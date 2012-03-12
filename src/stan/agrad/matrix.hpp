@@ -778,7 +778,29 @@ namespace stan {
     inline var trace(const matrix_v& m) {
       return m.trace();
     }
-
+    
+   /**
+     * Return the element-wise logarithm of the matrix or vector.
+     *
+     * @param m The matrix or vector.
+     * @return ret(i,j) = log(m(i,j))
+     */
+    template<typename TM, int Rows, int Cols>
+    inline Eigen::Matrix<var,Rows,Cols> log(const Eigen::Matrix<TM,Rows,Cols>& m) {
+      return to_var(m).array().log().matrix();
+    }
+   
+    /**
+     * Return the element-wise exponentiation of the matrix or vector.
+     *
+     * @param m The matrix or vector.
+     * @return ret(i,j) = exp(m(i,j))
+     */
+    template<typename TM, int Rows, int Cols>
+    inline Eigen::Matrix<var,Rows,Cols> exp(const Eigen::Matrix<TM,Rows,Cols>& m) {
+      return to_var(m).array().exp().matrix();
+    }
+     
     /**
      * Return the sum of the specified column vectors.
      * The two vectors must have the same size.
@@ -829,6 +851,56 @@ namespace stan {
       return to_var(m1) + to_var(m2);
     }
 
+   /**
+     * Return the sum of a matrix or vector and a scalar.
+     * @param m Matrix or vector.
+     * @param c Scalar.
+     * @return Matrix or Vector plus the scalar.
+     */
+    template <typename T1, typename T2, int Rows, int Cols>
+    inline Eigen::Matrix<var, Rows, Cols>
+    add(const Eigen::Matrix<T1, Rows, Cols>& m,
+        const T2& c) {
+      return (to_var(m).array() + c).matrix();
+    }
+
+   /**
+     * Return the sum of a scalar and a matrix or vector.
+     * @param c Scalar.
+     * @param m Matrix or vector.
+     * @return Scalar plus vector.
+     */
+    template <typename T1, typename T2, int Rows, int Cols>
+    inline Eigen::Matrix<var, Rows, Cols>
+    add(const T1& c,
+        const Eigen::Matrix<T2, Rows, Cols>& m) {
+      return (c + to_var(m).array()).matrix();
+    }
+
+   /**
+     * Return the difference between a matrix or vector  and a scalar.
+     * @param m Matrix or vector.
+     * @param c Scalar.
+     * @return Vector minus the scalar.
+     */
+    template <typename T1, typename T2, int Rows, int Cols>
+    inline Eigen::Matrix<var, Rows, Cols>
+    subtract(const Eigen::Matrix<T1, Rows, Cols>& m,
+             const T2& c) {
+      return (to_var(m).array() - c).matrix();
+    }
+   /**
+     * Return the difference between a scalar and a matrix or vector.
+     * @param c Scalar.
+     * @param m Matrix or vector.
+     * @return Scalar minus vector.
+     */
+    template <typename T1, typename T2, int Rows, int Cols>
+    inline Eigen::Matrix<var, Rows, Cols>
+    subtract(const T1& c,
+             const Eigen::Matrix<T2, Rows, Cols>& m) {
+      return (c - to_var(m).array()).matrix();
+    }
     /**
      * Return the difference between the first specified column vector
      * and the second.  The two vectors must have the same size.

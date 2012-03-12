@@ -419,6 +419,73 @@ TEST(agrad_matrix, dot_product__rowvector_rowvector__exception) {
 }
 // end dot_product tests
 
+// exp tests
+TEST(agrad_matrix, exp__matrix) {
+  matrix_d expected_output(2,2);
+  matrix_v mv(2,2), output;
+  int i,j;
+
+  mv << 1, 2, 3, 4;
+  expected_output << std::exp(1), std::exp(2), std::exp(3), std::exp(4);
+  output = stan::agrad::exp(mv);
+
+  for (i = 0; i < 2; i++)
+    for (j = 0; j < 2; j++)
+      EXPECT_FLOAT_EQ(expected_output(i,j), output(i,j).val());
+}
+
+// log tests
+TEST(agrad_matrix, log__matrix) {
+  matrix_d expected_output(2,2);
+  matrix_v mv(2,2), output;
+  int i,j;
+
+  mv << 1, 2, 3, 4;
+  expected_output << std::log(1), std::log(2), std::log(3), std::log(4);
+  output = stan::agrad::log(mv);
+
+  for (i = 0; i < 2; i++)
+    for (j = 0; j < 2; j++)
+      EXPECT_FLOAT_EQ(expected_output(i,j), output(i,j).val());
+}
+
+// scalar add/subtract tests
+TEST(agrad_matrix,add__scalar) {
+  matrix_v v(2,2);
+  v << 1, 2, 3, 4;
+  matrix_v result;
+
+  result = stan::agrad::add(2.0,v);
+  EXPECT_FLOAT_EQ(3.0,result(0,0).val());
+  EXPECT_FLOAT_EQ(4.0,result(0,1).val());
+  EXPECT_FLOAT_EQ(5.0,result(1,0).val());
+  EXPECT_FLOAT_EQ(6.0,result(1,1).val());
+
+  result = stan::agrad::add(v,2.0);
+  EXPECT_FLOAT_EQ(3.0,result(0,0).val());
+  EXPECT_FLOAT_EQ(4.0,result(0,1).val());
+  EXPECT_FLOAT_EQ(5.0,result(1,0).val());
+  EXPECT_FLOAT_EQ(6.0,result(1,1).val());
+}
+
+TEST(agrad_matrix,subtract__scalar) {
+  matrix_v v(2,2);
+  v << 1, 2, 3, 4;
+  matrix_v result;
+
+  result = stan::agrad::subtract(2.0,v);
+  EXPECT_FLOAT_EQ(1.0,result(0,0).val());
+  EXPECT_FLOAT_EQ(0.0,result(0,1).val());
+  EXPECT_FLOAT_EQ(-1.0,result(1,0).val());
+  EXPECT_FLOAT_EQ(-2.0,result(1,1).val());
+
+  result = stan::agrad::subtract(v,2.0);
+  EXPECT_FLOAT_EQ(-1.0,result(0,0).val());
+  EXPECT_FLOAT_EQ(0.0,result(0,1).val());
+  EXPECT_FLOAT_EQ(1.0,result(1,0).val());
+  EXPECT_FLOAT_EQ(2.0,result(1,1).val());
+}
+
 // add tests
 TEST(agrad_matrix, add__vector_vector) {
   vector_v expected_output(5), output;
