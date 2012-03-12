@@ -45,6 +45,154 @@ namespace Eigen {
       { return x*y; }
 
     };
+
+    template<bool _ConjLhs, bool _ConjRhs>
+    class gebp_traits< stan::agrad::var, double, _ConjLhs, _ConjRhs >
+    {
+      public:
+	typedef stan::agrad::var LhsScalar;
+	typedef stan::agrad::var RhsScalar;
+	typedef typename scalar_product_traits<LhsScalar, RhsScalar>::ReturnType ResScalar;
+
+
+      enum {
+	ConjLhs = _ConjLhs,
+	ConjRhs = _ConjRhs,
+	Vectorizable = packet_traits<LhsScalar>::Vectorizable && packet_traits<RhsScalar>::Vectorizable,
+	LhsPacketSize = Vectorizable ? packet_traits<LhsScalar>::size : 1,
+	RhsPacketSize = Vectorizable ? packet_traits<RhsScalar>::size : 1,
+	ResPacketSize = Vectorizable ? packet_traits<ResScalar>::size : 1,
+	
+	NumberOfRegisters = EIGEN_ARCH_DEFAULT_NUMBER_OF_REGISTERS,
+
+	// register block size along the N direction (must be either 2 or 4)
+	nr = NumberOfRegisters/4,
+
+	// register block size along the M direction (currently, this one cannot be modified)
+	mr = 2 * LhsPacketSize,
+	
+	WorkSpaceFactor = nr * RhsPacketSize,
+
+	LhsProgress = LhsPacketSize,
+	RhsProgress = RhsPacketSize
+      };
+
+      typedef typename packet_traits<LhsScalar>::type  _LhsPacket;
+      typedef typename packet_traits<RhsScalar>::type  _RhsPacket;
+      typedef typename packet_traits<ResScalar>::type  _ResPacket;
+
+      typedef typename conditional<Vectorizable,_LhsPacket,LhsScalar>::type LhsPacket;
+      typedef typename conditional<Vectorizable,_RhsPacket,RhsScalar>::type RhsPacket;
+      typedef typename conditional<Vectorizable,_ResPacket,ResScalar>::type ResPacket;
+
+      typedef ResPacket AccPacket;
+      
+      EIGEN_STRONG_INLINE void initAcc(AccPacket& p)
+      {
+	p = pset1<ResPacket>(ResScalar(0));
+      }
+
+      EIGEN_STRONG_INLINE void unpackRhs(DenseIndex n, const RhsScalar* rhs, RhsScalar* b)
+      {
+	for(DenseIndex k=0; k<n; k++)
+	  pstore1<RhsPacket>(&b[k*RhsPacketSize], rhs[k]);
+      }
+
+      EIGEN_STRONG_INLINE void loadRhs(const RhsScalar* b, RhsPacket& dest) const
+      {
+	dest = pload<RhsPacket>(b);
+      }
+
+      EIGEN_STRONG_INLINE void loadLhs(const LhsScalar* a, LhsPacket& dest) const
+      {
+	dest = pload<LhsPacket>(a);
+      }
+
+      EIGEN_STRONG_INLINE void madd(const LhsPacket& a, const RhsPacket& b, AccPacket& c, AccPacket& tmp) const
+      {
+	tmp = b; tmp = pmul(a,tmp); c = padd(c,tmp);
+      }
+
+      EIGEN_STRONG_INLINE void acc(const AccPacket& c, const ResPacket& alpha, ResPacket& r) const
+      {
+	r = pmadd(c,alpha,r);
+      }
+
+    };
+
+    template<bool _ConjLhs, bool _ConjRhs>
+    class gebp_traits< double, stan::agrad::var, _ConjLhs, _ConjRhs >
+    {
+      public:
+	typedef stan::agrad::var RhsScalar;
+	typedef stan::agrad::var LhsScalar;
+	typedef typename scalar_product_traits<LhsScalar, RhsScalar>::ReturnType ResScalar;
+	
+      enum {
+	ConjLhs = _ConjLhs,
+	ConjRhs = _ConjRhs,
+	Vectorizable = packet_traits<LhsScalar>::Vectorizable && packet_traits<RhsScalar>::Vectorizable,
+	LhsPacketSize = Vectorizable ? packet_traits<LhsScalar>::size : 1,
+	RhsPacketSize = Vectorizable ? packet_traits<RhsScalar>::size : 1,
+	ResPacketSize = Vectorizable ? packet_traits<ResScalar>::size : 1,
+	
+	NumberOfRegisters = EIGEN_ARCH_DEFAULT_NUMBER_OF_REGISTERS,
+
+	// register block size along the N direction (must be either 2 or 4)
+	nr = NumberOfRegisters/4,
+
+	// register block size along the M direction (currently, this one cannot be modified)
+	mr = 2 * LhsPacketSize,
+	
+	WorkSpaceFactor = nr * RhsPacketSize,
+
+	LhsProgress = LhsPacketSize,
+	RhsProgress = RhsPacketSize
+      };
+
+      typedef typename packet_traits<LhsScalar>::type  _LhsPacket;
+      typedef typename packet_traits<RhsScalar>::type  _RhsPacket;
+      typedef typename packet_traits<ResScalar>::type  _ResPacket;
+
+      typedef typename conditional<Vectorizable,_LhsPacket,LhsScalar>::type LhsPacket;
+      typedef typename conditional<Vectorizable,_RhsPacket,RhsScalar>::type RhsPacket;
+      typedef typename conditional<Vectorizable,_ResPacket,ResScalar>::type ResPacket;
+
+      typedef ResPacket AccPacket;
+      
+      EIGEN_STRONG_INLINE void initAcc(AccPacket& p)
+      {
+	p = pset1<ResPacket>(ResScalar(0));
+      }
+
+      EIGEN_STRONG_INLINE void unpackRhs(DenseIndex n, const RhsScalar* rhs, RhsScalar* b)
+      {
+	for(DenseIndex k=0; k<n; k++)
+	  pstore1<RhsPacket>(&b[k*RhsPacketSize], rhs[k]);
+      }
+
+      EIGEN_STRONG_INLINE void loadRhs(const RhsScalar* b, RhsPacket& dest) const
+      {
+	dest = pload<RhsPacket>(b);
+      }
+
+      EIGEN_STRONG_INLINE void loadLhs(const LhsScalar* a, LhsPacket& dest) const
+      {
+	dest = pload<LhsPacket>(a);
+      }
+
+      EIGEN_STRONG_INLINE void madd(const LhsPacket& a, const RhsPacket& b, AccPacket& c, AccPacket& tmp) const
+      {
+	tmp = b; tmp = pmul(a,tmp); c = padd(c,tmp);
+      }
+
+      EIGEN_STRONG_INLINE void acc(const AccPacket& c, const ResPacket& alpha, ResPacket& r) const
+      {
+	r = pmadd(c,alpha,r);
+      }
+
+    };
+
   }
 
   /**
