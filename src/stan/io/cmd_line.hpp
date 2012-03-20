@@ -6,6 +6,7 @@
 #include <iostream>
 #include <ostream>
 #include <set>
+#include <string>
 #include <sstream>
 #include <vector>
 
@@ -35,6 +36,32 @@ namespace stan {
       for (int i = 0; i < padding; ++i)
         o << ' ';
     }
+
+    void print_help_helper(const std::string& key_val,
+                      const std::string& msg,
+                      const std::string& note = "") {
+      pad_help_option(key_val);
+      std::cout << msg 
+                << std::endl;
+      if (note.size() > 0) {
+        pad_help_option("");
+        std::cout << "    (" << note << ")" 
+                  << std::endl;
+      }
+      std::cout << std::endl;
+    }
+
+    void print_help_option(const std::string& key,
+                           const std::string& value_type,
+                           const std::string& msg,
+                           const std::string& note = "") {
+      std::stringstream ss;
+      ss << "--" << key;
+      if (value_type.size() > 0)
+        ss << "=<" << value_type << ">";
+      print_help_helper(ss.str(),msg,note);
+    }
+
 
 
     /**

@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <cstddef>
+#include <iostream>
 #include <vector>
 
 #include <boost/random/normal_distribution.hpp>
@@ -67,8 +68,15 @@ namespace stan {
       // Stop immediately if H < u - _maxchange
       const double _maxchange;
 
+      // Limit tree depth
+      const int _maxdepth;
+
+      // depth of last sample taken (-1 before any samples)
+      int _lastdepth;
+
       // Class implementing Nesterov's primal-dual averaging
       DualAverage _da;
+
 
       /**
        * Determine whether we've started to make a "U-turn" at either end
@@ -118,7 +126,8 @@ namespace stan {
        * @param base_rng Optional Seed for random number generator; if not
        * specified, generate new seed based on system time.
        */
-      nuts(prob_grad& model, 
+      nuts(prob_grad& model,
+           int maxdepth = 10, 
            double epsilon = -1,
            double epsilon_pm = 0.0,
            bool adapt_epsilon = true,
@@ -144,6 +153,8 @@ namespace stan {
           _rand_uniform_01(_rand_int),
 
           _maxchange(-1000),
+          _maxdepth(maxdepth),
+          _lastdepth(-1),
 
           _da(gamma, std::vector<double>(1, 0)) {
         
@@ -241,7 +252,6 @@ namespace stan {
 
         // Sample the slice variable
         double u = log(_rand_uniform_01()) + H0;
-        int depth = 0;
         int nvalid = 1;
         int direction = 2 * (_rand_uniform_01() > 0.5) - 1;
         bool criterion = true;
@@ -252,7 +262,9 @@ namespace stan {
         double prob_sum = -1;
         int newnvalid = -1;
         int n_considered = 0;
-        while (criterion) {
+        // for-loop with depth outside to set lastdepth
+        int depth = 0;
+        while (criterion && (_maxdepth < 0 || depth <= _maxdepth)) {
           direction = 2 * (_rand_uniform_01() > 0.5) - 1;
           if (direction == -1)
             build_tree(xminus, mminus, gradminus, u, direction, depth,
@@ -276,8 +288,10 @@ namespace stan {
             _logp = newlogp;
           }
           nvalid += newnvalid;
+//          fprintf(stderr, "depth = %d, _logp = %g\n", depth, _logp);
           ++depth;
         }
+        _lastdepth = depth;
 
         // Now we just have to update epsilon, if adaptation is on.
         double adapt_stat = prob_sum / float(n_considered);
@@ -297,6 +311,19 @@ namespace stan {
         mcmc::sample s(_x, _z, _logp);
         return s;
       }
+
+      int last_depth() {
+        return _lastdepth;
+      }
+
+      virtual void write_sampler_param_names(std::ostream& o) {
+        o << "treedepth__,";
+      }
+
+      virtual void write_sampler_params(std::ostream& o) {
+        o << _lastdepth << ',';
+      }
+
 
       virtual double log_prob() {
         return _logp;

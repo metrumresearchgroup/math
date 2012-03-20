@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <vector>
 #include <boost/random/additive_combine.hpp> // L'Ecuyer RNG
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_01.hpp>
@@ -27,33 +28,9 @@ namespace stan {
 
   namespace gm {
 
-    void print_help_2(const std::string& key_val,
-                      const std::string& msg,
-                      const std::string& note = "") {
-      stan::io::pad_help_option(key_val);
-      std::cout << msg 
-                << std::endl;
-      if (note.size() > 0) {
-        stan::io::pad_help_option("");
-        std::cout << "    (" << note << ")" 
-                  << std::endl;
-      }
-      std::cout << std::endl;
-    }
-
-    void print_help_option(const std::string& key,
-                           const std::string& value_type,
-                           const std::string& msg,
-                           const std::string& note = "") {
-      std::stringstream ss;
-      ss << "--" << key;
-      if (value_type.size() > 0)
-        ss << "=<" << value_type << ">";
-      print_help_2(ss.str(),msg,note);
-    }
         
     void print_nuts_help(std::string cmd) {
-      using stan::io::pad_help_option;
+      using stan::io::print_help_option;
 
       std::cout << std::endl;
       std::cout << "Compiled Stan Graphical Model Command" << std::endl;
@@ -104,7 +81,7 @@ namespace stan {
                         "Period between saved samples after warm up",
                         "default = max(1, floor(iter - warmup) / 1000)");
 
-      print_help_option("refresh","+int"
+      print_help_option("refresh","+int",
                         "Period between samples updating progress report print",
                         "default = max(1,iter/200))");
 
@@ -112,6 +89,10 @@ namespace stan {
                         "Number of leapfrog steps; -1 for No-U-Turn adaptation",
                         "default = -1");
 
+      print_help_option("max_treedepth","int",
+                        "Limit NUTS leapfrog steps to 2^max_tree_depth; -1 for no limit",
+                        "default = 10");
+      
       print_help_option("epsilon","float",
                         "Initial value for step size, or -1 to set automatically",
                         "default = -1");
@@ -124,12 +105,12 @@ namespace stan {
                         "Turn off step size adaptation (default is on)");
 
       print_help_option("delta","+float",
-                        "Initial parameter for NUTS step-size tuning.",
+                        "Initial step size for step-size adaptation",
                         "default = 0.5");
 
       print_help_option("gamma","+float",
-                        "Gamma parameter for dual averaging step-size adaptation.",
-                        "default = 0.05");
+                    "Gamma parameter for dual averaging step-size adaptation",
+                    "default = 0.05");
 
       print_help_option("test_grad","",
                         "Test gradient calculations using finite differences");
@@ -146,8 +127,8 @@ namespace stan {
         && ((n + 1) % refresh == 0);
     }
 
-    template <typename T_model>
-    void sample_from(stan::mcmc::adaptive_sampler& sampler,
+    template <class Sampler, class Model>
+    void sample_from(Sampler& sampler,
                      bool epsilon_adapt,
                      int refresh,
                      int num_iterations,
@@ -156,7 +137,7 @@ namespace stan {
                      std::ostream& sample_file_stream,
                      std::vector<double>& params_r,
                      std::vector<int>& params_i,
-                     T_model& model) {
+                     Model& model) {
 
       sampler.set_params(params_r,params_i);
      
@@ -189,6 +170,7 @@ namespace stan {
 
             // FIXME: use csv_writer arg to make comma optional?
             sample_file_stream << sample.log_prob() << ',';
+            sampler.write_sampler_params(sample_file_stream);
             sample.params_r(params_r);
             sample.params_i(params_i);
             model.write_csv(params_r,params_i,sample_file_stream);
@@ -212,7 +194,7 @@ namespace stan {
       o << "# " << key << "=" << val << std::endl;
     }
 
-    template <typename T_model>
+    template <class Model>
     int nuts_command(int argc, const char* argv[]) {
 
       stan::io::cmd_line command(argc,argv);
@@ -229,7 +211,7 @@ namespace stan {
       stan::io::dump data_var_context(data_stream);
       data_stream.close();
 
-      T_model model(data_var_context);
+      Model model(data_var_context);
 
       std::string sample_file = "samples.csv";
       command.val("samples",sample_file);
@@ -249,6 +231,9 @@ namespace stan {
 
       double epsilon = -1.0;
       command.val("epsilon",epsilon);
+
+      int max_treedepth = 10;
+      command.val("max_treedepth",max_treedepth);
 
       double epsilon_pm = 0.0;
       command.val("epsilon_pm",epsilon_pm);
@@ -365,6 +350,7 @@ namespace stan {
       std::cout << "thin = " << num_thin << std::endl;
 
       std::cout << "leapfrog_steps = " << leapfrog_steps << std::endl;
+      std::cout << "max_treedepth = " << max_treedepth << std::endl;;
       std::cout << "epsilon = " << epsilon << std::endl;;
       std::cout << "epsilon_pm = " << epsilon_pm << std::endl;;
       std::cout << "epsilon_adapt_off = " << epsilon_adapt_off << std::endl;;
@@ -394,22 +380,27 @@ namespace stan {
       write_comment_property(sample_stream,"warmup",num_warmup);
       write_comment_property(sample_stream,"thin",num_thin);
       write_comment_property(sample_stream,"leapfrog_steps",leapfrog_steps);
+      write_comment_property(sample_stream,"max_treedepth",max_treedepth);
       write_comment_property(sample_stream,"epsilon",epsilon);
       write_comment_property(sample_stream,"epsilon_pm",epsilon_pm);
       write_comment_property(sample_stream,"delta",delta);
       write_comment_property(sample_stream,"gamma",gamma);
       write_comment(sample_stream);
 
-      if (!append_samples) {
-        sample_stream << "lp__,"; // log probability first
-        model.write_csv_header(sample_stream);
-      }
-
       if (leapfrog_steps < 0) {
         stan::mcmc::nuts<rng_t> nuts_sampler(model, 
-                                             epsilon, epsilon_pm, epsilon_adapt,
+                                             max_treedepth, epsilon, 
+                                             epsilon_pm, epsilon_adapt,
                                              delta, gamma, 
                                              base_rng);
+
+        // cut & paste (see below) to enable sample-specific params
+        if (!append_samples) {
+          sample_stream << "lp__,"; // log probability first
+          nuts_sampler.write_sampler_param_names(sample_stream);
+          model.write_csv_header(sample_stream);
+        }
+
         sample_from(nuts_sampler,epsilon_adapt,refresh,
                     num_iterations,num_warmup,num_thin,
                     sample_stream,params_r,params_i,
@@ -420,6 +411,14 @@ namespace stan {
                                                     epsilon, epsilon_pm, epsilon_adapt,
                                                     delta, gamma,
                                                     base_rng);
+
+        // cut & paste (see above) to enable sample-specific params
+        if (!append_samples) {
+          sample_stream << "lp__,"; // log probability first
+          hmc_sampler.write_sampler_param_names(sample_stream);
+          model.write_csv_header(sample_stream);
+        }
+
         sample_from(hmc_sampler,epsilon_adapt,refresh,
                     num_iterations,num_warmup,num_thin,
                     sample_stream,params_r,params_i,
