@@ -485,10 +485,10 @@ namespace stan {
      *
      * <p>\f$\mbox{square}(x) = x^2\f$.
      *
-     * <p>The implementation of <code>square(x)</code> is just <code>x
-     * * x</code>.  Given this, this method is mainly useful in cases
-     * where <code>x</code> is not a simple primitive type, particularly
-     * when it is an auto-dif type.
+     * <p>The implementation of <code>square(x)</code> is just 
+     * <code>x * x</code>.  Given this, this method is mainly useful 
+     * in cases where <code>x</code> is not a simple primitive type, 
+     * particularly when it is an auto-dif type.
      *
      * @param x Input to square.
      * @return Square of input.
@@ -505,6 +505,27 @@ namespace stan {
       if (b == 0.0 && a == 0.0)
         return 0.0;
       return a * log(b);
+    }
+
+    /**
+     * Calculates the log of 1 plus the exponential of the specified
+     * value without overflow.                  
+     *
+     * This function is related to other special functions by:
+     *
+     * <code>log_1p_exp(x) </code>
+     *
+     * <code> = log1p(exp(a))</code>
+     *
+     * <code> = log(1 + exp(x))</code>
+
+     * <code> = log_sum_exp(0,x)</code>.
+     */
+    inline double log1p_exp(const double& a) {
+      // like log_sum_exp below with b=0.0
+      if (a > 0.0)
+        return a + log1p(exp(-a));
+      return log1p(exp(a));
     }
 
     /**
@@ -560,7 +581,7 @@ namespace stan {
      * @return Pi.
      */
     double pi() {
-      return PI;
+      return boost::math::constants::pi<double>();
     }
 
     /**

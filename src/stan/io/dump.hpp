@@ -29,7 +29,12 @@ namespace stan {
        }
     }
 
-
+    /**
+     * A <code>dump_writer</code> writes data into the S-plus dump
+     * format, a human-readable ASCII representation of arbitrarily
+     * dimensioned arrays of integers and arrays of floating point
+     * values.
+     */
     class dump_writer {
     private:
       std::ostream& out_;
@@ -61,7 +66,39 @@ namespace stan {
         out_ << s << ".";
       }
 
+      void write_val(const unsigned long long int& n) {
+        out_ << n;
+      }
+
+      void write_val(const unsigned long int& n) {
+        out_ << n;
+      }
+
+      void write_val(const unsigned int& n) {
+        out_ << n;
+      }
+
+      void write_val(const unsigned short& n) {
+        out_ << n;
+      }
+
+      void write_val(const long long& n) {
+        out_ << n;
+      }
+
+      void write_val(const long& n) {
+        out_ << n;
+      }
+
       void write_val(const int& n) {
+        out_ << n;
+      }
+
+      void write_val(const short& n) {
+        out_ << n;
+      }
+
+      void write_val(const char& n) {
         out_ << n;
       }
 
@@ -294,7 +331,6 @@ namespace stan {
        * @param xs Values of variable.
        * @tparam T <code>double</code> or <code>int</code>.
        */
-
       template <typename T>
       void dump_list(std::string name,
                      std::vector<T> xs) {

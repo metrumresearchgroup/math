@@ -1162,8 +1162,8 @@ namespace stan {
     }
     /**
      * Return the element-wise product of the specified matrices.
-     * @param v1 First matrix.
-     * @param v2 Second matrix.
+     * @param m1 First matrix.
+     * @param m2 Second matrix.
      * @return Elementwise product of the matrices.
      */
     inline matrix_d elt_multiply(const matrix_d& m1, const matrix_d& m2) {
@@ -1228,8 +1228,8 @@ namespace stan {
     }
     /**
      * Return the element-wise division of the specified matrices.
-     * @param v1 First matrix.
-     * @param v2 Second matrix.
+     * @param m1 First matrix.
+     * @param m2 Second matrix.
      * @return Elementwise division of the matrices.
      */
     inline matrix_d elt_divide(const matrix_d& m1, const matrix_d& m2) {
@@ -1362,7 +1362,7 @@ namespace stan {
     /**
      * Return the product of the specified scalar and row vector.
      * @param c Scalar.
-     * @param v Row vector.
+     * @param rv Row vector.
      * @return Product of scalar and row vector.
      */
     inline row_vector_d multiply(double c, const row_vector_d& rv) {

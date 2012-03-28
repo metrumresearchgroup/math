@@ -14,12 +14,6 @@ namespace stan {
     const double E = boost::math::constants::e<double>();
 
     /** 
-     * The value of pi, 
-     * \f$ \pi \f$.
-     */
-    const double PI = boost::math::constants::pi<double>();
-
-    /** 
      * The value of the square root of 2, 
      * \f$ \sqrt{2} \f$. 
      */
