@@ -1,4 +1,3 @@
-##
 # Makefile for Stan.
 # This makefile relies heavily on the make defaults for
 # make 3.81.
@@ -14,13 +13,13 @@ help:
 # - OS: {mac, win, linux}. 
 ##
 CC = g++
-O = 0
+O = 3
 # OS is set automatically by this script
 -include make/detect_os
 
 ##
 # Get information about the compiler used.
-# - CC_TYPE: {g++, clang++, other}
+# - CC_TYPE: {g++, clang++, mingw32-g++, other}
 # - CC_MAJOR: major version of CC
 # - CC_MINOR: minor version of CC
 ##
@@ -56,9 +55,9 @@ help:
 	@echo '------------------------------------------------------------'
 	@echo 'Stan: makefile'
 	@echo '  Current configuration:'
-	@echo '  - OS (Operating System):' $(OS)
-	@echo '  - CC (Compiler):        ' $(CC)
-	@echo '  - O (Optimize Level):   ' $(O)
+	@echo '  - OS (Operating System):   ' $(OS)
+	@echo '  - CC (Compiler):           ' $(CC)
+	@echo '  - O (Optimize Level):      ' $(O)
 	@echo 'Available targets: '
 	@echo '  Tests:'
 	@echo '  - test-unit:   Runs unit tests.'
@@ -129,3 +128,4 @@ clean-demo:
 
 clean-all: clean clean-models clean-dox clean-demo
 	$(RM) -r test bin
+

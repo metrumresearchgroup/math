@@ -41,10 +41,11 @@
 #include <boost/variant/recursive_variant.hpp>
 
 #include <stan/gm/ast.hpp>
-#include <stan/gm/parser/whitespace_grammar.hpp>
-#include <stan/gm/parser/expression_grammar.hpp>
-#include <stan/gm/parser/var_decls_grammar.hpp>
-#include <stan/gm/parser/statement_grammar.hpp>
+#include <stan/gm/grammars/whitespace_grammar.hpp>
+#include <stan/gm/grammars/expression_grammar.hpp>
+#include <stan/gm/grammars/var_decls_grammar.hpp>
+#include <stan/gm/grammars/statement_grammar.hpp>
+#include <stan/gm/grammars/common_adaptors_def.hpp>
 
 BOOST_FUSION_ADAPT_STRUCT(stan::gm::assignment,
                           (stan::gm::variable_dims, var_dims_)
@@ -62,10 +63,6 @@ BOOST_FUSION_ADAPT_STRUCT(stan::gm::for_statement,
                           (std::string, variable_)
                           (stan::gm::range, range_)
                           (stan::gm::statement, statement_) )
-
-BOOST_FUSION_ADAPT_STRUCT(stan::gm::range,
-                          (stan::gm::expression, low_)
-                          (stan::gm::expression, high_) )
 
 BOOST_FUSION_ADAPT_STRUCT(stan::gm::sample,
                           (stan::gm::expression, expr_)
@@ -103,8 +100,9 @@ namespace stan {
         if (lhs_origin != local_origin
             && lhs_origin != origin_allowed) {
           error_msgs << "attempt to assign variable in wrong block."
-                     << " left-hand-side variable origin=" << lhs_origin
-                     << std::endl;
+                     << " left-hand-side variable origin=";
+          print_var_origin(error_msgs,lhs_origin);
+          error_msgs << std::endl;
           return false;
         }
 
@@ -139,9 +137,11 @@ namespace stan {
         if (!types_compatible) {
           error_msgs << "base type mismatch in assignment"
                      << "; left variable=" << a.var_dims_.name_
-                     << "; left base type=" << lhs_base_type
-                     << "; right base type=" << rhs_base_type
-                     << std::endl;
+                     << "; left base type=";
+          write_base_expr_type(error_msgs,lhs_base_type);
+          error_msgs << "; right base type=";
+          write_base_expr_type(error_msgs,rhs_base_type);
+          error_msgs << std::endl;
           return false;
         }
         return true;
@@ -217,7 +217,7 @@ namespace stan {
     };
     boost::phoenix::function<remove_loop_identifier> remove_loop_identifier_f;
 
-    struct validate_int_expr {
+    struct validate_int_expr2 {
       template <typename T1, typename T2>
       struct result { typedef bool type; };
 
@@ -231,7 +231,7 @@ namespace stan {
         return true;
       }
     };
-    boost::phoenix::function<validate_int_expr> validate_int_expr_f;
+    boost::phoenix::function<validate_int_expr2> validate_int_expr2_f;
 
     struct validate_allow_sample {
       template <typename T1, typename T2>
@@ -327,10 +327,10 @@ namespace stan {
       range_r.name("range expression pair, colon");
       range_r 
         %= expression_g
-        [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
+        [_pass = validate_int_expr2_f(_1,boost::phoenix::ref(error_msgs_))]
         >> lit(':') 
         >> expression_g
-        [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))];
+        [_pass = validate_int_expr2_f(_1,boost::phoenix::ref(error_msgs_))];
 
       assignment_r.name("variable assignment by expression");
       assignment_r
@@ -353,7 +353,7 @@ namespace stan {
       dims_r 
         %= lit('[') 
         > (expression_g
-           [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
+           [_pass = validate_int_expr2_f(_1,boost::phoenix::ref(error_msgs_))]
            % ',')
         > lit(']')
         ;

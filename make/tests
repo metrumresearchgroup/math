@@ -19,7 +19,7 @@ test-unit: $(addsuffix $(EXE),$(UNIT_TESTS))
 	set -e;\
 	$(foreach test,$(UNIT_TESTS), \
 	  echo '------------------------------------------------------------';\
-	  $(test) --gtest_output="xml:$(test).xml";)
+	  $(addsuffix $(EXE),$(test)) --gtest_output="xml:$(test).xml";)
 
 ##
 # Target to build bugs models
@@ -35,7 +35,7 @@ test-bugs: $(addsuffix $(EXE),$(BUGS_EXAMPLES))
 # Target to build all tests
 ##
 .PHONY: test-all
-test-all: test-unit
+test-all: test-unit test-bugs
 
 
 ##
@@ -88,10 +88,10 @@ test/%.d : src/test/%_test.cpp
 ifeq (test-unit,$(MAKECMDGOALS))
   -include $(addsuffix .d,$(UNIT_TESTS))
 endif
-ifeq (test-bugs,$(MAKECMDGOALS))
-  -include $(addsuffix .d,$(UNIT_TESTS))
-  -include demo/gm.d
-endif
+#ifeq (test-bugs,$(MAKECMDGOALS))
+#  -include $(addsuffix .d,$(UNIT_TESTS))
+#  -include demo/gm.d
+#endif
 ifeq (test-all,$(MAKECMDGOALS))
   -include $(addsuffix .d,$(UNIT_TESTS))
 endif
