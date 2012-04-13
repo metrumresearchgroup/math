@@ -14,187 +14,191 @@
  * (Expert) Numerical traits for algorithmic differentiation variables.
  */
 namespace Eigen {
-
+  
   /**
    * (Expert) Product traits for algorithmic differentiation variables.
    */
   namespace internal {
-
+    
     template <>  
     struct scalar_product_traits<stan::agrad::var,double> {
       typedef stan::agrad::var ReturnType;
     };
-
+    
     template <>  
     struct scalar_product_traits<double,stan::agrad::var> {
       typedef stan::agrad::var ReturnType;
     };
-
+    
     template<> struct is_same<stan::agrad::var,double> { enum { value = 1}; };
     template<> struct is_same<double,stan::agrad::var> { enum { value = 1}; };
     template<> struct is_arithmetic<stan::agrad::var> { enum { value = true}; }; // possibly necessary but does not seem to do anything
-
+    
     template<> struct conj_helper<stan::agrad::var, double, false, false>
     {
       typedef stan::agrad::var Scalar;
-
+      
       EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const double& y, const Scalar& c) const
       { return c + pmul(x,y); }
-
+      
       EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const double& y) const
       { return x*y; }
-
+      
     };
-
+    
     template<bool _ConjLhs, bool _ConjRhs>
     class gebp_traits< stan::agrad::var, double, _ConjLhs, _ConjRhs >
     {
-      public:
-	typedef stan::agrad::var LhsScalar;
-	typedef stan::agrad::var RhsScalar;
-	typedef typename scalar_product_traits<LhsScalar, RhsScalar>::ReturnType ResScalar;
-
-
+    public:
+      typedef stan::agrad::var LhsScalar;
+      typedef double RhsScalar;
+      typedef typename scalar_product_traits<LhsScalar, RhsScalar>::ReturnType ResScalar;
+      
+      
       enum {
-	ConjLhs = _ConjLhs,
-	ConjRhs = _ConjRhs,
-	Vectorizable = packet_traits<LhsScalar>::Vectorizable && packet_traits<RhsScalar>::Vectorizable,
-	LhsPacketSize = Vectorizable ? packet_traits<LhsScalar>::size : 1,
-	RhsPacketSize = Vectorizable ? packet_traits<RhsScalar>::size : 1,
-	ResPacketSize = Vectorizable ? packet_traits<ResScalar>::size : 1,
-	
-	NumberOfRegisters = EIGEN_ARCH_DEFAULT_NUMBER_OF_REGISTERS,
-
-	// register block size along the N direction (must be either 2 or 4)
-	nr = NumberOfRegisters/4,
-
-	// register block size along the M direction (currently, this one cannot be modified)
-	mr = 2 * LhsPacketSize,
-	
-	WorkSpaceFactor = nr * RhsPacketSize,
-
-	LhsProgress = LhsPacketSize,
-	RhsProgress = RhsPacketSize
+        ConjLhs = _ConjLhs,
+        ConjRhs = _ConjRhs,
+        Vectorizable = 0,
+        LhsPacketSize = Vectorizable ? packet_traits<LhsScalar>::size : 1,
+        RhsPacketSize = Vectorizable ? packet_traits<RhsScalar>::size : 1,
+        ResPacketSize = Vectorizable ? packet_traits<ResScalar>::size : 1,
+        
+        NumberOfRegisters = EIGEN_ARCH_DEFAULT_NUMBER_OF_REGISTERS,
+        
+        // register block size along the N direction (must be either 2 or 4)
+        nr = NumberOfRegisters/4,
+        
+        // register block size along the M direction (currently, this one cannot be modified)
+        mr = 2 * LhsPacketSize,
+        
+        WorkSpaceFactor = nr * RhsPacketSize,
+        
+        LhsProgress = LhsPacketSize,
+        RhsProgress = RhsPacketSize
       };
-
+      
       typedef typename packet_traits<LhsScalar>::type  _LhsPacket;
       typedef typename packet_traits<RhsScalar>::type  _RhsPacket;
       typedef typename packet_traits<ResScalar>::type  _ResPacket;
-
+      
       typedef typename conditional<Vectorizable,_LhsPacket,LhsScalar>::type LhsPacket;
       typedef typename conditional<Vectorizable,_RhsPacket,RhsScalar>::type RhsPacket;
       typedef typename conditional<Vectorizable,_ResPacket,ResScalar>::type ResPacket;
-
+      
       typedef ResPacket AccPacket;
       
       EIGEN_STRONG_INLINE void initAcc(AccPacket& p)
       {
-	p = pset1<ResPacket>(ResScalar(0));
+        p = pset1<ResPacket>(ResScalar(0));
       }
-
+      
       EIGEN_STRONG_INLINE void unpackRhs(DenseIndex n, const RhsScalar* rhs, RhsScalar* b)
       {
-	for(DenseIndex k=0; k<n; k++)
-	  pstore1<RhsPacket>(&b[k*RhsPacketSize], rhs[k]);
+        for(DenseIndex k=0; k<n; k++)
+          pstore1<RhsPacket>(&b[k*RhsPacketSize], rhs[k]);
       }
-
+      
       EIGEN_STRONG_INLINE void loadRhs(const RhsScalar* b, RhsPacket& dest) const
       {
-	dest = pload<RhsPacket>(b);
+        dest = pload<RhsPacket>(b);
       }
-
+      
       EIGEN_STRONG_INLINE void loadLhs(const LhsScalar* a, LhsPacket& dest) const
       {
-	dest = pload<LhsPacket>(a);
+        dest = pload<LhsPacket>(a);
       }
-
-      EIGEN_STRONG_INLINE void madd(const LhsPacket& a, const RhsPacket& b, AccPacket& c, AccPacket& tmp) const
+      
+      template<typename T>
+      EIGEN_STRONG_INLINE void madd(const LhsPacket& a, const RhsPacket& b, AccPacket& c, T& tmp) const
       {
-	tmp = b; tmp = pmul(a,tmp); c = padd(c,tmp);
+        //        tmp = b; tmp = pmul(a,tmp); c = padd(c,tmp);
+        c += a*b;
       }
-
+      
       EIGEN_STRONG_INLINE void acc(const AccPacket& c, const ResPacket& alpha, ResPacket& r) const
       {
-	r = pmadd(c,alpha,r);
+        r = pmadd(c,alpha,r);
       }
-
+      
     };
-
+    
     template<bool _ConjLhs, bool _ConjRhs>
     class gebp_traits< double, stan::agrad::var, _ConjLhs, _ConjRhs >
     {
-      public:
-	typedef stan::agrad::var RhsScalar;
-	typedef stan::agrad::var LhsScalar;
-	typedef typename scalar_product_traits<LhsScalar, RhsScalar>::ReturnType ResScalar;
-	
+    public:
+      typedef double LhsScalar;
+      typedef stan::agrad::var RhsScalar;
+      typedef typename scalar_product_traits<LhsScalar, RhsScalar>::ReturnType ResScalar;
+      
       enum {
-	ConjLhs = _ConjLhs,
-	ConjRhs = _ConjRhs,
-	Vectorizable = packet_traits<LhsScalar>::Vectorizable && packet_traits<RhsScalar>::Vectorizable,
-	LhsPacketSize = Vectorizable ? packet_traits<LhsScalar>::size : 1,
-	RhsPacketSize = Vectorizable ? packet_traits<RhsScalar>::size : 1,
-	ResPacketSize = Vectorizable ? packet_traits<ResScalar>::size : 1,
-	
-	NumberOfRegisters = EIGEN_ARCH_DEFAULT_NUMBER_OF_REGISTERS,
-
-	// register block size along the N direction (must be either 2 or 4)
-	nr = NumberOfRegisters/4,
-
-	// register block size along the M direction (currently, this one cannot be modified)
-	mr = 2 * LhsPacketSize,
-	
-	WorkSpaceFactor = nr * RhsPacketSize,
-
-	LhsProgress = LhsPacketSize,
-	RhsProgress = RhsPacketSize
+        ConjLhs = _ConjLhs,
+        ConjRhs = _ConjRhs,
+        Vectorizable = 0,
+        LhsPacketSize = Vectorizable ? packet_traits<LhsScalar>::size : 1,
+        RhsPacketSize = Vectorizable ? packet_traits<RhsScalar>::size : 1,
+        ResPacketSize = Vectorizable ? packet_traits<ResScalar>::size : 1,
+        
+        NumberOfRegisters = EIGEN_ARCH_DEFAULT_NUMBER_OF_REGISTERS,
+        
+        // register block size along the N direction (must be either 2 or 4)
+        nr = NumberOfRegisters/4,
+        
+        // register block size along the M direction (currently, this one cannot be modified)
+        mr = 2 * LhsPacketSize,
+        
+        WorkSpaceFactor = nr * RhsPacketSize,
+        
+        LhsProgress = LhsPacketSize,
+        RhsProgress = RhsPacketSize
       };
-
+      
       typedef typename packet_traits<LhsScalar>::type  _LhsPacket;
       typedef typename packet_traits<RhsScalar>::type  _RhsPacket;
       typedef typename packet_traits<ResScalar>::type  _ResPacket;
-
+      
       typedef typename conditional<Vectorizable,_LhsPacket,LhsScalar>::type LhsPacket;
       typedef typename conditional<Vectorizable,_RhsPacket,RhsScalar>::type RhsPacket;
       typedef typename conditional<Vectorizable,_ResPacket,ResScalar>::type ResPacket;
-
+      
       typedef ResPacket AccPacket;
       
       EIGEN_STRONG_INLINE void initAcc(AccPacket& p)
       {
-	p = pset1<ResPacket>(ResScalar(0));
+        p = pset1<ResPacket>(ResScalar(0));
       }
-
+      
       EIGEN_STRONG_INLINE void unpackRhs(DenseIndex n, const RhsScalar* rhs, RhsScalar* b)
       {
-	for(DenseIndex k=0; k<n; k++)
-	  pstore1<RhsPacket>(&b[k*RhsPacketSize], rhs[k]);
+        for(DenseIndex k=0; k<n; k++)
+          pstore1<RhsPacket>(&b[k*RhsPacketSize], rhs[k]);
       }
-
+      
       EIGEN_STRONG_INLINE void loadRhs(const RhsScalar* b, RhsPacket& dest) const
       {
-	dest = pload<RhsPacket>(b);
+        dest = pload<RhsPacket>(b);
       }
-
+      
       EIGEN_STRONG_INLINE void loadLhs(const LhsScalar* a, LhsPacket& dest) const
       {
-	dest = pload<LhsPacket>(a);
+        dest = pload<LhsPacket>(a);
       }
-
-      EIGEN_STRONG_INLINE void madd(const LhsPacket& a, const RhsPacket& b, AccPacket& c, AccPacket& tmp) const
+      
+      template<typename T>
+      EIGEN_STRONG_INLINE void madd(const LhsPacket& a, const RhsPacket& b, AccPacket& c, T& tmp) const
       {
-	tmp = b; tmp = pmul(a,tmp); c = padd(c,tmp);
+//        tmp = b; tmp = pmul(a,tmp); c = padd(c,tmp);
+        c += a*b;
       }
-
+      
       EIGEN_STRONG_INLINE void acc(const AccPacket& c, const ResPacket& alpha, ResPacket& r) const
       {
-	r = pmadd(c,alpha,r);
+        r = pmadd(c,alpha,r);
       }
-
+      
     };
-
+    
   }
-
+  
   /**
    * Numerical traits template override for Eigen for automatic
    * gradient variables.
@@ -207,58 +211,58 @@ namespace Eigen {
      * Required for numerical traits.
      */
     typedef stan::agrad::var Real;
-
+    
     /**
      * Non-integer valued variables.
      *
      * Required for numerical traits.
      */
     typedef stan::agrad::var NonInteger;
-
+    
     /**
      * Nested variables.
      *
      * Required for numerical traits.
      */
     typedef stan::agrad::var Nested;
-
+    
     /**
      * Return standard library's epsilon for double-precision floating
      * point, <code>std::numeric_limits&lt;double&gt;::epsilon()</code>.
      *
      * @return Same epsilon as a <code>double</code>.
      */
-    inline static Real epsilon() { 
+    inline static double epsilon() { 
       return std::numeric_limits<double>::epsilon(); 
     }
-
+    
     /**
      * Return dummy precision
      */
-    inline static Real dummy_precision() {
+    inline static double dummy_precision() {
       return 1e-12; // copied from NumTraits.h values for double
     }
-
+    
     /**
      * Return standard library's highest for double-precision floating
      * point, <code>std::numeric_limits&lt;double&gt;::max()</code>.
      *
      * @return Same highest value as a <code>double</code>.
      */
-    inline static Real highest() {
+    inline static double highest() {
       return std::numeric_limits<double>::max();
     }
-
+    
     /**
      * Return standard library's lowest for double-precision floating
      * point, <code>&#45;std::numeric_limits&lt;double&gt;::max()</code>.
      *
      * @return Same lowest value as a <code>double</code>.
      */    
-    inline static Real lowest() {
+    inline static double lowest() {
       return -std::numeric_limits<double>::max();
     }
-
+    
     /**
      * Properties for automatic differentiation variables
      * read by Eigen matrix library.
@@ -274,7 +278,7 @@ namespace Eigen {
       HasFloatingPoint = 1,
     };
   };
-
+  
   namespace internal {
     /**
      * Implemented this for printing to stream.
@@ -285,11 +289,10 @@ namespace Eigen {
       static inline int run()
       {
         using std::ceil;
-        return cast<double,int>(ceil(-log(NumTraits<stan::agrad::var>::epsilon().val())
+        return cast<double,int>(ceil(-log(NumTraits<stan::agrad::var>::epsilon())
                                      /log(10.0)));
       }
     };
-
   }
 }
 
