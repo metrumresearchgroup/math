@@ -3,7 +3,8 @@
 
 #include <cmath>
 #include <cstddef>
-#include <ctime>
+#include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <iomanip>
 #include <iostream>
 #include <fstream>
@@ -20,6 +21,7 @@
 #include <stan/mcmc/adaptive_hmc.hpp>
 #include <stan/mcmc/hmc.hpp>
 #include <stan/mcmc/nuts.hpp>
+#include <stan/mcmc/nuts_diag.hpp>
 #include <stan/model/prob_grad_ad.hpp>
 #include <stan/model/prob_grad.hpp>
 #include <stan/mcmc/sampler.hpp>
@@ -86,7 +88,7 @@ namespace stan {
                         "default = max(1,iter/200))");
 
       print_help_option("leapfrog_steps","int",
-                        "Number of leapfrog steps; -1 for No-U-Turn adaptation",
+                        "Number of leapfrog steps; -1 for no-U-turn adaptation",
                         "default = -1");
 
       print_help_option("max_treedepth","int",
@@ -101,9 +103,10 @@ namespace stan {
                         "Sample epsilon +/- epsilon * epsilon_pm",
                         "default = 0.0");
 
-      print_help_option("epsilon_adapt_off","",
-                        "Turn off step size adaptation (default is on)");
-
+      print_help_option("equal_step_sizes","",
+                        "Use same step size for every parameter with NUTS",
+                        "default is to estimate varying step sizes during warmup");
+      
       print_help_option("delta","+float",
                         "Initial step size for step-size adaptation",
                         "default = 0.5");
@@ -112,19 +115,18 @@ namespace stan {
                     "Gamma parameter for dual averaging step-size adaptation",
                     "default = 0.05");
 
+      print_help_option("save_warmup","",
+                        "Save the warmup samples");
+
       print_help_option("test_grad","",
                         "Test gradient calculations using finite differences");
       
       std::cout << std::endl;
     }
 
-    bool do_print(int refresh) {
-      return refresh > 0;
-    }
-
     bool do_print(int n, int refresh) {
-      return do_print(refresh)
-        && ((n + 1) % refresh == 0);
+      return n == 0
+        || ((n + 1) % refresh == 0);
     }
 
     template <class Sampler, class Model>
@@ -134,6 +136,7 @@ namespace stan {
                      int num_iterations,
                      int num_warmup,
                      int num_thin,
+                     bool save_warmup,
                      std::ostream& sample_file_stream,
                      std::vector<double>& params_r,
                      std::vector<int>& params_i,
@@ -148,20 +151,34 @@ namespace stan {
         sampler.adapt_on(); 
       for (int m = 0; m < num_iterations; ++m) {
         if (do_print(m,refresh)) {
-          std::cout << "\rIteration: ";
+          std::cout << "Iteration: ";
           std::cout << std::setw(it_print_width) << (m + 1)
                     << " / " << num_iterations;
           std::cout << " [" << std::setw(3) 
                     << static_cast<int>((100.0 * (m + 1))/num_iterations)
                     << "%] ";
           std::cout << ((m < num_warmup) ? " (Adapting)" : " (Sampling)");
+          std::cout << std::endl;
           std::cout.flush();
         }
         if (m < num_warmup) {
-          sampler.next(); // discard
+          if (save_warmup && (m % num_thin) == 0) {
+            stan::mcmc::sample sample = sampler.next();
+
+            // FIXME: use csv_writer arg to make comma optional?
+            sample_file_stream << sample.log_prob() << ',';
+            sampler.write_sampler_params(sample_file_stream);
+            sample.params_r(params_r);
+            sample.params_i(params_i);
+            model.write_csv(params_r,params_i,sample_file_stream);
+          } else {
+            sampler.next(); // discard
+          }
         } else {
-          if (epsilon_adapt)
+          if (epsilon_adapt && sampler.adapting()) {
             sampler.adapt_off();
+            sampler.write_adaptation_params(sample_file_stream);
+          }
           if (((m - num_warmup) % num_thin) != 0) {
             sampler.next();
             continue;
@@ -211,7 +228,8 @@ namespace stan {
       stan::io::dump data_var_context(data_stream);
       data_stream.close();
 
-      Model model(data_var_context);
+      // FIXME: configure to use alt to std::cout for model prints
+      Model model(data_var_context, &std::cout);
 
       std::string sample_file = "samples.csv";
       command.val("samples",sample_file);
@@ -226,6 +244,8 @@ namespace stan {
       unsigned int num_thin = (calculated_thin > 1) ? calculated_thin : 1U;
       command.val("thin",num_thin);
 
+      bool user_supplied_thin = command.has_key("thin");
+
       int leapfrog_steps = -1;
       command.val("leapfrog_steps",leapfrog_steps);
 
@@ -238,8 +258,9 @@ namespace stan {
       double epsilon_pm = 0.0;
       command.val("epsilon_pm",epsilon_pm);
 
-      bool epsilon_adapt_off = command.has_flag("epsilon_adapt_off");
-      bool epsilon_adapt = !epsilon_adapt_off;
+      bool epsilon_adapt = epsilon <= 0.0;
+
+      bool equal_step_sizes = command.has_flag("equal_step_sizes");
 
       double delta = 0.5;
       command.val("delta", delta);
@@ -247,10 +268,11 @@ namespace stan {
       double gamma = 0.05;
       command.val("gamma", gamma);
 
-      int refresh = 1;
+      int refresh = num_iterations / 200;
+      refresh = refresh <= 0 ? 1 : refresh;
       command.val("refresh",refresh);
 
-      int random_seed = 0;
+      unsigned int random_seed = 0;
       if (command.has_key("seed")) {
         bool well_formed = command.val("seed",random_seed);
         if (!well_formed) {
@@ -261,7 +283,10 @@ namespace stan {
           return -1;
         }
       } else {
-        random_seed = std::time(0);
+        random_seed 
+          = (boost::posix_time::microsec_clock::universal_time() -
+             boost::posix_time::ptime(boost::posix_time::min_date_time))
+          .total_milliseconds();
       }
 
       int chain_id = 1;
@@ -284,8 +309,8 @@ namespace stan {
       typedef boost::ecuyer1988 rng_t;
       rng_t base_rng(random_seed);
       // (2**50 = 1T samples, 1000 chains)
-      static boost::uintmax_t DISCARD_STRIDE = 1;
-      DISCARD_STRIDE <<= 50;
+      static boost::uintmax_t DISCARD_STRIDE = static_cast<boost::uintmax_t>(1) << 50;
+      // DISCARD_STRIDE <<= 50;
       base_rng.discard(DISCARD_STRIDE * (chain_id - 1));
       
       std::vector<int> params_i;
@@ -293,21 +318,21 @@ namespace stan {
 
       std::string init_val;
       // parameter initialization
+      int num_init_tries = 1;
       if (command.has_key("init")) {
+        num_init_tries = -1;
         command.val("init",init_val);
         if (init_val == "0") {
           params_i = std::vector<int>(model.num_params_i(),0);
           params_r = std::vector<double>(model.num_params_r(),0.0);
         } else {
-          std::cout << "init file=" << init_val << std::endl;
-        
           std::fstream init_stream(init_val.c_str(),std::fstream::in);
           stan::io::dump init_var_context(init_stream);
           init_stream.close();
           model.transform_inits(init_var_context,params_i,params_r);
         }
       } else {
-        init_val = "random initialization";
+        init_val = "random initialization";  // for I/O
         // init_rng generates uniformly from -2 to 2
         boost::random::uniform_real_distribution<double> 
           init_range_distribution(-2.0,2.0);
@@ -317,9 +342,34 @@ namespace stan {
 
         params_i = std::vector<int>(model.num_params_i(),0);
         params_r = std::vector<double>(model.num_params_r());
-        for (size_t i = 0; i < params_r.size(); ++i)
-          params_r[i] = init_rng();
+
+        // retry inits until get a finite log prob value
+        std::vector<double> init_grad;
+        static int MAX_INIT_TRIES = 100;
+        for (num_init_tries = 1; num_init_tries <= MAX_INIT_TRIES; ++num_init_tries) {
+          for (size_t i = 0; i < params_r.size(); ++i)
+            params_r[i] = init_rng();
+          // FIXME: allow config vs. std::cout
+          double init_log_prob = model.grad_log_prob(params_r,params_i,init_grad,&std::cout);
+          if (!boost::math::isfinite(init_log_prob))
+            continue;
+          for (size_t i = 0; i < init_grad.size(); ++i)
+            if (!boost::math::isfinite(init_grad[i]))
+              continue;
+          break;
+        }
+        if (num_init_tries == MAX_INIT_TRIES) {
+          std::cout << "Initialization failed after " << MAX_INIT_TRIES 
+                    << " attempts. "
+                    << " Try specifying initial values,"
+                    << " reducing ranges of constrianed values,"
+                    << " or reparameterizing the model."
+                    << std::endl;
+          return -1;
+        }
       }
+
+      bool save_warmup = command.has_flag("save_warmup");
 
       bool append_samples = command.has_flag("append_samples");
       std::ios_base::openmode samples_append_mode
@@ -329,39 +379,47 @@ namespace stan {
       
 
       std::cout << "STAN SAMPLING COMMAND" << std::endl;
-      std::cout << "data = " << data_file << std::endl;
+      if (data_file == "")
+        std::cout << "data = (specified model requires no data)" << std::endl;
+      else 
+        std::cout << "data = " << data_file << std::endl;
+
       std::cout << "init = " << init_val << std::endl;
+      if (num_init_tries > 0)
+        std::cout << "init tries = " << num_init_tries << std::endl;
+
       std::cout << "samples = " << sample_file << std::endl;
       std::cout << "append_samples = " << append_samples << std::endl;
+      std::cout << "save_warmup = " << save_warmup<< std::endl;
 
       std::cout << "seed = " << random_seed 
                 << " (" << (command.has_key("seed") 
                             ? "user specified"
                             : "randomly generated") << ")"
                 << std::endl;
-      std::cout << "chain_id=" << chain_id
-                << " (" << (command.has_key("seed")
+      std::cout << "chain_id = " << chain_id
+                << " (" << (command.has_key("chain_id")
                             ? "user specified"
                             : "default") << ")"
                 << std::endl;
 
       std::cout << "iter = " << num_iterations << std::endl;
       std::cout << "warmup = " << num_warmup << std::endl;
-      std::cout << "thin = " << num_thin << std::endl;
+      std::cout << "thin = " << num_thin
+                << (user_supplied_thin ? " (user supplied)" : " (default)")
+                << std::endl;
 
+      std::cout << "equal_step_sizes = " << equal_step_sizes << std::endl;
       std::cout << "leapfrog_steps = " << leapfrog_steps << std::endl;
       std::cout << "max_treedepth = " << max_treedepth << std::endl;;
       std::cout << "epsilon = " << epsilon << std::endl;;
       std::cout << "epsilon_pm = " << epsilon_pm << std::endl;;
-      std::cout << "epsilon_adapt_off = " << epsilon_adapt_off << std::endl;;
       std::cout << "delta = " << delta << std::endl;
       std::cout << "gamma = " << gamma << std::endl;
 
-
       if (command.has_flag("test_grad")) {
         std::cout << std::endl << "TEST GRADIENT MODE" << std::endl;
-        model.test_gradients(params_r,params_i);
-        return 0;
+        return model.test_gradients(params_r,params_i);
       }
 
       std::fstream sample_stream(sample_file.c_str(), 
@@ -371,14 +429,17 @@ namespace stan {
       write_comment(sample_stream);
       write_comment_property(sample_stream,"stan_version_major",stan::MAJOR_VERSION);
       write_comment_property(sample_stream,"stan_version_minor",stan::MINOR_VERSION);
+      write_comment_property(sample_stream,"stan_version_patch",stan::PATCH_VERSION);
       write_comment_property(sample_stream,"data",data_file);
       write_comment_property(sample_stream,"init",init_val);
       write_comment_property(sample_stream,"append_samples",append_samples);
+      write_comment_property(sample_stream,"save_warmup",save_warmup);
       write_comment_property(sample_stream,"seed",random_seed);
       write_comment_property(sample_stream,"chain_id",chain_id);
       write_comment_property(sample_stream,"iter",num_iterations);
       write_comment_property(sample_stream,"warmup",num_warmup);
       write_comment_property(sample_stream,"thin",num_thin);
+      write_comment_property(sample_stream,"equal_step_sizes",equal_step_sizes);
       write_comment_property(sample_stream,"leapfrog_steps",leapfrog_steps);
       write_comment_property(sample_stream,"max_treedepth",max_treedepth);
       write_comment_property(sample_stream,"epsilon",epsilon);
@@ -387,14 +448,40 @@ namespace stan {
       write_comment_property(sample_stream,"gamma",gamma);
       write_comment(sample_stream);
 
-      if (leapfrog_steps < 0) {
+      if (leapfrog_steps < 0 && !equal_step_sizes) {
+        // NUTS II (with varying step size estimation during warmup)
+        stan::mcmc::nuts_diag<rng_t> nuts2_sampler(model, 
+                                                   max_treedepth, epsilon, 
+                                                   epsilon_pm, epsilon_adapt,
+                                                   delta, gamma, 
+                                                   base_rng);
+
+        // cut & paste (see below) to enable sample-specific params
+        if (!append_samples) {
+          sample_stream << "lp__,"; // log probability first
+          nuts2_sampler.write_sampler_param_names(sample_stream);
+          model.write_csv_header(sample_stream);
+        }
+        nuts2_sampler.set_error_stream(std::cout);  // cout intended
+        nuts2_sampler.set_output_stream(std::cout); 
+
+        sample_from(nuts2_sampler,epsilon_adapt,refresh,
+                    num_iterations,num_warmup,num_thin,save_warmup,
+                    sample_stream,params_r,params_i,
+                    model);
+
+      } else if (leapfrog_steps < 0 && equal_step_sizes) {
+
+        // NUTS I (equal step sizes)
         stan::mcmc::nuts<rng_t> nuts_sampler(model, 
                                              max_treedepth, epsilon, 
                                              epsilon_pm, epsilon_adapt,
                                              delta, gamma, 
                                              base_rng);
 
-        // cut & paste (see below) to enable sample-specific params
+        nuts_sampler.set_error_stream(std::cout);
+        nuts_sampler.set_output_stream(std::cout); // cout intended
+          // cut & paste (see below) to enable sample-specific params
         if (!append_samples) {
           sample_stream << "lp__,"; // log probability first
           nuts_sampler.write_sampler_param_names(sample_stream);
@@ -402,16 +489,21 @@ namespace stan {
         }
 
         sample_from(nuts_sampler,epsilon_adapt,refresh,
-                    num_iterations,num_warmup,num_thin,
+                    num_iterations,num_warmup,num_thin,save_warmup,
                     sample_stream,params_r,params_i,
                     model);
+
       } else {
+
+        // STANDARD HMC
         stan::mcmc::adaptive_hmc<rng_t> hmc_sampler(model,
                                                     leapfrog_steps,
                                                     epsilon, epsilon_pm, epsilon_adapt,
                                                     delta, gamma,
                                                     base_rng);
 
+        hmc_sampler.set_error_stream(std::cout); // intended
+        hmc_sampler.set_output_stream(std::cout);
         // cut & paste (see above) to enable sample-specific params
         if (!append_samples) {
           sample_stream << "lp__,"; // log probability first
@@ -420,7 +512,7 @@ namespace stan {
         }
 
         sample_from(hmc_sampler,epsilon_adapt,refresh,
-                    num_iterations,num_warmup,num_thin,
+                    num_iterations,num_warmup,num_thin,save_warmup,
                     sample_stream,params_r,params_i,
                     model);
       }

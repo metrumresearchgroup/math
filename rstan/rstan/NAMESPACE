@@ -1,0 +1,34 @@
+useDynLib(rstan)
+# exportPattern("^[[:alpha:]]+")
+
+importFrom("graphics", plot)
+importFrom("Matrix", summary, print)
+
+export(
+  stan_model,
+  stanc, 
+  stan_version, 
+  stan,
+  stan_rdump,
+  read_rdump,
+  makeconf_path,
+  set_cppo, get_cppo, 
+  rstan_options 
+# get_rstan.options
+)
+
+exportClasses(
+  stanmodel, stanfit 
+) 
+exportMethods(
+#   print, plot, 
+#   extract, 
+  get_cppcode, get_cxxflags, # for stanmodel 
+  show, sampling, summary, print, extract,
+  traceplot, plot, get_stancode, get_inits, get_seed, get_cppo_mode,
+  get_adaptation_info,
+  get_sampler_params,
+  get_logposterior, 
+  get_stanmodel 
+)
+import(Rcpp)

@@ -42,6 +42,21 @@ namespace stan {
       visgen(std::ostream& o) : o_(o) { }
     };
 
+    void generate_start_namespace(std::string name,
+                                   std::ostream& o) {
+      o << "namespace " << name << "_namespace {" << EOL2;
+    }
+
+     void generate_end_namespace(std::ostream& o) {
+       o << "} // namespace" << EOL2;
+     }
+
+     void generate_comment(std::string const& msg, int indent, 
+                           std::ostream& o) {
+       generate_indent(indent,o);
+       o << "// " << msg        << EOL;
+     }
+
 
     void generate_indexed_expr(const std::string& expr,
                                const std::vector<expression> indexes, 
@@ -132,6 +147,21 @@ namespace stan {
       boost::apply_visitor(vis, e.expr_);
     }
 
+    struct printable_visgen : public visgen {
+      printable_visgen(std::ostream& o) : visgen(o) {  }
+      void operator()(const std::string& s) const { 
+        o_ << '"' << s << '"';
+      }
+      void operator()(const expression& e) const { 
+        generate_expression(e,o_);
+      }
+    };
+
+    void generate_printable(const printable& p, std::ostream& o) {
+      printable_visgen vis(o);
+      boost::apply_visitor(vis, p.printable_);
+    }
+
     void generate_using(const std::string& type, std::ostream& o) {
       o << "using " << type << ";" << EOL;
     }
@@ -148,10 +178,12 @@ namespace stan {
       generate_using("stan::agrad::var",o);
       generate_using("stan::model::prob_grad_ad",o);
       generate_using("stan::math::get_base1",o);
+      generate_using("stan::math::stan_print",o);
       generate_using("stan::io::dump",o);
       generate_using("std::istream",o);
       generate_using_namespace("stan::math",o);
       generate_using_namespace("stan::prob",o);
+      generate_using_namespace("stan::agrad",o);
       o << EOL;
     }
 
@@ -273,7 +305,10 @@ namespace stan {
       void operator()(simplex_var_decl const& x) const {
         generate_initialization(o_,2U,x.name_,"vector_d",x.dims_,x.K_);
       }
-      void operator()(pos_ordered_var_decl const& x) const {
+      void operator()(ordered_var_decl const& x) const {
+        generate_initialization(o_,2U,x.name_,"vector_d",x.dims_,x.K_);
+      }
+      void operator()(positive_ordered_var_decl const& x) const {
         generate_initialization(o_,2U,x.name_,"vector_d",x.dims_,x.K_);
       }
       void operator()(matrix_var_decl const& x) const {
@@ -350,10 +385,15 @@ namespace stan {
         read_args.push_back(x.K_);
         generate_initialize_array("vector_v","simplex",read_args,x.name_,x.dims_);
       }
-      void operator()(const pos_ordered_var_decl& x) const {
+      void operator()(const ordered_var_decl& x) const {
         std::vector<expression> read_args;
         read_args.push_back(x.K_);
-        generate_initialize_array("vector_v","pos_ordered",read_args,x.name_,x.dims_);
+        generate_initialize_array("vector_v","ordered",read_args,x.name_,x.dims_);
+      }
+      void operator()(const positive_ordered_var_decl& x) const {
+        std::vector<expression> read_args;
+        read_args.push_back(x.K_);
+        generate_initialize_array("vector_v","positive_ordered",read_args,x.name_,x.dims_);
       }
       void operator()(const cov_matrix_var_decl& x) const {
         std::vector<expression> read_args;
@@ -396,19 +436,23 @@ namespace stan {
         std::string name_dims(name);
         for (size_t i = 0; i < dims.size(); ++i) {
           generate_indent(i + 2, o_);
-          o_ << "size_t dim_"  << name << "_" << i << " = ";
+          o_ << "size_t dim_"  << name << "_" << i << "__ = ";
           generate_expression(dims[i],o_);
           o_ << ";" << EOL;
           if (i < dims.size() - 1) {  
             generate_indent(i + 2, o_);
-            o_ << name_dims << ".resize(dim" << "_" << name << "_" << i << ");" 
+            o_ << name_dims << ".resize(dim" << "_" << name << "_" << i << "__);" 
                << EOL;
-            name_dims.append("[k_").append(to_string(i)).append("]");
+            name_dims.append("[k_").append(to_string(i)).append("__]");
           }
           generate_indent(i + 2, o_);
-          o_ << "for (size_t k_" << i << " = 0;"
-             << " k_" << i << " < dim_" << name << "_" << i << ";"
-             << " ++k_" << i << ") {" << EOL;
+          if (i == dims.size() - 1) {
+            o_ << name_dims << ".reserve(dim_" << name << "_" << i << "__);" << EOL;
+            generate_indent(i + 2, o_);
+          }
+          o_ << "for (size_t k_" << i << "__ = 0;"
+             << " k_" << i << "__ < dim_" << name << "_" << i << "__;"
+             << " ++k_" << i << "__) {" << EOL;
           if (i == dims.size() - 1) {
             generate_indent(i + 3, o_);
             o_ << name_dims << ".push_back(in__." << read_type << "_constrain(";
@@ -540,8 +584,11 @@ namespace stan {
       void operator()(simplex_var_decl const& x) const {
         nonbasic_validate(x,"simplex");
       }
-      void operator()(pos_ordered_var_decl const& x) const {
-        nonbasic_validate(x,"pos_ordered");
+      void operator()(ordered_var_decl const& x) const {
+        nonbasic_validate(x,"ordered");
+      }
+      void operator()(positive_ordered_var_decl const& x) const {
+        nonbasic_validate(x,"positive_ordered");
       }
       void operator()(corr_matrix_var_decl const& x) const {
         nonbasic_validate(x,"corr_matrix");
@@ -584,7 +631,10 @@ namespace stan {
       void operator()(simplex_var_decl const& x) const {
         declare_array(("vector_d"), x.name_, x.dims_.size());
       }
-      void operator()(pos_ordered_var_decl const& x) const {
+      void operator()(ordered_var_decl const& x) const {
+        declare_array(("vector_d"), x.name_, x.dims_.size());
+      }
+      void operator()(positive_ordered_var_decl const& x) const {
         declare_array(("vector_d"), x.name_, x.dims_.size());
       }
       void operator()(cov_matrix_var_decl const& x) const {
@@ -674,7 +724,13 @@ namespace stan {
         declare_array(is_var_ ? "vector_v" : "vector_d", 
                       ctor_args, x.name_, x.dims_);
       }
-      void operator()(pos_ordered_var_decl const& x) const {
+      void operator()(ordered_var_decl const& x) const {
+        std::vector<expression> ctor_args;
+        ctor_args.push_back(x.K_);
+        declare_array(is_var_ ? "vector_v" : "vector_d", 
+                      ctor_args, x.name_, x.dims_);
+      }
+      void operator()(positive_ordered_var_decl const& x) const {
         std::vector<expression> ctor_args;
         ctor_args.push_back(x.K_);
         declare_array(is_var_ ? "vector_v" : "vector_d", 
@@ -760,21 +816,186 @@ namespace stan {
         boost::apply_visitor(vis,vs[i].decl_);
     }
 
+    // see member_var_decl_visgen cut & paste
+    struct generate_init_vars_visgen : public visgen {
+      int indent_;
+      generate_init_vars_visgen(int indent,
+                                std::ostream& o)
+        : visgen(o),
+          indent_(indent) {
+      }
+      void operator()(nil const& x) const { }
+      void operator()(int_var_decl const& x) const {
+        generate_indent(indent_,o_);
+        o_ << "initialize_variable(" << x.name_ << ",INIT_DUMMY__);" << EOL;
+      }
+      void operator()(double_var_decl const& x) const {
+        generate_indent(indent_,o_);
+        o_ << "initialize_variable(" << x.name_ << ",INIT_DUMMY__);" << EOL;
+      }
+      void operator()(vector_var_decl const& x) const {
+        generate_indent(indent_,o_);
+        o_ << "initialize_variable(" << x.name_ << ",INIT_DUMMY__);" << EOL;
+      }
+      void operator()(row_vector_var_decl const& x) const {
+        generate_indent(indent_,o_);
+        o_ << "initialize_variable(" << x.name_ << ",INIT_DUMMY__);" << EOL;
+      }
+      void operator()(matrix_var_decl const& x) const {
+        generate_indent(indent_,o_);
+        o_ << "initialize_variable(" << x.name_ << ",INIT_DUMMY__);" << EOL;
+      }
+      void operator()(simplex_var_decl const& x) const {
+        generate_indent(indent_,o_);
+        o_ << "initialize_variable(" << x.name_ << ",INIT_DUMMY__);" << EOL;
+      }
+      void operator()(ordered_var_decl const& x) const {
+        generate_indent(indent_,o_);
+        o_ << "initialize_variable(" << x.name_ << ",INIT_DUMMY__);" << EOL;
+      }
+      void operator()(positive_ordered_var_decl const& x) const {
+        generate_indent(indent_,o_);
+        o_ << "initialize_variable(" << x.name_ << ",INIT_DUMMY__);" << EOL;
+      }
+      void operator()(cov_matrix_var_decl const& x) const {
+        generate_indent(indent_,o_);
+        o_ << "initialize_variable(" << x.name_ << ",INIT_DUMMY__);" << EOL;
+      }
+      void operator()(corr_matrix_var_decl const& x) const {
+        generate_indent(indent_,o_);
+        o_ << "initialize_variable(" << x.name_ << ",INIT_DUMMY__);" << EOL;
+      }
+    };
 
-    void generate_start_namespace(std::string name,
-                                   std::ostream& o) {
-      o << "namespace " << name << "_namespace {" << EOL2;
+    void generate_init_vars(const std::vector<var_decl>& vs,
+                            int indent,
+                            std::ostream& o) {
+      generate_init_vars_visgen vis(indent,o);
+      o << EOL;
+      generate_comment("initialized transformed params to avoid seg fault on val access",
+                       indent,o);
+      generate_indent(indent,o);
+      o << "var INIT_DUMMY__(std::numeric_limits<double>::quiet_NaN());" << EOL;
+      for (size_t i = 0; i < vs.size(); ++i)
+        boost::apply_visitor(vis,vs[i].decl_);
     }
 
-     void generate_end_namespace(std::ostream& o) {
-       o << "} // namespace" << EOL2;
-     }
 
-     void generate_comment(std::string const& msg, int indent, 
-                           std::ostream& o) {
-       generate_indent(indent,o);
-       o << "// " << msg        << EOL;
-     }
+    struct validate_transformed_params_visgen : public visgen {
+      int indents_;
+      validate_transformed_params_visgen(int indents,
+                                         std::ostream& o)
+        : visgen(o),
+          indents_(indents) 
+      { }
+      void operator()(nil const& x) const { }
+      void operator()(int_var_decl const& x) const {
+        std::vector<expression> dims(x.dims_);
+        validate_array(x.name_,dims,0);
+      }
+      void operator()(double_var_decl const& x) const {
+        std::vector<expression> dims(x.dims_);
+        validate_array(x.name_,dims,0);
+      }
+      void operator()(vector_var_decl const& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.M_);
+        validate_array(x.name_,dims,1);
+      }
+      void operator()(simplex_var_decl const& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.K_);
+        validate_array(x.name_,dims,1);
+      }
+      void operator()(ordered_var_decl const& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.K_);
+        validate_array(x.name_,dims,1);
+      }
+      void operator()(positive_ordered_var_decl const& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.K_);
+        validate_array(x.name_,dims,1);
+      }
+      void operator()(row_vector_var_decl const& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.N_);
+        validate_array(x.name_,dims,1);
+      }
+      void operator()(matrix_var_decl const& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.M_);
+        dims.push_back(x.N_);
+        validate_array(x.name_,dims,2);
+      }
+      void operator()(cov_matrix_var_decl const& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.K_);
+        dims.push_back(x.K_);
+        validate_array(x.name_,dims,2);
+      }
+      void operator()(corr_matrix_var_decl const& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.K_);
+        dims.push_back(x.K_);
+        validate_array(x.name_,dims,2);
+      }
+      void validate_array(const std::string& name, 
+                          const std::vector<expression>& dims,
+                          size_t matrix_dims) const {
+
+        size_t non_matrix_dims = dims.size() - matrix_dims;
+
+        for (size_t k = 0; k < dims.size(); ++k) {
+          generate_indent(indents_ + k,o_);
+          o_ << "for (int i" << k << "__ = 0; i" << k << "__ < ";
+          generate_expression(dims[k],o_);
+          o_ << "; ++i" << k << "__) {" << EOL;
+        }
+
+        generate_indent(indents_ + dims.size(), o_);
+        o_ << "if (" << name;
+        for (size_t k = 0; k < non_matrix_dims; ++k)
+          o_ << "[i" << k << "__]";
+        if (matrix_dims > 0) {
+          o_ << "(i" << non_matrix_dims << "__";
+          if (matrix_dims > 1)
+            o_ << ",i" << (non_matrix_dims + 1) << "__";
+          o_ << ')';
+        }
+        o_ << ".is_uninitialized()) {" << EOL;
+        generate_indent(indents_ + dims.size() + 1, o_);
+        o_ << "std::stringstream msg__;" << EOL;
+        generate_indent(indents_ + dims.size() + 1, o_);
+        o_ << "msg__ << \"Undefined transformed parameter: "
+           << name << "\"";
+        for (size_t k = 0; k < dims.size(); ++k) {
+          o_ << " << '['";
+          o_ << " << i" << k << "__";
+          o_ << " << ']'";
+        }
+        o_ << ';' << EOL;
+        generate_indent(indents_ + dims.size() + 1, o_);
+        o_ << "throw std::runtime_error(msg__.str());" << EOL;
+
+        generate_indent(indents_ + dims.size(), o_);
+        o_ << "}" << EOL;
+        for (size_t k = 0; k < dims.size(); ++k) {
+          generate_indent(indents_ + dims.size() - k - 1, o_);
+          o_ << "}" << EOL;
+        }
+      }
+    };
+
+    void generate_validate_transformed_params(const std::vector<var_decl>& vs,
+                                              int indent,
+                                              std::ostream& o) {
+      generate_comment("validate transformed parameters",indent,o);
+      validate_transformed_params_visgen vis(indent,o);
+      for (size_t i = 0; i < vs.size(); ++i)
+        boost::apply_visitor(vis,vs[i].decl_);
+      o << EOL;
+    }
 
     void generate_statement(statement const& s, int indent, std::ostream& o,
                             bool include_sampling, bool is_var);
@@ -796,14 +1017,15 @@ namespace stan {
       }
       void operator()(assignment const& x) const {
         generate_indent(indent_,o_);
+        o_ << "assign(";
         generate_indexed_expr(x.var_dims_.name_,
                               x.var_dims_.dims_,
                               x.var_type_.base_type_,
                               x.var_type_.dims_.size(),
                               o_);
-        o_ << " = ";
+        o_ << ", ";
         generate_expression(x.expr_,o_);
-        o_ << ";" << EOL;
+        o_ << ");" << EOL;
       }
       void operator()(sample const& x) const {
         if (!include_sampling_) return;
@@ -818,14 +1040,14 @@ namespace stan {
         o_ << ");" << EOL;
         if (x.truncation_.has_low() && x.truncation_.has_high()) {
           generate_indent(indent_,o_);
-          o_ << "lp__ += log(";
-          o_ << x.dist_.family_ << "_p(";
+          o_ << "lp__ -= log(";
+          o_ << x.dist_.family_ << "_cdf(";
           generate_expression(x.truncation_.high_.expr_,o_);
           for (size_t i = 0; i < x.dist_.args_.size(); ++i) {
             o_ << ", ";
             generate_expression(x.dist_.args_[i],o_);
           }
-          o_ << ") - " << x.dist_.family_ << "_p(";
+          o_ << ") - " << x.dist_.family_ << "_cdf(";
           generate_expression(x.truncation_.low_.expr_,o_);
           for (size_t i = 0; i < x.dist_.args_.size(); ++i) {
             o_ << ", ";
@@ -834,8 +1056,8 @@ namespace stan {
           o_ << "));" << EOL;
         } else if (!x.truncation_.has_low() && x.truncation_.has_high()) {
           generate_indent(indent_,o_);
-          o_ << "lp__ += log(";
-          o_ << x.dist_.family_ << "_p(";
+          o_ << "lp__ -= log(";
+          o_ << x.dist_.family_ << "_cdf(";
           generate_expression(x.truncation_.high_.expr_,o_);
           for (size_t i = 0; i < x.dist_.args_.size(); ++i) {
             o_ << ", ";
@@ -844,8 +1066,8 @@ namespace stan {
           o_ << "));" << EOL;
         } else if (x.truncation_.has_low() && !x.truncation_.has_high()) {
           generate_indent(indent_,o_);
-          o_ << "lp__ += log(1.0 - "; // FIXME: use log1m()
-          o_ << x.dist_.family_ << "_p(";
+          o_ << "lp__ -= log1m(";
+          o_ << x.dist_.family_ << "_cdf(";
           generate_expression(x.truncation_.low_.expr_,o_);
           for (size_t i = 0; i < x.dist_.args_.size(); ++i) {
             o_ << ", ";
@@ -870,6 +1092,20 @@ namespace stan {
           generate_indent(indent_,o_);
           o_ << "}" << EOL;
         }
+      }
+      void operator()(const print_statement& ps) const {
+        generate_indent(indent_,o_);
+        o_ << "if (pstream__) {" << EOL;
+        for (size_t i = 0; i < ps.printables_.size(); ++i) {
+          generate_indent(indent_ + 1,o_);
+          o_ << "stan_print(pstream__,";
+          generate_printable(ps.printables_[i],o_);
+          o_ << ");" << EOL;
+        }
+        generate_indent(indent_ + 1,o_);
+        o_ << "*pstream__ << std::endl;" << EOL;
+        generate_indent(indent_,o_);
+        o_ << '}' << EOL;
       }
       void operator()(const for_statement& x) const {
         generate_indent(indent_,o_);
@@ -911,7 +1147,8 @@ namespace stan {
                            std::ostream& o) {
       o << EOL;
       o << INDENT << "var log_prob(vector<var>& params_r__," << EOL;
-      o << INDENT << "             vector<int>& params_i__) {" << EOL2;
+      o << INDENT << "             vector<int>& params_i__," << EOL;
+      o << INDENT << "             std::ostream* pstream__ = 0) {" << EOL2;
       o << INDENT2 << "var lp__(0.0);" << EOL;
 
       generate_comment("model parameters",2,o);
@@ -921,10 +1158,14 @@ namespace stan {
       static bool is_var = true;
       generate_comment("transformed parameters",2,o);
       generate_local_var_decls(p.derived_decl_.first,2,o,is_var);
+      generate_init_vars(p.derived_decl_.first,2,o);
+
       o << EOL;
       static bool include_sampling = true;
       generate_statements(p.derived_decl_.second,2,o,include_sampling,is_var);
       o << EOL;
+      
+      generate_validate_transformed_params(p.derived_decl_.first,2,o);
 
       generate_comment("model body",2,o);
       generate_statement(p.statement_,2,o,include_sampling,is_var);
@@ -974,7 +1215,7 @@ namespace stan {
       void operator()(double_var_decl const& x) const {
         std::vector<expression> dims = x.dims_;
         var_resizer_(x);
-        o_ << INDENT2 << "if(!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
+        o_ << INDENT2 << "if (!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
         o_ << INDENT3 << "throw std::runtime_error(\"variable " << x.name_ <<" not found.\");" << EOL;
         o_ << INDENT2 << "vals_r__ = context__.vals_r(\"" << x.name_ << "\");" << EOL;
         o_ << INDENT2 << "pos__ = 0;" << EOL;
@@ -1003,7 +1244,7 @@ namespace stan {
       void operator()(vector_var_decl const& x) const {
         std::vector<expression> dims = x.dims_;
         var_resizer_(x);
-        o_ << INDENT2 << "if(!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
+        o_ << INDENT2 << "if (!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
         o_ << INDENT3 << "throw std::runtime_error(\"variable " << x.name_ <<" not found.\");" << EOL;
         o_ << INDENT2 << "vals_r__ = context__.vals_r(\"" << x.name_ << "\");" << EOL;
         o_ << INDENT2 << "pos__ = 0;" << EOL;
@@ -1038,7 +1279,7 @@ namespace stan {
       void operator()(row_vector_var_decl const& x) const {
         std::vector<expression> dims = x.dims_;
         var_resizer_(x);
-        o_ << INDENT2 << "if(!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
+        o_ << INDENT2 << "if (!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
         o_ << INDENT3 << "throw std::runtime_error(\"variable " << x.name_ <<" not found.\");" << EOL;
         o_ << INDENT2 << "vals_r__ = context__.vals_r(\"" << x.name_ << "\");" << EOL;
         o_ << INDENT2 << "pos__ = 0;" << EOL;
@@ -1073,7 +1314,7 @@ namespace stan {
       void operator()(simplex_var_decl const& x) const {
         std::vector<expression> dims = x.dims_;
         var_resizer_(x);
-        o_ << INDENT2 << "if(!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
+        o_ << INDENT2 << "if (!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
         o_ << INDENT3 << "throw std::runtime_error(\"variable " << x.name_ <<" not found.\");" << EOL;
         o_ << INDENT2 << "vals_r__ = context__.vals_r(\"" << x.name_ << "\");" << EOL;
         o_ << INDENT2 << "pos__ = 0;" << EOL;
@@ -1105,10 +1346,45 @@ namespace stan {
         o_ << INDENT2 << "}" << EOL;
       }
       // same as simplex
-      void operator()(pos_ordered_var_decl const& x) const {
+      void operator()(ordered_var_decl const& x) const {
         std::vector<expression> dims = x.dims_;
         var_resizer_(x);
-        o_ << INDENT2 << "if(!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
+        o_ << INDENT2 << "if (!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
+        o_ << INDENT3 << "throw std::runtime_error(\"variable " << x.name_ <<" not found.\");" << EOL;
+        o_ << INDENT2 << "vals_r__ = context__.vals_r(\"" << x.name_ << "\");" << EOL;
+        o_ << INDENT2 << "pos__ = 0;" << EOL;
+        o_ << INDENT2 << "size_t " << x.name_ << "_i_vec_lim__ = ";
+        generate_expression(x.K_,o_);
+        o_ << ";" << EOL;
+        o_ << INDENT2 << "for (size_t " << "i_vec__ = 0; " << "i_vec__ < " << x.name_ << "_i_vec_lim__; ++i_vec__) {" << EOL;
+        size_t indentation = 2;
+        for (size_t dim_up = 0U; dim_up < dims.size(); ++dim_up) {
+          size_t dim = dims.size() - dim_up - 1U;
+          ++indentation;
+          generate_indent(indentation,o_);
+          o_ << "size_t " << x.name_ << "_limit_" << dim << "__ = ";
+          generate_expression(dims[dim],o_);
+          o_ << ";" << EOL;
+          generate_indent(indentation,o_);
+          o_ << "for (size_t i_" << dim << "__ = 0; i_" << dim << "__ < " << x.name_ << "_limit_" << dim << "__; ++i_" << dim << "__) {" << EOL;
+        }
+        generate_indent(indentation+1,o_);
+        o_ << x.name_;
+        for (size_t dim = 0; dim < dims.size(); ++dim)
+          o_ << "[i_" << dim << "__]";
+        o_ << "[i_vec__]";
+        o_ << " = vals_r__[pos__++];" << EOL;
+        for (size_t dim = 0; dim < dims.size(); ++dim) {
+          generate_indent(dims.size() + 2 - dim,o_);
+          o_ << "}" << EOL;
+        }
+        o_ << INDENT2 << "}" << EOL;
+      }
+      // same as simplex
+      void operator()(positive_ordered_var_decl const& x) const {
+        std::vector<expression> dims = x.dims_;
+        var_resizer_(x);
+        o_ << INDENT2 << "if (!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
         o_ << INDENT3 << "throw std::runtime_error(\"variable " << x.name_ <<" not found.\");" << EOL;
         o_ << INDENT2 << "vals_r__ = context__.vals_r(\"" << x.name_ << "\");" << EOL;
         o_ << INDENT2 << "pos__ = 0;" << EOL;
@@ -1143,7 +1419,7 @@ namespace stan {
       void operator()(matrix_var_decl const& x) const {
         std::vector<expression> dims = x.dims_;
         var_resizer_(x);
-        o_ << INDENT2 << "if(!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
+        o_ << INDENT2 << "if (!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
         o_ << INDENT3 << "throw std::runtime_error(\"variable " << x.name_ <<" not found.\");" << EOL;
         o_ << INDENT2 << "vals_r__ = context__.vals_r(\"" << x.name_ << "\");" << EOL;
         o_ << INDENT2 << "pos__ = 0;" << EOL;
@@ -1182,7 +1458,7 @@ namespace stan {
       void operator()(corr_matrix_var_decl const& x) const {
         std::vector<expression> dims = x.dims_;
         var_resizer_(x);
-        o_ << INDENT2 << "if(!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
+        o_ << INDENT2 << "if (!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
         o_ << INDENT3 << "throw std::runtime_error(\"variable " << x.name_ <<" not found.\");" << EOL;
         o_ << INDENT2 << "vals_r__ = context__.vals_r(\"" << x.name_ << "\");" << EOL;
         o_ << INDENT2 << "pos__ = 0;" << EOL;
@@ -1218,7 +1494,7 @@ namespace stan {
       void operator()(cov_matrix_var_decl const& x) const {
         std::vector<expression> dims = x.dims_;
         var_resizer_(x);
-        o_ << INDENT2 << "if(!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
+        o_ << INDENT2 << "if (!context__.contains_r(\"" << x.name_ << "\"))" << EOL;
         o_ << INDENT3 << "throw std::runtime_error(\"variable " << x.name_ <<" not found.\");" << EOL;
         o_ << INDENT2 << "vals_r__ = context__.vals_r(\"" << x.name_ << "\");" << EOL;
         o_ << INDENT2 << "pos__ = 0;" << EOL;
@@ -1253,6 +1529,15 @@ namespace stan {
       }
     };
 
+    void suppress_warning(const std::string& indent,
+                         const std::string& var_name,
+                         std::ostream& o) {
+      o << indent << "(void) " 
+        << var_name << ";"
+        << " // dummy call to supress warning"
+        << EOL;
+    }
+
     void generate_member_var_inits(const std::vector<var_decl>& vs,
                                    std::ostream& o) {
       dump_member_var_visgen vis(o);
@@ -1263,11 +1548,16 @@ namespace stan {
     void generate_constructor(const program& prog,
                               const std::string& model_name,
                               std::ostream& o) {
-      o << INDENT << model_name << "(stan::io::var_context& context__)" << EOL;
-      o << INDENT2 << ": prob_grad_ad::prob_grad_ad(0) {" << EOL; // resize 0 with var_resizing
+      o << INDENT << model_name << "(stan::io::var_context& context__,";
+      o << INDENT << "    std::ostream* pstream__ = 0)"
+        << EOL;
+      o << INDENT2 << ": prob_grad_ad::prob_grad_ad(0) {" 
+        << EOL; // resize 0 with var_resizing
       o << INDENT2 << "static const char* function__ = \"" 
         << model_name << "_namespace::" << model_name << "(%1%)\";" << EOL;
+      suppress_warning(INDENT2, "function__", o);
       o << INDENT2 << "size_t pos__;" << EOL;
+      suppress_warning(INDENT2, "pos__", o);
       o << INDENT2 << "std::vector<int> vals_i__;" << EOL;
       o << INDENT2 << "std::vector<double> vals_r__;" << EOL;
 
@@ -1281,7 +1571,8 @@ namespace stan {
       static bool include_sampling = false;
       static bool is_var = false;
       for (size_t i = 0; i < prog.derived_data_decl_.second.size(); ++i)
-        generate_statement(prog.derived_data_decl_.second[i],2,o,include_sampling,is_var);
+        generate_statement(prog.derived_data_decl_.second[i],
+                           2,o,include_sampling,is_var);
       
       generate_comment("validate transformed data",2,o);
       generate_validate_var_decls(prog.derived_data_decl_.first,2,o);
@@ -1345,11 +1636,17 @@ namespace stan {
         generate_buffer_loop("r",x.name_,x.dims_,x.K_);
         generate_write_loop("simplex_unconstrain(",x.name_,x.dims_);
       }
-      void operator()(pos_ordered_var_decl const& x) const {
+      void operator()(ordered_var_decl const& x) const {
         generate_check_double(x.name_,x.dims_.size() + 1);
         generate_declaration(x.name_,"vector_d",x.dims_,x.K_);
         generate_buffer_loop("r",x.name_,x.dims_,x.K_);
-        generate_write_loop("pos_ordered_unconstrain(",x.name_,x.dims_);
+        generate_write_loop("ordered_unconstrain(",x.name_,x.dims_);
+      }
+      void operator()(positive_ordered_var_decl const& x) const {
+        generate_check_double(x.name_,x.dims_.size() + 1);
+        generate_declaration(x.name_,"vector_d",x.dims_,x.K_);
+        generate_buffer_loop("r",x.name_,x.dims_,x.K_);
+        generate_write_loop("positive_ordered_unconstrain(",x.name_,x.dims_);
       }
       void operator()(matrix_var_decl const& x) const {
         generate_check_double(x.name_,x.dims_.size() + 2);
@@ -1510,6 +1807,184 @@ namespace stan {
     }
 
     // see write_csv_visgen for similar structure
+    struct write_dims_visgen : public visgen {
+      write_dims_visgen(std::ostream& o)
+        : visgen(o) {
+      }
+      void operator()(const nil& x) const  { }
+      void operator()(const int_var_decl& x) const {
+        generate_dims_array(EMPTY_EXP_VECTOR,x.dims_);
+      }
+      void operator()(const double_var_decl& x) const {
+        generate_dims_array(EMPTY_EXP_VECTOR,x.dims_);
+      }
+      void operator()(const vector_var_decl& x) const {
+        std::vector<expression> matrix_args;
+        matrix_args.push_back(x.M_);
+        generate_dims_array(matrix_args,x.dims_);
+      }
+      void operator()(const row_vector_var_decl& x) const {
+        std::vector<expression> matrix_args;
+        matrix_args.push_back(x.N_);
+        generate_dims_array(matrix_args,x.dims_);
+      }
+      void operator()(const matrix_var_decl& x) const {
+        std::vector<expression> matrix_args;
+        matrix_args.push_back(x.M_);
+        matrix_args.push_back(x.N_);
+        generate_dims_array(matrix_args,x.dims_);
+      }
+      void operator()(const simplex_var_decl& x) const {
+        std::vector<expression> matrix_args;
+        matrix_args.push_back(x.K_);
+        generate_dims_array(matrix_args,x.dims_);
+      }
+      void operator()(const ordered_var_decl& x) const {
+        std::vector<expression> matrix_args;
+        matrix_args.push_back(x.K_);
+        generate_dims_array(matrix_args,x.dims_);
+      }
+      void operator()(const positive_ordered_var_decl& x) const {
+        std::vector<expression> matrix_args;
+        matrix_args.push_back(x.K_);
+        generate_dims_array(matrix_args,x.dims_);
+      }
+      void operator()(const cov_matrix_var_decl& x) const {
+        std::vector<expression> matrix_args;
+        matrix_args.push_back(x.K_);
+        matrix_args.push_back(x.K_);
+        generate_dims_array(matrix_args,x.dims_);
+      }
+      void operator()(const corr_matrix_var_decl& x) const {
+        std::vector<expression> matrix_args;
+        matrix_args.push_back(x.K_);
+        matrix_args.push_back(x.K_);
+        generate_dims_array(matrix_args,x.dims_);
+      }
+      void 
+      generate_dims_array(const std::vector<expression>& matrix_dims_exprs, 
+                          const std::vector<expression>& array_dims_exprs) 
+        const {
+
+        o_ << INDENT2 << "dims__.resize(0);" << EOL;
+        for (size_t i = 0; i < array_dims_exprs.size(); ++i) {
+          o_ << INDENT2 << "dims__.push_back(";
+          generate_expression(array_dims_exprs[i].expr_, o_);
+          o_ << ");" << EOL;
+        }
+        // cut and paste above with matrix_dims_exprs
+        for (size_t i = 0; i < matrix_dims_exprs.size(); ++i) {
+          o_ << INDENT2 << "dims__.push_back(";
+          generate_expression(matrix_dims_exprs[i].expr_, o_);
+          o_ << ");" << EOL;
+        }
+        o_ << INDENT2 << "dimss__.push_back(dims__);" << EOL;
+      }
+
+    };
+
+    void generate_dims_method(const program& prog,
+                              std::ostream& o) {
+      write_dims_visgen vis(o);
+      o << EOL << INDENT 
+        << "void get_dims(std::vector<std::vector<size_t> >& dimss__) {" 
+        << EOL;
+
+      o << INDENT2 << "dimss__.resize(0);" << EOL;
+      o << INDENT2 << "std::vector<size_t> dims__;" << EOL;
+
+      // parameters
+      for (size_t i = 0; i < prog.parameter_decl_.size(); ++i) {
+        boost::apply_visitor(vis,prog.parameter_decl_[i].decl_);
+      }
+      // transformed parameters
+      for (size_t i = 0; i < prog.derived_decl_.first.size(); ++i) {
+        boost::apply_visitor(vis,prog.derived_decl_.first[i].decl_);
+      }
+      // generated quantities
+      for (size_t i = 0; i < prog.generated_decl_.first.size(); ++i) {
+        boost::apply_visitor(vis,prog.generated_decl_.first[i].decl_);
+      }
+      o << INDENT << "}" << EOL2;
+    }
+
+
+
+    // see write_csv_visgen for similar structure
+    struct write_param_names_visgen : public visgen {
+      write_param_names_visgen(std::ostream& o)
+        : visgen(o) {
+      }
+      void operator()(const nil& x) const  { }
+      void operator()(const int_var_decl& x) const {
+        generate_param_names(x.name_);
+      }
+      void operator()(const double_var_decl& x) const {
+        generate_param_names(x.name_);
+      }
+      void operator()(const vector_var_decl& x) const {
+        generate_param_names(x.name_);
+      }
+      void operator()(const row_vector_var_decl& x) const {
+        generate_param_names(x.name_);
+      }
+      void operator()(const matrix_var_decl& x) const {
+        generate_param_names(x.name_);
+      }
+      void operator()(const simplex_var_decl& x) const {
+        generate_param_names(x.name_);
+      }
+      void operator()(const ordered_var_decl& x) const {
+        generate_param_names(x.name_);
+      }
+      void operator()(const positive_ordered_var_decl& x) const {
+        generate_param_names(x.name_);
+      }
+      void operator()(const cov_matrix_var_decl& x) const {
+        generate_param_names(x.name_);
+      }
+      void operator()(const corr_matrix_var_decl& x) const {
+        generate_param_names(x.name_);
+      }
+      void 
+      generate_param_names(const std::string& name) const {
+        o_ << INDENT2 
+           << "names__.push_back(\"" << name << "\");"
+           << EOL;
+      }
+    };
+
+
+    void generate_param_names_method(const program& prog,
+                                          std::ostream& o) {
+      write_param_names_visgen vis(o);
+      o << EOL << INDENT
+        << "void get_param_names(std::vector<std::string>& names__) {"
+        << EOL;
+
+      o << INDENT2
+        << "names__.resize(0);"
+        << EOL;
+      
+      // parameters
+      for (size_t i = 0; i < prog.parameter_decl_.size(); ++i) {
+        boost::apply_visitor(vis,prog.parameter_decl_[i].decl_);
+      }
+      // transformed parameters
+      for (size_t i = 0; i < prog.derived_decl_.first.size(); ++i) {
+        boost::apply_visitor(vis,prog.derived_decl_.first[i].decl_);
+      }
+      // generated quantities
+      for (size_t i = 0; i < prog.generated_decl_.first.size(); ++i) {
+        boost::apply_visitor(vis,prog.generated_decl_.first[i].decl_);
+      }
+
+      o << INDENT << "}" << EOL2;
+    }
+
+
+
+    // see write_csv_visgen for similar structure
     struct write_csv_header_visgen : public visgen {
       write_csv_header_visgen(std::ostream& o)
         : visgen(o) {
@@ -1542,7 +2017,12 @@ namespace stan {
         matrix_args.push_back(x.K_);
         generate_csv_header_array(matrix_args,x.name_,x.dims_);
       }
-      void operator()(const pos_ordered_var_decl& x) const {
+      void operator()(const ordered_var_decl& x) const {
+        std::vector<expression> matrix_args;
+        matrix_args.push_back(x.K_);
+        generate_csv_header_array(matrix_args,x.name_,x.dims_);
+      }
+      void operator()(const positive_ordered_var_decl& x) const {
         std::vector<expression> matrix_args;
         matrix_args.push_back(x.K_);
         generate_csv_header_array(matrix_args,x.name_,x.dims_);
@@ -1672,10 +2152,15 @@ namespace stan {
         read_args.push_back(x.K_);
         generate_initialize_array("vector_d","simplex",read_args,x.name_,x.dims_);
       }
-      void operator()(const pos_ordered_var_decl& x) const {
+      void operator()(const ordered_var_decl& x) const {
         std::vector<expression> read_args;
         read_args.push_back(x.K_);
-        generate_initialize_array("vector_d","pos_ordered",read_args,x.name_,x.dims_);
+        generate_initialize_array("vector_d","ordered",read_args,x.name_,x.dims_);
+      }
+      void operator()(const positive_ordered_var_decl& x) const {
+        std::vector<expression> read_args;
+        read_args.push_back(x.K_);
+        generate_initialize_array("vector_d","positive_ordered",read_args,x.name_,x.dims_);
       }
       void operator()(const cov_matrix_var_decl& x) const {
         std::vector<expression> read_args;
@@ -1712,19 +2197,19 @@ namespace stan {
         std::string name_dims(name);
         for (size_t i = 0; i < dims.size(); ++i) {
           generate_indent(i + 2, o_);
-          o_ << "size_t dim_"  << name << "_" << i << " = ";
+          o_ << "size_t dim_"  << name << "_" << i << "__ = ";
           generate_expression(dims[i],o_);
           o_ << ";" << EOL;
           if (i < dims.size() - 1) {  
             generate_indent(i + 2, o_);
-            o_ << name_dims << ".resize(dim" << "_" << name << "_" << i << ");" 
+            o_ << name_dims << ".resize(dim_" << name << "_" << i << "__);" 
                << EOL;
-            name_dims.append("[k_").append(to_string(i)).append("]");
+            name_dims.append("[k_").append(to_string(i)).append("__]");
           }
           generate_indent(i + 2, o_);
-          o_ << "for (size_t k_" << i << " = 0;"
-             << " k_" << i << " < dim_" << name << "_" << i << ";"
-             << " ++k_" << i << ") {" << EOL;
+          o_ << "for (size_t k_" << i << "__ = 0;"
+             << " k_" << i << "__ < dim_" << name << "_" << i << "__;"
+             << " ++k_" << i << "__) {" << EOL;
           if (i == dims.size() - 1) {
             generate_indent(i + 3, o_);
             o_ << name_dims << ".push_back(in__." << read_type << "_constrain(";
@@ -1741,7 +2226,7 @@ namespace stan {
           o_ << '[';
           for (size_t i = 0; i < dims.size(); ++i) {
             if (i > 0) o_ << "][";
-            o_ << "k_" << i;
+            o_ << "k_" << i << "__";
           }
           o_ << ']';
         }
@@ -1753,6 +2238,9 @@ namespace stan {
         }
       }
     };
+
+
+
 
     struct write_csv_vars_visgen : public visgen {
       write_csv_vars_visgen(std::ostream& o)
@@ -1778,7 +2266,10 @@ namespace stan {
       void operator()(const simplex_var_decl& x) const {
         write_array(x.name_,x.dims_);
       }
-      void operator()(const pos_ordered_var_decl& x) const {
+      void operator()(const ordered_var_decl& x) const {
+        write_array(x.name_,x.dims_);
+      }
+      void operator()(const positive_ordered_var_decl& x) const {
         write_array(x.name_,x.dims_);
       }
       void operator()(const cov_matrix_var_decl& x) const {
@@ -1795,10 +2286,10 @@ namespace stan {
         }
         for (size_t i = 0; i < dims.size(); ++i) {
           generate_indent(i + 2, o_);
-          o_ << "for (int k_" << i << " = 0;"
-             << " k_" << i << " < ";
+          o_ << "for (int k_" << i << "__ = 0;"
+             << " k_" << i << "__ < ";
           generate_expression(dims[i],o_);
-          o_ << "; ++k_" << i << ") {" << EOL;
+          o_ << "; ++k_" << i << "__) {" << EOL;
         }
 
         generate_indent(dims.size() + 2, o_);
@@ -1807,7 +2298,7 @@ namespace stan {
           o_ << '[';
           for (size_t i = 0; i < dims.size(); ++i) {
             if (i > 0) o_ << "][";
-            o_ << "k_" << i;
+            o_ << "k_" << i << "__";
           }
           o_ << ']';
         }
@@ -1820,16 +2311,20 @@ namespace stan {
       }
     };
 
+
     void generate_write_csv_method(const program& prog,
                                    const std::string& model_name,
                                    std::ostream& o) {
       o << INDENT << "void write_csv(std::vector<double>& params_r__," << EOL;
       o << INDENT << "               std::vector<int>& params_i__," << EOL;
-      o << INDENT << "               std::ostream& o__) {" << EOL;
-      o << INDENT2 << "stan::io::reader<double> in__(params_r__,params_i__);" << EOL;
+      o << INDENT << "               std::ostream& o__," << EOL;
+      o << INDENT << "               std::ostream* pstream__ = 0) {" << EOL;
+      o << INDENT2 << "stan::io::reader<double> in__(params_r__,params_i__);" 
+        << EOL;
       o << INDENT2 << "stan::io::csv_writer writer__(o__);" << EOL;
       o << INDENT2 << "static const char* function__ = \""
-        << model_name << "_namespace::write_csv(%1)\";" << EOL;
+        << model_name << "_namespace::write_csv(%1%)\";" << EOL;
+      suppress_warning(INDENT2, "function__", o);
 
       // declares, reads, and writes parameters
       generate_comment("read-transform, write parameters",2,o);
@@ -1837,13 +2332,334 @@ namespace stan {
       for (size_t i = 0; i < prog.parameter_decl_.size(); ++i)
         boost::apply_visitor(vis,prog.parameter_decl_[i].decl_);
 
+      // this is for all other values
       write_csv_vars_visgen vis_writer(o);
 
-      // transformed parameters guaranteed to satisfy constraints
+      // parameters are guaranteed to satisfy constraints
+
+      o << EOL;
+      generate_comment("declare, define and validate transformed parameters",
+                       2,o);
+      o << INDENT2 <<  "double lp__ = 0.0;" << EOL;
+      suppress_warning(INDENT2, "lp__", o);
+      static bool is_var = false;
+      generate_local_var_decls(prog.derived_decl_.first,2,o,is_var); 
+      o << EOL;
+      static bool include_sampling = false;
+      generate_statements(prog.derived_decl_.second,2,o,include_sampling,is_var); 
+      o << EOL;
+
+      generate_validate_var_decls(prog.derived_decl_.first,2,o);
+      o << EOL;
+
+      generate_comment("write transformed parameters",2,o);
+      for (size_t i = 0; i < prog.derived_decl_.first.size(); ++i)
+        boost::apply_visitor(vis_writer, prog.derived_decl_.first[i].decl_);
+      o << EOL;
+
+      generate_comment("declare and define generated quantities",2,o);
+      generate_local_var_decls(prog.generated_decl_.first,2,o,is_var); 
+      o << EOL;
+      generate_statements(prog.generated_decl_.second,2,o,include_sampling,is_var); 
+      o << EOL;
+
+      generate_comment("validate generated quantities",2,o);
+      generate_validate_var_decls(prog.generated_decl_.first,2,o);
+      o << EOL;
+
+      generate_comment("write generated quantities",2,o);
+      for (size_t i = 0; i < prog.generated_decl_.first.size(); ++i)
+        boost::apply_visitor(vis_writer, prog.generated_decl_.first[i].decl_);
+      if (prog.generated_decl_.first.size() > 0)
+        o << EOL;
+
+      o << INDENT2 << "writer__.newline();" << EOL;
+      o << INDENT << "}" << EOL2;
+    }
+
+
+    // see init_member_var_visgen for cut & paste
+    struct write_array_visgen : public visgen {
+      write_array_visgen(std::ostream& o)
+        : visgen(o) {
+      }
+      void operator()(const nil& x) const { }
+      void operator()(const int_var_decl& x) const {
+        generate_initialize_array("int","integer",EMPTY_EXP_VECTOR,
+                                  x.name_,x.dims_);
+      }      
+      void operator()(const double_var_decl& x) const {
+        if (!is_nil(x.range_.low_.expr_)) {
+          if (!is_nil(x.range_.high_.expr_)) {
+            std::vector<expression> read_args;
+            read_args.push_back(x.range_.low_);
+            read_args.push_back(x.range_.high_);
+            generate_initialize_array("double","scalar_lub",read_args,
+                                      x.name_,x.dims_);
+          } else {
+            std::vector<expression> read_args;
+            read_args.push_back(x.range_.low_);
+            generate_initialize_array("double","scalar_lb",read_args,x.name_,x.dims_);
+          }
+        } else {
+          if (!is_nil(x.range_.high_.expr_)) {
+            std::vector<expression> read_args;
+            read_args.push_back(x.range_.high_);
+            generate_initialize_array("double","scalar_ub",read_args,x.name_,x.dims_);
+          } else {
+            generate_initialize_array("double","scalar",EMPTY_EXP_VECTOR,x.name_,x.dims_);
+          }
+        }
+      }
+      void operator()(const vector_var_decl& x) const {
+        std::vector<expression> read_args;
+        read_args.push_back(x.M_);
+        generate_initialize_array("vector_d","vector",read_args,x.name_,x.dims_);
+      }
+      void operator()(const row_vector_var_decl& x) const {
+        std::vector<expression> read_args;
+        read_args.push_back(x.N_);
+        generate_initialize_array("row_vector_d","row_vector",read_args,x.name_,x.dims_);
+      }
+      void operator()(const matrix_var_decl& x) const {
+        std::vector<expression> read_args;
+        read_args.push_back(x.M_);
+        read_args.push_back(x.N_);
+        generate_initialize_array("matrix_d","matrix",read_args,x.name_,x.dims_);
+      }
+      void operator()(const simplex_var_decl& x) const {
+        std::vector<expression> read_args;
+        read_args.push_back(x.K_);
+        generate_initialize_array("vector_d","simplex",read_args,x.name_,x.dims_);
+      }
+      void operator()(const ordered_var_decl& x) const {
+        std::vector<expression> read_args;
+        read_args.push_back(x.K_);
+        generate_initialize_array("vector_d","ordered",read_args,x.name_,x.dims_);
+      }
+      void operator()(const positive_ordered_var_decl& x) const {
+        std::vector<expression> read_args;
+        read_args.push_back(x.K_);
+        generate_initialize_array("vector_d","positive_ordered",read_args,x.name_,x.dims_);
+      }
+      void operator()(const cov_matrix_var_decl& x) const {
+        std::vector<expression> read_args;
+        read_args.push_back(x.K_);
+        generate_initialize_array("matrix_d","cov_matrix",read_args,x.name_,x.dims_);
+      }
+      void operator()(const corr_matrix_var_decl& x) const {
+        std::vector<expression> read_args;
+        read_args.push_back(x.K_);
+        generate_initialize_array("matrix_d","corr_matrix",read_args,x.name_,x.dims_);
+      }
+      void generate_initialize_array(const std::string& var_type,
+                                     const std::string& read_type,
+                                     const std::vector<expression>& read_args,
+                                     const std::string& name,
+                                     const std::vector<expression>& dims) const {
+        if (dims.size() == 0) {
+          generate_indent(2,o_);
+          o_ << var_type << " ";
+          o_ << name << " = in__." << read_type  << "_constrain(";
+          for (size_t j = 0; j < read_args.size(); ++j) {
+            if (j > 0) o_ << ",";
+            generate_expression(read_args[j],o_);
+          }
+          o_ << ");" << EOL;
+          return;
+        }
+        o_ << INDENT2;
+        for (size_t i = 0; i < dims.size(); ++i) o_ << "vector<";
+        o_ << var_type;
+        for (size_t i = 0; i < dims.size(); ++i) o_ << "> ";
+        o_ << name << ";" << EOL;
+        std::string name_dims(name);
+        for (size_t i = 0; i < dims.size(); ++i) {
+          generate_indent(i + 2, o_);
+          o_ << "size_t dim_"  << name << "_" << i << "__ = ";
+          generate_expression(dims[i],o_);
+          o_ << ";" << EOL;
+          if (i < dims.size() - 1) {  
+            generate_indent(i + 2, o_);
+            o_ << name_dims << ".resize(dim_" << name << "_" << i << "__);" 
+               << EOL;
+            name_dims.append("[k_").append(to_string(i)).append("__]");
+          }
+          generate_indent(i + 2, o_);
+          o_ << "for (size_t k_" << i << "__ = 0;"
+             << " k_" << i << "__ < dim_" << name << "_" << i << "__;"
+             << " ++k_" << i << "__) {" << EOL;
+          if (i == dims.size() - 1) {
+            generate_indent(i + 3, o_);
+            o_ << name_dims << ".push_back(in__." << read_type << "_constrain(";
+            for (size_t j = 0; j < read_args.size(); ++j) {
+              if (j > 0) o_ << ",";
+              generate_expression(read_args[j],o_);
+            }
+            o_ << "));" << EOL;
+          }
+        }
+        
+        // cut from write_csv: need to reverse order, just used write_array_vars!
+        // generate_indent(dims.size() + 2, o_);
+        // o_ << "vars__.push_back(" << name;
+        // if (dims.size() > 0) {
+        //   o_ << '[';
+        //   for (size_t i = 0; i < dims.size(); ++i) {
+        //     if (i > 0) o_ << "][";
+        //     o_ << "k_" << i;
+        //   }
+        //   o_ << ']';
+        // }
+        // o_ << ");" << EOL;
+        
+        for (size_t i = dims.size(); i > 0; --i) {
+          generate_indent(i + 1, o_);
+          o_ << "}" << EOL;
+        }
+
+
+      }
+    };
+
+
+
+
+    struct write_array_vars_visgen : public visgen {
+      write_array_vars_visgen(std::ostream& o)
+        : visgen(o) {
+      }
+      void operator()(const nil& x) const { }
+      // FIXME: template these out
+      void operator()(const int_var_decl& x) const {
+        write_array(x.name_,x.dims_,EMPTY_EXP_VECTOR);
+      }
+      void operator()(const double_var_decl& x) const {
+        write_array(x.name_,x.dims_,EMPTY_EXP_VECTOR);
+      }
+      void operator()(const vector_var_decl& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.M_);
+        write_array(x.name_,dims, EMPTY_EXP_VECTOR);
+      }
+      void operator()(const row_vector_var_decl& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.N_);
+        write_array(x.name_,dims, EMPTY_EXP_VECTOR);
+      }
+      void operator()(const matrix_var_decl& x) const {
+        std::vector<expression> matdims;
+        matdims.push_back(x.M_);
+        matdims.push_back(x.N_);
+        write_array(x.name_,x.dims_,matdims);
+      }
+      void operator()(const simplex_var_decl& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.K_);
+        write_array(x.name_,dims,EMPTY_EXP_VECTOR);
+      }
+      void operator()(const ordered_var_decl& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.K_);
+        write_array(x.name_,dims,EMPTY_EXP_VECTOR);
+      }
+      void operator()(const positive_ordered_var_decl& x) const {
+        std::vector<expression> dims(x.dims_);
+        dims.push_back(x.K_);
+        write_array(x.name_,dims,EMPTY_EXP_VECTOR);
+      }
+      void operator()(const cov_matrix_var_decl& x) const {
+        std::vector<expression> matdims;
+        matdims.push_back(x.K_);
+        matdims.push_back(x.K_);
+        write_array(x.name_,x.dims_,matdims);
+      }
+      void operator()(const corr_matrix_var_decl& x) const {
+        std::vector<expression> matdims;
+        matdims.push_back(x.K_);
+        matdims.push_back(x.K_);
+        write_array(x.name_,x.dims_,matdims);
+      }
+      void write_array(const std::string& name,
+                       const std::vector<expression>& arraydims,
+                       const std::vector<expression>& matdims) const {
+
+        std::vector<expression> dims(arraydims);
+        for (size_t i = 0; i < matdims.size(); ++i)
+          dims.push_back(matdims[i]);
+
+        if (dims.size() == 0) {
+          o_ << INDENT2 << "vars__.push_back(" << name << ");" << EOL;
+          return;
+        }
+        
+        // for (size_t i = 0; i < dims.size(); ++i) {
+        for (size_t i = dims.size(); i > 0; ) {
+          --i;
+          generate_indent((dims.size() - i) + 1, o_);
+          o_ << "for (int k_" << i << "__ = 0;"
+             << " k_" << i << "__ < ";
+          generate_expression(dims[i],o_);
+          o_ << "; ++k_" << i << "__) {" << EOL;
+        }
+
+        generate_indent(dims.size() + 2, o_);
+        o_ << "vars__.push_back(" << name;
+        if (arraydims.size() > 0) {
+          o_ << '[';
+          for (size_t i = 0; i < arraydims.size(); ++i) {
+            if (i > 0) o_ << "][";
+            o_ << "k_" << i << "__";
+          }
+          o_ << ']';
+        }
+        if (matdims.size() > 0) {
+          o_ << "(k_" << arraydims.size() << "__";
+          if (matdims.size() > 1) 
+            o_ << ", k_" << (arraydims.size() + 1) << "__";
+          o_ << ")";
+        }
+        o_ << ");" << EOL;
+        
+        for (size_t i = dims.size(); i > 0; --i) {
+          generate_indent(i + 1, o_);
+          o_ << "}" << EOL;
+        }
+      }
+    };
+
+
+    void generate_write_array_method(const program& prog,
+                                     const std::string& model_name,
+                                     std::ostream& o) {
+      o << INDENT << "void write_array(std::vector<double>& params_r__," << EOL;
+      o << INDENT << "                 std::vector<int>& params_i__," << EOL;
+      o << INDENT << "                 std::vector<double>& vars__," << EOL;
+      o << INDENT << "                 std::ostream* pstream__ = 0) {" << EOL;
+      o << INDENT2 << "vars__.resize(0);" << EOL;
+      o << INDENT2 << "stan::io::reader<double> in__(params_r__,params_i__);" << EOL;
+      o << INDENT2 << "static const char* function__ = \""
+        << model_name << "_namespace::write_array(%1%)\";" << EOL;
+      suppress_warning(INDENT2, "function__", o);
+
+      // declares, reads, and sets parameters
+      generate_comment("read-transform, write parameters",2,o);
+      write_array_visgen vis(o);
+      for (size_t i = 0; i < prog.parameter_decl_.size(); ++i)
+        boost::apply_visitor(vis,prog.parameter_decl_[i].decl_);
+
+      // this is for all other values
+      write_array_vars_visgen vis_writer(o);
+
+      // writes parameters
+      for (size_t i = 0; i < prog.parameter_decl_.size(); ++i)
+        boost::apply_visitor(vis_writer,prog.parameter_decl_[i].decl_);
+
 
       o << EOL;
       generate_comment("declare and define transformed parameters",2,o);
       o << INDENT2 <<  "double lp__ = 0.0;" << EOL;
+      suppress_warning(INDENT2, "lp__", o);
       static bool is_var = false;
       generate_local_var_decls(prog.derived_decl_.first,2,o,is_var); 
       o << EOL;
@@ -1876,9 +2692,9 @@ namespace stan {
       if (prog.generated_decl_.first.size() > 0)
         o << EOL;
 
-      o << INDENT2 << "writer__.newline();" << EOL;
       o << INDENT << "}" << EOL2;
     }
+
     
     // know all data is set and range expressions only depend on data
     struct set_param_ranges_visgen : public visgen {
@@ -1932,7 +2748,10 @@ namespace stan {
         }
         o_ << ";" << EOL;
       }
-      void operator()(const pos_ordered_var_decl& x) const {
+      void operator()(const ordered_var_decl& x) const {
+        generate_increment(x.K_,x.dims_);
+      }
+      void operator()(const positive_ordered_var_decl& x) const {
         generate_increment(x.K_,x.dims_);
       }
       void operator()(const cov_matrix_var_decl& x) const {
@@ -2028,10 +2847,15 @@ namespace stan {
                        std::ostream& out) {
       out << "int main(int argc, const char* argv[]) {" << EOL;
       out << INDENT << "try {" << EOL;
-      out << INDENT2 << "stan::gm::nuts_command<" << model_name << "_namespace::" << model_name << ">(argc,argv);" << EOL;
+      out << INDENT2 << "stan::gm::nuts_command<" << model_name 
+          << "_namespace::" << model_name << ">(argc,argv);" << EOL;
       out << INDENT << "} catch (std::exception& e) {" << EOL;
-      out << INDENT2 << "std::cerr << std::endl << \"Exception: \" << e.what() << std::endl;" << EOL;
-      out << INDENT2 << "std::cerr << \"Diagnostic information: \" << std::endl << boost::diagnostic_information(e) << std::endl;" << EOL;
+      out << INDENT2 
+          << "std::cerr << std::endl << \"Exception: \" << e.what() << std::endl;" 
+          << EOL;
+      out << INDENT2
+          << "std::cerr << \"Diagnostic information: \" << std::endl << boost::diagnostic_information(e) << std::endl;" 
+          << EOL;
       out << INDENT2 << "return -1;" << EOL;
       out << INDENT << "}" << EOL;
 
@@ -2040,7 +2864,8 @@ namespace stan {
 
     void generate_cpp(const program& prog, 
                       const std::string& model_name,
-                      std::ostream& out) {
+                      std::ostream& out,
+                      bool include_main = true) {
       generate_version_comment(out);
       generate_includes(out);
       generate_start_namespace(model_name,out);
@@ -2055,12 +2880,15 @@ namespace stan {
       generate_set_param_ranges(prog.parameter_decl_,out);
       generate_init_method(prog.parameter_decl_,out);
       generate_log_prob(prog,out);
-      // FIXME: put back
+      generate_param_names_method(prog,out);
+      generate_dims_method(prog,out);
+      generate_write_array_method(prog,model_name,out);
       generate_write_csv_header_method(prog,out);
       generate_write_csv_method(prog,model_name,out);
       generate_end_class_decl(out);
       generate_end_namespace(out);
-      generate_main(model_name,out);
+      if (include_main) 
+        generate_main(model_name,out);
     }
 
   }

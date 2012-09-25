@@ -9,46 +9,93 @@ namespace stan {
   namespace mcmc {
 
     /**
-     * The <code>adaptive_sampler</code> abstract base class provides
-     * a basis on which to build adaptive samplers.  This class
+     * An abstract base class for adaptive samplers.
+     *
+     * The <code>adaptive_sampler</code> abstract base class
      * maintains the adaptation status, number of steps, as well as
      * recording function evals and the mean statistic being
      * optimized.
      */
     class adaptive_sampler {
 
-    private: 
+    protected: 
       bool _adapt;
       unsigned int _n_steps;
       int _n_adapt_steps;
       unsigned int _nfevals;
       double _mean_stat;
+      std::ostream* _error_msgs;
+      std::ostream* _output_msgs;
 
     public:
 
       /**
-       * Construct an adaptive sampler with specified adaptation
+       * Constructs an adaptive sampler with specified adaptation
        * status.
        *
        * @param adapt Initial adaptation status.
+       * @param error_msgs Pointer to output stream for error
+       * messages.
        */
-      adaptive_sampler(bool adapt)
+      adaptive_sampler(bool adapt,
+                       std::ostream* error_msgs = 0,
+                       std::ostream* output_msgs = 0)
         : _adapt(adapt), 
           _n_steps(0), 
           _n_adapt_steps(0), 
           _nfevals(0),
-          _mean_stat(0) {
+          _mean_stat(0),
+          _error_msgs(error_msgs),
+          _output_msgs(output_msgs) {
       }
 
       /**
-       * Destroy this sampler.
+       * Destructor.
        */
       virtual ~adaptive_sampler() { 
       }
 
       /**
+       * Set the stream into which errors will be written
+       * as the sampler runs.  
+       *
+       * @param error_msgs Stream to which error messages are written.
+       */
+      void set_error_stream(std::ostream& error_msgs) {
+        _error_msgs = &error_msgs;
+      }
+
+      /**
+       * Unset the stream into which errors are written to 0 so
+       * that error messages are ignored.
+       */
+      void unset_error_stream() {
+        _error_msgs = 0;
+      }
+
+
+      /**
+       * Set the stream into which output will be written
+       * as the sampler runs.  
+       *
+       * @param error_msgs Stream to which output messages are written.
+       */
+      void set_output_stream(std::ostream& output_msgs) {
+        _output_msgs = &output_msgs;
+      }
+
+      /**
+       * Unset the stream into which errors are written to 0 so
+       * that output messages are ignored.
+       */
+      void unset_output_stream() {
+        _output_msgs = 0;
+      }
+
+
+      /**
        * Set the model real and integer parameters to the specified
-       * values.  
+       * values.
        *
        * This method will typically be used to set the parameters
        * by the client of this class after initialization.  
@@ -60,9 +107,9 @@ namespace stan {
                               const std::vector<int>& z) = 0;
 
       /**
-       * Return the next sample from this sampler.  This
+       * Returns the next sample from this sampler.  This
        * method increments the count of steps with and without
-       * adaptaiton and calls the virtual <code>next_impl()</code> 
+       * adaptation and calls the virtual <code>next_impl()</code> 
        * to produce a result.
        *
        * @return Next sample.
@@ -75,7 +122,7 @@ namespace stan {
       }
 
       /**
-       * Return the next sample from this sampler.  This pure virtual method
+       * Returns the next sample from this sampler.  This pure virtual method
        * must be implemented by concrete subclasses to produce the next
        * sample.
        *
@@ -94,22 +141,22 @@ namespace stan {
       };
 
       /**
-       * Set the specified parameter vector to the sequence of tunable
+       * Sets the specified parameter vector to the sequence of tunable
        * parameters for this sampler.
        *
        * The default implementation sets the specified vector to empty.
        *
-       * @param params Where to store the returned parameters.
+       * @param[out] params Where to store the returned parameters.
        */
       virtual void get_parameters(std::vector<double>& params) { 
         params.resize(0);
       }
 
       /**
-       * Return the value of whatever statistic we're trying to
-       * coerce.  For example, if we're trying to set the average
-       * acceptance probability of HMC to 0.651 then this will return
-       * the realized acceptance probability averaged across all
+       * Returns the value of the statistic we are trying to
+       * coerce.  For example, if we are trying to set the average
+       * acceptance probability of HMC to 0.651 then this method will
+       * return the realized acceptance probability averaged across all
        * samples so far.
        *
        * @return Mean observed target statistic for adaptation.
@@ -119,7 +166,7 @@ namespace stan {
       }
       
       /**
-       * Set the mean statistic to the specified value.
+       * Sets the mean statistic to the specified value.
        *
        * @param v New value of mean statistic.
        */
@@ -128,7 +175,7 @@ namespace stan {
       }
 
       /**
-       * Update mean statistic given the specified adaptation statistic
+       * Updates the mean statistic given the specified adaptation statistic
        * and weighting.  The behavior is equivalent to doing
        *
        * <code>mean_stat += avg_eta * adapt_stat + (1 - avg_eta) * mean_stat</code>.
@@ -142,10 +189,10 @@ namespace stan {
       }
 
       /**
-       * Return the number of times that the (possibly unnormalized)
+       * Returns the number of times that the (possibly unnormalized)
        * log probability function has been evaluated by this sampler.
        * This is a useful alternative to wall time in evaluating the
-       * relative performance of different algorithms. However, it's
+       * relative performance of different algorithms. However, it is
        * up to the sampler implementation to be sure to actually keep
        * track of this.
        *
@@ -210,7 +257,7 @@ namespace stan {
        * Write out any sampler-specific parameters for output.
        *
        * This method must
-       * match<code>write_sampler_param_names(std::ostream&)</code> in
+       * match <code>write_sampler_param_names()</code> in
        * terms of number of parameters written.
        *
        * Params should be writte starting with a comma, then
@@ -219,17 +266,29 @@ namespace stan {
        *
        * The base class implementation is a no-op.
        *
-       * @param o Output stream to which params are written.
+       * @param[out] o Output stream to which params are written.
        */
       virtual void write_sampler_params(std::ostream& o) { 
       }
 
       /**
+       * Use this method to write the adaptation parameters into
+       * the output.  
+       *
+       * These should be written as one or more comment lines,
+       * each starting with a pound (<code>#</code>) character.
+       *
+       * @param o Output stream to which adaptation information is written.
+       */
+      virtual void write_adaptation_params(std::ostream& o) {
+      }
+
+      /**
        * Write out any sampler-specific parameter names for output.
        *
-       * This method must
-       * match<code>write_sampler_params(std::ostream&)</code> in
-       * terms of number of parameters written.
+       * This method must match
+       * <code>write_sampler_params()</code> in terms of
+       * number of parameters written.
        *
        * Params should be writte starting with a comma, then the first
        * parameter, then a comma, then the second parameter, ending on
@@ -237,11 +296,30 @@ namespace stan {
        *
        * The base class implementation is a no-op.
        *
-       * @param o Output stream to which param names are written.
+       * @param[out] o Output stream to which param names are written.
        */
-      virtual void write_sampler_param_names(std::ostream& o) { 
+      virtual void write_sampler_param_names(std::ostream& o) {
+      }
+
+      /**
+       * Get any sampler-specific parameter namess.
+       *
+       * @param[out] names Output vector to which param names are written.
+       */
+
+      virtual void get_sampler_param_names(std::vector<std::string>& names) {
       }
                                 
+      /**
+       * Get any sampler-specific parameters.
+       *
+       * @param[out] values Output vector to which params are written.
+       *  All values are casted to type double.
+       *  This function should match get_sampler_param_names.
+       *
+       */
+      virtual void get_sampler_params(std::vector<double>& values) {
+      }
 
     };
 

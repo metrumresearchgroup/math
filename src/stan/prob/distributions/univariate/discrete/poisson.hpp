@@ -3,6 +3,7 @@
 
 #include <stan/prob/constants.hpp>
 #include <stan/math/error_handling.hpp>
+#include <stan/math/special_functions.hpp>
 #include <stan/prob/traits.hpp>
 
 namespace stan {
@@ -17,25 +18,25 @@ namespace stan {
     poisson_log(const unsigned int n, const T_rate& lambda, 
                 const Policy&) {
 
-      static const char* function = "stan::prob::poisson_log<%1%>(%1%)";
+      static const char* function = "stan::prob::poisson_log(%1%)";
       
       using stan::math::check_not_nan;
       using stan::math::check_nonnegative;
       using boost::math::tools::promote_args;
 
       typename promote_args<T_rate>::type lp;
-      if (!check_nonnegative(function, n, "Number n", &lp, Policy()))
+      if (!check_nonnegative(function, n, "Random variable", &lp, Policy()))
         return lp;
       if (!check_not_nan(function, lambda,
-                         "Rate parameter, lambda,", &lp, Policy()))
+                         "Rate parameter", &lp, Policy()))
         return lp;
       if (!check_nonnegative(function, lambda,
-                             "Rate parameter, lambda,", &lp, Policy()))
+                             "Rate parameter", &lp, Policy()))
         return lp;
       
       if (lambda == 0)
-        return LOG_ZERO;
-      
+        return n == 0 ? 0 : LOG_ZERO;
+
       using stan::math::multiply_log;
       if (std::isinf(lambda))
         return LOG_ZERO;

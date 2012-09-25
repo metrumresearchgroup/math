@@ -8,8 +8,13 @@
 # precompiled model header
 /src/stan/model/model_header.hpp.*ch
 
+# other binary
+*.o
+*.exe
+
 # /doc/
 /doc/api
+/doc/*.pdf
 
 # temporary files
 *~
@@ -18,4 +23,10 @@
 *.d
 .Rproj.user
 stan.Rproj
+.kdev4/
+stan.kdev4
 
+# model files
+src/test/gm/model_specs/*.cpp
+src/test/gm/model_specs/function_signatures
+src/test/gm/model_specs/function_signatures.exe

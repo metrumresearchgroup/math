@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include "stan/math/special_functions.hpp"
 
+
 TEST(MathsSpecialFunctions, int_step) {
   EXPECT_EQ(0U, stan::math::int_step(-1.0));
   EXPECT_EQ(0U, stan::math::int_step(0.0));
@@ -15,10 +16,6 @@ TEST(MathsSpecialFunctions, binomial_coefficient_log) {
   EXPECT_FLOAT_EQ(2.0, exp(stan::math::binomial_coefficient_log(2.0,1.0)));
   EXPECT_FLOAT_EQ(3.0, exp(stan::math::binomial_coefficient_log(3.0,1.0)));
   EXPECT_NEAR(3.0, exp(stan::math::binomial_coefficient_log(3.0,2.0)),0.0001);
-}
-
-TEST(MathsSpecialFunctions, fma) {
-  EXPECT_FLOAT_EQ(3.0 * 5.0 + 7.0, stan::math::fma(3.0,5.0,7.0));
 }
 
 TEST(MathsSpecialFunctions, lbeta) {
@@ -44,22 +41,6 @@ TEST(MathsSpecialFunctions, log_loss) {
   EXPECT_FLOAT_EQ(-log(0.5), stan::math::binary_log_loss(1,0.5));
   EXPECT_FLOAT_EQ(-log(0.75), stan::math::binary_log_loss(0,0.25));
   EXPECT_FLOAT_EQ(-log(0.75), stan::math::binary_log_loss(1,0.75));
-}
-
-TEST(MathsSpecialFunctions, exp2) {
-  EXPECT_FLOAT_EQ(std::pow(2.0,3.0), stan::math::exp2(3.0));
-  EXPECT_FLOAT_EQ(1, stan::math::exp2(0.0));
-}
-
-TEST(MathsSpecialFunctions, log2) {
-  EXPECT_FLOAT_EQ(0.0, stan::math::log2(1.0));
-  EXPECT_FLOAT_EQ(3.0, stan::math::log2(8.0));
-  EXPECT_FLOAT_EQ(std::log(5.0)/std::log(2.0), stan::math::log2(5.0));
-}
-
-TEST(MathsSpecialFunctions, fdim) {
-  EXPECT_FLOAT_EQ(1.0, stan::math::fdim(3.0,2.0));
-  EXPECT_FLOAT_EQ(0.0, stan::math::fdim(2.0,3.0));
 }
 
 TEST(MathsSpecialFunctions, step) {
@@ -163,19 +144,26 @@ TEST(MathsSpecialFunctions, lmgamma) {
 }
 
 TEST(MathsSpecialFunctions, if_else) {
+  using stan::math::if_else;
   unsigned int c = 5;
   double x = 1.0;
   double y = -1.0;
-  EXPECT_FLOAT_EQ(x, stan::math::if_else(c,x,y));
+  EXPECT_FLOAT_EQ(x, if_else(c,x,y));
   c = 0;
-  EXPECT_FLOAT_EQ(y, stan::math::if_else(c,x,y));
+  EXPECT_FLOAT_EQ(y, if_else(c,x,y));
 
   bool d = true;
   int u = 1;
   int v = -1;
-  EXPECT_EQ(1, stan::math::if_else(d,u,v));
+  EXPECT_EQ(1.0, stan::math::if_else(d,u,v));
   d = false;
-  EXPECT_EQ(-1, stan::math::if_else(d,u,v));
+  EXPECT_FLOAT_EQ(-1.0, stan::math::if_else(d,u,v));
+
+  EXPECT_FLOAT_EQ(1.2,if_else(true,1.2,12));
+  EXPECT_FLOAT_EQ(12.0,if_else(false,1.2,12));
+
+  EXPECT_FLOAT_EQ(1.0,if_else(true,1,12.3));
+  EXPECT_FLOAT_EQ(12.3,if_else(false,1,12.3));
 }
 
 TEST(MathsSpecialFunctions, square) {
@@ -222,14 +210,14 @@ TEST(MathsSpecialFunctions, log10_fun) {
 }
 
 TEST(MathsSpecialFunctions, infty) {
-  EXPECT_FLOAT_EQ(std::numeric_limits<double>::infinity(), stan::math::infinity());
+  EXPECT_FLOAT_EQ(std::numeric_limits<double>::infinity(), stan::math::positive_infinity());
 }
 TEST(MathsSpecialFunctions, neg_infty) {
   EXPECT_FLOAT_EQ(-std::numeric_limits<double>::infinity(), 
                   stan::math::negative_infinity());
 }
 TEST(MathsSpecialFunctions, nan) {
-  EXPECT_TRUE(std::isnan(stan::math::nan()));
+  EXPECT_TRUE(std::isnan(stan::math::not_a_number()));
 }
 TEST(MathsSpecialFunctions, epsilon) {
   EXPECT_FLOAT_EQ(std::numeric_limits<double>::epsilon(),
@@ -296,4 +284,27 @@ TEST(MathsSpecialFunctions, log1p_exp) {
   // exp(10000.0) overflows
   EXPECT_FLOAT_EQ(10000.0,log1p_exp(10000.0));
   EXPECT_FLOAT_EQ(0.0,log1p_exp(-10000.0));
+}
+
+TEST(MathsSpecialFunctions, ibeta) {
+  using stan::math::ibeta;
+  
+  EXPECT_FLOAT_EQ(0.0, ibeta(0.5, 0.5, 0.0))  << "reasonable values for a, b, x";
+  EXPECT_FLOAT_EQ(0.333333333, ibeta(0.5, 0.5, 0.25))  << "reasonable values for a, b, x";
+  EXPECT_FLOAT_EQ(0.5, ibeta(0.5, 0.5, 0.5))  << "reasonable values for a, b, x";
+  EXPECT_FLOAT_EQ(0.666666667, ibeta(0.5, 0.5, 0.75))  << "reasonable values for a, b, x";
+  EXPECT_FLOAT_EQ(1.0, ibeta(0.5, 0.5, 1.0))  << "reasonable values for a, b, x";
+
+  EXPECT_FLOAT_EQ(0.0, ibeta(0.1, 1.5, 0.0))  << "reasonable values for a, b, x";
+  EXPECT_FLOAT_EQ(0.9117332, ibeta(0.1, 1.5, 0.25))  << "reasonable values for a, b, x";
+  EXPECT_FLOAT_EQ(0.9645342, ibeta(0.1, 1.5, 0.5))  << "reasonable values for a, b, x";
+  EXPECT_FLOAT_EQ(0.9897264, ibeta(0.1, 1.5, 0.75))  << "reasonable values for a, b, x";
+  EXPECT_FLOAT_EQ(1.0, ibeta(0.1, 1.5, 1.0))  << "reasonable values for a, b, x";
+}
+
+TEST(MathsSpecialFunctions, value_of) {
+  using stan::math::value_of;
+  double x = 5.0;
+  EXPECT_FLOAT_EQ(5.0,value_of(x));
+  EXPECT_FLOAT_EQ(5.0,value_of(5));
 }

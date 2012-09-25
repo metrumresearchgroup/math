@@ -30,6 +30,8 @@ namespace stan {
     }
 
     /**
+     * Writes data into the S-plus dump format.
+     * 
      * A <code>dump_writer</code> writes data into the S-plus dump
      * format, a human-readable ASCII representation of arbitrarily
      * dimensioned arrays of integers and arrays of floating point
@@ -356,6 +358,8 @@ namespace stan {
     };
 
     /**
+     * Reads data from S-plus dump format.
+     *
      * A <code>dump_reader</code> parses data from the S-plus dump
      * format, a human-readable ASCII representation of arbitrarily
      * dimensioned arrays of integers and arrays of floating point
@@ -392,7 +396,7 @@ namespace stan {
      * three-dimensional array <code>x</code> with dimensions
      * <code>[2,2,2]</code>, then there are 8 values, provided in the
      * order
-     *
+     * 
      * <p><code>[0,0,0]</code>, 
      * <code>[1,0,0]</code>, 
      * <code>[0,1,0]</code>, 
@@ -401,6 +405,27 @@ namespace stan {
      * <code>[1,0,1]</code>, 
      * <code>[0,1,1]</code>, 
      * <code>[1,1,1]</code>.
+     *
+     * definitions ::= definition+
+     *
+     * definition ::= name ("->" | '=') value optional_semicolon
+     *
+     * name ::= char* 
+     *        | ''' char* ''' 
+     *        | '"' char* '"'
+     *
+     * value ::= value<int> | value<double>
+     *
+     * value<T> ::= T 
+     *            | seq<T>
+     *            | 'struct' '(' seq<T> ',' ".Dim" '=' seq<int> ')'
+     *
+     * seq<int> ::= int ':' int
+     *            | cseq<int>
+     *
+     * seq<double> ::= cseq<double>
+     *
+     * cseq<T> ::= 'c' '(' T % ',' ')'
      *
      */
     class dump_reader {
@@ -411,6 +436,23 @@ namespace stan {
       std::vector<size_t> dims_;
       std::istream& in_;
 
+      bool scan_single_char(char c_expected) {
+        int c = in_.peek();
+        if (c != c_expected)
+          return false;
+        char c_skip;
+        in_.get(c_skip);
+        return true;
+      }
+
+      bool scan_optional_long() {
+        if (scan_single_char('l'))
+          return true;
+        else if (scan_single_char('L'))
+          return true;
+        else
+          return false;
+      }
 
       bool scan_char(char c_expected) {
         char c;
@@ -442,6 +484,9 @@ namespace stan {
         if (scan_char('"')) {
           if (!scan_name_unquoted()) return false;
           if (!scan_char('"')) return false;
+        } else if (scan_char('\'')) {
+          if (!scan_name_unquoted()) return false;
+          if (!scan_char('\'')) return false;
         } else {
           if (!scan_name_unquoted()) return false;
         }
@@ -476,7 +521,6 @@ namespace stan {
           break;
         }
         while (in_.get(c)) {
-          if (std::isspace(c)) continue;
           if (std::isdigit(c) || c == '-') {
             buf.push_back(c);
           } else if (c == '.'
@@ -495,6 +539,7 @@ namespace stan {
           if (!(std::stringstream(buf) >> n))
             return false;
           stack_i_.push_back(n);
+          scan_optional_long();
         } else {
           for (size_t j = 0; j < stack_i_.size(); ++j)
             stack_r_.push_back(static_cast<double>(stack_i_[j]));
@@ -534,23 +579,55 @@ namespace stan {
 
       bool scan_struct_value() {
         if (!scan_char('(')) return false;
-        if (!scan_char('c')) return false;
-        scan_seq_value();
+        if (scan_char('c')) { 
+          scan_seq_value();
+        } else {
+          size_t start;
+          in_ >> start;
+          if (!scan_char(':'))
+            return false;
+          size_t end;
+          in_ >> end;
+          if (start <= end) {
+            for (size_t i = start; i <= end; ++i)
+              stack_i_.push_back(i);
+          } else {
+            for (size_t i = start; i >= end; --i)
+              stack_i_.push_back(i);
+          }
+        } 
         dims_.clear();
         if (!scan_char(',')) return false;
         if (!scan_char('.')) return false;
         if (!scan_chars("Dim")) return false;
         if (!scan_char('=')) return false;
-        if (!scan_char('c')) return false;
-        if (!scan_char('(')) return false;
-        size_t dim;
-        in_ >> dim;
-        dims_.push_back(dim);
-        while (scan_char(',')) {
+        if (scan_char('c')) {
+          if (!scan_char('(')) return false;
+          size_t dim;
           in_ >> dim;
+          scan_optional_long(); 
           dims_.push_back(dim);
+          while (scan_char(',')) {
+            in_ >> dim;
+            scan_optional_long(); 
+            dims_.push_back(dim);
+          }
+          if (!scan_char(')')) return false;
+        } else {
+          size_t start;
+          in_ >> start;
+          if (!scan_char(':'))
+            return false;
+          size_t end;
+          in_ >> end;
+          if (start < end) {
+            for (size_t i = start; i <= end; ++i)
+              dims_.push_back(i);
+          } else {
+            for (size_t i = start; i >= end; --i)
+              dims_.push_back(i);
+          }
         }
-        if (!scan_char(')')) return false;
         if (!scan_char(')')) return false;
         return true;
       }
@@ -562,8 +639,50 @@ namespace stan {
           return scan_seq_value();
         if (scan_chars("structure"))
           return scan_struct_value();
-        return scan_number();
+        if (!scan_number()) 
+          return false;
+        if (!scan_char(':'))
+          return true;
+        if (stack_i_.size() != 1)
+          return false;
+        if (!scan_number())
+          return false; 
+        if (stack_i_.size() != 2)
+          return false;
+        int start = stack_i_[0];
+        int end = stack_i_[1];
+        stack_i_.clear();
+        if (start <= end) {
+          for (int i = start; i <= end; ++i)
+            stack_i_.push_back(i);
+        } else {
+          for (int i = start; i >= end; --i) 
+            stack_i_.push_back(i);
+        }
+        dims_.push_back(stack_i_.size());
+        return true;
       }
+
+      /**
+       * Helper function prints diagnostic information to std::cout.
+       */
+      void print() {
+        std::cout << "var name=|" << name_ << "|" << std::endl;
+        std:: cout << "dims=(";
+        for (size_t i = 0; i < dims_.size(); ++i) {
+          if (i > 0)
+            std::cout << ",";
+          std::cout << dims_[i];
+        }
+        std::cout << ")" << std::endl;
+        std::cout << "float stack:" << std::endl;
+        for (size_t i = 0; i < stack_r_.size(); ++i)
+          std::cout << "  [" << i << "] " << stack_r_[i] << std::endl;
+        std::cout << "int stack" << std::endl;
+        for (size_t i = 0; i < stack_i_.size(); ++i)
+          std::cout << "  [" << i << "] " << stack_i_[i] << std::endl;
+      }
+
 
     public:
       /**
@@ -604,6 +723,8 @@ namespace stan {
       }
 
       /**
+       * Checks if the last item read is integer.
+       *
        * Return <code>true</code> if the value(s) in the most recently
        * read item are integer values and <code>false</code> if
        * they are floating point.
@@ -645,36 +766,24 @@ namespace stan {
         stack_i_.clear();
         dims_.clear();
         name_.erase();
-        if (!scan_name()) return false;
-        if (!scan_char('<')) return false;
-        if (!scan_char('-')) return false;
-        if (!scan_value()) return false;
+        if (!scan_name())  // set name
+          return false;
+        if (!scan_char('<')) // set <- 
+          return false;
+        if (!scan_char('-')) 
+          return false;
+        if (!scan_value()) // set stack_r_, stack_i_, dims_
+          return false;
         return true;
       }
-
-      void print() {
-        std::cout << "var name=|" << name_ << "|" << std::endl;
-        std:: cout << "dims=(";
-        for (size_t i = 0; i < dims_.size(); ++i) {
-          if (i > 0)
-            std::cout << ",";
-          std::cout << dims_[i];
-        }
-        std::cout << ")" << std::endl;
-        std::cout << "float stack:" << std::endl;
-        for (size_t i = 0; i < stack_r_.size(); ++i)
-          std::cout << "  [" << i << "] " << stack_r_[i] << std::endl;
-        std::cout << "int stack" << std::endl;
-        for (size_t i = 0; i < stack_i_.size(); ++i)
-          std::cout << "  [" << i << "] " << stack_i_[i] << std::endl;
-      }
-
   
     };
 
 
 
     /**
+     * Represents named arrays with dimensions.
+     *
      * A dump object represents a dump of named arrays with dimensions.
      * The arrays may have any dimensionality.  The values for an array
      * are typed to double or int.  
@@ -858,6 +967,13 @@ namespace stan {
           names.push_back((*it).first);
       }
 
+      /** 
+       * Remove variable from the object.
+       * 
+       * @param name Name of the variable to remove.
+       * @return If variable is removed returns <code>true</code>, else
+       *   returns <code>false</code>.
+       */
       bool remove(const std::string& name) {
         return (vars_i_.erase(name) > 0) 
           || (vars_r_.erase(name) > 0);
@@ -865,11 +981,7 @@ namespace stan {
       
     };
     
-
   }
 
-
 }
-
-
 #endif

@@ -6,7 +6,7 @@
 // matrices because positive definiteness is simple.  
 
 transformed data {
-  cov_matrix(2) S;
+  cov_matrix[2] S;
 
   for (i in 1:2)
     for (j in 1:2)
@@ -17,13 +17,13 @@ transformed data {
 }
 parameters {
   real x;
-  real(0,) sd1;
-  real(0,) sd2;
+  real<lower=0> sd1;
+  real<lower=0> sd2;
 }
 transformed parameters {
   real rho;
   real cov;
-  matrix(2,2) W;
+  matrix[2,2] W;
 
   rho <- tanh(x);
   cov <- rho * sd1 * sd2;
@@ -45,7 +45,7 @@ model {
   //     | rho * sd2               rho * sd1        sd1 * sd2 * (1 - rho^2)   |
 
   lp__ <- lp__ + log(2.0 * sd1) + log(2.0 * sd2) + log(sd1 * sd2 * (1.0 - rho * rho));
-
+  
   W ~ wishart(4, S);
 }
 

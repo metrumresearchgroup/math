@@ -2,7 +2,7 @@
 # http://www.openbugs.info/Examples/Camel.html
 
 #   data {
-#     int(0,) N; # N = 12 
+#     int<lower=0> N; # N = 12 
 #     
 #   } 
 
@@ -10,8 +10,8 @@
 ## status: results not verified with in those in bugs 
 
 transformed data {
-  vector(2) mu; 
-  matrix(2, 2) S; 
+  vector[2] mu; 
+  matrix[2, 2] S; 
   mu[1] <- 0; 
   mu[2] <- 0; 
   S[1, 1] <- 1000; 
@@ -21,7 +21,7 @@ transformed data {
 } 
 
 parameters { 
-  cov_matrix(2) Sigma; 
+  cov_matrix[2] Sigma; 
   real y52; 
   real y62; 
   real y72; 
@@ -32,8 +32,8 @@ parameters {
   real y121; 
 } 
 
-transformed parameters {
-  vector(2) Y[12]; 
+model {
+  vector[2] Y[12]; 
   Y[1, 1] <- 1; 
   Y[1, 2] <- 1; 
   Y[2, 1] <- 1; 
@@ -59,10 +59,7 @@ transformed parameters {
   Y[10, 2] <- 2; 
   Y[11, 2] <- -2; 
   Y[12, 2] <- -2; 
-} 
 
-
-model {
   // Sigma ~ inv_wishart(2, S); 
  
   // using the prior as in Tanner and Wong (1987) 
@@ -71,6 +68,6 @@ model {
 } 
 
 generated quantities { 
-  real(-1, 1) rho; 
+  real<lower=-1,upper= 1> rho; 
   rho <- Sigma[1, 2] / sqrt(Sigma[1, 1] * Sigma[2, 2]); 
 } 

@@ -58,6 +58,22 @@ namespace stan {
                               whitespace_grammar<Iterator> > 
       for_statement_r;
 
+      boost::spirit::qi::rule<Iterator,
+                              print_statement(),
+                              whitespace_grammar<Iterator> >
+      print_statement_r;
+
+      boost::spirit::qi::rule<Iterator,
+                              printable(),
+                              whitespace_grammar<Iterator> >
+      printable_r;
+
+      boost::spirit::qi::rule<Iterator,
+                              std::string(),
+                              whitespace_grammar<Iterator> >
+      printable_string_r;
+
+
       boost::spirit::qi::rule<Iterator, 
                               std::string(), 
                               whitespace_grammar<Iterator> > 

@@ -1,4 +1,4 @@
-#include <stan/mcmc/hmc.hpp>
+#include <stan/mcmc/hmc_base.hpp>
 #include <gtest/gtest.h>
 
 TEST(stanMcmcHmc,headerParses) {

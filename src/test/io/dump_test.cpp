@@ -66,6 +66,7 @@ TEST(io_dump, reader_double) {
 TEST(io_dump, reader_int) {
   test_val("a",5,"a <- 5");
   test_val("a",-1,"a <- -1");
+  test_val("a",8,"a <- 8L");
 }
 
 TEST(io_dump, reader_doubles) {
@@ -111,8 +112,61 @@ TEST(io_dump, reader_ints) {
   vs.push_back(-2);
   vs.push_back(3);
   vs.push_back(0);
-  test_list("b12",vs,"b12 <- c(-5, -2, 3, 0)");
+  test_list("b12",vs,"b12 <- c(-5, -2L, 3, 0l)");
+
+  vs.clear();
+  vs.push_back(1);
+  vs.push_back(2);
+  vs.push_back(3);
+  vs.push_back(4);
+  vs.push_back(5);
+  test_list("z98",vs,"z98 <- 1:5");
+  
+  vs.clear();
+  vs.push_back(9);
+  vs.push_back(8);
+  test_list("iroc",vs,"iroc <- 9:8");
 }
+
+
+TEST(io_dump, reader_vec_data) {
+  std::vector<int> expected_vals;
+  for (int i = 1; i <= 6; ++i)
+    expected_vals.push_back(i);
+  std::vector<size_t> expected_dims;
+  expected_dims.push_back(2U);
+  expected_dims.push_back(3U);
+
+  std::string txt = "foo <- structure(1:6, .Dim = c(2,3))";
+  std::stringstream in(txt);
+  stan::io::dump_reader reader(in);
+  test_list2(reader,"foo",expected_vals,expected_dims);
+}
+TEST(io_dump, reader_vec_data_backward) {
+  std::vector<int> expected_vals;
+  for (int i = 20; i >= 1; --i)
+    expected_vals.push_back(i);
+  std::vector<size_t> expected_dims;
+  expected_dims.push_back(5U);
+  expected_dims.push_back(4U);
+
+  std::string txt = "foo <- structure(20:1, .Dim = c(5,4))";
+  std::stringstream in(txt);
+  stan::io::dump_reader reader(in);
+  test_list2(reader,"foo",expected_vals,expected_dims);
+}
+TEST(io_dump, reader_vec_data_long_suffix) {
+  std::vector<int> expected_vals;
+  for (int i = 10; i >= -9; --i)
+    expected_vals.push_back(i);
+  std::vector<size_t> expected_dims;
+  expected_dims.push_back(20U);
+  std::string txt = "a <-\nc(10L, 9L, 8L, 7L, 6L, 5L, 4L, 3L, 2L, 1L, 0L, -1L, -2L, -3L, \n-4L, -5L, -6L, -7L, -8L, -9L)";
+  std::stringstream in(txt);
+  stan::io::dump_reader reader(in);
+  test_list2(reader,"a",expected_vals,expected_dims);
+}
+
 
 TEST(io_dump, reader_vec_double) {
   std::vector<double> expected_vals;
@@ -130,6 +184,39 @@ TEST(io_dump, reader_vec_double) {
   stan::io::dump_reader reader(in);
   test_list2(reader,"foo",expected_vals,expected_dims);
 }
+TEST(io_dump, reader_vec_double_dots) {
+  std::vector<double> expected_vals;
+  expected_vals.push_back(1.0);
+  expected_vals.push_back(4.0);
+  expected_vals.push_back(2.0);
+  expected_vals.push_back(5.0);
+  expected_vals.push_back(3.0);
+  expected_vals.push_back(6.0);
+  std::vector<size_t> expected_dims;
+  expected_dims.push_back(2U);
+  expected_dims.push_back(3U);
+  std::string txt = "foo <- structure(c(1.0,4.0,2.0,5.0,3.0,6.0), .Dim = 2:3))";
+  std::stringstream in(txt);
+  stan::io::dump_reader reader(in);
+  test_list2(reader,"foo",expected_vals,expected_dims);
+}
+TEST(io_dump, reader_vec_double_dots_rev) {
+  std::vector<double> expected_vals;
+  expected_vals.push_back(1.0);
+  expected_vals.push_back(4.0);
+  expected_vals.push_back(2.0);
+  expected_vals.push_back(5.0);
+  expected_vals.push_back(3.0);
+  expected_vals.push_back(6.0);
+  std::vector<size_t> expected_dims;
+  expected_dims.push_back(3U);
+  expected_dims.push_back(2U);
+  std::string txt = "foo <- structure(c(1.0,4.0,2.0,5.0,3.0,6.0), .Dim = 3:2))";
+  std::stringstream in(txt);
+  stan::io::dump_reader reader(in);
+  test_list2(reader,"foo",expected_vals,expected_dims);
+}
+
 
 
 TEST(io_dump, reader_vec_int) {
@@ -160,13 +247,30 @@ TEST(io_dump, reader_sequence) {
   EXPECT_FALSE(reader.next());
 }
 
+TEST(io_dump,two_lines) {
+  std::string txt = "foo <- 3\nbar <- 4";
+  std::stringstream in(txt);
+  stan::io::dump dump(in);
+  EXPECT_TRUE(dump.contains_i("foo"));
+  EXPECT_TRUE(dump.contains_i("bar"));
+
+  std::string txt2 = "foo <- 3\nloo <- 4";
+  std::stringstream in2(txt2);
+  stan::io::dump dump2(in2);
+  EXPECT_TRUE(dump2.contains_i("foo"));
+  EXPECT_FALSE(dump2.contains_i("oo"));
+  EXPECT_TRUE(dump2.contains_i("loo"));
+}
+
 TEST(io_dump,dump) {
-  std::string txt = "foo <- c(1,2)\nbar<-1.0\n\"bing\"<-\nstructure(c(1.0,4.0,2.0,5.0,3.0,6.0), .Dim = c(2,3))";
+  std::string txt = "foo <- c(1,2)\nbar<-1.0\n\"bing\"<-\nstructure(c(1.0,4.0,2.0,5.0,3.0,6.0), .Dim = c(2,3))\nqux <- 2.0\nquux<-structure(c(1.0,2.0,3.0,4.0), .Dim = c(2L, 2L))";
   std::stringstream in(txt);
   stan::io::dump dump(in);
   EXPECT_TRUE(dump.contains_i("foo"));
   EXPECT_TRUE(dump.contains_r("foo"));
   EXPECT_TRUE(dump.contains_r("bar"));
+  EXPECT_TRUE(dump.contains_r("qux"));
+  EXPECT_TRUE(dump.contains_r("quux"));
   EXPECT_FALSE(dump.contains_r("baz"));
   EXPECT_FALSE(dump.contains_i("bingz"));
 
@@ -179,10 +283,17 @@ TEST(io_dump,dump) {
   EXPECT_FLOAT_EQ(1.0,dump.vals_r("bar")[0]);
   EXPECT_EQ(6U,dump.vals_r("bing").size());
   EXPECT_FLOAT_EQ(2.0,dump.vals_r("bing")[2]);
+  EXPECT_EQ(1U,dump.vals_r("qux").size());
+  EXPECT_EQ(4U,dump.vals_r("quux").size());
+  EXPECT_FLOAT_EQ(4.0,dump.vals_r("quux")[3]);
   
   EXPECT_EQ(2U, dump.dims_r("bing").size());
   EXPECT_EQ(2U, dump.dims_r("bing")[0]);
   EXPECT_EQ(3U, dump.dims_r("bing")[1]);
+
+  EXPECT_EQ(2U, dump.dims_r("quux").size());
+  EXPECT_EQ(2U, dump.dims_r("quux")[0]);
+  EXPECT_EQ(2U, dump.dims_r("quux")[1]);
 
   EXPECT_TRUE(dump.remove("bing"));
   EXPECT_FALSE(dump.remove("bing"));

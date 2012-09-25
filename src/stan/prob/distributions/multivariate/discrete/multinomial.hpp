@@ -1,11 +1,12 @@
-#ifndef __STAN__PROB__DISTRIBUTIONS__UNIVARIATE__DISCRETE__MULTINOMIAL_HPP__
-#define __STAN__PROB__DISTRIBUTIONS__UNIVARIATE__DISCRETE__MULTINOMIAL_HPP__
+#ifndef __STAN__PROB__DISTRIBUTIONS__MULTIVARIATE__DISCRETE__MULTINOMIAL_HPP__
+#define __STAN__PROB__DISTRIBUTIONS__MULTIVARIATE__DISCRETE__MULTINOMIAL_HPP__
 
 #include <stan/prob/traits.hpp>
 #include <stan/math/error_handling.hpp>
 #include <stan/math/matrix_error_handling.hpp>
 #include <stan/math/error_handling.hpp>
 #include <stan/prob/constants.hpp>
+#include <stan/math/special_functions.hpp>
 
 
 namespace stan {
@@ -20,17 +21,17 @@ namespace stan {
     multinomial_log(const std::vector<int>& ns,
                     const Eigen::Matrix<T_prob,Eigen::Dynamic,1>& theta, 
                     const Policy&) {
-      static const char* function = "stan::prob::multinomial_log<%1%>(%1%)";
+      static const char* function = "stan::prob::multinomial_log(%1%)";
 
-      using stan::math::check_positive;
+      using stan::math::check_nonnegative;
       using stan::math::check_simplex;
       using stan::math::check_size_match;
       using boost::math::tools::promote_args;
 
       typename promote_args<T_prob>::type lp(0.0);
-      if (!check_positive(function, ns, "Sample sizes, ns,", &lp, Policy()))
+      if (!check_nonnegative(function, ns, "Number of trials variable", &lp, Policy()))
         return lp;
-      if (!check_simplex(function, theta, "Probabilities, theta,", 
+      if (!check_simplex(function, theta, "Probabilites parameter", 
                          &lp, Policy()))
         return lp;
       if (!check_size_match(function, ns.size(), theta.rows(), &lp, Policy()))

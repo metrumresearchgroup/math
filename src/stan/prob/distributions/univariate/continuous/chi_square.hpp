@@ -3,7 +3,9 @@
 
 #include <stan/prob/traits.hpp>
 #include <stan/math/error_handling.hpp>
+#include <stan/math/special_functions.hpp>
 #include <stan/prob/constants.hpp>
+#include <stan/prob/distributions/univariate/continuous/gamma.hpp>
 
 namespace stan {
 
@@ -33,7 +35,7 @@ namespace stan {
               class Policy>
     typename boost::math::tools::promote_args<T_y,T_dof>::type
     chi_square_log(const T_y& y, const T_dof& nu, const Policy&) {
-      static const char* function = "stan::prob::chi_square_log<%1%>(%1%)";
+      static const char* function = "stan::prob::chi_square_log(%1%)";
 
       using stan::math::check_positive;
       using stan::math::check_finite;
@@ -41,11 +43,11 @@ namespace stan {
       using boost::math::tools::promote_args;
 
       typename promote_args<T_y,T_dof>::type lp;
-      if (!check_not_nan(function, y, "Random variate y", &lp, Policy()))
+      if (!check_not_nan(function, y, "Random variable", &lp, Policy()))
         return lp;
-      if (!check_finite(function, nu, "Degrees of freedom", &lp, Policy()))
+      if (!check_finite(function, nu, "Degrees of freedom parameter", &lp, Policy()))
         return lp;
-      if (!check_positive(function, nu, "Degrees of freedom", &lp, Policy()))
+      if (!check_positive(function, nu, "Degrees of freedom parameter", &lp, Policy()))
         return lp;
       
       if (y < 0)
@@ -90,7 +92,43 @@ namespace stan {
       return chi_square_log<false>(y,nu,stan::math::default_policy());
     }
 
+    /** 
+     * Calculates the chi square cumulative distribution function for the given
+     * variate and degrees of freedom.
+     * 
+     * @param y A scalar variate.
+     * @param nu Degrees of freedom.
+     * 
+     * @return The cdf of the chi square distribution
+     */
+    /*template <typename T_y, typename T_dof, 
+              class Policy>
+    typename boost::math::tools::promote_args<T_y,T_dof>::type
+    chi_square_cdf(const T_y& y, const T_dof& nu, const Policy&) {
+      static const char* function = "stan::prob::chi_square_cdf(%1%)";
 
+      using stan::math::check_positive;
+      using stan::math::check_finite;
+      using stan::math::check_not_nan;
+      using boost::math::tools::promote_args;
+
+      typename promote_args<T_y,T_dof>::type lp;
+      if (!check_not_nan(function, y, "Random variable", &lp, Policy()))
+        return lp;
+      if (!check_finite(function, nu, "Degrees of freedom parameter", &lp, Policy()))
+        return lp;
+      if (!check_positive(function, nu, "Degrees of freedom parameter", &lp, Policy()))
+        return lp;
+      
+	// FIXME: include when gamma_cdf() is ready
+      return stan::prob::gamma_cdf(y,nu/2,0.5,Policy());
+    }
+
+    template <typename T_y, typename T_dof>
+    typename boost::math::tools::promote_args<T_y,T_dof>::type
+    chi_square_cdf(const T_y& y, const T_dof& nu) {
+      return chi_square_cdf(y, nu, stan::math::default_policy());
+    }*/
   }
 }
 

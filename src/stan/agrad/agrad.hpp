@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <vector>
 #include <ostream>
+#include <iostream>
 
 #include <stan/memory/stack_alloc.hpp>
 
@@ -16,12 +17,21 @@ namespace stan {
 
     class chainable;
     class vari;
+    class var;
 
-    namespace {
-      // FIXME: manage all this as a single singleton (thread local)
-      std::vector<chainable*> var_stack_; 
-      memory::stack_alloc memalloc_;
-    }
+    template <typename T>
+    struct var_to_vi {
+      typedef T type;
+    };
+    template <>
+    struct var_to_vi<stan::agrad::var> {
+      typedef stan::agrad::vari* type;
+    };
+
+
+    // FIXME: manage all this as a single singleton (thread local)
+    extern std::vector<chainable*> var_stack_; 
+    extern memory::stack_alloc memalloc_;
 
     static void recover_memory();
 
@@ -184,7 +194,7 @@ namespace stan {
      *
      * @return Size of <code>vari</code> stack.
      */
-    size_t stack_size() {
+    inline size_t stack_size() {
       return var_stack_.size();
     }
       
@@ -195,7 +205,7 @@ namespace stan {
      * 
      * @param o ostream to modify
      */
-    void print_stack(std::ostream& o) {
+    inline void print_stack(std::ostream& o) {
       o << "STACK, size=" << var_stack_.size() << std::endl;
       for (size_t i = 0; i < var_stack_.size(); ++i)
         o << i 
@@ -235,13 +245,26 @@ namespace stan {
       vari * vi_;
 
       /**
+       * Return <code>true</code> if this variable has been
+       * declared, but not been defined.  Any attempt to use an
+       * undefined variable's value or adjoint will result in a
+       * segmentation fault.
+       *
+       * @return <code>true</code> if this variable does not yet have
+       * a defined variable.
+       */ 
+      bool is_uninitialized() {
+        return (vi_ == static_cast<vari*>(0U));
+      }
+
+      /**
        * Construct a variable from a pointer to a variable implementation.
        *
        * @param vi Variable implementation. 
        */
-      explicit var(vari* vi) :
-        vi_(vi) {
-      }
+      explicit var(vari* vi)
+      : vi_(vi) 
+      {  }
 
       /**
        * Construct a variable for later assignment.   
@@ -250,8 +273,9 @@ namespace stan {
        * dangling.  Before an assignment, the behavior is thus undefined just
        * as for a basic double.
        */
-      var() {
-      }
+       var() 
+       : vi_(static_cast<vari*>(0U))
+       { }
 
       /**      
        * Construct a variable by static casting the specified
@@ -1159,7 +1183,7 @@ namespace stan {
      * @tparam T Type of variable.
      */
     template <typename T>
-    double as_double(T x) { return (double)x; }
+    inline double as_double(T x) { return (double)x; }
 
     /**
      * Cast variable to double. Useful for templated functions where a
@@ -1172,7 +1196,7 @@ namespace stan {
      * @tparam T Type of variable.
      */
     template <>
-    double as_double<agrad::var>(agrad::var x) { return x.vi_->val_; }
+    inline double as_double<agrad::var>(agrad::var x) { return x.vi_->val_; }
 
     // COMPARISON OPERATORS
 
@@ -2255,9 +2279,9 @@ namespace stan {
      * @param[in] independents Indepent (input) variables.
      * @param[out] jacobian Jacobian of the transform.
      */
-    void jacobian(std::vector<var>& dependents,
-                  std::vector<var>& independents,
-                  std::vector<std::vector<double> >& jacobian) {
+    inline void jacobian(std::vector<var>& dependents,
+                         std::vector<var>& independents,
+                         std::vector<std::vector<double> >& jacobian) {
       jacobian.resize(dependents.size());
       for (size_t i = 0; i < dependents.size(); ++i) {
         jacobian[i].resize(independents.size());
@@ -2323,9 +2347,6 @@ namespace stan {
 }
 
 
-/** 
- * Template specification of functions in std for Stan.
- */
 namespace std {
 
   /** 
@@ -2373,32 +2394,31 @@ namespace std {
   };
 
   /**
+   * Checks if the given number is NaN.
+   * 
    * Return <code>true</code> if the value of the
-   * specivied variable is not a number.
+   * specified variable is not a number.
    *
    * @param a Variable to test.
    * @return <code>true</code> if value is not a number.
    */
-  int isnan(const stan::agrad::var& a) {
+  inline int isnan(const stan::agrad::var& a) {
     return isnan(a.val());
   }
 
   /**
+   * Checks if the given number is infinite.
+   * 
    * Return <code>true</code> if the value of the
    * a is positive or negative infinity.
    *
    * @param a Variable to test.
    * @return <code>true</code> if value is infinite.
    */
-  int isinf(const stan::agrad::var& a) {
+  inline int isinf(const stan::agrad::var& a) {
     return isinf(a.val());
   }
 
-
-
 }
-
-
-
 
 #endif

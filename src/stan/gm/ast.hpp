@@ -37,7 +37,9 @@ namespace stan {
     struct inv_var_decl;
     struct matrix_var_decl;
     struct no_op_statement;
-    struct pos_ordered_var_decl;
+    struct ordered_var_decl;
+    struct positive_ordered_var_decl;
+    struct print_statement;
     struct program;
     struct range;
     struct row_vector_var_decl;
@@ -52,42 +54,7 @@ namespace stan {
     struct var_type;
     struct vector_var_decl;
 
-    // enum base_expr_type {
-    //   INT_T,
-    //   DOUBLE_T,
-    //   VECTOR_T, // includes: SIMPLEX_T, POS_ORDERED_T
-    //   ROW_VECTOR_T,
-    //   MATRIX_T,
-    //   ILL_FORMED_T // includes: CORR_MATRIX_T, COV_MATRIX_T
-    // };
-
-    // std::ostream& operator<<(std::ostream& o, base_expr_type type) {
-    //   switch (type) {
-    //   case INT_T :
-    //     o << "int";
-    //     break;
-    //   case DOUBLE_T :
-    //     o << "double";
-    //     break;
-    //   case VECTOR_T :
-    //     o << "vector";
-    //     break;
-    //   case ROW_VECTOR_T :
-    //     o << "row vector";
-    //     break;
-    //   case MATRIX_T :
-    //     o << "matrix";
-    //     break;
-    //   case ILL_FORMED_T :
-    //     o << "ill formed";
-    //     break;
-    //   default:
-    //     o << "UNKNOWN";
-    //   }
-    //   return o;
-    // }
-
-    // forward declarable enum hack
+    // forward declarable enum hack (can't fwd-decl enum)
     typedef int base_expr_type;
     const int INT_T = 1;
     const int DOUBLE_T = 2;
@@ -95,16 +62,6 @@ namespace stan {
     const int ROW_VECTOR_T = 4;
     const int MATRIX_T = 5;
     const int ILL_FORMED_T = 6;
-
-    // // can't forward-declare an enum
-    // enum base_expr_type {
-    //   INT_T,
-    //   DOUBLE_T,
-    //   VECTOR_T, // includes: SIMPLEX_T, POS_ORDERED_T
-    //   ROW_VECTOR_T,
-    //   MATRIX_T,
-    //   ILL_FORMED_T // includes: CORR_MATRIX_T, COV_MATRIX_T
-    // };
 
     std::ostream& write_base_expr_type(std::ostream& o, base_expr_type type);
 
@@ -160,6 +117,13 @@ namespace stan {
                const expr_type& arg_type2,
                const expr_type& arg_type3,
                const expr_type& arg_type4);
+      void add(const std::string& name,
+               const expr_type& result_type,
+               const expr_type& arg_type1,
+               const expr_type& arg_type2,
+               const expr_type& arg_type3,
+               const expr_type& arg_type4,
+               const expr_type& arg_type5);
       void add_nullary(const::std::string& name);
       void add_unary(const::std::string& name);
       void add_binary(const::std::string& name);
@@ -168,7 +132,8 @@ namespace stan {
       int num_promotions(const std::vector<expr_type>& call_args,
                          const std::vector<expr_type>& sig_args);
       expr_type get_result_type(const std::string& name,
-                                const std::vector<expr_type>& args);
+                                const std::vector<expr_type>& args,
+                                std::ostream& error_msgs);
     private:
       function_signatures(); 
       function_signatures(const function_signatures& fs);
@@ -239,6 +204,20 @@ namespace stan {
       expression& operator/=(const expression& rhs);
 
       expression_t expr_;
+    };
+
+    struct printable {
+      typedef boost::variant<boost::recursive_wrapper<std::string>,
+                             boost::recursive_wrapper<expression> >
+      printable_t;
+
+      printable();
+      printable(const expression& expression);
+      printable(const std::string& msg);
+      printable(const printable_t& printable);
+      printable(const printable& printable);
+
+      printable_t printable_;
     };
 
     struct is_nil_op : public boost::static_visitor<bool> {
@@ -448,14 +427,20 @@ namespace stan {
                        std::vector<expression> const& dims);
     };
 
-    struct pos_ordered_var_decl : public base_var_decl {
-      std::string name_;
+    struct ordered_var_decl : public base_var_decl {
       expression K_;
-      std::vector<expression> dims_;
-      pos_ordered_var_decl();
-      pos_ordered_var_decl(expression const& K,
-                           std::string const& name,
-                           std::vector<expression> const& dims);
+      ordered_var_decl();
+      ordered_var_decl(expression const& K,
+                       std::string const& name,
+                       std::vector<expression> const& dims);
+    };
+
+    struct positive_ordered_var_decl : public base_var_decl {
+      expression K_;
+      positive_ordered_var_decl();
+      positive_ordered_var_decl(expression const& K,
+                                std::string const& name,
+                                std::vector<expression> const& dims);
     };
 
     struct vector_var_decl : public base_var_decl {
@@ -489,21 +474,17 @@ namespace stan {
    
 
     struct cov_matrix_var_decl : public base_var_decl {
-      std::string name_;
       expression K_;
-      std::vector<expression> dims_;
       cov_matrix_var_decl();
       cov_matrix_var_decl(expression const& K,
-                           std::string const& name,
+                          std::string const& name,
                           std::vector<expression> const& dims);
     };
 
 
 
     struct corr_matrix_var_decl : public base_var_decl {
-      std::string name_;
       expression K_;
-      std::vector<expression> dims_;
       corr_matrix_var_decl();
       corr_matrix_var_decl(expression const& K,
                            std::string const& name,
@@ -521,7 +502,8 @@ namespace stan {
       std::string operator()(const row_vector_var_decl& x) const;
       std::string operator()(const matrix_var_decl& x) const;
       std::string operator()(const simplex_var_decl& x) const;
-      std::string operator()(const pos_ordered_var_decl& x) const;
+      std::string operator()(const ordered_var_decl& x) const;
+      std::string operator()(const positive_ordered_var_decl& x) const;
       std::string operator()(const cov_matrix_var_decl& x) const;
       std::string operator()(const corr_matrix_var_decl& x) const;
     };
@@ -537,7 +519,8 @@ namespace stan {
                              boost::recursive_wrapper<row_vector_var_decl>,
                              boost::recursive_wrapper<matrix_var_decl>,
                              boost::recursive_wrapper<simplex_var_decl>,
-                             boost::recursive_wrapper<pos_ordered_var_decl>,
+                             boost::recursive_wrapper<ordered_var_decl>,
+                             boost::recursive_wrapper<positive_ordered_var_decl>,
                              boost::recursive_wrapper<cov_matrix_var_decl>,
                              boost::recursive_wrapper<corr_matrix_var_decl> >
       var_decl_t;
@@ -556,7 +539,8 @@ namespace stan {
       var_decl(const row_vector_var_decl& decl);
       var_decl(const matrix_var_decl& decl);
       var_decl(const simplex_var_decl& decl);
-      var_decl(const pos_ordered_var_decl& decl);
+      var_decl(const ordered_var_decl& decl);
+      var_decl(const positive_ordered_var_decl& decl);
       var_decl(const cov_matrix_var_decl& decl);
       var_decl(const corr_matrix_var_decl& decl);
 
@@ -569,6 +553,7 @@ namespace stan {
                            boost::recursive_wrapper<sample>,
                            boost::recursive_wrapper<statements>,
                            boost::recursive_wrapper<for_statement>,
+                           boost::recursive_wrapper<print_statement>,
                            boost::recursive_wrapper<no_op_statement> >
     statement_t;
     
@@ -582,6 +567,7 @@ namespace stan {
     statement(const sample& st);
     statement(const statements& st);
     statement(const for_statement& st);
+    statement(const print_statement& st);
     statement(const no_op_statement& st);
 
     // template <typename Statement>
@@ -598,6 +584,13 @@ namespace stan {
                   range& range,
                   statement& stmt);
   };
+
+  struct print_statement {
+    std::vector<printable> printables_;
+    print_statement();
+    print_statement(const std::vector<printable>& printables);
+  };
+
 
   struct no_op_statement {
       // no op, no data
@@ -647,6 +640,7 @@ namespace stan {
                expression& expr);
   };
   
+    // FIXME:  is this next necessary dependency?
   // from generator.hpp
   void generate_expression(const expression& e, std::ostream& o);
 

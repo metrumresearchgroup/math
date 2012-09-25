@@ -4,7 +4,9 @@
 #include <stan/prob/constants.hpp>
 #include <stan/math/matrix_error_handling.hpp>
 #include <stan/math/error_handling.hpp>
+#include <stan/math/special_functions.hpp>
 #include <stan/prob/traits.hpp>
+#include <boost/concept_check.hpp>
 
 namespace stan {
 
@@ -48,16 +50,17 @@ namespace stan {
                 const T_dof& nu,
                 const Eigen::Matrix<T_scale,Eigen::Dynamic,Eigen::Dynamic>& S,
                 const Policy&) {
-      static const char* function = "stan::prob::wishart_log<%1%>(%1%)";
+      static const char* function = "stan::prob::wishart_log(%1%)";
 
       using stan::math::check_greater_or_equal;
       using stan::math::check_size_match;
       using boost::math::tools::promote_args;
+      using Eigen::Array;
 
-      unsigned int k = W.rows();
+      typename Eigen::Matrix<T_scale,Eigen::Dynamic,Eigen::Dynamic>::size_type k = W.rows();
       typename promote_args<T_y,T_dof,T_scale>::type lp;
       if (!check_greater_or_equal(function, nu, k - 1, 
-                                  "Degrees of freedom, nu,", &lp, Policy()))
+                                  "Degrees of freedom parameter", &lp, Policy()))
         return lp;
       if (!check_size_match(function, W.rows(), W.cols(), &lp, Policy()))
         return lp;
@@ -66,14 +69,28 @@ namespace stan {
       if (!check_size_match(function, W.rows(), S.rows(), &lp, Policy()))
         return lp;
       // FIXME: domain checks
-      
-      using stan::math::multiply_log;
-      using stan::math::lmgamma;
-      using stan::math::multiply;
-      using stan::math::inverse;
-      using stan::math::determinant;
-      using stan::math::trace;
 
+      Eigen::LLT< Eigen::Matrix<T_y,Eigen::Dynamic,Eigen::Dynamic> > LLT_W = W.llt();
+      if (LLT_W.info() != Eigen::Success) {
+        lp = stan::math::policies::raise_domain_error<T_y>(function,
+                                              "W is not positive definite (%1%)",
+                                              0,Policy());
+        return lp;
+      }
+      Eigen::LLT< Eigen::Matrix<T_scale,Eigen::Dynamic,Eigen::Dynamic> > LLT_S = S.llt();
+      if (LLT_S.info() != Eigen::Success) {
+        lp = stan::math::policies::raise_domain_error<T_scale>(function,
+                                              "S is not positive definite (%1%)",
+                                              0,Policy());
+        return lp;
+      }      
+
+      Eigen::Matrix<T_y,Eigen::Dynamic,Eigen::Dynamic> L_W = LLT_W.matrixL();
+      Eigen::Matrix<T_scale,Eigen::Dynamic,Eigen::Dynamic> L_S = LLT_S.matrixL();
+
+      using stan::math::elt_multiply;
+      using stan::math::mdivide_left_tri_low;
+      using stan::math::lmgamma;
       lp = 0.0;
       if (include_summand<propto,T_dof>::value)
         lp += nu * k * NEG_LOG_TWO_OVER_TWO;
@@ -82,16 +99,18 @@ namespace stan {
         lp -= lmgamma(k, 0.5 * nu);
 
       if (include_summand<propto,T_dof,T_scale>::value)
-        lp -= multiply_log(0.5 * nu, determinant(S)); 
+        lp -= nu * L_S.diagonal().array().log().sum();
 
-      if (include_summand<propto,T_scale,T_y>::value)
-        lp -= 0.5 * fabs(trace(multiply(inverse(S), W)));
-
-      if (include_summand<propto,T_y,T_dof>::value) {
-        if (nu != (k + 1)) {
-          lp += multiply_log(0.5 * (nu - k - 1.0), determinant(W));
-        }
+      if (include_summand<propto,T_scale,T_y>::value) {
+        Eigen::Matrix<T_scale,Eigen::Dynamic,Eigen::Dynamic> I(k,k);
+        I.setIdentity();
+        L_S = mdivide_left_tri_low(L_S, I);
+        L_S = L_S.transpose() * L_S.template triangularView<Eigen::Lower>();
+        lp -= 0.5 * elt_multiply(L_S, W).array().sum(); // trace(S^-1 * W)
       }
+
+      if (include_summand<propto,T_y,T_dof>::value && nu != (k + 1))
+        lp += (nu - k - 1.0) * L_W.diagonal().array().log().sum();
 
       return lp;
     }

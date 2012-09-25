@@ -6,6 +6,7 @@
 #include <stan/prob/constants.hpp>
 #include <stan/math/matrix_error_handling.hpp>
 #include <stan/math/error_handling.hpp>
+#include <stan/math/special_functions.hpp>
 #include <stan/prob/traits.hpp>
 #include <stan/prob/distributions/multivariate/continuous/multi_normal.hpp>
 
@@ -30,12 +31,12 @@ namespace stan {
                         Eigen::Matrix<T_scale,
                                       Eigen::Dynamic,Eigen::Dynamic>& Sigma,
                         const Policy&) {
-      static const char* function = "stan::prob::multi_student_t<%1%>(%1%)";
+      static const char* function = "stan::prob::multi_student_t(%1%)";
 
       using stan::math::check_size_match;
       using stan::math::check_finite;
       using stan::math::check_not_nan;
-      using stan::math::check_cov_matrix;      
+      using stan::math::check_symmetric;
       using stan::math::check_positive;      
       using boost::math::tools::promote_args;
 
@@ -46,29 +47,37 @@ namespace stan {
         return lp;
       if (!check_size_match(function, y.size(), Sigma.cols(), &lp, Policy()))
         return lp;
-      if (!check_finite(function, mu, "Location parameter, mu", &lp, Policy()))
+      if (!check_finite(function, mu, "Location parameter", &lp, Policy()))
         return lp;
-      if (!check_not_nan(function, y, "y", &lp, Policy())) 
+      if (!check_not_nan(function, y, "Random variable", &lp, Policy())) 
         return lp;
-      if (!check_cov_matrix(function, Sigma, &lp, Policy()))
+      if (!check_symmetric(function, Sigma, "Scale parameter", &lp, Policy()))
         return lp;
 
       // allows infinities
       if (!check_not_nan(function, nu, 
-                         "Degrees of freedom, nu", &lp,
+                         "Degrees of freedom parameter", &lp,
                          Policy()))
         return lp;
       if (!check_positive(function, nu, 
-                          "Degrees of freedom, nu", &lp,
+                          "Degrees of freedom parameter", &lp,
                           Policy()))
         return lp;
       
-      // FIXME: calls expensive (!) checks twice, here and in multi normal
       using std::isinf;
 
       if (isinf(nu)) // already checked nu > 0
         return multi_normal_log(y,mu,Sigma,Policy());
 
+      Eigen::LLT< Eigen::Matrix<T_scale,Eigen::Dynamic,Eigen::Dynamic> > LLT = Sigma.llt();
+      if (LLT.info() != Eigen::Success) {
+        lp = stan::math::policies::raise_domain_error<T_scale>(function,
+                                              "Sigma is not positive definite (%1%)",
+                                              0,Policy());
+        return lp;
+      }
+      Eigen::Matrix<T_scale,Eigen::Dynamic,Eigen::Dynamic> L = LLT.matrixL();
+      
       double d = y.size();
 
       if (include_summand<propto,T_dof>::value) {
@@ -80,28 +89,29 @@ namespace stan {
       if (include_summand<propto>::value) 
         lp -= (0.5 * d) * LOG_PI;
 
-      using std::fabs;
-      using stan::math::determinant;
-      using stan::math::inverse;
       using stan::math::multiply;
-      using stan::math::dot_product;
+      using stan::math::dot_self;
       using stan::math::subtract;
-      using stan::math::transpose;
+      using Eigen::Array;
+      using stan::math::mdivide_left_tri;
 
-      if (include_summand<propto,T_scale>::value) 
-        lp -= 0.5 * log(fabs(determinant(Sigma)));
+
+      if (include_summand<propto,T_scale>::value)
+        lp -= L.diagonal().array().log().sum();
 
       if (include_summand<propto,T_y,T_dof,T_loc,T_scale>::value) {
+//      Eigen::Matrix<T_scale,Eigen::Dynamic,Eigen::Dynamic> I(d,d);
+//      I.setIdentity();
+        
         Eigen::Matrix<typename promote_args<T_y,T_loc>::type,
                       Eigen::Dynamic,
                       1> y_minus_mu = subtract(y,mu);
-        
+        Eigen::Matrix<typename promote_args<T_scale,T_y,T_loc>::type,
+                      Eigen::Dynamic,
+                      1> half = L = mdivide_left_tri<Eigen::Lower>(L, y_minus_mu);
         lp -= 0.5 
-          * (nu + d) 
-          * log(1.0 + (dot_product(multiply(transpose(y_minus_mu),
-                                         inverse(Sigma)),
-                                y_minus_mu)
-                       / nu));
+          * (nu + d)
+          * log(1.0 + dot_self(half) / nu);
       }
       return lp;
     }

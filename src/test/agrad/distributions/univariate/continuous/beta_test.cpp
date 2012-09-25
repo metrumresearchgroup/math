@@ -1,70 +1,91 @@
-#include <gtest/gtest.h>
-#include <test/agrad/distributions/expect_eq_diffs.hpp>
-#include <stan/agrad/agrad.hpp>
-#include <stan/agrad/special_functions.hpp>
-#include <stan/meta/traits.hpp>
+#define _LOG_PROB_ beta_log
 #include <stan/prob/distributions/univariate/continuous/beta.hpp>
 
-template <typename T_y, typename T_alpha, typename T_beta>
-void expect_propto(T_y y1, T_alpha alpha1, T_beta beta1,
-                   T_y y2, T_alpha alpha2, T_beta beta2,
-                   std::string message) {
-  expect_eq_diffs(stan::prob::beta_log<false>(y1,alpha1,beta1),
-                  stan::prob::beta_log<false>(y2,alpha2,beta2),
-                  stan::prob::beta_log<true>(y1,alpha1,beta1),
-                  stan::prob::beta_log<true>(y2,alpha2,beta2),
-                  message);
-}
+#include <test/agrad/distributions/distribution_test_fixture.hpp>
+#include <test/agrad/distributions/distribution_tests_3_params.hpp>
 
+using std::vector;
+using std::numeric_limits;
 using stan::agrad::var;
 
-TEST(AgradDistributionsBeta,Propto) {
-  expect_propto<var,var,var>(0.2,2.5,2.0,
-                             0.9,5.0,3.0,
-                             "var: y, alpha, beta");
-}
-TEST(AgradDistributionsBeta,ProptoY) {
-  double alpha = 3.0;
-  double beta = 2.0;
-  
-  expect_propto<var,double,double>(0.2, alpha, beta,
-                                   0.9, alpha, beta,
-                                   "var: y");
-}
-TEST(AgradDistributionsBeta,ProptoYAlpha) {
-  double beta = 2.0;
-  
-  expect_propto<var,var,double>(0.2, 1.0, beta,
-                                0.9, 4.0, beta,
-                                "var: y and alpha");
-}
-TEST(AgradDistributionsBeta,ProptoYBeta) {
-  double alpha = 2.0;
-  
-  expect_propto<var,double,var>(0.2, alpha, 0.5,
-                                0.9, alpha, 3.0,
-                                "var: y and beta");
-}
-TEST(AgradDistributionsBeta,ProptoAlpha) {
-  double y = 0.4;
-  double beta = 3.0;
-  
-  expect_propto<double,var,double>(y, 0.2, beta,
-                                   y, 6.0, beta,
-                                   "var: alpha");
-}
-TEST(AgradDistributionsBeta,ProptoAlphaBeta) {
-  double y = 0.4;
-  
-  expect_propto<double,var,var>(y, 0.6, 3.0,
-                                y, 5.0, 1.4,
-                                "var: alpha and beta");
-}
-TEST(AgradDistributionsBeta,ProptoBeta) {
-  double y = 0.4;
-  double alpha = 6.0;
-  
-  expect_propto<double,double,var>(y, alpha, 1.0,
-                                   y, alpha, 1.5,
-                                   "var: beta");
-}
+class AgradDistributionsBeta : public AgradDistributionTest {
+public:
+  void valid_values(vector<vector<double> >& parameters) {
+    vector<double> param(3);
+
+    param[0] = 0.2;           // y
+    param[1] = 1.0;           // alpha
+    param[2] = 1.0;           // beta
+    parameters.push_back(param);
+
+    param[0] = 0.3;           // y
+    param[1] = 12.0;          // alpha
+    param[2] = 25.0;          // beta
+    parameters.push_back(param);
+  }
+ 
+  void invalid_values(vector<size_t>& index, 
+		      vector<double>& value) {
+    // y
+    
+    // alpha
+    index.push_back(1U);
+    value.push_back(0.0);
+
+    index.push_back(1U);
+    value.push_back(-1.0);
+
+    index.push_back(1U);
+    value.push_back(numeric_limits<double>::infinity());
+
+    index.push_back(1U);
+    value.push_back(-numeric_limits<double>::infinity());
+
+    // beta
+    index.push_back(2U);
+    value.push_back(0.0);
+
+    index.push_back(2U);
+    value.push_back(-1.0);
+
+    index.push_back(2U);
+    value.push_back(numeric_limits<double>::infinity());
+
+    index.push_back(2U);
+    value.push_back(-numeric_limits<double>::infinity());
+  }
+
+  template <class T_y, class T_scale1, class T_scale2>
+  var log_prob(const T_y& y, const T_scale1& alpha, const T_scale2& beta) {
+    using std::log;
+    using stan::math::log1m;
+    using stan::math::log;
+    using stan::math::value_of;
+    using stan::prob::include_summand;
+    
+    var logp(0);
+    
+    if (include_summand<true,T_y,T_scale1>::value)
+      logp += (alpha - 1.0) * log(y);
+    if (include_summand<true,T_y,T_scale2>::value)
+      logp += (beta - 1.0) * log1m(y);
+    if (include_summand<true,T_scale1,T_scale2>::value)
+      logp += lgamma(alpha + beta);
+    if (include_summand<true,T_scale1>::value)
+      logp -= lgamma(alpha);
+    if (include_summand<true,T_scale2>::value)
+      logp -= lgamma(beta);
+    return logp;
+  }
+
+};
+
+INSTANTIATE_TYPED_TEST_CASE_P(AgradDistributionsBeta,
+			      AgradDistributionTestFixture,
+			      AgradDistributionsBeta);
+INSTANTIATE_TYPED_TEST_CASE_P(AgradDistributionsBeta,
+			      AgradDistributionTestFixture2,
+			      AgradDistributionsBeta);
+INSTANTIATE_TYPED_TEST_CASE_P(AgradDistributionsBeta,
+			      AgradDistributionTestFixture3,
+			      AgradDistributionsBeta);

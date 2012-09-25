@@ -64,6 +64,9 @@ BOOST_FUSION_ADAPT_STRUCT(stan::gm::for_statement,
                           (stan::gm::range, range_)
                           (stan::gm::statement, statement_) )
 
+BOOST_FUSION_ADAPT_STRUCT(stan::gm::print_statement,
+                          (std::vector<stan::gm::printable>, printables_) )
+
 BOOST_FUSION_ADAPT_STRUCT(stan::gm::sample,
                           (stan::gm::expression, expr_)
                           (stan::gm::distribution, dist_) 
@@ -116,8 +119,10 @@ namespace stan {
                                                  num_index_dims);
 
         if (lhs_type.is_ill_formed()) {
-          error_msgs << "ill-formed lhs of assignment"
-                     << std::endl;
+          error_msgs << "too many indexes for variable " 
+                     << "; variable name = " << name
+                     << "; num dimensions given = " << num_index_dims
+                     << "; variable array dimensions = " << lhs_var_num_dims;
           return false;
         }
         if (lhs_type.num_dims_ != a.expr_.expression_type().num_dims_) {
@@ -163,7 +168,7 @@ namespace stan {
         function_name += "_log";
         expr_type result_type 
           = function_signatures::instance()
-          .get_result_type(function_name,arg_types);
+          .get_result_type(function_name,arg_types,error_msgs);
         if (!result_type.is_primitive_double()) {
           error_msgs << "unknown distribution=" << s.dist_.family_ << std::endl;
           return false;
@@ -279,6 +284,7 @@ namespace stan {
       statement_r
         %= statement_seq_r(_r1,_r2)
         | for_statement_r(_r1,_r2)
+        | print_statement_r
         | assignment_r 
         [_pass 
          = validate_assignment_f(_1,_r2,boost::phoenix::ref(var_map_),
@@ -319,6 +325,25 @@ namespace stan {
         [remove_loop_identifier_f(_a,boost::phoenix::ref(var_map_))];
       ;
 
+      print_statement_r.name("print statement");
+      print_statement_r
+        %= lit("print")
+        > lit('(')
+        > (printable_r % ',')
+        // > (expression_g % ',')
+        > lit(')');
+
+      printable_r.name("printable");
+      printable_r
+        %= printable_string_r 
+        | expression_g;
+
+      printable_string_r.name("printable quoted string");
+      printable_string_r
+        %= lit('"')
+        > lexeme[*char_("a-zA-Z0-9/~!@#$%^&*()_+`-={}|[]:;'<>?,./ ")]
+        > lit('"');
+      
       identifier_r.name("identifier");
       identifier_r
         %= (lexeme[char_("a-zA-Z") 
@@ -380,11 +405,11 @@ namespace stan {
       truncation_range_r.name("range pair");
       truncation_range_r
         %= lit('T')
-        > lit('(') 
+        > lit('[') 
         > -expression_g
         > lit(',')
         > -expression_g
-        > lit(')');
+        > lit(']');
 
       no_op_statement_r.name("no op statement");
       no_op_statement_r 

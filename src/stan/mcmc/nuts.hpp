@@ -14,6 +14,7 @@
 #include <stan/math/util.hpp>
 #include <stan/mcmc/adaptive_sampler.hpp>
 #include <stan/mcmc/dualaverage.hpp>
+#include <stan/mcmc/hmc_base.hpp>
 #include <stan/mcmc/util.hpp>
 
 namespace stan {
@@ -26,44 +27,10 @@ namespace stan {
      * The NUTS sampler requires a probability model with the ability
      * to compute gradients, characterized as an instance of
      * <code>prob_grad</code>.  
-     *
      */
     template <class BaseRNG = boost::mt19937>
-    class nuts : public adaptive_sampler {
+    class nuts : public hmc_base<BaseRNG> {
     private:
-
-      // Provides the target distribution we're trying to sample from
-      // it's a ref only because it's heavy to copy
-      prob_grad& _model;
-    
-      // The most recent setting of the real-valued parameters
-      std::vector<double> _x;
-
-      // The most recent setting of the discrete parameters
-      std::vector<int> _z;
-
-      // The most recent gradient with respect to the real parameters
-      std::vector<double> _g;
-
-      // The most recent log-likelihood
-      double _logp;
-
-      // The step size used in the Hamiltonian simulation
-      double _epsilon;
-
-      // The +/- around epsilon 
-      double _epsilon_pm; 
-
-      // The desired value of E[number of states in slice in last doubling]
-      double _delta;
-
-      // Tuning parameter for dual averaging
-      double _gamma; 
-
-      // RNGs
-      BaseRNG _rand_int;
-      boost::variate_generator<BaseRNG&, boost::normal_distribution<> > _rand_unit_norm;
-      boost::uniform_01<BaseRNG&> _rand_uniform_01;
 
       // Stop immediately if H < u - _maxchange
       const double _maxchange;
@@ -73,10 +40,6 @@ namespace stan {
 
       // depth of last sample taken (-1 before any samples)
       int _lastdepth;
-
-      // Class implementing Nesterov's primal-dual averaging
-      DualAverage _da;
-
 
       /**
        * Determine whether we've started to make a "U-turn" at either end
@@ -97,10 +60,6 @@ namespace stan {
 
     public:
 
-      double epsilon() { return _epsilon; }
-
-      void setEpsilon(double epsilon) { _epsilon = epsilon; }
-
       /**
        * Construct a No-U-Turn Sampler (NUTS) for the specified model,
        * using the specified step size and number of leapfrog steps,
@@ -112,13 +71,13 @@ namespace stan {
        * called from the <code>ctime</code> library.
        * 
        * @param model Probability model with gradients.
-       * @param maxdepth 
+       * @param maxdepth Maximum depth for searching for a U-Turn. Default is 10.
        * @param epsilon Optional (initial) Hamiltonian dynamics simulation
        * step size. If not specified or set < 0, find_reasonable_parameters()
        * will be called to initialize epsilon.
        * @param epsilon_pm Plus/minus range for uniformly sampling epsilon around
        * its value.
-       * @param adapt_epsilon True if epsilon is adapted during warmup.
+       * @param epsilon_adapt True if epsilon is adapted during warmup.
        * @param delta Optional target value between 0 and 1 used to tune 
        * epsilon. Lower delta => higher epsilon => more efficiency, unless
        * epsilon gets _too_ big in which case efficiency suffers.
@@ -127,109 +86,35 @@ namespace stan {
        * @param base_rng Optional Seed for random number generator; if not
        * specified, generate new seed based on system time.
        */
-      nuts(prob_grad& model,
+      nuts(stan::model::prob_grad& model,
            int maxdepth = 10,
            double epsilon = -1,
            double epsilon_pm = 0.0,
-           bool adapt_epsilon = true,
+           bool epsilon_adapt = true,
            double delta = 0.6, 
            double gamma = 0.05,
            BaseRNG base_rng = BaseRNG(std::time(0)) )
-        : adaptive_sampler(adapt_epsilon),
-
-          _model(model), // what used to be here
-          _x(model.num_params_r()),
-          _z(model.num_params_i()),
-          _g(model.num_params_r()),
-
-          _epsilon(epsilon),
-          _epsilon_pm(epsilon_pm),
-          
-          _delta(delta),
-          _gamma(gamma),
-
-          _rand_int(base_rng),
-          _rand_unit_norm(_rand_int,
-                          boost::normal_distribution<double>()),
-          _rand_uniform_01(_rand_int),
-
+        : hmc_base<BaseRNG>(model,
+                            epsilon,
+                            epsilon_pm,
+                            epsilon_adapt,
+                            delta,
+                            gamma,
+                            base_rng),
           _maxchange(-1000),
           _maxdepth(maxdepth),
-          _lastdepth(-1),
-
-          _da(gamma, std::vector<double>(1, 0)) {
-        
-        model.init(_x, _z);
-        _logp = model.grad_log_prob(_x, _z, _g);
-        if (_epsilon <= 0)
-          find_reasonable_parameters();
-        if (adapting()) {
-          // Err on the side of regularizing epsilon towards being too big;
-          // the logic is that it's cheaper to run NUTS when epsilon's large.
-          _da.setx0(std::vector<double>(1, log(_epsilon * 10)));
-        }
+          _lastdepth(-1)
+      {
+        // start at 10 * epsilon because NUTS cheaper for larger epsilon
+        this->adaptation_init(10.0);
       }
 
       /**
-       * Destroy this sampler.
+       * Destructor.
        *
        * The implementation for this class is a no-op.
        */
       ~nuts() { }
-
-      /**
-       * Set the model real and integer parameters to the specified
-       * values.  
-       *
-       * This method will typically be used to set the parameters
-       * by the client of this class after initialization.  
-       *
-       * @param x Real parameters.
-       * @param z Integer parameters.
-       */
-      virtual void set_params(const std::vector<double>& x,
-                              const std::vector<int>& z) {
-        assert(x.size() == _x.size());
-        assert(z.size() == _z.size());
-        _x = x;
-        _z = z;
-        _logp = _model.grad_log_prob(_x,_z,_g);
-      }
-
-      /**
-       * Search for a roughly reasonable (within a factor of 2)
-       * setting of the step size epsilon.
-       */
-      virtual void find_reasonable_parameters() {
-        _epsilon = 1;
-        std::vector<double> x = _x;
-        std::vector<double> m(_model.num_params_r());
-        for (size_t i = 0; i < m.size(); ++i)
-          m[i] = _rand_unit_norm();
-        std::vector<double> g = _g;
-        double lastlogp = _logp;
-        double logp = leapfrog(_model, _z, x, m, g, _epsilon);
-        double H = logp - lastlogp;
-        int direction = H > log(0.5) ? 1 : -1;
-//         fprintf(stderr, "epsilon = %f.  initial logp = %f, lf logp = %f\n", 
-//                 _epsilon, lastlogp, logp);
-        while (true) {
-          x = _x;
-          g = _g;
-          for (size_t i = 0; i < m.size(); ++i)
-            m[i] = _rand_unit_norm();
-          logp = leapfrog(_model, _z, x, m, g, _epsilon);
-          H = logp - lastlogp;
-//           fprintf(stderr, "epsilon = %f.  initial logp = %f, lf logp = %f\n", 
-//                   _epsilon, lastlogp, logp);
-          if ((direction == 1) && (H < log(0.5)))
-            break;
-          else if ((direction == -1) && (H > log(0.5)))
-            break;
-          else
-            _epsilon = direction == 1 ? 2 * _epsilon : 0.5 * _epsilon;
-        }
-      }
 
       /**
        * Return the next sample.
@@ -238,23 +123,23 @@ namespace stan {
        */
       virtual sample next_impl() {
         // Initialize the algorithm
-        std::vector<double> mminus(_model.num_params_r());
+        std::vector<double> mminus(this->_model.num_params_r());
         for (size_t i = 0; i < mminus.size(); ++i)
-          mminus[i] = _rand_unit_norm();
+          mminus[i] = this->_rand_unit_norm();
         std::vector<double> mplus(mminus);
         // The log-joint probability of the momentum and position terms, i.e.
         // -(kinetic energy + potential energy)
-        double H0 = -0.5 * stan::math::dot_self(mminus) + _logp;
+        double H0 = -0.5 * stan::math::dot_self(mminus) + this->_logp;
 
-        std::vector<double> gradminus(_g);
-        std::vector<double> gradplus(_g);
-        std::vector<double> xminus(_x);
-        std::vector<double> xplus(_x);
+        std::vector<double> gradminus(this->_g);
+        std::vector<double> gradplus(this->_g);
+        std::vector<double> xminus(this->_x);
+        std::vector<double> xplus(this->_x);
 
         // Sample the slice variable
-        double u = log(_rand_uniform_01()) + H0;
+        double u = log(this->_rand_uniform_01()) + H0;
         int nvalid = 1;
-        int direction = 2 * (_rand_uniform_01() > 0.5) - 1;
+        int direction = 2 * (this->_rand_uniform_01() > 0.5) - 1;
         bool criterion = true;
 
         // Repeatedly double the set of points we've visited
@@ -265,8 +150,19 @@ namespace stan {
         int n_considered = 0;
         // for-loop with depth outside to set lastdepth
         int depth = 0;
+
+        double epsilon = this->_epsilon;
+        // only vary epsilon after done adapting
+        if (!this->adapting() && this->varying_epsilon()) { 
+          double low = epsilon * (1.0 - this->_epsilon_pm);
+          double high = epsilon * (1.0 + this->_epsilon_pm);
+          double range = high - low;
+          epsilon = low + (range * this->_rand_uniform_01());
+        }
+        this->_epsilon_last = epsilon; // use epsilon_last in tree build
+
         while (criterion && (_maxdepth < 0 || depth <= _maxdepth)) {
-          direction = 2 * (_rand_uniform_01() > 0.5) - 1;
+          direction = 2 * (this->_rand_uniform_01() > 0.5) - 1;
           if (direction == -1)
             build_tree(xminus, mminus, gradminus, u, direction, depth,
                        H0, xminus, mminus, gradminus, dummy1, dummy2, dummy3,
@@ -283,86 +179,94 @@ namespace stan {
           criterion = compute_criterion(xplus, xminus, mplus, mminus);
           // Metropolis-Hastings to determine if we can jump to a point in
           // the new half-tree
-          if (_rand_uniform_01() < float(newnvalid) / (1e-100+float(nvalid))) {
-            _x = newx;
-            _g = newgrad;
-            _logp = newlogp;
+          if (this->_rand_uniform_01() < float(newnvalid) / (1e-100+float(nvalid))) {
+            this->_x = newx;
+            this->_g = newgrad;
+            this->_logp = newlogp;
           }
           nvalid += newnvalid;
-//          fprintf(stderr, "depth = %d, _logp = %g\n", depth, _logp);
+//          fprintf(stderr, "depth = %d, this->_logp = %g\n", depth, this->_logp);
           ++depth;
         }
         _lastdepth = depth;
 
         // Now we just have to update epsilon, if adaptation is on.
         double adapt_stat = prob_sum / float(n_considered);
-        if (adapting()) {
-          double adapt_g = adapt_stat - _delta;
+        if (this->adapting()) {
+          double adapt_g = adapt_stat - this->_delta;
           std::vector<double> gvec(1, -adapt_g);
           std::vector<double> result;
-          _da.update(gvec, result);
-          _epsilon = exp(result[0]);
+          this->_da.update(gvec, result);
+          this->_epsilon = exp(result[0]);
         }
         std::vector<double> result;
-        _da.xbar(result);
+        this->_da.xbar(result);
 //         fprintf(stderr, "xbar = %f\n", exp(result[0]));
-        double avg_eta = 1.0 / n_steps();
-        update_mean_stat(avg_eta,adapt_stat);
+        double avg_eta = 1.0 / this->n_steps();
+        this->update_mean_stat(avg_eta,adapt_stat);
 
-        mcmc::sample s(_x, _z, _logp);
+        mcmc::sample s(this->_x, this->_z, this->_logp);
         return s;
-      }
-
-      int last_depth() {
-        return _lastdepth;
       }
 
       virtual void write_sampler_param_names(std::ostream& o) {
         o << "treedepth__,";
+        if (this->_epsilon_adapt || this->varying_epsilon())
+          o << "stepsize__,";
       }
 
       virtual void write_sampler_params(std::ostream& o) {
         o << _lastdepth << ',';
+        if (this->_epsilon_adapt || this->varying_epsilon())
+          o << this->_epsilon_last << ',';
       }
 
-
-      virtual double log_prob() {
-        return _logp;
+      virtual void get_sampler_param_names(std::vector<std::string>& names) {
+        names.clear();
+        names.push_back("treedepth__");
+        if (this->_epsilon_adapt || this->varying_epsilon())
+          names.push_back("stepsize__");
+      }
+      virtual void get_sampler_params(std::vector<double>& values) {
+        values.clear();
+        values.push_back(_lastdepth);
+        if (this->_epsilon_adapt || this->varying_epsilon())
+          values.push_back(this->_epsilon_last);
       }
 
       /**
        * The core recursion in NUTS.
        *
-       * @param x The position value to start from.
-       * @param m The momentum value to start from.
-       * @param grad The gradient at the initial position.
-       * @param u The slice variable.
-       * @param direction Simulate backwards if -1, forwards if 1.
-       * @param depth The depth of the tree to build---we'll run 2^depth
+       * @param[in] x The position value to start from.
+       * @param[in] m The momentum value to start from.
+       * @param[in] grad The gradient at the initial position.
+       * @param[in] u The slice variable.
+       * @param[in] direction Simulate backwards if -1, forwards if 1.
+       * @param[in] depth The depth of the tree to build---we'll run 2^depth
        * leapfrog steps.
-       * @param H0 The joint probability of the position-momentum we started
+       * @param[in] H0 The joint probability of the position-momentum we started
        * from initially---used to compute statistic to adapt epsilon.
-       * @param xminus Returns the position of the backwardmost leaf of this
+       * @param[out] xminus Returns the position of the backwardmost leaf of this
        * subtree.
-       * @param mminus Returns the momentum of the backwardmost leaf of this
+       * @param[out] mminus Returns the momentum of the backwardmost leaf of this
        * subtree.
-       * @param gradminus Returns the gradient at xminus.
-       * @param xplus Returns the position of the forwardmost leaf of this
+       * @param[out] gradminus Returns the gradient at xminus.
+       * @param[out] xplus Returns the position of the forwardmost leaf of this
        * subtree.
-       * @param mplus Returns the momentum of the forwardmost leaf of this
+       * @param[out] mplus Returns the momentum of the forwardmost leaf of this
        * subtree.
-       * @param gradplus Returns the gradient at xplus.
-       * @param newx Returns the new position sample selected from
+       * @param[out] gradplus Returns the gradient at xplus.
+       * @param[out] newx Returns the new position sample selected from
        * this subtree.
-       * @param newgrad Returns the gradient at the new sample selected from
+       * @param[out] newgrad Returns the gradient at the new sample selected from
        * this subtree.
-       * @param newlogp Returns the log-probability of the new sample selected
+       * @param[out] newlogp Returns the log-probability of the new sample selected
        * from this subtree.
-       * @param nvalid Returns the number of usable points in the subtree.
-       * @param criterion Returns true if the subtree is usable, false if not.
-       * @param prob_sum Returns the sum of the HMC acceptance probabilities
+       * @param[out] nvalid Returns the number of usable points in the subtree.
+       * @param[out] criterion Returns true if the subtree is usable, false if not.
+       * @param[out] prob_sum Returns the sum of the HMC acceptance probabilities
        * at each point in the subtree.
-       * @param n_considered Returns the number of states in the subtree.
+       * @param[out] n_considered Returns the number of states in the subtree.
        */
       void build_tree(const std::vector<double>& x, 
                       const std::vector<double>& m,
@@ -388,8 +292,10 @@ namespace stan {
           xminus = x;
           gradminus = grad;
           mminus = m;
-          newlogp = leapfrog(_model, _z, xminus, mminus, gradminus,
-                             direction * _epsilon);
+          // FIXME:  lepfrog needs +/- this->_epsilon_pm
+          newlogp = leapfrog(this->_model, this->_z, xminus, mminus, gradminus,
+                             direction * this->_epsilon_last,
+                             this->_error_msgs, this->_output_msgs);
           newx = xminus;
           newgrad = gradminus;
           xplus = xminus;
@@ -402,7 +308,7 @@ namespace stan {
           criterion = newH - u > _maxchange;
           prob_sum = stan::math::min(1, exp(newH - H0));
           n_considered = 1;
-          nfevals_plus_eq(1);
+          this->nfevals_plus_eq(1);
         } else {            // depth >= 1
           build_tree(x, m, grad, u, direction, depth-1, H0, xminus, mminus,
                      gradminus, xplus, mplus, gradplus, newx, newgrad, newlogp,
@@ -427,7 +333,8 @@ namespace stan {
                          newx2, newgrad2, newlogp2, nvalid2, criterion2,
                          prob_sum2, n_considered2);
             if (criterion && 
-                (_rand_uniform_01() < float(nvalid2) / float(nvalid+nvalid2))){
+                (this->_rand_uniform_01() 
+                 < float(nvalid2) / float(nvalid+nvalid2))) {
               newx = newx2;
               newgrad = newgrad2;
               newlogp = newlogp2;
@@ -439,30 +346,6 @@ namespace stan {
           }
           criterion &= compute_criterion(xplus, xminus, mplus, mminus);
         }
-      }
-
-      /**
-       * Turn off parameter adaptation. 
-       *
-       * Because we're using primal-dual averaging, once we're done
-       * adapting we want to set epsilon=the _average_ value of
-       * epsilon over each adaptation step. This results in a
-       * lower-variance estimate of the optimal epsilon.
-       */
-      virtual void adapt_off() {
-        adaptive_sampler::adapt_off();
-        std::vector<double> result;
-        _da.xbar(result);
-        _epsilon = exp(result[0]);
-      }
-
-      /**
-       * Return the value of epsilon.
-       *
-       * @param params Where to store epsilon.
-       */
-      virtual void get_parameters(std::vector<double>& params) {
-        params.assign(1, _epsilon);
       }
 
 

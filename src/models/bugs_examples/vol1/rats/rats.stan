@@ -1,8 +1,8 @@
 # http://www.mrc-bsu.cam.ac.uk/bugs/winbugs/Vol1.pdf
 # Page 3: Rats
 data {
-  int(0,) N;
-  int(0,) T;
+  int<lower=0> N;
+  int<lower=0> T;
   real x[T];
   real y[N,T];
   real xbar;
@@ -12,16 +12,16 @@ parameters {
   real beta[N];
 
   real mu_alpha;
-  real mu_beta;
+  real mu_beta;          // beta.c in original bugs model
 
-  real(0,) sigmasq_y;
-  real(0,) sigmasq_alpha;
-  real(0,) sigmasq_beta;
+  real<lower=0> sigmasq_y;
+  real<lower=0> sigmasq_alpha;
+  real<lower=0> sigmasq_beta;
 }
 transformed parameters {
-  real(0,) sigma_y;
-  real(0,) sigma_alpha;
-  real(0,) sigma_beta;
+  real<lower=0> sigma_y;       // sigma in original bugs model
+  real<lower=0> sigma_alpha;
+  real<lower=0> sigma_beta;
 
   sigma_y <- sqrt(sigmasq_y);
   sigma_alpha <- sqrt(sigmasq_alpha);
@@ -39,4 +39,8 @@ model {
     for (t in 1:T) 
       y[n,t] ~ normal(alpha[n] + beta[n] * (x[t] - xbar), sigma_y);
 
+}
+generated quantities {
+  real alpha0;
+  alpha0 <- mu_alpha - xbar * mu_beta;
 }

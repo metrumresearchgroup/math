@@ -8,15 +8,15 @@
 
 
 data {
-  int(0,) N; 
+  int<lower=0> N; 
   real x[N]; 
   real Y[N]; 
 } 
 parameters {
   real alpha; 
   real beta;  
-  real(.5, 1) lambda; // orginal gamma in the JAGS example  
-  real(0,) tau; 
+  real<lower=.5,upper= 1> lambda; // orginal gamma in the JAGS example  
+  real<lower=0> tau; 
    
 } 
 transformed parameters {
@@ -26,7 +26,8 @@ transformed parameters {
   U3 <- logit(lambda);
 } 
 model {
-  for (i in 1:N) Y[i] ~ normal(alpha - beta * pow(lambda, x[i]), sigma);
+  for (i in 1:N) 
+    Y[i] ~ normal(alpha - beta * pow(lambda, x[i]), sigma);
     
   alpha ~ normal(0.0, 1000); 
   beta ~ normal(0.0, 1000); 

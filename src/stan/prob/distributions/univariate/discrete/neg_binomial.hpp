@@ -3,6 +3,7 @@
 
 #include <stan/prob/constants.hpp>
 #include <stan/math/error_handling.hpp>
+#include <stan/math/special_functions.hpp>
 #include <stan/prob/traits.hpp>
 
 namespace stan {
@@ -19,7 +20,7 @@ namespace stan {
                      const T_inv_scale& beta, 
                      const Policy&) {
 
-      static const char* function = "stan::prob::neg_binomial_log<%1%>(%1%)";
+      static const char* function = "stan::prob::neg_binomial_log(%1%)";
 
       using stan::math::check_finite;      
       using stan::math::check_nonnegative;
@@ -27,16 +28,16 @@ namespace stan {
       using boost::math::tools::promote_args;
       
       typename promote_args<T_shape, T_inv_scale>::type lp;
-      if (!check_nonnegative(function, n, "n", &lp, Policy()))
+      if (!check_nonnegative(function, n, "Failures variable", &lp, Policy()))
         return lp;
-      if (!check_finite(function, alpha, "Shape, alpha,", &lp, Policy()))
+      if (!check_finite(function, alpha, "Shape parameter", &lp, Policy()))
         return lp;
-      if (!check_positive(function, alpha, "Shape, alpha,", &lp, Policy()))
+      if (!check_positive(function, alpha, "Shape parameter", &lp, Policy()))
         return lp;
-      if (!check_finite(function, beta, "Inverse scale, beta,",
+      if (!check_finite(function, beta, "Inverse scale parameter",
                         &lp, Policy()))
         return lp;
-      if (!check_positive(function, beta, "Inverse scale, beta,", 
+      if (!check_positive(function, beta, "Inverse scale parameter", 
                           &lp, Policy()))
         return lp;
       
@@ -44,10 +45,25 @@ namespace stan {
       using stan::math::binomial_coefficient_log;
       
       lp = 0.0;
+
+      // Special case where negative binomial reduces to Poisson
+      if (alpha > 1e10) {
+        if (include_summand<propto>::value)
+          lp -= lgamma(n + 1.0);
+        if (include_summand<propto,T_shape>::value ||
+            include_summand<propto,T_inv_scale>::value) {
+          typename promote_args<T_shape, T_inv_scale>::type lambda;
+          lambda = alpha / beta;
+          lp += multiply_log(n, lambda) - lambda;
+          return lp;
+        }
+      }
+      // More typical cases
       if (include_summand<propto,T_shape>::value)
-        lp += binomial_coefficient_log<T_shape>(n + alpha - 1.0, n);
+	if (n != 0)
+	  lp += binomial_coefficient_log<T_shape>(n + alpha - 1.0, n);
       if (include_summand<propto,T_shape,T_inv_scale>::value)
-        lp += multiply_log(alpha, beta) - (alpha + n) * log1p(beta);
+	lp += -n * log1p(beta) + alpha * log(beta / (1 + beta));
       return lp;
     }
 

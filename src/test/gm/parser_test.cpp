@@ -86,6 +86,10 @@ TEST(gm_parser,good_const) {
   EXPECT_TRUE(is_parsable("src/test/gm/model_specs/good_const.stan"));
 }
 
+TEST(gm_parser,good_matrix_ops) {
+  EXPECT_TRUE(is_parsable("src/test/gm/model_specs/good_matrix_ops.stan"));
+}
+
 TEST(gm_parser,good_funs) {
   EXPECT_TRUE(is_parsable("src/test/gm/model_specs/good_funs.stan"));
 }
@@ -96,6 +100,10 @@ TEST(gm_parser,triangle_lp) {
 
 TEST(gm_parser,good_vars) {
   EXPECT_TRUE(is_parsable("src/test/gm/model_specs/good_vars.stan"));
+}
+
+TEST(gm_parser,good_cov) {
+  EXPECT_TRUE(is_parsable("src/test/gm/model_specs/good_cov.stan"));
 }
 
 TEST(gm_parser,parsable_test_bad1) {
@@ -130,7 +138,6 @@ TEST(gm_parser,parsable_test_bad7) {
   EXPECT_THROW(is_parsable("src/test/gm/model_specs/bad7.stan"),
                std::invalid_argument);
 }
-
 TEST(gm_parser,parsable_test_bad8) {
   EXPECT_THROW(is_parsable("src/test/gm/model_specs/bad8.stan"),
                std::invalid_argument);
@@ -138,4 +145,16 @@ TEST(gm_parser,parsable_test_bad8) {
 TEST(gm_parser,parsable_test_bad9) {
   EXPECT_THROW(is_parsable("src/test/gm/model_specs/bad9.stan"),
                std::invalid_argument);
+}
+TEST(gm_parser,parsable_test_bad10) {
+  EXPECT_THROW(is_parsable("src/test/gm/model_specs/bad10.stan"),
+               std::invalid_argument);
+}
+TEST(gm_parser,parsable_test_bad11) {
+  EXPECT_THROW(is_parsable("src/test/gm/model_specs/bad11.stan"),
+               std::invalid_argument);
+}
+TEST(gm_parser,function_signatures) {
+  EXPECT_TRUE(is_parsable("src/test/gm/model_specs/function_signatures1.stan"));
+  EXPECT_TRUE(is_parsable("src/test/gm/model_specs/function_signatures2.stan"));
 }

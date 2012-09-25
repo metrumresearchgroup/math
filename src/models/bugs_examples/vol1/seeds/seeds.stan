@@ -1,22 +1,22 @@
 ## 
 ##  http://www.openbugs.info/Examples/Seeds.html
 data {
-    int(0,) I;
-    int(0,) n[I];
-    int(0,) N[I];
+    int<lower=0> I;
+    int<lower=0> n[I];
+    int<lower=0> N[I];
     real x1[I];
     real x2[I];
 }
 parameters {
     real alpha0;
     real alpha1;
-    real alpha2;
     real alpha12;
-    real(0,) tau;
+    real alpha2;
+    real<lower=0> tau;
     real b[I];
 }
 transformed parameters {
-    real(0,) sigma;
+    real<lower=0> sigma;
     sigma  <- 1.0 / sqrt(tau);
 }
 model {

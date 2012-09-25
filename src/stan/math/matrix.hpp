@@ -1,12 +1,16 @@
-#ifndef __STAN__MATH__MATRIX_H__
-#define __STAN__MATH__MATRIX_H__
+#ifndef __STAN__MATH__MATRIX_HPP__
+#define __STAN__MATH__MATRIX_HPP__
 
 #include <stdexcept>
+#include <ostream>
 #include <vector>
+
+#include <boost/math/tools/promotion.hpp>
 
 #define EIGEN_DENSEBASE_PLUGIN "stan/math/EigenDenseBaseAddons.hpp"
 #include <Eigen/Dense>
 
+#include <stan/math/boost_error_handling.hpp>
 
 namespace stan {
   
@@ -75,8 +79,6 @@ namespace stan {
      */
     typedef EigenType<double>::row_vector row_vector_d;
 
-
-
     namespace {
 
       template <typename T>
@@ -139,12 +141,10 @@ namespace stan {
 
     namespace {
       
-      inline
-      void check_range(size_t max,
-                       size_t i, 
-                       const std::string& msg,
-                       size_t idx) {
-        if (i < 1 || i > max) {
+      void raise_range_error(size_t max,
+                             size_t i, 
+                             const char* msg,
+                             size_t idx) {
           std::stringstream s;
           s << "INDEX OPERATOR [] OUT OF BOUNDS"
             << "; index=" << i
@@ -154,7 +154,17 @@ namespace stan {
             << "; " << msg
             << std::endl;
           throw std::out_of_range(s.str());
-        }
+      }
+
+      inline
+      void check_range(size_t max,
+                       size_t i, 
+                       const char* msg,
+                       size_t idx) {
+#ifndef NDEBUG
+        if (i < 1 || i > max) 
+          raise_range_error(max,i,msg,idx);
+#endif
       }
 
     }
@@ -177,7 +187,7 @@ namespace stan {
     inline
     T& get_base1(std::vector<T>& x, 
                  size_t i, 
-                 const std::string& error_msg,
+                 const char* error_msg,
                  size_t idx) {
       check_range(x.size(),i,error_msg,idx);
       return x[i - 1];
@@ -203,7 +213,7 @@ namespace stan {
     T& get_base1(std::vector<std::vector<T> >& x, 
                  size_t i1, 
                  size_t i2,
-                 const std::string& error_msg,
+                 const char* error_msg,
                  size_t idx) {
       check_range(x.size(),i1,error_msg,idx);
       return get_base1(x[i1 - 1],i2,error_msg,idx+1);
@@ -231,7 +241,7 @@ namespace stan {
                  size_t i1, 
                  size_t i2,
                  size_t i3,
-                 const std::string& error_msg,
+                 const char* error_msg,
                  size_t idx) {
       check_range(x.size(),i1,error_msg,idx);
       return get_base1(x[i1 - 1],i2,i3,error_msg,idx+1);
@@ -261,7 +271,7 @@ namespace stan {
                  size_t i2,
                  size_t i3,
                  size_t i4,
-                 const std::string& error_msg,
+                 const char* error_msg,
                  size_t idx) {
       check_range(x.size(),i1,error_msg,idx);
       return get_base1(x[i1 - 1],i2,i3,i4,error_msg,idx+1);
@@ -293,7 +303,7 @@ namespace stan {
                  size_t i3,
                  size_t i4,
                  size_t i5,
-                 const std::string& error_msg,
+                 const char* error_msg,
                  size_t idx) {
       check_range(x.size(),i1,error_msg,idx);
       return get_base1(x[i1 - 1],i2,i3,i4,i5,error_msg,idx+1);
@@ -327,7 +337,7 @@ namespace stan {
                  size_t i4,
                  size_t i5,
                  size_t i6,
-                 const std::string& error_msg,
+                 const char* error_msg,
                  size_t idx) {
       check_range(x.size(),i1,error_msg,idx);
       return get_base1(x[i1 - 1],i2,i3,i4,i5,i6,error_msg,idx+1);
@@ -364,7 +374,7 @@ namespace stan {
                  size_t i5,
                  size_t i6,
                  size_t i7,
-                 const std::string& error_msg,
+                 const char* error_msg,
                  size_t idx) {
       check_range(x.size(),i1,error_msg,idx);
       return get_base1(x[i1 - 1],i2,i3,i4,i5,i6,i7,error_msg,idx+1);
@@ -403,7 +413,7 @@ namespace stan {
                  size_t i6,
                  size_t i7,
                  size_t i8,
-                 const std::string& error_msg,
+                 const char* error_msg,
                  size_t idx) {
       check_range(x.size(),i1,error_msg,idx);
       return get_base1(x[i1 - 1],i2,i3,i4,i5,i6,i7,i8,error_msg,idx+1);
@@ -435,7 +445,7 @@ namespace stan {
     Eigen::Matrix<T,1,Eigen::Dynamic>
     get_base1(Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>& x,
               size_t m,
-              const std::string& error_msg,
+              const char* error_msg,
               size_t idx) {
       check_range(x.rows(),m,error_msg,idx);
       return x.row(m - 1);
@@ -462,7 +472,7 @@ namespace stan {
     T& get_base1(Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>& x,
                  size_t m,
                  size_t n,
-                 const std::string& error_msg,
+                 const char* error_msg,
                  size_t idx) {
       check_range(x.rows(),m,error_msg,idx);
       check_range(x.cols(),n,error_msg,idx + 1);
@@ -487,7 +497,7 @@ namespace stan {
     inline
     T& get_base1(Eigen::Matrix<T,Eigen::Dynamic,1>& x,
                  size_t m,
-                 const std::string& error_msg,
+                 const char* error_msg,
                  size_t idx) {
       check_range(x.size(),m,error_msg,idx);
       return x(m - 1);
@@ -512,7 +522,7 @@ namespace stan {
     inline
     T& get_base1(Eigen::Matrix<T,1,Eigen::Dynamic>& x,
                  size_t n,
-                 const std::string& error_msg,
+                 const char* error_msg,
                  size_t idx) {
       check_range(x.size(),n,error_msg,idx);
       return x(n - 1);
@@ -576,34 +586,141 @@ namespace stan {
       return m.cols();
     }
     
+    template <typename T, int R, int C>
+    void validate_square(const Eigen::Matrix<T,R,C>& x,
+                         const char* msg) {
+      if (x.rows() == x.cols()) return;
+      std::stringstream ss;
+      ss << "error in call to " << msg
+         << "; require square matrix, but found"
+         << " rows=" << x.rows()
+         << "; cols=" << x.cols();
+      throw std::domain_error(ss.str());
+    }
+
+    template <typename T1, int R1, int C1, typename T2, int R2, int C2>
+    inline void validate_matching_dims(const Eigen::Matrix<T1,R1,C1>& x1,
+                                       const Eigen::Matrix<T2,R2,C2>& x2,
+                                       const char* msg) {
+      if (x1.rows() == x2.rows()
+          && x1.cols() == x2.cols()) return;
+      std::stringstream ss;
+      ss << "error in call to " << msg
+         << "; require matching dimensions, but found"
+         << " arg1 rows=" << x1.rows() << " arg1 cols=" << x1.cols()
+         << " arg2 rows=" << x2.rows() << " arg2 cols=" << x2.cols();
+      throw std::domain_error(ss.str());
+    }
+
+    template <typename T1, typename T2>
+    inline void validate_matching_sizes(const std::vector<T1>& x1,
+                                        const std::vector<T2>& x2,
+                                        const char* msg) {
+      if (x1.size() == x2.size()) return;
+      std::stringstream ss;
+      ss << "require matching sizes in " << msg
+         << " found first argument size=" << x1.size()
+         << "; second argument size=" << x2.size();
+      throw std::domain_error(ss.str());
+    }
+
+    template <typename T1, int R1, int C1, typename T2, int R2, int C2>
+    inline void validate_matching_sizes(const Eigen::Matrix<T1,R1,C1>& x1,
+                                        const Eigen::Matrix<T2,R2,C2>& x2,
+                                        const char* msg) {
+      if (x1.size() == x2.size()) return;
+      std::stringstream ss;
+      ss << "error in call to " << msg
+         << "; require matching sizes, but found"
+         << " arg1 rows=" << x1.rows() << " arg1 cols=" << x1.cols()
+         << " arg1 size=" << (x1.rows() * x1.cols())
+         << " arg2 rows=" << x2.rows() << " arg2 cols=" << x2.cols()
+         << " arg2 size=" << (x2.rows() * x2.cols());
+      throw std::domain_error(ss.str());
+    }
+
+    template <typename T>
+    inline void validate_nonzero_size(const T& x, const char* msg) {
+      if (x.size() > 0) return;
+      std::stringstream ss;
+      ss << "require non-zero size for " << msg
+         << "found size=" << x.size();
+      throw std::domain_error(ss.str());
+    }
+
+    template <typename T, int R, int C>
+    inline void validate_vector(const Eigen::Matrix<T,R,C>& x,
+                                const char* msg) {
+      if (x.rows() == 1 || x.cols() == 1) return;
+      std::stringstream ss;
+      ss << "error in " << msg
+         << "; require vector, found "
+         << " rows=" << x.rows() << "cols=" << x.cols();
+      throw std::domain_error(ss.str());
+    }
+
+
+
+    
+
 
     // scalar returns
 
     /**
-     * Returns the determinant of the specified
-     * square matrix.
+     * Returns the determinant of the specified square matrix.
      * @param m Specified matrix.
      * @return Determinant of the matrix.
+     * @throw std::domain_error if matrix is not square.
      */
-    inline double determinant(const matrix_d& m) {
-      return m.determinant();
+    double determinant(const matrix_d& m);
+
+
+    /**
+     * Returns the dot product of the specified vector with itself.
+     * @param v Vector.
+     * @tparam R number of rows or <code>Eigen::Dynamic</code> for dynamic
+     * @tparam C number of rows or <code>Eigen::Dyanmic</code> for dynamic
+     * @throw std::domain_error If v is not vector dimensioned.
+     */
+    template <int R, int C>
+    inline double dot_self(const Eigen::Matrix<double, R, C>& v) {
+      validate_vector(v,"dot_self");
+      double sum = 0.0;
+      for (int i = 0; i < v.size(); ++i)
+        sum += v(i) * v(i);
+      return sum;
     }
+
+    /**
+     * Returns the dot product of each column of a matrix with itself.
+     * @param x Matrix.
+     * @tparam T scalar type
+     */
+    template<typename T>
+    inline Eigen::Matrix<T,Eigen::Dynamic,1> 
+    columns_dot_self(const Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>& x) {
+      return x.colwise().squaredNorm();
+    }
+
     /**
      * Returns the dot product of the specified vectors.
-     * @param rv1 First vector.
-     * @param rv2 Second vector.
+     *
+     * @param v1 First vector.
+     * @param v2 Second vector.
      * @return Dot product of the vectors.
+     * @throw std::domain_error If the vectors are not the same
+     * size or if they are both not vector dimensioned.
      */
     template<int R1,int C1,int R2, int C2>
     inline double dot_product(const Eigen::Matrix<double, R1, C1>& v1, 
                               const Eigen::Matrix<double, R2, C2>& v2) {
-      if (v1.rows() != 1 && v1.cols() != 1)
-        throw std::invalid_argument("v1 must be a vector");
-      if (v2.rows() != 1 && v2.cols() != 1)
-        throw std::invalid_argument("v2 must be a vector");
-      if (v1.size() != v2.size())
-        throw std::invalid_argument("v1.size() must equal v2.size()");
-      return v1.dot(v2);
+      validate_vector(v1,"dot_product");
+      validate_vector(v2,"dot_product");
+      validate_matching_sizes(v1,v2,"dot_product");
+      double sum = 0.0;
+      for (int i = 0; i < v1.size(); ++i)
+        sum += v1[i] * v2[i]; 
+      return sum;
     }
     /**
      * Returns the dot product of the specified arrays of doubles.
@@ -622,11 +739,11 @@ namespace stan {
      * Returns the dot product of the specified arrays of doubles.
      * @param v1 First array.
      * @param v2 Second array.
+     * @throw std::domain_error if the vectors are not the same size.
      */
     inline double dot_product(const std::vector<double>& v1,
                               const std::vector<double>& v2) {
-      if (v1.size() != v2.size())
-        throw std::invalid_argument("v1.size() must equal v2.size()");
+      validate_matching_sizes(v1,v2,"dot_product");
       return dot_product(&v1[0], &v2[0], v1.size());
     }
 
@@ -635,27 +752,67 @@ namespace stan {
      * column vector.
      * @param v Specified vector.
      * @return Minimum coefficient value in the vector.
+     * @tparam Type of values being compared and returned
      */
-    inline double min(const vector_d& v) {
-      return v.minCoeff();
+    inline int min(const std::vector<int>& x) {
+      if (x.size() == 0)
+        throw std::domain_error("error: cannot take min of empty int vector");
+      int min = x[0];
+      for (size_t i = 1; i < x.size(); ++i)
+        if (x[i] < min) 
+          min = x[i];
+      return min;
     }
+
     /**
      * Returns the minimum coefficient in the specified
-     * row vector.
-     * @param rv Specified vector.
+     * column vector.
+     * @param v Specified vector.
+     * @return Minimum coefficient value in the vector.
+     * @tparam Type of values being compared and returned
+     */
+    template <typename T>
+    inline T min(const std::vector<T>& x) {
+      if (x.size() == 0)
+        return std::numeric_limits<T>::infinity();
+      T min = x[0];
+      for (size_t i = 1; i < x.size(); ++i)
+        if (x[i] < min) 
+          min = x[i];
+      return min;
+    }
+
+    /**
+     * Returns the minimum coefficient in the specified
+     * matrix, vector, or row vector.
+     * @param v Specified matrix, vector, or row vector.
      * @return Minimum coefficient value in the vector.
      */
-    inline double min(const row_vector_d& rv) {
-      return rv.minCoeff();
-    }
-    /**
-     * Returns the minimum coefficient in the specified
-     * matrix.
-     * @param m Specified matrix.
-     * @return Minimum coefficient value in the matrix.
-     */
-    inline double min(const matrix_d& m) {
+    template <typename T, int R, int C>
+    inline T min(const Eigen::Matrix<T,R,C>& m) {
+      if (m.size() == 0) 
+        return std::numeric_limits<double>::infinity();
       return m.minCoeff();
+    }
+
+
+
+    /**
+     * Returns the maximum coefficient in the specified
+     * column vector.
+     * @param v Specified vector.
+     * @return Maximum coefficient value in the vector.
+     * @tparam Type of values being compared and returned
+     * @throw std::domain_error If the size of the vector is zero.
+     */
+    inline int max(const std::vector<int>& x) {
+      if (x.size() == 0)
+        throw std::domain_error("error: cannot take max of empty int vector");
+      int max = x[0];
+      for (size_t i = 1; i < x.size(); ++i)
+        if (x[i] > max) 
+          max = x[i];
+      return max;
     }
 
     /**
@@ -663,26 +820,29 @@ namespace stan {
      * column vector.
      * @param v Specified vector.
      * @return Maximum coefficient value in the vector.
+     * @tparam T Type of values being compared and returned
      */
-    inline double max(const vector_d& v) {
-      return v.maxCoeff();
+    template <typename T>
+    inline T max(const std::vector<T>& x) {
+      if (x.size() == 0)
+        return -std::numeric_limits<T>::infinity();
+      T max = x[0];
+      for (size_t i = 1; i < x.size(); ++i)
+        if (x[i] > max) 
+          max = x[i];
+      return max;
     }
+
     /**
      * Returns the maximum coefficient in the specified
-     * row vector.
-     * @param rv Specified vector.
+     * vector, row vector, or matrix.
+     * @param v Specified vector, row vector, or matrix.
      * @return Maximum coefficient value in the vector.
      */
-    inline double max(const row_vector_d& rv) {
-      return rv.maxCoeff();
-    }
-    /**
-     * Returns the maximum coefficient in the specified
-     * matrix.
-     * @param m Specified matrix.
-     * @return Maximum coefficient value in the matrix.
-     */
-    inline double max(const matrix_d& m) {
+    template <typename T, int R, int C>
+    inline T max(const Eigen::Matrix<T,R,C>& m) {
+      if (m.size() == 0)
+        return -std::numeric_limits<double>::infinity();
       return m.maxCoeff();
     }
 
@@ -691,54 +851,52 @@ namespace stan {
      * in the specified standard vector.
      * @param v Specified vector.
      * @return Sample mean of vector coefficients.
+     * @throws std::domain_error if the size of the vector is less
+     * than 1.
      */
     template <typename T>
-    inline double mean(const std::vector<T>& v) {
-      double sum(0);
-      for (size_t i = 0; i < v.size(); ++i)
+    inline 
+    typename boost::math::tools::promote_args<T>::type
+    mean(const std::vector<T>& v) {
+      validate_nonzero_size(v,"mean");
+      T sum(v[0]);
+      for (size_t i = 1; i < v.size(); ++i)
         sum += v[i];
       return sum / v.size();
     }
 
     /**
      * Returns the sample mean (i.e., average) of the coefficients
-     * in the specified column vector.
-     * @param v Specified vector.
+     * in the specified vector, row vector, or matrix.
+     * @param m Specified vector, row vector, or matrix.
      * @return Sample mean of vector coefficients.
      */
-    inline double mean(const vector_d& v) {
-      return v.mean();
-    }
-    /**
-     * Returns the sample mean (i.e., average) of the coefficients
-     * in the specified row vector.
-     * @param rv Specified vector.
-     * @return Sample mean of vector coefficients.
-     */
-    inline double mean(const row_vector_d& rv) {
-      return rv.mean();
-    }
-    /**
-     * Returns the sample mean (i.e., average) of the coefficients
-     * in the specified matrix.
-     * @param m Specified matrix.
-     * @return Sample mean of matrix coefficients.
-     */
-    inline double mean(const matrix_d& m) {
+    template <typename T, int R, int C>
+    inline  
+    typename boost::math::tools::promote_args<T>::type
+    mean(const Eigen::Matrix<T,R,C>& m) {
+      validate_nonzero_size(m,"mean");
       return m.mean();
     }
 
     /**
      * Returns the sample variance (divide by length - 1) of the
-     * coefficients in the specified column vector.
+     * coefficients in the specified standard vector.
      * @param v Specified vector.
      * @return Sample variance of vector.
+     * @throws std::domain_error if the size of the vector is less
+     * than 1.
      */
     template <typename T>
-    inline double variance(const std::vector<T>& v) {
-      T v_mean = mean(v);
-      T sum_sq_diff = 0;
-      for (int i = 0; i < v.size(); ++i) {
+    inline 
+    typename boost::math::tools::promote_args<T>::type
+    variance(const std::vector<T>& v) {
+      validate_nonzero_size(v,"variance");
+      if (v.size() == 1)
+        return 0.0;
+      T v_mean(mean(v));
+      T sum_sq_diff(0);
+      for (size_t i = 0; i < v.size(); ++i) {
         T diff = v[i] - v_mean;
         sum_sq_diff += diff * diff;
       }
@@ -751,44 +909,21 @@ namespace stan {
      * @param v Specified vector.
      * @return Sample variance of vector.
      */
-    inline double variance(const vector_d& v) {
-      double mean = v.mean();
-      double sum_sq_diff = 0;
-      for (int i = 0; i < v.size(); ++i) {
-        double diff = v[i] - mean;
+    template <typename T, int R, int C>
+    inline
+    typename boost::math::tools::promote_args<T>::type
+    variance(const Eigen::Matrix<T,R,C>& m) {
+      validate_nonzero_size(m,"variance");
+      if (m.size() == 1)
+        return 0.0;
+      typename boost::math::tools::promote_args<T>::type 
+        mn(mean(m));
+      typename boost::math::tools::promote_args<T>::type 
+        sum_sq_diff(0);
+      for (int i = 0; i < m.size(); ++i) {
+        typename boost::math::tools::promote_args<T>::type 
+          diff = m(i) - mn;
         sum_sq_diff += diff * diff;
-      }
-      return sum_sq_diff / (v.size() - 1);
-    }
-    /**
-     * Returns the sample variance (divide by length - 1) of the
-     * coefficients in the specified row vector.
-     * @param rv Specified vector.
-     * @return Sample variance of vector.
-     */
-    inline double variance(const row_vector_d& rv) {
-      double mean = rv.mean();
-      double sum_sq_diff = 0;
-      for (int i = 0; i < rv.size(); ++i) {
-        double diff = rv[i] - mean;
-        sum_sq_diff += diff * diff;
-      }
-      return sum_sq_diff / (rv.size() - 1);
-    }
-    /**
-     * Returns the sample variance (divide by length - 1) of the
-     * coefficients in the specified matrix.
-     * @param m Specified matrix.
-     * @return Sample variance of matrix.
-     */
-    inline double variance(const matrix_d& m) {
-      double mean = m.mean();
-      double sum_sq_diff = 0;
-      for (int j = 0; j < m.cols(); ++j) { 
-        for (int i = 0; i < m.rows(); ++i) {
-          double diff = m(i,j) - mean;
-          sum_sq_diff += diff * diff;
-        }
       }
       return sum_sq_diff / (m.size() - 1);
     }
@@ -800,35 +935,27 @@ namespace stan {
      * @return Sample variance of vector.
      */
     template <typename T>
-    inline double sd(const std::vector<T>& v) {
+    inline 
+    typename boost::math::tools::promote_args<T>::type
+    sd(const std::vector<T>& v) {
+      validate_nonzero_size(v,"sd");
+      if (v.size() == 1) return 0.0;
       return sqrt(variance(v));
     }
 
     /**
      * Returns the unbiased sample standard deviation of the
-     * coefficients in the specified column vector.
-     * @param v Specified vector.
-     * @return Sample variance of vector.
+     * coefficients in the specified vector, row vector, or matrix.
+     * @param m Specified vector, row vector or matrix.
+     * @return Sample variance.
      */
-    inline double sd(const vector_d& v) {
-      return sqrt(variance(v));
-    }
-    /**
-     * Returns the unbiased sample standard deviation of the
-     * coefficients in the specified row vector.
-     * @param rv Specified vector.
-     * @return Sample variance of vector.
-     */
-    inline double sd(const row_vector_d& rv) {
-      return sqrt(variance(rv));
-    }
-    /**
-     * Returns the unbiased sample standard deviation of the
-     * coefficients in the specified matrix.
-     * @param m Specified matrix.
-     * @return Sample variance of matrix.
-     */
-    inline double sd(const matrix_d& m) {
+    template <typename T, int R, int C>
+    inline 
+    typename boost::math::tools::promote_args<T>::type
+    sd(const Eigen::Matrix<T,R,C>& m) {
+      // FIXME: redundant with test in variance; second line saves sqrt
+      validate_nonzero_size(m,"sd");  
+      if (m.size() == 1) return 0.0;
       return sqrt(variance(m));
     }
 
@@ -842,8 +969,9 @@ namespace stan {
      */
     template <typename T>
     inline T sum(const std::vector<T>& xs) {
-      T sum(0);
-      for (size_t i = 0; i < xs.size(); ++i)
+      if (xs.size() == 0) return 0;
+      T sum(xs[0]);
+      for (size_t i = 1; i < xs.size(); ++i)
         sum += xs[i];
       return sum;
     }
@@ -854,28 +982,25 @@ namespace stan {
      * @param v Specified vector.
      * @return Sum of coefficients of vector.
      */
-    inline double sum(const vector_d& v) {
+    template <typename T, int R, int C>
+    inline double sum(const Eigen::Matrix<T,R,C>& v) {
       return v.sum();
     }
-    /**
-     * Returns the sum of the coefficients of the specified
-     * row vector.
-     * @param rv Specified vector.
-     * @return Sum of coefficients of vector.
-     */
-    inline double sum(const row_vector_d& rv) {
-      return rv.sum();
-    }
-    /**
-     * Returns the sum of the coefficients of the specified
-     * matrix
-     * @param m Specified matrix.
-     * @return Sum of coefficients of matrix.
-     */
-    inline double sum(const matrix_d& m) {
-      return m.sum();
-    }
 
+    /**
+     * Returns the product of the coefficients of the specified
+     * standard vector.
+     * @param v Specified vector.
+     * @return Product of coefficients of vector.
+     */
+    template <typename T>
+    inline T prod(const std::vector<T>& v) {
+      if (v.size() == 0) return 1;
+      T product = v[0];
+      for (size_t i = 1; i < v.size(); ++i)
+        product *= v[i];
+      return product;
+    }
     
     /**
      * Returns the product of the coefficients of the specified
@@ -883,38 +1008,46 @@ namespace stan {
      * @param v Specified vector.
      * @return Product of coefficients of vector.
      */
-    inline double prod(const vector_d& v) {
+    template <typename T, int R, int C>
+    inline T prod(const Eigen::Matrix<T,R,C>& v) {
+      if (v.size() == 0) return 1.0;
       return v.prod();
-    }
-    /**
-     * Returns the product of the coefficients of the specified
-     * row vector.
-     * @param rv Specified vector.
-     * @return Product of coefficients of vector.
-     */
-    inline double prod(const row_vector_d& rv) {
-      return rv.prod();
-    }
-    /**
-     * Returns the product of the coefficients of the specified
-     * matrix.
-     * @param m Specified matrix.
-     * @return Product of coefficients of matrix.
-     */
-    inline double prod(const matrix_d& m) {
-      return m.prod();
     }
 
     /**
      * Returns the trace of the specified matrix.  The trace
      * is defined as the sum of the elements on the diagonal.
-     * The matrix is not required to be square.
+     * The matrix is not required to be square.  Returns 0 if
+     * matrix is empty.
      *
-     * @param m Specified matrix.
+     * @param[in] m Specified matrix.
      * @return Trace of the matrix.
      */
-    inline double trace(const matrix_d& m) {
+    template <typename T>
+    inline T trace(const Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>& m) {
       return m.trace();
+    }
+
+    /**
+     * Return the element-wise logarithm of the matrix or vector.
+     *
+     * @param m The matrix or vector.
+     * @return ret(i,j) = log(m(i,j))
+     */
+    template<typename T, int Rows, int Cols>
+    inline Eigen::Matrix<T,Rows,Cols> log(const Eigen::Matrix<T,Rows,Cols>& m) {
+      return m.array().log().matrix();
+    }
+
+    /**
+     * Return the element-wise exponentiation of the matrix or vector.
+     *
+     * @param m The matrix or vector.
+     * @return ret(i,j) = exp(m(i,j))
+     */
+    template<typename T, int Rows, int Cols>
+    inline Eigen::Matrix<T,Rows,Cols> exp(const Eigen::Matrix<T,Rows,Cols>& m) {
+      return m.array().exp().matrix();
     }
 
 
@@ -926,63 +1059,30 @@ namespace stan {
      * @param v1 First vector.
      * @param v2 Second vector.
      * @return Sum of the two vectors.
-     * @throw std::invalid_argument if v1 and v2 are not the same size.
+     * @throw std::domain_error if v1 and v2 are not the same size.
      */
-    inline vector_d add(const vector_d& v1, vector_d& v2) {
-      if (v1.size() != v2.size()) 
-        throw std::invalid_argument ("v1.size() != v2.size()");
-      return v1 + v2;
-    }
+    vector_d add(const vector_d& v1, const vector_d& v2);
     /**
      * Return the sum of the specified row vectors.  The
      * two vectors must have the same size.
      * @param rv1 First vector.
      * @param rv2 Second vector.
      * @return Sum of the two vectors.
-     * @throw std::invalid_argument if rv1 and rv2 are not the same size.
+     * @throw std::domain_error if rv1 and rv2 are not the same size.
      */
-    inline row_vector_d add(const row_vector_d& rv1, 
-                            const row_vector_d& rv2) {
-      if (rv1.size() != rv2.size()) 
-        throw std::invalid_argument ("rv1.size() != rv2.size()");
-      return rv1 + rv2;
-    }
+    row_vector_d add(const row_vector_d& rv1, 
+                     const row_vector_d& rv2);
     /**
      * Return the sum of the specified matrices.  The two matrices
      * must have the same dimensions.
      * @param m1 First matrix.
      * @param m2 Second matrix.
      * @return Sum of the two vectors.
-     * @throw std::invalid_argument if m1 and m2 are not the same size.
+     * @throw std::domain_error if m1 and m2 are not the same size.
      */
-    inline matrix_d add(const matrix_d& m1, const matrix_d& m2) {
-      if (m1.rows() != m2.rows() || m1.cols() != m2.cols())
-        throw std::invalid_argument ("dimensions of m1 and m2 do not match");
-      return m1 + m2;
-    }
+    matrix_d add(const matrix_d& m1, const matrix_d& m2);
 
-    /**
-     * Return the element-wise logarithm of the matrix or vector.
-     *
-     * @param m The matrix or vector.
-     * @return ret(i,j) = log(m(i,j))
-     */
-    template<int Rows, int Cols>
-    inline Eigen::Matrix<double,Rows,Cols> log(const Eigen::Matrix<double,Rows,Cols>& m) {
-      return m.array().log().matrix();
-    }
-
-    /**
-     * Return the element-wise exponentiation of the matrix or vector.
-     *
-     * @param m The matrix or vector.
-     * @return ret(i,j) = exp(m(i,j))
-     */
-    template<int Rows, int Cols>
-    inline Eigen::Matrix<double,Rows,Cols> exp(const Eigen::Matrix<double,Rows,Cols>& m) {
-      return m.array().exp().matrix();
-    }
-
+   
     /**
      * Return the sum of a matrix or vector and a scalar.
      * @param m Matrix or vector.
@@ -1010,40 +1110,27 @@ namespace stan {
      * @param v1 First vector.
      * @param v2 Second vector.
      * @return First vector minus the second vector.
-     * @throw std::invalid_argument if v1 and v2 are not the same size.
+     * @throw std::domain_error if v1 and v2 are not the same size.
      */
-    inline vector_d subtract(const vector_d& v1, const vector_d& v2) {
-      if (v1.size() != v2.size())
-        throw std::invalid_argument ("v1.size() != v2.size()");
-      return v1 - v2;
-    }
+    vector_d subtract(const vector_d& v1, const vector_d& v2);
     /**
      * Return the difference between the first specified row vector and
      * the second.  The two vectors must have the same size.
      * @param rv1 First vector.
      * @param rv2 Second vector.
      * @return First vector minus the second vector.
-     * @throw std::invalid_argument if rv1 and rv2 are not the same size.
+     * @throw std::domain_error if rv1 and rv2 are not the same size.
      */
-    inline row_vector_d subtract(const row_vector_d& rv1,
-                                 const row_vector_d& rv2) {
-      if (rv1.size() != rv2.size())
-        throw std::invalid_argument ("rv1.size() != rv2.size()");
-      return rv1 - rv2;
-    }
+    row_vector_d subtract(const row_vector_d& rv1, const row_vector_d& rv2);
     /**
      * Return the difference between the first specified matrix and
      * the second.  The two matrices must have the same dimensions.
      * @param m1 First matrix.
      * @param m2 Second matrix.
      * @return First matrix minus the second matrix.
-     * @throw std::invalid_argument if m1 and m2 are not the same size.
+     * @throw std::domain_error if m1 and m2 are not the same size.
      */
-    inline matrix_d subtract(const matrix_d& m1, const matrix_d& m2) {
-      if (m1.rows() != m2.rows() || m1.cols() != m2.cols())
-        throw std::invalid_argument ("dimensions of m1 and m2 do not match");
-      return m1 - m2;
-    }
+    matrix_d subtract(const matrix_d& m1, const matrix_d& m2);
 
     /**
      * Return the difference between a matrix or vector and a scalar.
@@ -1072,27 +1159,21 @@ namespace stan {
      * @param v Specified vector.  
      * @return The negation of the vector.
      */
-    inline vector_d minus(const vector_d& v) {
-      return -v;
-    }
+    vector_d minus(const vector_d& v);
     /**
      * Return the negation of the specified row vector.  The result is
      * the same as multiplying by the scalar <code>-1</code>.
      * @param rv Specified vector.
      * @return The negation of the vector.
      */
-    inline row_vector_d minus(const row_vector_d& rv) {
-      return -rv;
-    }
+    row_vector_d minus(const row_vector_d& rv);
     /**
      * Return the negation of the specified matrix.  The result is the same
      * as multiplying by the scalar <code>-1</code>.
      * @param m Specified matrix.
      * @return The negation of the matrix.
      */
-    inline matrix_d minus(const matrix_d& m) {
-      return -m;
-    }
+    matrix_d minus(const matrix_d& m);
 
     /**
      * Return the division of the specified column vector by
@@ -1101,9 +1182,7 @@ namespace stan {
      * @param c Specified scalar.
      * @return Vector divided by the scalar.
      */
-    inline vector_d divide(const vector_d& v, double c) {
-      return v / c;
-    }
+    vector_d divide(const vector_d& v, double c);
     /**
      * Return the division of the specified row vector by
      * the specified scalar.
@@ -1111,9 +1190,7 @@ namespace stan {
      * @param c Specified scalar.
      * @return Vector divided by the scalar.
      */
-    inline row_vector_d divide(const row_vector_d& rv, double c) {
-      return rv / c;
-    }
+    row_vector_d divide(const row_vector_d& rv, double c);
     /**
      * Return the division of the specified matrix by the specified
      * scalar.
@@ -1121,9 +1198,7 @@ namespace stan {
      * @param c Specified scalar.
      * @return Matrix divided by the scalar.
      */
-    inline matrix_d divide(const matrix_d& m, double c) {
-      return m / c;
-    }
+    matrix_d divide(const matrix_d& m, double c);
 
     /**
      * Return the element-wise product of the specified vectors.
@@ -1131,60 +1206,21 @@ namespace stan {
      * @param v2 Second vector.
      * @return Elementwise product of the vectors.
      */
-    inline vector_d elt_multiply(const vector_d& v1, const vector_d& v2) {
-      if (v1.size() != v2.size()) {
-        std::stringstream msg;
-        msg << "vectors must have same dimensions, v1.size()=" << v1.size()
-            << ", v2.size()=" << v2.size() << std::endl;
-        throw std::domain_error(msg.str());
-      }
-      vector_d prod(v1.size());
-      for (int i = 0; i < v1.size(); ++i)
-        prod(i) = v1(i) * v2(i);
-      return prod;
-    }
+    vector_d elt_multiply(const vector_d& v1, const vector_d& v2);
     /**
      * Return the element-wise product of the specified row vectors.
      * @param v1 First row vector.
      * @param v2 Second row vector.
      * @return Elementwise product of the vectors.
      */
-    inline vector_d elt_multiply(const row_vector_d& v1, const row_vector_d& v2) {
-      if (v1.size() != v2.size()) {
-        std::stringstream msg;
-        msg << "vectors must have same dimensions, v1.size()=" << v1.size()
-            << ", v2.size()=" << v2.size() << std::endl;
-        throw std::domain_error(msg.str());
-      }
-      row_vector_d prod(v1.size());
-      for (int i = 0; i < v1.size(); ++i)
-        prod(i) = v1(i) * v2(i);
-      return prod;
-    }
+    row_vector_d elt_multiply(const row_vector_d& v1, const row_vector_d& v2);
     /**
      * Return the element-wise product of the specified matrices.
      * @param m1 First matrix.
      * @param m2 Second matrix.
      * @return Elementwise product of the matrices.
      */
-    inline matrix_d elt_multiply(const matrix_d& m1, const matrix_d& m2) {
-      if (m1.rows() != m2.rows()
-          || m1.cols() != m2.cols()) {
-        std::stringstream msg;
-        msg << "vectors must have same dimensions"
-          << "; m1.rows()=" << m1.rows() 
-          << ", m2.rows()=" << m2.rows()
-          << ", m1.cols()=" << m1.cols()
-          << ", m2.cols()=" << m2.cols()
-          << std::endl;
-          throw std::domain_error(msg.str());
-      }
-      matrix_d prod(m1.rows(),m1.cols());
-      for (int j = 0; j < m1.cols(); ++j)
-        for (int i = 0; i < m1.rows(); ++i)
-          prod(i,j) = m1(i,j) * m2(i,j);
-      return prod;
-    }
+    matrix_d elt_multiply(const matrix_d& m1, const matrix_d& m2);
 
 
     /**
@@ -1193,63 +1229,21 @@ namespace stan {
      * @param v2 Second vector.
      * @return Elementwise division of the vectors.
      */
-    inline vector_d elt_divide(const vector_d& v1, const vector_d& v2) {
-      if (v1.size() != v2.size()) {
-        std::stringstream msg;
-        msg << "require vectors to be same size for element-wise division;"
-            << " found v1.size()=" << v1.size()
-            << ", v2.size()=" << v2.size()
-            << std::endl;
-        throw std::domain_error(msg.str());
-      }
-      vector_d prod(v1.size());
-      for (int i = 0; i < v1.size(); ++i)
-        prod(i) = v1(i) / v2(i);
-      return prod;
-    }
+    vector_d elt_divide(const vector_d& v1, const vector_d& v2);
     /**
      * Return the element-wise division of the specified row vectors.
      * @param v1 First row vector.
      * @param v2 Second row vector.
      * @return Elementwise division of the vectors.
      */
-    inline vector_d elt_divide(const row_vector_d& v1, const row_vector_d& v2) {
-      if (v1.size() != v2.size()) {
-        std::stringstream msg;
-        msg << "require vectors to be same size for element-wise division;"
-            << " found v1.size()=" << v1.size()
-            << ", v2.size()=" << v2.size()
-            << std::endl;
-        throw std::domain_error(msg.str());
-      }
-      row_vector_d prod(v1.size());
-      for (int i = 0; i < v1.size(); ++i)
-        prod(i) = v1(i) / v2(i);
-      return prod;
-    }
+    row_vector_d elt_divide(const row_vector_d& v1, const row_vector_d& v2);
     /**
      * Return the element-wise division of the specified matrices.
      * @param m1 First matrix.
      * @param m2 Second matrix.
      * @return Elementwise division of the matrices.
      */
-    inline matrix_d elt_divide(const matrix_d& m1, const matrix_d& m2) {
-      if (m1.rows() != m2.rows() 
-          || m1.cols() != m2.cols()) {
-        std::stringstream msg;
-        msg << "require matrices to be same dimensions for element-wise division;"
-            << " found m1.rows()=" << m1.rows() << ", m1.cols()=" << m1.cols()
-            << "; m2.rows()=" << m2.rows() << ", m2.cols()=" << m2.cols()
-            << std::endl;
-        throw std::domain_error(msg.str());
-
-      }
-      matrix_d prod(m1.rows(),m1.cols());
-      for (int j = 0; j < m2.cols(); ++j)
-        for (int i = 0; i < m1.rows(); ++i)
-          prod(i,j) = m1(i,j) / m2(i,j);
-      return prod;
-    }
+    matrix_d elt_divide(const matrix_d& m1, const matrix_d& m2);
 
     /**
      * Return the product of the of the specified column
@@ -1258,9 +1252,7 @@ namespace stan {
      * @param c Specified scalar.
      * @return Product of vector and scalar.
      */
-    inline vector_d multiply(const vector_d& v, double c) {
-      return c * v;
-    }
+    vector_d multiply(const vector_d& v, double c);
     /**
      * Return the product of the of the specified row
      * vector and specified scalar.
@@ -1268,9 +1260,7 @@ namespace stan {
      * @param c Specified scalar.
      * @return Product of vector and scalar.
      */
-    inline row_vector_d multiply(const row_vector_d& rv, double c) {
-      return c * rv;
-    }
+    row_vector_d multiply(const row_vector_d& rv, double c);
     /**
      * Return the product of the of the specified matrix
      * and specified scalar.
@@ -1278,9 +1268,7 @@ namespace stan {
      * @param c Scalar.
      * @return Product of matrix and scalar.
      */
-    inline matrix_d multiply(const matrix_d& m, double c) {
-      return c * m;
-    }
+    matrix_d multiply(const matrix_d& m, double c);
     /**
      * Return the product of the specified matrices.  The number of
      * columns in the first matrix must be the same as the number of rows
@@ -1288,7 +1276,7 @@ namespace stan {
      * @param m1 First matrix.
      * @param m2 Second matrix.
      * @return The product of the first and second matrices.
-     * @throw std::invalid_argument if the number of columns of m1 does not match
+     * @throw std::domain_error if the number of columns of m1 does not match
      *   the number of rows of m2.
      */
     template<int R1,int C1,int R2,int C2>
@@ -1296,7 +1284,7 @@ namespace stan {
                                                 const Eigen::Matrix<double,R2,C2>& m2) {
       
       if (m1.cols() != m2.rows())
-        throw std::invalid_argument("m1.cols() != m2.rows()");
+        throw std::domain_error("m1.cols() != m2.rows()");
       return m1*m2;
     }
     /**
@@ -1306,13 +1294,13 @@ namespace stan {
      * @param rv Row vector.
      * @param v Column vector.
      * @return Scalar result of multiplying row vector by column vector.
-     * @throw std::invalid_argument if rv and v are not the same size.
+     * @throw std::domain_error if rv and v are not the same size.
      */
     template<int C1,int R2>
     inline double multiply(const Eigen::Matrix<double,1,C1>& rv,
                            const Eigen::Matrix<double,R2,1>& v) {
       if (rv.size() != v.size()) 
-        throw std::invalid_argument ("rv.size() != v.size()");
+        throw std::domain_error ("rv.size() != v.size()");
       return rv.dot(v);
     }
     /**
@@ -1321,27 +1309,21 @@ namespace stan {
      * @param v Vector.
      * @return Product of scalar and vector.
      */
-    inline vector_d multiply(double c, const vector_d& v) {
-      return c * v;
-    }
+    vector_d multiply(double c, const vector_d& v);
     /**
      * Return the product of the specified scalar and row vector.
      * @param c Scalar.
      * @param rv Row vector.
      * @return Product of scalar and row vector.
      */
-    inline row_vector_d multiply(double c, const row_vector_d& rv) {
-      return c * rv;
-    }
+    row_vector_d multiply(double c, const row_vector_d& rv);
     /**
      * Return the product of the specified scalar and matrix.
      * @param c Scalar.
      * @param m Matrix
      * @return Product of scalar and matrix.
      */
-    inline matrix_d multiply(double c, const matrix_d& m) {
-      return c * m;
-    }
+    matrix_d multiply(double c, const matrix_d& m);
 
 
 
@@ -1356,9 +1338,7 @@ namespace stan {
      * @param i Row index.
      * @return Specified row of the matrix.
      */
-    inline row_vector_d row(const matrix_d& m, size_t i) {
-      return m.row(i - 1);
-    }
+    row_vector_d row(const matrix_d& m, size_t i);
 
     /**
      * Return the specified column of the specified matrix
@@ -1371,9 +1351,7 @@ namespace stan {
      * @param j Column index.
      * @return Specified column of the matrix.
      */
-    inline vector_d col(const matrix_d& m, size_t j) {
-      return m.col(j - 1);
-    }
+    vector_d col(const matrix_d& m, size_t j);
 
     /**
      * Return a column vector of the diagonal elements of the
@@ -1381,9 +1359,7 @@ namespace stan {
      * @param m Specified matrix.  
      * @return Diagonal of the matrix.
      */
-    inline vector_d diagonal(const matrix_d& m) {
-      return m.diagonal();
-    }
+    vector_d diagonal(const matrix_d& m);
 
     /**
      * Return a square diagonal matrix with the specified vector of
@@ -1391,9 +1367,7 @@ namespace stan {
      * @param v Specified vector.
      * @return Diagonal matrix with vector as diagonal values.
      */
-    inline matrix_d diag_matrix(const vector_d& v) {
-      return v.asDiagonal();
-    }
+    matrix_d diag_matrix(const vector_d& v);
 
     /**
      * Return the transposition of the specified column
@@ -1401,34 +1375,44 @@ namespace stan {
      * @param v Specified vector.
      * @return Transpose of the vector.
      */
-    inline row_vector_d transpose(const vector_d& v) {
-      return v.transpose();
-    }
+    row_vector_d transpose(const vector_d& v);
     /**
      * Return the transposition of the specified row
      * vector.
      * @param rv Specified vector.
      * @return Transpose of the vector.
      */
-    inline vector_d transpose(const row_vector_d& rv) {
-      return rv.transpose();
-    }
+    vector_d transpose(const row_vector_d& rv);
     /**
      * Return the transposition of the specified matrix.
      * @param m Specified matrix.
      * @return Transpose of the matrix.
      */
-    inline matrix_d transpose(const matrix_d& m) {
-      return m.transpose();
-    }
+    matrix_d transpose(const matrix_d& m);
 
     /**
      * Returns the inverse of the specified matrix.
      * @param m Specified matrix.
      * @return Inverse of the matrix.
      */
-    inline matrix_d inverse(const matrix_d& m) {
-      return m.inverse();
+    matrix_d inverse(const matrix_d& m);
+
+    /**
+     * Return the softmax of the specified vector.
+     * @param y Vector to transform
+     * @return Unit simplex result of the softmax transform of the vector.
+     */
+    vector_d softmax(const vector_d& y);
+    
+
+    template<int R1,int C1,int R2,int C2>
+    inline Eigen::Matrix<double,R1,C2> mdivide_left_tri_low(const Eigen::Matrix<double,R1,C1> &A,
+                                                            const Eigen::Matrix<double,R2,C2> &b) {
+      if (A.cols() != A.rows())
+        throw std::domain_error("A is not square");
+      if (A.cols() != b.rows())
+        throw std::domain_error("A.cols() != b.rows()");
+      return A.template triangularView<Eigen::Lower>().solve(b);
     }
 
     /**
@@ -1437,16 +1421,16 @@ namespace stan {
      * being Eigen::Upper or Eigen::Lower.
      * @param b Right hand side matrix or vector.
      * @return x = A^-1 b, solution of the linear system.
-     * @throws std::invalid_argument if A is not square or the rows of b don't
+     * @throws std::domain_error if A is not square or the rows of b don't
      * match the size of A.
      */
     template<int TriView,int R1,int C1,int R2,int C2>
     inline Eigen::Matrix<double,R1,C2> mdivide_left_tri(const Eigen::Matrix<double,R1,C1> &A,
                                                         const Eigen::Matrix<double,R2,C2> &b) {
       if (A.cols() != A.rows())
-        throw std::invalid_argument("A is not square");
+        throw std::domain_error("A is not square");
       if (A.cols() != b.rows())
-        throw std::invalid_argument("A.cols() != b.rows()");
+        throw std::domain_error("A.cols() != b.rows()");
       return A.template triangularView<TriView>().solve(b);
     }
     /**
@@ -1455,16 +1439,16 @@ namespace stan {
      * being Eigen::Upper or Eigen::Lower.
      * @param b Right hand side matrix or vector.
      * @return x = A^-1 b, solution of the linear system.
-     * @throws std::invalid_argument if A is not square or the rows of b don't
+     * @throws std::domain_error if A is not square or the rows of b don't
      * match the size of A.
      */
     template<int TriView,int R1,int C1,int R2,int C2>
     inline Eigen::Matrix<double,R1,C2> mdivide_right_tri(const Eigen::Matrix<double,R1,C1> &b,
                                                          const Eigen::Matrix<double,R2,C2> &A) {
       if (A.cols() != A.rows())
-        throw std::invalid_argument("A is not square");
+        throw std::domain_error("A is not square");
       if (A.rows() != b.cols())
-        throw std::invalid_argument("A.rows() != b.cols()");
+        throw std::domain_error("A.rows() != b.cols()");
       return A.template triangularView<TriView>().transpose().solve(b.transpose()).transpose();
     }
     /**
@@ -1472,16 +1456,16 @@ namespace stan {
      * @param A Matrix.
      * @param b Right hand side matrix or vector.
      * @return x = A^-1 b, solution of the linear system.
-     * @throws std::invalid_argument if A is not square or the rows of b don't
+     * @throws std::domain_error if A is not square or the rows of b don't
      * match the size of A.
      */
     template<int R1,int C1,int R2,int C2>
     inline Eigen::Matrix<double,R1,C2> mdivide_left(const Eigen::Matrix<double,R1,C1> &A,
                                                     const Eigen::Matrix<double,R2,C2> &b) {
       if (A.cols() != A.rows())
-        throw std::invalid_argument("A is not square");
+        throw std::domain_error("A is not square");
       if (A.cols() != b.rows())
-        throw std::invalid_argument("A.cols() != b.rows()");
+        throw std::domain_error("A.cols() != b.rows()");
       return A.lu().solve(b);
     }
     /**
@@ -1489,16 +1473,16 @@ namespace stan {
      * @param A Matrix.
      * @param b Right hand side matrix or vector.
      * @return x = A^-1 b, solution of the linear system.
-     * @throws std::invalid_argument if A is not square or the rows of b don't
+     * @throws std::domain_error if A is not square or the rows of b don't
      * match the size of A.
      */
     template<int R1,int C1,int R2,int C2>
     inline Eigen::Matrix<double,R1,C2> mdivide_right(const Eigen::Matrix<double,R1,C1> &b,
                                                      const Eigen::Matrix<double,R2,C2> &A) {
       if (A.cols() != A.rows())
-        throw std::invalid_argument("A is not square");
+        throw std::domain_error("A is not square");
       if (A.rows() != b.cols())
-        throw std::invalid_argument("A.rows() != b.cols()");
+        throw std::domain_error("A.rows() != b.cols()");
       return A.transpose().lu().solve(b.transpose()).transpose();
     }
 
@@ -1509,12 +1493,7 @@ namespace stan {
      * @param m Specified matrix.
      * @return Eigenvalues of matrix.
      */
-    inline vector_d eigenvalues(const matrix_d& m) {
-      // false == no vectors
-      Eigen::EigenSolver<matrix_d> solver(m,false);
-      // FIXME: test imag() all 0?
-      return solver.eigenvalues().real();
-    }
+    vector_d eigenvalues(const matrix_d& m);
 
     /**
      * Return a matrix whose columns are the real components of the
@@ -1523,10 +1502,7 @@ namespace stan {
      * @param m Specified matrix.
      * @return Eigenvectors of matrix.
      */
-    inline matrix_d eigenvectors(const matrix_d& m) {
-      Eigen::EigenSolver<matrix_d> solver(m);
-      return solver.eigenvectors().real();
-    }
+    matrix_d eigenvectors(const matrix_d& m);
     /**
      * Assign the real components of the eigenvalues and eigenvectors
      * of the specified matrix to the specified references.
@@ -1544,13 +1520,9 @@ namespace stan {
      * @param eigenvectors Matrix reference into which eigenvectors
      * are written.
      */
-    inline void eigen_decompose(const matrix_d& m,
-                                vector_d& eigenvalues,
-                                matrix_d& eigenvectors) {
-      Eigen::EigenSolver<matrix_d> solver(m);
-      eigenvalues = solver.eigenvalues().real();
-      eigenvectors = solver.eigenvectors().real();
-    }
+    void eigen_decompose(const matrix_d& m,
+                         vector_d& eigenvalues,
+                         matrix_d& eigenvectors);
 
     /**
      * Return the eigenvalues of the specified symmetric matrix
@@ -1561,10 +1533,7 @@ namespace stan {
      * @param m Specified matrix.
      * @return Eigenvalues of matrix.
      */
-    inline vector_d eigenvalues_sym(const matrix_d& m) {
-      Eigen::SelfAdjointEigenSolver<matrix_d> solver(m,Eigen::EigenvaluesOnly);
-      return solver.eigenvalues().real();
-    }
+    vector_d eigenvalues_sym(const matrix_d& m);
     /**
      * Return a matrix whose rows are the real components of the
      * eigenvectors of the specified symmetric matrix.  This function
@@ -1574,10 +1543,7 @@ namespace stan {
      * @param m Symmetric matrix.
      * @return Eigenvectors of matrix.
      */
-    inline matrix_d eigenvectors_sym(const matrix_d& m) {
-      Eigen::SelfAdjointEigenSolver<matrix_d> solver(m);
-      return solver.eigenvectors().real();
-    }
+    matrix_d eigenvectors_sym(const matrix_d& m);
     /**
      * Assign the real components of the eigenvalues and eigenvectors
      * of the specified symmetric matrix to the specified references.
@@ -1590,13 +1556,9 @@ namespace stan {
      * @param eigenvectors Matrix reference into which eigenvectors
      * are written.
      */
-    inline void eigen_decompose_sym(const matrix_d& m,
+    void eigen_decompose_sym(const matrix_d& m,
                                     vector_d& eigenvalues,
-                                    matrix_d& eigenvectors) {
-      Eigen::SelfAdjointEigenSolver<matrix_d> solver(m);
-      eigenvalues = solver.eigenvalues().real();
-      eigenvectors = solver.eigenvectors().real();
-    }
+                                    matrix_d& eigenvectors);
 
 
     /**
@@ -1607,15 +1569,9 @@ namespace stan {
      * <p>\f$A = L \times L^T\f$.
      * @param m Symmetrix matrix.
      * @return Square root of matrix.
-     * @throw std::invalid_argument if m is not a square matrix
+     * @throw std::domain_error if m is not a square matrix
      */
-    inline matrix_d cholesky_decompose(const matrix_d& m) {
-      if (m.rows() != m.cols())
-        throw std::invalid_argument ("m must be a square matrix");
-      Eigen::LLT<matrix_d> llt(m.rows());
-      llt.compute(m);
-      return llt.matrixL();
-    }
+    matrix_d cholesky_decompose(const matrix_d& m);
 
     /**
      * Return the vector of the singular values of the specified matrix
@@ -1625,10 +1581,7 @@ namespace stan {
      * @param m Specified matrix.
      * @return Singular values of the matrix.
      */
-    inline vector_d singular_values(const matrix_d& m) {
-      Eigen::JacobiSVD<matrix_d> svd(m); // no U or V
-      return svd.singularValues();
-    }      
+    vector_d singular_values(const matrix_d& m);
 
     /**
      * Assign the real components of a singular value decomposition
@@ -1651,17 +1604,53 @@ namespace stan {
      * @param v Right singular vectors.
      * @param s Singular values.
      */
-    inline void svd(const matrix_d& m,
-                    matrix_d& u,
-                    matrix_d& v,
-                    vector_d& s) {
-      static const unsigned int THIN_SVD_OPTIONS
-        = Eigen::ComputeThinU | Eigen::ComputeThinV;
-      Eigen::JacobiSVD<matrix_d> svd(m, THIN_SVD_OPTIONS);
-      u = svd.matrixU();
-      v = svd.matrixV();
-      s = svd.singularValues();
+    void svd(const matrix_d& m, matrix_d& u, matrix_d& v, vector_d& s);
+
+    template <typename T>
+    void stan_print(std::ostream* o, const T& x) {
+      *o << x;
     }
+    
+    template <typename T>
+    void stan_print(std::ostream* o, const std::vector<T>& x) {
+      *o << '[';
+      for (int i = 0; i < x.size(); ++i) {
+        if (i > 0) *o << ',';
+        stan_print(o,x[i]);
+      }
+      *o << ']';
+    }
+
+    template <typename T>
+    void stan_print(std::ostream* o, const Eigen::Matrix<T,Eigen::Dynamic,1>& x) {
+      *o << '[';
+      for (int i = 0; i < x.size(); ++i) {
+        if (i > 0) *o << ',';
+        stan_print(o,x(i));
+      }
+      *o << ']';
+    }
+
+    template <typename T>
+    void stan_print(std::ostream* o, const Eigen::Matrix<T,1,Eigen::Dynamic>& x) {
+      *o << '[';
+      for (int i = 0; i < x.size(); ++i) {
+        if (i > 0) *o << ',';
+        stan_print(o,x(i));
+      }
+      *o << ']';
+    }
+
+    template <typename T>
+    void stan_print(std::ostream* o, const Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>& x) {
+      *o << '[';
+      for (int i = 0; i < x.rows(); ++i) {
+        if (i > 0) *o << ',';
+        stan_print(o,x.row(i));
+      }
+      *o << ']';
+    }
+
 
   }
 

@@ -1,40 +1,43 @@
-
 # compared with JAGS version in 
 # the R package BUGSExamples (https://r-forge.r-project.org/R/?group_id=882) 
-
 data {
-  int(0,) Ndogs; 
-  int(0,) Ntrials; 
+  int<lower=0> Ndogs; 
+  int<lower=0> Ntrials; 
   int Y[Ndogs, Ntrials];
 }
-
 transformed data {
+  int y[Ndogs, Ntrials];
   int xa[Ndogs, Ntrials]; 
-  int xs[Ndogs, Ntrials]; 
-  for (i in 1:Ndogs) {
-    // xa[i, 1] <- 0; 
-    for (j in 2 : Ntrials) {
-      xs[i, j] <- 0; 
-      for (k in 1:(j - 1)) xa[i, j] <- xa[i, j] + Y[i, k]; 
-      // xa[i, j] <- sum(Y[i, 1:(j - 1)])
-      xs[i, j] <- j - 1 - xa[i, j];
+  int xs[Ndogs, Ntrials];
+  for (dog in 1:Ndogs) {
+    xa[dog, 1] <- 0; 
+    xs[dog, 1] <- 0;
+    for (trial in 2:Ntrials) {
+      for (k in 1:(trial - 1))
+        xa[dog, trial] <- xa[dog, trial] + Y[dog, k]; 
+      xs[dog, trial] <- trial - 1 - xa[dog, trial];
     }
-  } 
+  }
+  for (dog in 1:Ndogs) {
+    for (trial in 1:Ntrials) {
+      y[dog, trial] <- 1 - Y[dog, trial];
+    }
+  }
 } 
-
 parameters {
-  real(, -0.00001) alpha;
-  real(, -0.00001) beta;
+  real<upper= -0.00001> alpha;
+  real<upper= -0.00001> beta;
 } 
-
 model {
-  // alpha ~ normal_trunc_h_propto(0, 316, -0.00001); 
-  // beta ~ normal_trunc_h_propto(0, 316, -0.00001); 
-  // alpha ~ normal_trunc_h(0, 316, -0.00001); 
-  // beta ~ normal_trunc_h(0, 316, -0.00001); 
-  alpha ~ normal(0, 316); 
-  beta  ~ normal(0, 316); 
-  for(i in 1:Ndogs)  
-    for (j in 2:Ntrials)  
-      1 - Y[i, j] ~ bernoulli(exp(alpha * xa[i, j] + beta * xs[i, j]));
+  alpha ~ normal(0.0, 316.2);
+  beta  ~ normal(0.0, 316.2);
+  for(dog in 1:Ndogs)  
+    for (trial in 2:Ntrials)  
+      y[dog, trial] ~ bernoulli(exp(alpha * xa[dog, trial] + beta * xs[dog, trial]));
 } 
+generated quantities {
+  real A;
+  real B;
+  A <- exp(alpha);
+  B <- exp(beta);
+}

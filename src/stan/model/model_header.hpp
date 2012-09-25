@@ -4,18 +4,19 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <vector>
 #include <fstream>
 #include <iostream>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 #include <utility>
+#include <vector>
+
 #include <boost/exception/all.hpp>
 
-#include <stan/math/matrix.hpp>
 #include <stan/agrad/agrad.hpp>
 #include <stan/agrad/special_functions.hpp>
 #include <stan/agrad/matrix.hpp>
+#include <stan/agrad/partials_vari.hpp>
 #include <stan/gm/command.hpp>
 #include <stan/io/cmd_line.hpp>
 #include <stan/io/dump.hpp>

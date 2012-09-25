@@ -4,6 +4,7 @@
 #include <stan/prob/constants.hpp>
 #include <stan/math/matrix_error_handling.hpp>
 #include <stan/math/error_handling.hpp>
+#include <stan/math/special_functions.hpp>
 #include <stan/prob/traits.hpp>
 
 namespace stan {
@@ -17,28 +18,30 @@ namespace stan {
     template <typename T_shape>
     T_shape do_lkj_constant(const T_shape& eta, const unsigned int& K) {
       // Lewandowski, Kurowicka, and Joe (2009) equations 15 and 16
-      T_shape the_sum = 0.0;
-      T_shape constant = 0.0;
-      T_shape beta_arg;
       
-      if(eta == 1.0) {
-        for(unsigned int k = 1; k < K; k++) { // yes, go from 1 to K - 1
+      if (stan::is_constant<typename stan::scalar_type<T_shape> >::value
+          && eta == 1.0) {
+        double sum = 0.0;
+        double constant = 0.0;
+        double beta_arg = 0.0;
+        for (unsigned int k = 1; k < K; k++) { // yes, go from 1 to K - 1
           beta_arg = 0.5 * (k + 1.0);
           constant += k * (2.0 * lgamma(beta_arg) - lgamma(2.0 * beta_arg));
-          the_sum += pow(static_cast<double>(k),2.0);
+          sum += pow(static_cast<double>(k),2.0);
         }
-        constant += the_sum * LOG_TWO;
+        constant += sum * LOG_TWO;
         return constant;
       }
-
-      T_shape diff;
-      for(unsigned int k = 1; k < K; k++) { // yes, go from 1 to K - 1
-        diff = K - k;
+      T_shape sum = 0.0;
+      T_shape constant = 0.0;
+      T_shape beta_arg;
+      for (unsigned int k = 1; k < K; k++) { // yes, go from 1 to K - 1
+        unsigned int diff = K - k;
         beta_arg = eta + 0.5 * (diff - 1);
         constant += diff * (2.0 * lgamma(beta_arg) - lgamma(2.0 * beta_arg));
-        the_sum += (2.0 * eta - 2.0 + diff) * diff;
+        sum += (2.0 * eta - 2.0 + diff) * diff;
       }
-      constant += the_sum * LOG_TWO;
+      constant += sum * LOG_TWO;
       return constant;
     }
 
@@ -53,20 +56,20 @@ namespace stan {
              const T_shape& eta, 
              const Policy&) {
       static const char* function 
-        = "stan::prob::lkj_corr_cholesky_log<%1%>(%1%)";
+        = "stan::prob::lkj_corr_cholesky_log(%1%)";
 
       using boost::math::tools::promote_args;
       using stan::math::check_positive;
       
       typename promote_args<T_covar,T_shape>::type lp(0.0);
-      if (!check_positive(function, eta, "eta", &lp, Policy()))
+      if (!check_positive(function, eta, "Shape parameter", &lp, Policy()))
         return lp;      
 
       const unsigned int K = L.rows();
       if (K == 0)
         return 0.0;
       
-      if (include_summand<propto>::value) 
+      if (include_summand<propto,T_shape>::value) 
         lp += do_lkj_constant(eta, K);
       if (include_summand<propto,T_covar,T_shape>::value && eta != 1.0)
         lp += (eta - 1.0) * 2.0 * L.diagonal().array().log().sum();
@@ -116,7 +119,7 @@ namespace stan {
     lkj_corr_log(const Eigen::Matrix<T_y,Eigen::Dynamic,Eigen::Dynamic>& y, 
                  const T_shape& eta, 
                  const Policy&) {
-      static const char* function = "stan::prob::lkj_corr_log<%1%>(%1%)";
+      static const char* function = "stan::prob::lkj_corr_log(%1%)";
 
       using stan::math::check_size_match;
       using stan::math::check_not_nan;
@@ -125,13 +128,13 @@ namespace stan {
       using boost::math::tools::promote_args;
       
       typename promote_args<T_y,T_shape>::type lp;
-      if (!check_positive(function, eta, "eta", &lp, Policy()))
+      if (!check_positive(function, eta, "Shape parameter", &lp, Policy()))
         return lp;      
       if (!check_size_match(function, y.rows(), y.cols(), &lp, Policy()))
         return lp;
-      if (!check_not_nan(function, y, "y", &lp, Policy())) 
+      if (!check_not_nan(function, y, "Correlation matrix", &lp, Policy())) 
         return lp;
-      if (!check_corr_matrix(function, y, "y", &lp, Policy())) {
+      if (!check_corr_matrix(function, y, "Correlation matrix", &lp, Policy())) {
         return lp;
       }
       

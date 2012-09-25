@@ -26,7 +26,7 @@ namespace stan {
         o << "int";
         break;
       case DOUBLE_T :
-        o << "double";
+        o << "real";
         break;
       case VECTOR_T :
         o << "vector";
@@ -91,7 +91,8 @@ namespace stan {
 
     std::ostream& operator<<(std::ostream& o, const expr_type& et) {
       write_base_expr_type(o,et.type());
-      o << '[' << et.num_dims() << ']';
+      if (et.num_dims() > 0) 
+        o << '[' << et.num_dims() << ']';
       return o;
     }
 
@@ -165,6 +166,21 @@ namespace stan {
       arg_types.push_back(arg_type4);
       add(name,result_type,arg_types);
     }
+    void function_signatures::add(const std::string& name,
+                                  const expr_type& result_type,
+                                  const expr_type& arg_type1,
+                                  const expr_type& arg_type2,
+                                  const expr_type& arg_type3,
+                                  const expr_type& arg_type4,
+                                  const expr_type& arg_type5) {
+      std::vector<expr_type> arg_types;
+      arg_types.push_back(arg_type1);
+      arg_types.push_back(arg_type2);
+      arg_types.push_back(arg_type3);
+      arg_types.push_back(arg_type4);
+      arg_types.push_back(arg_type5);
+      add(name,result_type,arg_types);
+    }
     void function_signatures::add_nullary(const::std::string& name) {
       add(name,DOUBLE_T);
     }
@@ -201,7 +217,8 @@ namespace stan {
     }
     expr_type function_signatures::get_result_type(
                                          const std::string& name,
-                                         const std::vector<expr_type>& args) {
+                                         const std::vector<expr_type>& args,
+                                         std::ostream& error_msgs) {
       std::vector<function_signature_t> signatures = sigs_map_[name];
       size_t match_index = 0; 
       size_t min_promotions = std::numeric_limits<size_t>::max(); 
@@ -223,15 +240,15 @@ namespace stan {
       if (num_matches == 1) {
         return signatures[match_index].first;
       } else if (num_matches == 0) {
-        std::cerr << "no matches for function name=\"" << name << "\"" 
-                  << std::endl;
+        error_msgs << "no matches for function name=\"" << name << "\"" 
+                   << std::endl;
       } else {
-        std::cerr << num_matches << " matches with " 
-                  << min_promotions << " integer promotions "
-                  << "for function name=\"" << name << "\"" << std::endl;
+        error_msgs << num_matches << " matches with " 
+                   << min_promotions << " integer promotions "
+                   << "for function name=\"" << name << "\"" << std::endl;
       }
       for (size_t i = 0; i < args.size(); ++i)
-        std::cerr << "    arg " << i << " type=" << args[i] << std::endl;
+        error_msgs << "    arg " << i << " type=" << args[i] << std::endl;
       return expr_type(); // ill-formed dummy
     }
     function_signatures::function_signatures() { 
@@ -299,6 +316,14 @@ namespace stan {
     expression::expression(const index_op& expr) : expr_(expr) { }
     expression::expression(const binary_op& expr) : expr_(expr) { }
     expression::expression(const unary_op& expr) : expr_(expr) { }
+
+    printable::printable() : printable_("") { }
+    printable::printable(const expression& expr) : printable_(expr) { }
+    printable::printable(const std::string& msg) : printable_(msg) { }
+    printable::printable(const printable_t& printable) 
+      : printable_(printable) { }
+    printable::printable(const printable& printable)
+      : printable_(printable.printable_) { }
 
     bool is_nil_op::operator()(const nil& x) const { return true; }
     bool is_nil_op::operator()(const int_literal& x) const { return false; }
@@ -385,7 +410,7 @@ namespace stan {
     }
 
 
- expr_type infer_type_indexing(const base_expr_type& expr_base_type,
+    expr_type infer_type_indexing(const base_expr_type& expr_base_type,
                                   size_t num_expr_dims,
                                   size_t num_index_dims) {
       if (num_index_dims <= num_expr_dims)
@@ -400,13 +425,7 @@ namespace stan {
         if (expr_base_type == MATRIX_T)
           return expr_type(DOUBLE_T,0U);
       
-      std::cerr << "expression base type=";
-      write_base_expr_type(std::cerr,expr_base_type);
-      std::cerr << std::endl;
-      std::cerr << "too many index dimensions;"
-                << " require at most " << num_expr_dims
-                << " found " << num_index_dims
-                << std::endl;
+      // error condition, result expr_type has is_ill_formed() = true
       return expr_type();
     }
 
@@ -555,11 +574,22 @@ namespace stan {
         K_(K) 
     { }
 
-    pos_ordered_var_decl::pos_ordered_var_decl() 
+    ordered_var_decl::ordered_var_decl() 
       : base_var_decl(VECTOR_T) 
     { }
 
-    pos_ordered_var_decl::pos_ordered_var_decl(expression const& K,
+    ordered_var_decl::ordered_var_decl(expression const& K,
+                           std::string const& name,
+                           std::vector<expression> const& dims)
+        : base_var_decl(name,dims,VECTOR_T),
+          K_(K) {
+      }
+    
+    positive_ordered_var_decl::positive_ordered_var_decl() 
+      : base_var_decl(VECTOR_T) 
+    { }
+
+    positive_ordered_var_decl::positive_ordered_var_decl(expression const& K,
                            std::string const& name,
                            std::vector<expression> const& dims)
         : base_var_decl(name,dims,VECTOR_T),
@@ -594,7 +624,8 @@ namespace stan {
     }
 
 
-    cov_matrix_var_decl::cov_matrix_var_decl() : base_var_decl(MATRIX_T) { }
+    cov_matrix_var_decl::cov_matrix_var_decl() : base_var_decl(MATRIX_T) { 
+    }
     cov_matrix_var_decl::cov_matrix_var_decl(expression const& K,
                                      std::string const& name,
                                      std::vector<expression> const& dims)
@@ -635,7 +666,10 @@ namespace stan {
     std::string name_vis::operator()(const simplex_var_decl& x) const {
       return x.name_;
     }
-    std::string name_vis::operator()(const pos_ordered_var_decl& x) const {
+    std::string name_vis::operator()(const ordered_var_decl& x) const {
+      return x.name_;
+    }
+    std::string name_vis::operator()(const positive_ordered_var_decl& x) const {
       return x.name_;
     }
     std::string name_vis::operator()(const cov_matrix_var_decl& x) const {
@@ -659,7 +693,8 @@ namespace stan {
     var_decl::var_decl(const row_vector_var_decl& decl) : decl_(decl) { }
     var_decl::var_decl(const matrix_var_decl& decl) : decl_(decl) { }
     var_decl::var_decl(const simplex_var_decl& decl) : decl_(decl) { }
-    var_decl::var_decl(const pos_ordered_var_decl& decl) : decl_(decl) { }
+    var_decl::var_decl(const ordered_var_decl& decl) : decl_(decl) { }
+    var_decl::var_decl(const positive_ordered_var_decl& decl) : decl_(decl) { }
     var_decl::var_decl(const cov_matrix_var_decl& decl) : decl_(decl) { }
     var_decl::var_decl(const corr_matrix_var_decl& decl) : decl_(decl) { }
 
@@ -680,6 +715,7 @@ namespace stan {
     statement::statement(const sample& st) : statement_(st) { }
     statement::statement(const statements& st) : statement_(st) { }
     statement::statement(const for_statement& st) : statement_(st) { }
+    statement::statement(const print_statement& st) : statement_(st) { }
     statement::statement(const no_op_statement& st) : statement_(st) { }
 
     // template <typename Statement>
@@ -690,8 +726,6 @@ namespace stan {
 
 
 
-  
-
     for_statement::for_statement() {
       }
     for_statement::for_statement(std::string& variable,
@@ -701,9 +735,13 @@ namespace stan {
         range_(range),
         statement_(stmt) {
     }
-    
 
-   
+    print_statement::print_statement() { }
+
+    print_statement::print_statement(const std::vector<printable>& printables) 
+      : printables_(printables) { 
+    }
+    
     program::program() { }
     program::program(const std::vector<var_decl>& data_decl,
                      const std::pair<std::vector<var_decl>,

@@ -3,20 +3,18 @@
 
 #include <stdexcept>
 
+
 #include <boost/math/special_functions/gamma.hpp>
+#include <boost/math/special_functions/beta.hpp>
 #include <boost/math/tools/promotion.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <stan/math/constants.hpp>
+#include <stan/math/error_handling.hpp>
 
 namespace stan {
 
   namespace math {
-
-    using std::exp;
-    using std::log;
-
-
 
     // C99 
 
@@ -28,11 +26,13 @@ namespace stan {
      * <code>exp2(y) = pow(2.0,y)</code>.
      *
      * @param y Value.
+     * @tparam T Type of scalar.
      * @return Exponent base 2 of value.
      */
     template <typename T>
     inline typename boost::math::tools::promote_args<T>::type
     exp2(T y) {
+      using std::pow;
       return pow(2.0,y);
     }
 
@@ -51,8 +51,8 @@ namespace stan {
     inline typename boost::math::tools::promote_args<T1, T2>::type
     fdim(T1 a, T2 b) {
       return (a > b) ? (a - b) : 0.0;
-    }
-
+    } 
+    
     /**
      * The fused multiply-add operation (C99).  
      *
@@ -68,7 +68,7 @@ namespace stan {
     template <typename T1, typename T2, typename T3>
     inline typename boost::math::tools::promote_args<T1,T2,T3>::type
     fma(T1 a, T2 b, T3 c) {
-      return a * b + c;
+      return (a * b) + c;
     }
 
     /**
@@ -78,18 +78,17 @@ namespace stan {
      *
      * <code>log2(a) = log(a) / std::log(2.0)</code>.
      *
+     * @tparam T type of scalar
      * @param a Value.
      * @return Base 2 logarithm of the value.
      */
     template <typename T>
     inline typename boost::math::tools::promote_args<T>::type
     log2(T a) {
+      using std::log;
       const static double LOG2 = std::log(2.0);
       return log(a) / LOG2;
     }
-
-
-
 
     // OTHER BASIC FUNCTIONS
 
@@ -175,9 +174,15 @@ namespace stan {
     template <typename T_N, typename T_n>
     inline typename boost::math::tools::promote_args<T_N, T_n>::type
     binomial_coefficient_log(T_N N, T_n n) {
-      return lgamma(N + 1.0)
-        - lgamma(n + 1.0)
-        - lgamma(N - n + 1.0);
+      using std::log;
+
+      const double cutoff = 1000;
+      if ((N < cutoff) || (N - n < cutoff)) {
+        return lgamma(N + 1.0) - lgamma(n + 1.0) - lgamma(N - n + 1.0);
+      } else {
+        return n * log(N - n) + (N + 0.5) * log(N/(N-n))
+          + 1/(12*N) - n - 1/(12*(N-n)) - lgamma(n + 1.0);
+      }
     }
 
     /**
@@ -198,6 +203,7 @@ namespace stan {
     template <typename T>
     inline typename boost::math::tools::promote_args<T>::type
     inv_logit(T a) {
+      using std::exp;
       return 1.0 / (1.0 + exp(-a));
     }
 
@@ -218,6 +224,7 @@ namespace stan {
     template <typename T>
     inline typename boost::math::tools::promote_args<T>::type
     logit(T a) {
+      using std::log;
       return log(a / (1.0 - a));
     }
 
@@ -261,7 +268,8 @@ namespace stan {
     template <typename T>
     inline typename boost::math::tools::promote_args<T>::type
     inv_cloglog(T x) {
-      return std::exp(-std::exp(x));
+      using std::exp;
+      return exp(-exp(x));
     }
 
     /**
@@ -282,17 +290,18 @@ namespace stan {
     template <typename T>
     inline typename boost::math::tools::promote_args<T>::type
     binary_log_loss(int y, T y_hat) {
+      using std::log;
       return -log(y ? y_hat : (1.0 - y_hat));
     }
 
     // hide helper for now; could use Eigen here
     namespace {
       template <typename Vector, typename Scalar>
-      int maximum(const Vector& x) {
+      Scalar maximum(const Vector& x) {
         if(x.size() == 0)
           BOOST_THROW_EXCEPTION(std::invalid_argument ("x must have at least one element"));
         Scalar max_x(x[0]);
-        for (size_t i = 1; i < x.size(); ++i)
+        for (typename Vector::size_type i = 1; i < x.size(); ++i)
           if (x[i] < max_x)
             max_x = x[i];
         return max_x;
@@ -351,17 +360,17 @@ namespace stan {
      */
     template <typename Vector, typename Scalar>
     void softmax(const Vector& x, Vector& simplex) {
+      using std::exp;
       if(x.size() != simplex.size()) 
         BOOST_THROW_EXCEPTION(std::invalid_argument ("x.size() != simplex.size()"));
       Scalar sum(0.0); 
       Scalar max_x = maximum<Vector,Scalar>(x);
-      for (size_t i = 0; i < x.size(); ++i)
+      for (typename Vector::size_type i = 0; i < x.size(); ++i)
         sum += (simplex[i] = exp(x[i]-max_x));
-      for (size_t i = 0; i < x.size(); ++i)
+      for (typename Vector::size_type i = 0; i < x.size(); ++i)
         simplex[i] /= sum;
     }
 
-    
     /**
      * Writes the inverse softmax of the simplex argument into the second
      * argument.  See <code>stan::math::softmax</code> for the inverse
@@ -386,6 +395,7 @@ namespace stan {
      */
     template <typename Vector>
     void inverse_softmax(const Vector& simplex, Vector& y) {
+      using std::log;
       if(simplex.size() != y.size())
         BOOST_THROW_EXCEPTION(std::invalid_argument ("simplex.size() != y.size()"));
       for (size_t i = 0; i < simplex.size(); ++i)
@@ -404,6 +414,7 @@ namespace stan {
     template <typename T>
     inline typename boost::math::tools::promote_args<T>::type
     log1p(T x) {
+      using std::log;
       if (x < -1.0)
         BOOST_THROW_EXCEPTION(std::domain_error ("x can not be less than -1"));
 
@@ -431,7 +442,7 @@ namespace stan {
     }
 
     namespace {
-      const double LOG_PI_OVER_FOUR = log(boost::math::constants::pi<double>()) / 4.0;
+      const double LOG_PI_OVER_FOUR = std::log(boost::math::constants::pi<double>()) / 4.0;
     }
 
     /**
@@ -474,11 +485,8 @@ namespace stan {
      * @param c Boolean condition value.
      * @param y_true Value to return if condition is true.
      * @param y_false Value to return if condition is false.
-     * @tparam B Type of conditional.
-     * @tparam T Type of scalar.
      */
-    template <typename B, typename T>
-    T if_else(B c, T y_true, T y_false) {
+    inline double if_else(bool c, double y_true, double y_false) {
       return c ? y_true : y_false;
     }
 
@@ -497,13 +505,14 @@ namespace stan {
      * @tparam T Type of scalar.
      */
     template <typename T>
-    T square(T x) {
+    inline T square(T x) {
       return x * x;
     }
     
     template <typename T_a, typename T_b>
     inline typename boost::math::tools::promote_args<T_a,T_b>::type
     multiply_log(T_a a, T_b b) {
+      using std::log;
       if (b == 0.0 && a == 0.0)
         return 0.0;
       return a * log(b);
@@ -524,6 +533,7 @@ namespace stan {
      * <code> = log_sum_exp(0,x)</code>.
      */
     inline double log1p_exp(const double& a) {
+      using std::exp;
       // like log_sum_exp below with b=0.0
       if (a > 0.0)
         return a + log1p(exp(-a));
@@ -541,10 +551,31 @@ namespace stan {
      * @param b the second variable
      */
     inline double log_sum_exp(const double& a, const double& b) {
+      using std::exp;
       if (a > b)
         return a + log1p(exp(b - a));
       return b + log1p(exp(a - b));
     }
+
+    /** 
+     * The normalized incomplete beta function of a, b, and x.
+     *
+     * Used to compute the cumulative density function for the beta
+     * distribution.
+     * 
+     * @param a Shape parameter.
+     * @param b Shape parameter.
+     * @param x Random variate.
+     * 
+     * @return The normalized incomplete beta function.
+     */
+    inline double ibeta(const double& a,
+                        const double& b,
+                        const double& x) {
+      return boost::math::ibeta(a, b, x);
+    }
+
+
 
     /**
      * Return the log of the sum of the exponentiated values of the specified
@@ -574,6 +605,63 @@ namespace stan {
       return max + log(sum);
     }
 
+    /** 
+     * Return the scalar value and ignore the remaining
+     * arguments.
+     *
+     * <p>This function provides an overload of
+     * <code>simple_var</code> to use with primitive values for which
+     * the type and derivative type are the same.  The other overloads
+     * are for <code>stan::agrad::var</code> arguments; the
+     * definitions can be found in
+     * <code>stan/agrad/partials_vari.hpp</code>.
+     * 
+     * @tparam T1 Type of first dummy argument and derivative.
+     * @tparam T2 Type of second dummy argument and derivative.
+     * @tparam T3 Type of third dummy argument and derivative.
+     * @param v Value to return.
+     * @return Value.
+     */
+    template <typename T1, typename T2, typename T3>
+    inline double simple_var(double v, 
+                             const T1& /*y1*/, const T1& /*dy1*/, 
+                             const T2& /*y2*/, const T2& /*dy2*/,
+                             const T3& /*y3*/, const T3& /*dy3*/) {
+      return v;
+    }
+
+    /**
+     * Return the value of the specified scalar argument
+     * converted to a double value.
+     *
+     * This function is meant to cover the primitive types. For
+     * types requiring pass-by-reference, this template function
+     * should be specialized.
+     *
+     * @tparam T Type of scalar.
+     * @param x Scalar to convert to double.
+     * @return Value of scalar cast to a double.
+     */
+    template <typename T>
+    inline double value_of(T x) {
+      return static_cast<double>(x);
+    }
+
+    /**
+     * Return the specified argument. 
+     *
+     * <p>See <code>value_of(T)</code> for a polymorphic
+     * implementation using static casts.
+     * 
+     * <p>This inline pass-through no-op should be compiled away.
+     *
+     * @param x Specified value.
+     * @return Specified value.
+     */
+    template <>
+    inline double value_of<double>(double x) {
+      return x; 
+    }
 
     // CONSTANTS
 
@@ -582,7 +670,7 @@ namespace stan {
      * 
      * @return Pi.
      */
-    double pi() {
+    inline double pi() {
       return boost::math::constants::pi<double>();
     }
 
@@ -591,7 +679,7 @@ namespace stan {
      *
      * @return Base of natural logarithm.
      */
-    double e() {
+    inline double e() {
       return E;
     }
 
@@ -600,7 +688,7 @@ namespace stan {
      *
      * @return Square root of two. 
      */
-    double sqrt2() {
+    inline double sqrt2() {
       return SQRT_2;
     }
 
@@ -609,7 +697,7 @@ namespace stan {
      *
      * @return Natural logarithm of two.
      */
-    double log2() {
+    inline double log2() {
       return LOG_2;
     }
 
@@ -618,7 +706,7 @@ namespace stan {
      *
      * @return Natural logarithm of ten.
      */
-    double log10() {
+    inline double log10() {
       return LOG_10;
     }
 
@@ -627,7 +715,7 @@ namespace stan {
      *
      * @return Positive infinity.
      */
-    double infinity() {
+    inline double positive_infinity() {
       return INFTY;
     }
 
@@ -636,7 +724,7 @@ namespace stan {
      *
      * @return Negative infinity.
      */
-    double negative_infinity() {
+    inline double negative_infinity() {
       return NEGATIVE_INFTY;
     }
 
@@ -645,7 +733,7 @@ namespace stan {
      *
      * @return Quiet not-a-number.
      */
-    double nan() {
+    inline double not_a_number() {
       return NOT_A_NUMBER;
     }
 
@@ -654,7 +742,7 @@ namespace stan {
      *
      * @return Minimum positive number.
      */
-    double epsilon() {
+    inline double epsilon() {
       return EPSILON;
     }
 
@@ -664,7 +752,7 @@ namespace stan {
      *
      * @return Maximum negative number.
      */
-    double negative_epsilon() {
+    inline double negative_epsilon() {
       return NEGATIVE_EPSILON;
     }
 

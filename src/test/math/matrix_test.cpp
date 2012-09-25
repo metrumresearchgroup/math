@@ -1,4 +1,5 @@
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <gtest/gtest.h>
 #include <stan/math/matrix.hpp>
@@ -56,40 +57,40 @@ TEST(matrix_test, resize_svec_double) {
 TEST(matrix_test, resize_vec_double) {
   Matrix<double,Dynamic,1> v(2);
   std::vector<size_t> dims;
-  EXPECT_EQ(2U, v.size());
+  EXPECT_EQ(2, v.size());
 
   dims.push_back(17U);
   stan::math::resize(v,dims);
-  EXPECT_EQ(17U, v.size());
+  EXPECT_EQ(17, v.size());
 
   dims[0] = 3U;
   stan::math::resize(v,dims);
-  EXPECT_EQ(3U, v.size());
+  EXPECT_EQ(3, v.size());
 }
 TEST(matrix_test, resize_rvec_double) {
   Matrix<double,1,Dynamic> rv(2);
   std::vector<size_t> dims;
-  EXPECT_EQ(2U, rv.size());
+  EXPECT_EQ(2, rv.size());
 
   dims.push_back(17U);
   stan::math::resize(rv,dims);
-  EXPECT_EQ(17U, rv.size());
+  EXPECT_EQ(17, rv.size());
 
   dims[0] = 3U;
   stan::math::resize(rv,dims);
-  EXPECT_EQ(3U, rv.size());
+  EXPECT_EQ(3, rv.size());
 }
 TEST(matrix_test, resize_mat_double) {
   Matrix<double,Dynamic,Dynamic> m(2,3);
   std::vector<size_t> dims;
-  EXPECT_EQ(2U, m.rows());
-  EXPECT_EQ(3U, m.cols());
+  EXPECT_EQ(2, m.rows());
+  EXPECT_EQ(3, m.cols());
 
   dims.push_back(7U);
   dims.push_back(17U);
   stan::math::resize(m,dims);
-  EXPECT_EQ(7U, m.rows());
-  EXPECT_EQ(17U, m.cols());
+  EXPECT_EQ(7, m.rows());
+  EXPECT_EQ(17, m.cols());
 }
 TEST(matrix_test, resize_svec_svec_double) {
   std::vector<std::vector<double> > xx;
@@ -115,13 +116,13 @@ TEST(matrix_test, resize_svec_v_double) {
   dims.push_back(5U);
   stan::math::resize(xx,dims);
   EXPECT_EQ(4U,xx.size());
-  EXPECT_EQ(5U,xx[0].size());
+  EXPECT_EQ(5,xx[0].size());
 
   dims[0] = 3U;
   dims[1] = 7U;
   stan::math::resize(xx,dims);
   EXPECT_EQ(3U,xx.size());
-  EXPECT_EQ(7U,xx[1].size());  
+  EXPECT_EQ(7,xx[1].size());  
 }
 TEST(matrix_test, resize_svec_rv_double) {
   std::vector<Matrix<double,1,Dynamic> > xx;
@@ -131,13 +132,13 @@ TEST(matrix_test, resize_svec_rv_double) {
   dims.push_back(5U);
   stan::math::resize(xx,dims);
   EXPECT_EQ(4U,xx.size());
-  EXPECT_EQ(5U,xx[0].size());
+  EXPECT_EQ(5,xx[0].size());
 
   dims[0] = 3U;
   dims[1] = 7U;
   stan::math::resize(xx,dims);
   EXPECT_EQ(3U,xx.size());
-  EXPECT_EQ(7U,xx[1].size());  
+  EXPECT_EQ(7,xx[1].size());  
 }
 TEST(matrix_test, resize_svec_svec_matrix_double) {
   std::vector<std::vector<Matrix<double,Dynamic,Dynamic> > > mm;
@@ -149,8 +150,8 @@ TEST(matrix_test, resize_svec_svec_matrix_double) {
   stan::math::resize(mm,dims);
   EXPECT_EQ(4U,mm.size());
   EXPECT_EQ(5U,mm[0].size());
-  EXPECT_EQ(6U,mm[1][2].rows());
-  EXPECT_EQ(3U,mm[3][4].cols());
+  EXPECT_EQ(6,mm[1][2].rows());
+  EXPECT_EQ(3,mm[3][4].cols());
 }
 
 TEST(matrix,get_base1_vec1) {
@@ -297,14 +298,15 @@ TEST(matrix,get_base1_8) {
 }
 
 // exp tests
-TEST(matrix_test, exp__matrix) {
+TEST(matrix_test, expMatrix) {
+  using stan::math::exp;
   matrix_d expected_output(2,2);
   matrix_d mv(2,2), output;
   int i,j;
 
   mv << 1, 2, 3, 4;
   expected_output << std::exp(1), std::exp(2), std::exp(3), std::exp(4);
-  output = stan::math::exp(mv);
+  output = exp(mv);
 
   for (i = 0; i < 2; i++)
     for (j = 0; j < 2; j++)
@@ -312,14 +314,15 @@ TEST(matrix_test, exp__matrix) {
 }
 
 // log tests
-TEST(matrix_test, log__matrix) {
+TEST(matrix_test, logMatrix) {
+  using stan::math::log;
   matrix_d expected_output(2,2);
   matrix_d mv(2,2), output;
   int i,j;
 
   mv << 1, 2, 3, 4;
   expected_output << std::log(1), std::log(2), std::log(3), std::log(4);
-  output = stan::math::log(mv);
+  output = log(mv);
 
   for (i = 0; i < 2; i++)
     for (j = 0; j < 2; j++)
@@ -339,7 +342,7 @@ TEST(matrix_test,add_v_exception) {
 
   d1.resize(2);
   d2.resize(3);
-  EXPECT_THROW(stan::math::add(d1, d2), std::invalid_argument);
+  EXPECT_THROW(stan::math::add(d1, d2), std::domain_error);
 }
 TEST(matrix_test,add_rv_exception) {
   row_vector_d d1, d2;
@@ -354,7 +357,7 @@ TEST(matrix_test,add_rv_exception) {
 
   d1.resize(2);
   d2.resize(3);
-  EXPECT_THROW(stan::math::add(d1, d2), std::invalid_argument);
+  EXPECT_THROW(stan::math::add(d1, d2), std::domain_error);
 }
 TEST(matrix_test,add_m_exception) {
   matrix_d d1, d2;
@@ -369,7 +372,7 @@ TEST(matrix_test,add_m_exception) {
 
   d1.resize(2,3);
   d2.resize(3,3);
-  EXPECT_THROW(stan::math::add(d1, d2), std::invalid_argument);
+  EXPECT_THROW(stan::math::add(d1, d2), std::domain_error);
 }
 
 TEST(matrix_test,subtract_v_exception) {
@@ -385,7 +388,7 @@ TEST(matrix_test,subtract_v_exception) {
 
   d1.resize(2);
   d2.resize(3);
-  EXPECT_THROW(stan::math::subtract(d1, d2), std::invalid_argument);
+  EXPECT_THROW(stan::math::subtract(d1, d2), std::domain_error);
 }
 TEST(matrix_test,subtract_rv_exception) {
   row_vector_d d1, d2;
@@ -400,7 +403,7 @@ TEST(matrix_test,subtract_rv_exception) {
 
   d1.resize(2);
   d2.resize(3);
-  EXPECT_THROW(stan::math::subtract(d1, d2), std::invalid_argument);
+  EXPECT_THROW(stan::math::subtract(d1, d2), std::domain_error);
 }
 TEST(matrix_test,subtract_m_exception) {
   matrix_d d1, d2;
@@ -415,7 +418,7 @@ TEST(matrix_test,subtract_m_exception) {
 
   d1.resize(2,3);
   d2.resize(3,3);
-  EXPECT_THROW(stan::math::subtract(d1, d2), std::invalid_argument);
+  EXPECT_THROW(stan::math::subtract(d1, d2), std::domain_error);
 }
 
 TEST(matrixTest,subtract_c_m) {
@@ -562,7 +565,7 @@ TEST(matrix_test,multiply_rv_v_exception) {
 
   rv.resize(2);
   v.resize(3);
-  EXPECT_THROW(stan::math::multiply(rv, v), std::invalid_argument);
+  EXPECT_THROW(stan::math::multiply(rv, v), std::domain_error);
 }
 TEST(matrix_test,multiply_m_v_exception) {
   matrix_d m;
@@ -578,7 +581,7 @@ TEST(matrix_test,multiply_m_v_exception) {
 
   m.resize(2, 3);
   v.resize(2);
-  EXPECT_THROW(stan::math::multiply(m, v), std::invalid_argument);  
+  EXPECT_THROW(stan::math::multiply(m, v), std::domain_error);  
 }
 TEST(matrix_test,multiply_rv_m_exception) {
   row_vector_d rv;
@@ -594,7 +597,7 @@ TEST(matrix_test,multiply_rv_m_exception) {
 
   rv.resize(3);
   m.resize(2, 3);
-  EXPECT_THROW(stan::math::multiply(rv, m), std::invalid_argument);
+  EXPECT_THROW(stan::math::multiply(rv, m), std::domain_error);
 }
 TEST(matrix_test,multiply_m_m_exception) {
   matrix_d m1, m2;
@@ -610,7 +613,7 @@ TEST(matrix_test,multiply_m_m_exception) {
 
   m1.resize(4, 3);
   m2.resize(2, 3);
-  EXPECT_THROW(stan::math::multiply(m1, m2), std::invalid_argument);
+  EXPECT_THROW(stan::math::multiply(m1, m2), std::domain_error);
 }
 TEST(matrix_test,cholesky_decompose_exception) {
   matrix_d m;
@@ -622,16 +625,9 @@ TEST(matrix_test,cholesky_decompose_exception) {
   EXPECT_NO_THROW(stan::math::cholesky_decompose(m));
   
   m.resize(2, 3);
-  EXPECT_THROW(stan::math::cholesky_decompose(m), std::invalid_argument);
+  EXPECT_THROW(stan::math::cholesky_decompose(m), std::domain_error);
 }
-TEST(matrix_test,std_vector_sum_double) {
-  std::vector<double> x(3);
-  EXPECT_FLOAT_EQ(0.0,stan::math::sum(x));
-  x[0] = 1.0;
-  x[1] = 2.0;
-  x[2] = 3.0;
-  EXPECT_FLOAT_EQ(6.0,stan::math::sum(x));
-}
+
 TEST(matrix_test,std_vector_sum_int) {
   std::vector<int> x(3);
   EXPECT_EQ(0,stan::math::sum(x));
@@ -640,6 +636,97 @@ TEST(matrix_test,std_vector_sum_int) {
   x[2] = 3;
   EXPECT_EQ(6,stan::math::sum(x));
 }
+TEST(matrix_test,std_vector_sum_double) {
+  using stan::math::sum;
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  std::vector<double> x(3);
+  EXPECT_FLOAT_EQ(0.0,sum(x));
+  x[0] = 1.0;
+  x[1] = 2.0;
+  x[2] = 3.0;
+  EXPECT_FLOAT_EQ(6.0,sum(x));
+
+  vector_d v;
+  EXPECT_FLOAT_EQ(0.0,sum(v));
+  v = vector_d(1);
+  v[0] = 5.0;
+  EXPECT_FLOAT_EQ(5.0,sum(v));
+  v = vector_d(3);
+  v[0] = 5.0;
+  v[1] = 10.0;
+  v[2] = 100.0;
+  EXPECT_FLOAT_EQ(115.0,sum(v));
+
+  row_vector_d rv;
+  EXPECT_FLOAT_EQ(0.0,sum(rv));
+  rv = row_vector_d(1);
+  rv[0] = 5.0;
+  EXPECT_FLOAT_EQ(5.0,sum(rv));
+  rv = row_vector_d(3);
+  rv[0] = 5.0;
+  rv[1] = 10.0;
+  rv[2] = 100.0;
+  EXPECT_FLOAT_EQ(115.0,sum(rv));
+
+  matrix_d m;
+  EXPECT_FLOAT_EQ(0.0,sum(m));
+  m = matrix_d(1,1);
+  m << 5.0;
+  EXPECT_FLOAT_EQ(5.0,sum(m));
+  m = matrix_d(3,2);
+  m << 1, 2, 3, 4, 5, 6;
+  EXPECT_FLOAT_EQ(21.0,sum(m));
+}
+
+TEST(matrix_test,stdVectorProdInt) {
+  using stan::math::prod;
+  std::vector<int> v;
+  EXPECT_EQ(1,prod(v));
+  v.push_back(2);
+  EXPECT_EQ(2,prod(v));
+  v.push_back(3);
+  EXPECT_EQ(6,prod(v));
+}
+TEST(matrix_test,stdVectorProd) {
+  using stan::math::prod;
+  std::vector<double> x;
+  EXPECT_FLOAT_EQ(1.0,prod(x));
+  x.push_back(2.0);
+  EXPECT_FLOAT_EQ(2.0,prod(x));
+  x.push_back(3);
+  EXPECT_FLOAT_EQ(6.0,prod(x));
+
+  vector_d v;
+  EXPECT_FLOAT_EQ(1.0,prod(v));
+  v = vector_d(1);
+  v << 2.0;
+  EXPECT_FLOAT_EQ(2.0,prod(v));
+  v = vector_d(2);
+  v << 2.0, 3.0;
+  EXPECT_FLOAT_EQ(6.0,prod(v));
+
+  row_vector_d rv;
+  EXPECT_FLOAT_EQ(1.0,prod(rv));
+  rv = row_vector_d(1);
+  rv << 2.0;
+  EXPECT_FLOAT_EQ(2.0,prod(rv));
+  rv = row_vector_d(2);
+  rv << 2.0, 3.0;
+  EXPECT_FLOAT_EQ(6.0,prod(rv));
+
+  matrix_d m;
+  EXPECT_FLOAT_EQ(1.0,prod(m));
+  m = matrix_d(1,1);
+  m << 2.0;
+  EXPECT_FLOAT_EQ(2.0,prod(m));
+  m = matrix_d(2,3);
+  m << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
+  EXPECT_FLOAT_EQ(720.0,prod(m));
+}
+
+
+
 
 TEST(matrixTest,eltMultiplyVec) {
   vector_d v1(2);
@@ -739,8 +826,6 @@ TEST(matrixTest,eltDivideMatrix) {
   m2 << 10, 100, 1000, 10000, 100000, 1000000;
   matrix_d m = stan::math::elt_divide(m1,m2);
   
-  std::cout << m << std::endl;
-
   EXPECT_EQ(2,m.rows());
   EXPECT_EQ(3,m.cols());
   EXPECT_FLOAT_EQ(0.1, m(0,0));
@@ -838,4 +923,512 @@ TEST(matrixTest,mdivide_right_tri_val) {
   EXPECT_NEAR(0.0,I(1,0),1.0E-12);
   EXPECT_NEAR(1.0,I(1,1),1.0e-12);
 }
+TEST(MathMatrix,dot_self) {
+  using stan::math::dot_self;
 
+  Eigen::Matrix<double,Eigen::Dynamic,1> v1(1);
+  v1 << 2.0;
+  EXPECT_NEAR(4.0,dot_self(v1),1E-12);
+  Eigen::Matrix<double,Eigen::Dynamic,1> v2(2);
+  v2 << 2.0, 3.0;
+  EXPECT_NEAR(13.0,dot_self(v2),1E-12);
+  Eigen::Matrix<double,Eigen::Dynamic,1> v3(3);
+  v3 << 2.0, 3.0, 4.0;
+  EXPECT_NEAR(29.0,dot_self(v3),1E-12);
+
+  Eigen::Matrix<double,1,Eigen::Dynamic> rv1(1);
+  rv1 << 2.0;
+  EXPECT_NEAR(4.0,dot_self(rv1),1E-12);
+  Eigen::Matrix<double,1,Eigen::Dynamic> rv2(2);
+  rv2 << 2.0, 3.0;
+  EXPECT_NEAR(13.0,dot_self(rv2),1E-12);
+  Eigen::Matrix<double,1,Eigen::Dynamic> rv3(3);
+  rv3 << 2.0, 3.0, 4.0;
+  EXPECT_NEAR(29.0,dot_self(rv3),1E-12);
+
+  Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> m1(1,1);
+  m1 << 2.0;
+  EXPECT_NEAR(4.0,dot_self(m1),1E-12);
+  Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> m2(2,1);
+  m2 << 2.0, 3.0;
+  EXPECT_NEAR(13.0,dot_self(m2),1E-12);
+  Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> m3(3,1);
+  m3 << 2.0, 3.0, 4.0;
+  EXPECT_NEAR(29.0,dot_self(m3),1E-12);
+
+  Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> mm2(1,2);
+  mm2 << 2.0, 3.0;
+  EXPECT_NEAR(13.0,dot_self(mm2),1E-12);
+  Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> mm3(1,3);
+  mm3 << 2.0, 3.0, 4.0;
+  EXPECT_NEAR(29.0,dot_self(mm3),1E-12);
+
+}
+TEST(MathMatrix,columns_dot_self) {
+  using stan::math::columns_dot_self;
+
+  Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> m1(1,1);
+  m1 << 2.0;
+  EXPECT_NEAR(4.0,columns_dot_self(m1)(0,0),1E-12);
+  Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> m2(1,2);
+  m2 << 2.0, 3.0;
+  Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> x;
+  x = columns_dot_self(m2);
+  EXPECT_NEAR(4.0,x(0,0),1E-12);
+  EXPECT_NEAR(9.0,x(1,0),1E-12);
+  Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> m3(2,2);
+  m3 << 2.0, 3.0, 4.0, 5.0;
+  x = columns_dot_self(m3);
+  EXPECT_NEAR(20.0,x(0,0),1E-12);
+  EXPECT_NEAR(34.0,x(1,0),1E-12);
+}
+TEST(MathMatrix,softmax) {
+  using stan::math::softmax;
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  
+  Matrix<double,Dynamic,1> x(1);
+  x << 0.0;
+  
+  Matrix<double,Dynamic,1> theta = softmax(x);
+  EXPECT_EQ(1,theta.size());
+  EXPECT_FLOAT_EQ(1.0,theta[0]);
+
+  Matrix<double,Dynamic,1> x2(2);
+  x2 << -1.0, 1.0;
+  Matrix<double,Dynamic,1> theta2 = softmax(x2);
+  EXPECT_EQ(2,theta2.size());
+  EXPECT_FLOAT_EQ(exp(-1)/(exp(-1) + exp(1)), theta2[0]);
+  EXPECT_FLOAT_EQ(exp(1)/(exp(-1) + exp(1)), theta2[1]);
+
+  Matrix<double,Dynamic,1> x3(3);
+  x3 << -1.0, 1.0, 10.0;
+  Matrix<double,Dynamic,1> theta3 = softmax(x3);
+  EXPECT_EQ(3,theta3.size());
+  EXPECT_FLOAT_EQ(exp(-1)/(exp(-1) + exp(1) + exp(10.0)), theta3[0]);
+  EXPECT_FLOAT_EQ(exp(1)/(exp(-1) + exp(1) + exp(10.0)), theta3[1]);
+  EXPECT_FLOAT_EQ(exp(10)/(exp(-1) + exp(1) + exp(10.0)), theta3[2]);
+}
+TEST(MathMatrix,dimensionValidation) {
+  using stan::math::determinant;
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  Matrix<double,Dynamic,Dynamic> x(3,3);
+  x << 1, 2, 3, 1, 4, 9, 1, 8, 27;
+
+  ASSERT_FALSE(boost::math::isnan(determinant(x)));
+
+  Matrix<double,Dynamic,Dynamic> xx(3,2);
+  xx << 1, 2, 3, 1, 4, 9;
+  EXPECT_THROW(stan::math::determinant(xx),std::domain_error);
+  
+}
+TEST(MathMatrix,nonzeroMinMax) {
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  using std::numeric_limits;
+  Matrix<double,Dynamic,Dynamic> m;
+  Matrix<double,Dynamic,1> v;
+  Matrix<double,1,Dynamic> rv;
+  EXPECT_EQ(numeric_limits<double>::infinity(),
+            stan::math::min(m));
+  EXPECT_EQ(numeric_limits<double>::infinity(),
+            stan::math::min(v));
+  EXPECT_EQ(numeric_limits<double>::infinity(),
+            stan::math::min(rv));
+
+  EXPECT_EQ(-numeric_limits<double>::infinity(),
+            stan::math::max(m));
+  EXPECT_EQ(-numeric_limits<double>::infinity(),
+            stan::math::max(v));
+  EXPECT_EQ(-numeric_limits<double>::infinity(),
+            stan::math::max(rv));
+
+  EXPECT_THROW(stan::math::mean(m), std::domain_error);
+  EXPECT_THROW(stan::math::mean(v), std::domain_error);
+  EXPECT_THROW(stan::math::mean(rv), std::domain_error);
+
+  Matrix<double,Dynamic,Dynamic> m_nz(2,3);
+  Matrix<double,Dynamic,1> v_nz(2);
+  Matrix<double,1,Dynamic> rv_nz(3);
+  EXPECT_NO_THROW(stan::math::min(m_nz));
+  EXPECT_NO_THROW(stan::math::min(v_nz));
+  EXPECT_NO_THROW(stan::math::min(rv_nz));
+
+  EXPECT_NO_THROW(stan::math::max(m_nz));
+  EXPECT_NO_THROW(stan::math::max(v_nz));
+  EXPECT_NO_THROW(stan::math::max(rv_nz));
+
+  EXPECT_NO_THROW(stan::math::mean(m_nz));
+  EXPECT_NO_THROW(stan::math::mean(v_nz));
+  EXPECT_NO_THROW(stan::math::mean(rv_nz));
+}
+TEST(MathMatrix,minVectorValues) {
+  using stan::math::min;
+  std::vector<int> n;
+  EXPECT_THROW(min(n),std::domain_error);
+  n.push_back(1);
+  EXPECT_EQ(1,min(n));
+  n.push_back(2);
+  EXPECT_EQ(1,min(n));
+  n.push_back(0);
+  EXPECT_EQ(0,min(n));
+  
+  std::vector<double> x;
+  EXPECT_FLOAT_EQ(std::numeric_limits<double>::infinity(),min(x));
+  x.push_back(1.0);
+  EXPECT_FLOAT_EQ(1.0,min(x));
+  x.push_back(0.0);
+  EXPECT_FLOAT_EQ(0.0,min(x));
+  x.push_back(2.0);
+  EXPECT_FLOAT_EQ(0.0,min(x));
+  x.push_back(-10.0);
+  EXPECT_FLOAT_EQ(-10.0,min(x));
+
+  vector_d v;
+  EXPECT_FLOAT_EQ(std::numeric_limits<double>::infinity(),min(v));
+  v = vector_d(1);
+  v << 1.0;
+  EXPECT_FLOAT_EQ(1.0,min(v));
+  v = vector_d(2);
+  v << 1.0, 0.0;
+  EXPECT_FLOAT_EQ(0.0,min(v));
+  v = vector_d(3);
+  v << 1.0, 0.0, 2.0;
+  EXPECT_FLOAT_EQ(0.0,min(v));
+  v = vector_d(4);
+  v << 1.0, 0.0, 2.0, -10.0;
+  EXPECT_FLOAT_EQ(-10.0,min(v));
+
+  row_vector_d rv;
+  EXPECT_FLOAT_EQ(std::numeric_limits<double>::infinity(),min(rv));
+  rv = row_vector_d(1);
+  rv << 1.0;
+  EXPECT_FLOAT_EQ(1.0,min(rv));
+  rv = row_vector_d(2);
+  rv << 1.0, 0.0;
+  EXPECT_FLOAT_EQ(0.0,min(rv));
+  rv = row_vector_d(3);
+  rv << 1.0, 0.0, 2.0;
+  EXPECT_FLOAT_EQ(0.0,min(rv));
+  rv = row_vector_d(4);
+  rv << 1.0, 0.0, 2.0, -10.0;
+  EXPECT_FLOAT_EQ(-10.0,min(rv));
+
+  matrix_d m;
+  EXPECT_FLOAT_EQ(std::numeric_limits<double>::infinity(),min(m));
+  m = matrix_d(1,1);
+  m << 1.0;
+  EXPECT_FLOAT_EQ(1.0,min(m));
+  m = matrix_d(2,2);
+  m << 1.0, 0.0, 2.0, -10.0;
+  EXPECT_FLOAT_EQ(-10.0,min(m));
+}
+
+TEST(MathMatrix,maxVectorValues) {
+  using stan::math::max;
+  std::vector<int> n;
+  EXPECT_THROW(max(n),std::domain_error);
+  n.push_back(1);
+  EXPECT_EQ(1,max(n));
+  n.push_back(2);
+  EXPECT_EQ(2,max(n));
+  n.push_back(0);
+  EXPECT_EQ(2,max(n));
+  
+  std::vector<double> x;
+  EXPECT_FLOAT_EQ(-std::numeric_limits<double>::infinity(),max(x));
+  x.push_back(1.0);
+  EXPECT_FLOAT_EQ(1.0,max(x));
+  x.push_back(0.0);
+  EXPECT_FLOAT_EQ(1.0,max(x));
+  x.push_back(2.0);
+  EXPECT_FLOAT_EQ(2.0,max(x));
+  x.push_back(-10.0);
+  EXPECT_FLOAT_EQ(2.0,max(x));
+
+  vector_d v;
+  EXPECT_FLOAT_EQ(-std::numeric_limits<double>::infinity(),max(v));
+  v = vector_d(1);
+  v << 1.0;
+  EXPECT_FLOAT_EQ(1.0,max(v));
+  v = vector_d(2);
+  v << 1.0, 0.0;
+  EXPECT_FLOAT_EQ(1.0,max(v));
+  v = vector_d(3);
+  v << 1.0, 0.0, 2.0;
+  EXPECT_FLOAT_EQ(2.0,max(v));
+  v = vector_d(4);
+  v << 1.0, 0.0, 2.0, -10.0;
+  EXPECT_FLOAT_EQ(2.0,max(v));
+
+  row_vector_d rv;
+  EXPECT_FLOAT_EQ(-std::numeric_limits<double>::infinity(),max(rv));
+  rv = row_vector_d(1);
+  rv << 1.0;
+  EXPECT_FLOAT_EQ(1.0,max(rv));
+  rv = row_vector_d(2);
+  rv << 1.0, 0.0;
+  EXPECT_FLOAT_EQ(1.0,max(rv));
+  rv = row_vector_d(3);
+  rv << 1.0, 0.0, 2.0;
+  EXPECT_FLOAT_EQ(2.0,max(rv));
+  rv = row_vector_d(4);
+  rv << 1.0, 0.0, 2.0, -10.0;
+  EXPECT_FLOAT_EQ(2.0,max(rv));
+
+  matrix_d m;
+  EXPECT_FLOAT_EQ(-std::numeric_limits<double>::infinity(),max(m));
+  m = matrix_d(1,1);
+  m << 1.0;
+  EXPECT_FLOAT_EQ(1.0,max(m));
+  m = matrix_d(2,2);
+  m << 1.0, 0.0, 2.0, -10.0;
+  EXPECT_FLOAT_EQ(2.0,max(m));
+}
+
+TEST(MathMatrix,sd) {
+  using stan::math::sd;
+  std::vector<double> x;
+  EXPECT_THROW(sd(x),std::domain_error);
+  x.push_back(1.0);
+  EXPECT_FLOAT_EQ(0.0,sd(x));
+  x.push_back(2.0);
+  EXPECT_NEAR(0.7071068,sd(x),0.000001);
+  x.push_back(3.0);
+  EXPECT_FLOAT_EQ(1.0,sd(x));
+
+  vector_d v;
+  EXPECT_THROW(sd(v),std::domain_error);
+  v = vector_d(1);
+  v << 1.0;
+  EXPECT_FLOAT_EQ(0.0,sd(v));
+  v = vector_d(2);
+  v << 1.0, 2.0;
+  EXPECT_NEAR(0.7071068,sd(v),0.000001);
+  v = vector_d(3);
+  v << 1.0, 2.0, 3.0;
+  EXPECT_FLOAT_EQ(1.0,sd(v));
+
+  row_vector_d rv;
+  EXPECT_THROW(sd(rv),std::domain_error);
+  rv = row_vector_d(1);
+  rv << 1.0;
+  EXPECT_FLOAT_EQ(0.0,sd(rv));
+  rv = row_vector_d(2);
+  rv << 1.0, 2.0;
+  EXPECT_NEAR(0.7071068,sd(rv),0.000001);
+  rv = row_vector_d(3);
+  rv << 1.0, 2.0, 3.0;
+  EXPECT_FLOAT_EQ(1.0,sd(rv));
+
+
+  matrix_d m;
+  EXPECT_THROW(sd(m),std::domain_error);
+  m = matrix_d(1,1);
+  m << 1.0;
+  EXPECT_FLOAT_EQ(0.0,sd(m));
+  m = matrix_d(2,3);
+  m << 1.0, 2.0, 4.0, 9.0, 16.0, 25.0;
+  EXPECT_NEAR(9.396808,sd(m),0.000001);
+}
+
+TEST(MathMatrix,variance) {
+  using stan::math::variance;
+  std::vector<double> x;
+  EXPECT_THROW(variance(x),std::domain_error);
+  x.push_back(1.0);
+  EXPECT_FLOAT_EQ(0.0,variance(x));
+  x.push_back(2.0);
+  EXPECT_NEAR(0.5,variance(x),0.000001);
+  x.push_back(3.0);
+  EXPECT_FLOAT_EQ(1.0,variance(x));
+
+  vector_d v;
+  EXPECT_THROW(variance(v),std::domain_error);
+  v = vector_d(1);
+  v << 1.0;
+  EXPECT_FLOAT_EQ(0.0,variance(v));
+  v = vector_d(2);
+  v << 1.0, 2.0;
+  EXPECT_NEAR(0.5,variance(v),0.000001);
+  v = vector_d(3);
+  v << 1.0, 2.0, 3.0;
+  EXPECT_FLOAT_EQ(1.0,variance(v));
+
+  row_vector_d rv;
+  EXPECT_THROW(variance(rv),std::domain_error);
+  rv = row_vector_d(1);
+  rv << 1.0;
+  EXPECT_FLOAT_EQ(0.0,variance(rv));
+  rv = row_vector_d(2);
+  rv << 1.0, 2.0;
+  EXPECT_NEAR(0.5,variance(rv),0.000001);
+  rv = row_vector_d(3);
+  rv << 1.0, 2.0, 3.0;
+  EXPECT_FLOAT_EQ(1.0,variance(rv));
+
+
+  matrix_d m;
+  EXPECT_THROW(variance(m),std::domain_error);
+  m = matrix_d(1,1);
+  m << 1.0;
+  EXPECT_FLOAT_EQ(0.0,variance(m));
+  m = matrix_d(2,3);
+  m << 1.0, 2.0, 4.0, 9.0, 16.0, 25.0;
+  EXPECT_NEAR(88.3,variance(m),0.000001);
+}
+
+TEST(MathMatrix,mean) {
+  using stan::math::mean;
+  std::vector<double> x;
+  EXPECT_THROW(mean(x),std::domain_error);
+  x.push_back(1.0);
+  EXPECT_FLOAT_EQ(1.0,mean(x));
+  x.push_back(2.0);
+  EXPECT_NEAR(1.5,mean(x),0.000001);
+  x.push_back(3.0);
+  EXPECT_FLOAT_EQ(2.0,mean(x));
+
+  vector_d v;
+  EXPECT_THROW(mean(v),std::domain_error);
+  v = vector_d(1);
+  v << 1.0;
+  EXPECT_FLOAT_EQ(1.0,mean(v));
+  v = vector_d(2);
+  v << 1.0, 2.0;
+  EXPECT_NEAR(1.5,mean(v),0.000001);
+  v = vector_d(3);
+  v << 1.0, 2.0, 3.0;
+  EXPECT_FLOAT_EQ(2.0,mean(v));
+
+  row_vector_d rv;
+  EXPECT_THROW(mean(rv),std::domain_error);
+  rv = row_vector_d(1);
+  rv << 1.0;
+  EXPECT_FLOAT_EQ(1.0,mean(rv));
+  rv = row_vector_d(2);
+  rv << 1.0, 2.0;
+  EXPECT_NEAR(1.5,mean(rv),0.000001);
+  rv = row_vector_d(3);
+  rv << 1.0, 2.0, 3.0;
+  EXPECT_FLOAT_EQ(2.0,mean(rv));
+
+  matrix_d m;
+  EXPECT_THROW(mean(m),std::domain_error);
+  m = matrix_d(1,1);
+  m << 1.0;
+  EXPECT_FLOAT_EQ(1.0,mean(m));
+  m = matrix_d(2,3);
+  m << 1.0, 2.0, 4.0, 9.0, 16.0, 25.0;
+  EXPECT_FLOAT_EQ(9.5,mean(m));
+}
+
+TEST(MathMatrix, trace) {
+  using stan::math::trace;
+  matrix_d m;
+  EXPECT_FLOAT_EQ(0.0,trace(m));
+  m = matrix_d(1,1);
+  m << 2.3;
+  EXPECT_FLOAT_EQ(2.3,trace(m));
+  m = matrix_d(2,3);
+  m << 1, 2, 3, 4, 5, 6;
+  EXPECT_FLOAT_EQ(6.0,trace(m));
+}
+
+TEST(MathMatrix, minus) {
+  vector_d v0;
+  row_vector_d rv0;
+  matrix_d m0;
+  EXPECT_EQ(0,stan::math::minus(v0).size());
+  EXPECT_EQ(0,stan::math::minus(rv0).size());
+  EXPECT_EQ(0,stan::math::minus(m0).size());
+  vector_d v1(2);
+  v1 << 1, 2;
+  vector_d v2(3);
+  v2 << 10, 100, 1000;
+
+  row_vector_d rv1(2);
+  v1 << 1, 2;
+  row_vector_d rv2(3);
+  v2 << 10, 100, 1000;
+
+  matrix_d m1(2,3);
+  m1 << 1, 2, 3, 4, 5, 6;
+  matrix_d m2(3,2);
+  m2 << 10, 100, 1000, 0, -10, -12;
+
+  using stan::math::add;
+  EXPECT_THROW(add(v1,v2),std::domain_error);
+  EXPECT_THROW(add(rv1,rv2),std::domain_error);
+  EXPECT_THROW(add(m1,m2),std::domain_error);
+
+  using stan::math::subtract;
+  EXPECT_THROW(subtract(v1,v2),std::domain_error);
+  EXPECT_THROW(subtract(rv1,rv2),std::domain_error);
+  EXPECT_THROW(subtract(m1,m2),std::domain_error);
+
+  using stan::math::divide;
+  EXPECT_NO_THROW(divide(v0,2.0));
+  EXPECT_NO_THROW(divide(rv0,2.0));
+  EXPECT_NO_THROW(divide(m0,2.0));
+
+  using stan::math::multiply;
+  EXPECT_NO_THROW(multiply(v0,2.0));
+  EXPECT_NO_THROW(multiply(rv0,2.0));
+  EXPECT_NO_THROW(multiply(m0,2.0));
+  EXPECT_NO_THROW(multiply(2.0,v0));
+  EXPECT_NO_THROW(multiply(2.0,rv0));
+  EXPECT_NO_THROW(multiply(2.0,m0));
+
+  using stan::math::col;
+  EXPECT_THROW(col(m1,5),std::domain_error);
+
+  using stan::math::row;
+  EXPECT_THROW(row(m1,5),std::domain_error);
+
+  using stan::math::diagonal;
+  EXPECT_NO_THROW(diagonal(m0));
+
+  using stan::math::diag_matrix;
+  EXPECT_NO_THROW(diag_matrix(v0));
+
+  using stan::math::transpose;
+  EXPECT_NO_THROW(transpose(v0));
+  EXPECT_NO_THROW(transpose(rv0));
+  EXPECT_NO_THROW(transpose(m0));
+
+  using stan::math::inverse;
+  EXPECT_THROW(inverse(m1),std::domain_error);
+
+  using stan::math::softmax;
+  EXPECT_THROW(softmax(v0),std::domain_error);
+
+  using stan::math::eigenvalues;
+  EXPECT_NO_THROW(eigenvalues(m0));
+  EXPECT_THROW(eigenvalues(m1),std::domain_error);
+
+  using stan::math::eigenvectors;
+  EXPECT_THROW(eigenvectors(m0),std::domain_error);
+  matrix_d ev_m1(1,1);
+  ev_m1 << 2.0;
+  EXPECT_NO_THROW(eigenvectors(ev_m1));
+  EXPECT_THROW(eigenvectors(m1),std::domain_error);
+
+
+  using stan::math::eigenvalues_sym;
+  EXPECT_THROW(eigenvalues_sym(m0),std::domain_error);
+  EXPECT_THROW(eigenvalues_sym(m1),std::domain_error);
+
+  using stan::math::eigenvectors_sym;
+  EXPECT_THROW(eigenvectors_sym(m0),std::domain_error);
+  EXPECT_NO_THROW(eigenvectors_sym(ev_m1));
+  EXPECT_THROW(eigenvectors_sym(m1),std::domain_error);
+
+  using stan::math::cholesky_decompose;
+  EXPECT_NO_THROW(cholesky_decompose(m0));
+  EXPECT_THROW(cholesky_decompose(m1),std::domain_error);
+
+  using stan::math::singular_values;
+  EXPECT_NO_THROW(singular_values(m0));
+}

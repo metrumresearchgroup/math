@@ -22,7 +22,7 @@ namespace stan {
 
 
     /**
-     * Hamiltonian Monte Carlo sampler.
+     * Hamiltonian Monte Carlo (HMC) sampler.
      *
      * The HMC sampler requires a probability model with the ability
      * to compute gradients, characterized as an instance of
@@ -33,7 +33,7 @@ namespace stan {
      */
     class hmc : public adaptive_sampler {
     private:
-      mcmc::prob_grad& _model;
+      stan::model::prob_grad& _model;
     
       std::vector<double> _x;
       std::vector<int> _z;
@@ -50,7 +50,7 @@ namespace stan {
     public:
 
       /**
-       * Construct a Hamiltonian Monte Carlo (HMC) sampler for the
+       * Constructs a Hamiltonian Monte Carlo (HMC) sampler for the
        * specified model, using the specified step size and number of
        * leapfrog steps, with the specified random seed for randomization.
        *
@@ -63,9 +63,9 @@ namespace stan {
        * @param epsilon Hamiltonian dynamics simulation step size.
        * @param L Number of leapfrog steps per simulation.
        * @param random_seed Seed for random number generator; optional, if not
-       * specified, generate new seen based on system time.
+       * specified, generate new seed based on system time.
        */
-      hmc(mcmc::prob_grad& model,
+      hmc(stan::model::prob_grad& model,
           double epsilon, 
           int L,
           unsigned int random_seed = static_cast<unsigned int>(std::time(0)))
@@ -88,7 +88,7 @@ namespace stan {
       }
 
       /**
-       * Destroy this sampler.
+       * Destructor.
        *
        * The implementation for this class is a no-op.
        */

@@ -77,7 +77,12 @@ BOOST_FUSION_ADAPT_STRUCT(stan::gm::simplex_var_decl,
                           (std::string, name_)
                           (std::vector<stan::gm::expression>, dims_) )
 
-BOOST_FUSION_ADAPT_STRUCT(stan::gm::pos_ordered_var_decl,
+BOOST_FUSION_ADAPT_STRUCT(stan::gm::ordered_var_decl,
+                          (stan::gm::expression, K_)
+                          (std::string, name_)
+                          (std::vector<stan::gm::expression>, dims_) )
+
+BOOST_FUSION_ADAPT_STRUCT(stan::gm::positive_ordered_var_decl,
                           (stan::gm::expression, K_)
                           (std::string, name_)
                           (std::vector<stan::gm::expression>, dims_) )
@@ -135,9 +140,14 @@ namespace stan {
                     << " found simplex." << std::endl;
         return false;
       }
-      bool operator()(const pos_ordered_var_decl& x) const {
+      bool operator()(const ordered_var_decl& x) const {
         error_msgs_ << "require unconstrained variable declaration."
-                    << " found pos_ordered." << std::endl;
+                    << " found ordered." << std::endl;
+        return false;
+      }
+      bool operator()(const positive_ordered_var_decl& x) const {
+        error_msgs_ << "require unconstrained variable declaration."
+                    << " found positive_ordered." << std::endl;
         return false;
       }
       bool operator()(const cov_matrix_var_decl& x) const {
@@ -220,7 +230,17 @@ namespace stan {
         if (vm.exists(var_decl.name_)) {
           // variable already exists
           pass = false;
-          error_msgs << "variable already declared, name=" << var_decl.name_ << std::endl;
+          error_msgs << "variable already declared, name="
+                     << var_decl.name_ 
+                     << std::endl;
+          return var_decl;
+        } 
+        if ((vo == parameter_origin || vo == transformed_parameter_origin)
+            && var_decl.base_type_ == INT_T) {
+          pass = false;
+          error_msgs << "integer parameters or transformed parameters are not allowed; "
+                     << " found declared type int, parameter name=" << var_decl.name_
+                     << std::endl;
           return var_decl;
         }
         pass = true;  // probably don't need to set true
@@ -252,6 +272,34 @@ namespace stan {
     boost::phoenix::function<validate_decl_constraints> 
     validate_decl_constraints_f;
 
+    struct validate_identifier {
+      template <typename T1, typename T2>
+      struct result { typedef bool type; };
+
+      bool operator()(const std::string& identifier,
+                      std::stringstream& error_msgs) const {
+        int len = identifier.size();
+        if (len >= 2
+            && identifier[len-1] == '_'
+            && identifier[len-2] == '_') {
+          error_msgs << "identifiers cannot end in double underscore (__)"
+                     << "; found identifer=" << identifier;
+          return false;
+        }
+        return true;
+      }
+    };
+    boost::phoenix::function<validate_identifier> validate_identifier_f;
+
+    struct empty_range {
+      template <typename T1>
+      struct result { typedef range type; };
+      range operator()(std::stringstream& error_msgs) const {
+        return range();
+      }
+    };
+    boost::phoenix::function<empty_range> empty_range_f;
+
     struct validate_int_expr {
       template <typename T1, typename T2>
       struct result { typedef bool type; };
@@ -267,6 +315,34 @@ namespace stan {
       }
     };
     boost::phoenix::function<validate_int_expr> validate_int_expr_f;
+
+    struct set_int_range_lower {
+      template <typename T1, typename T2, typename T3>
+      struct result { typedef bool type; };
+      bool operator()(range& range,
+                      const expression& expr,
+                      std::stringstream& error_msgs) const {
+        range.low_ = expr;
+        validate_int_expr validator;
+        return validator(expr,error_msgs);
+      }
+    };
+    boost::phoenix::function<set_int_range_lower> set_int_range_lower_f;
+
+    struct set_int_range_upper {
+      template <typename T1, typename T2, typename T3>
+      struct result { typedef bool type; };
+      bool operator()(range& range,
+                      const expression& expr,
+                      std::stringstream& error_msgs) const {
+        range.high_ = expr;
+        validate_int_expr validator;
+        return validator(expr,error_msgs);
+      }
+    };
+    boost::phoenix::function<set_int_range_upper> set_int_range_upper_f;
+
+
 
     struct validate_int_data_expr {
       template <typename T1, typename T2, typename T3>
@@ -305,6 +381,33 @@ namespace stan {
       }
     };
     boost::phoenix::function<validate_double_expr> validate_double_expr_f;
+
+
+    struct set_double_range_lower {
+      template <typename T1, typename T2, typename T3>
+      struct result { typedef bool type; };
+      bool operator()(range& range,
+                      const expression& expr,
+                      std::stringstream& error_msgs) const {
+        range.low_ = expr;
+        validate_double_expr validator;
+        return validator(expr,error_msgs);
+      }
+    };
+    boost::phoenix::function<set_double_range_lower> set_double_range_lower_f;
+
+    struct set_double_range_upper {
+      template <typename T1, typename T2, typename T3>
+      struct result { typedef bool type; };
+      bool operator()(range& range,
+                      const expression& expr,
+                      std::stringstream& error_msgs) const {
+        range.high_ = expr;
+        validate_double_expr validator;
+        return validator(expr,error_msgs);
+      }
+    };
+    boost::phoenix::function<set_double_range_upper> set_double_range_upper_f;
 
 
     template <typename Iterator>
@@ -352,7 +455,10 @@ namespace stan {
             | simplex_decl_r       
             [_val = add_var_f(_1,boost::phoenix::ref(var_map_),_a,_r2,
                               boost::phoenix::ref(error_msgs_))]
-            | pos_ordered_decl_r   
+            | ordered_decl_r   
+            [_val = add_var_f(_1,boost::phoenix::ref(var_map_),_a,_r2,
+                              boost::phoenix::ref(error_msgs_))]
+            | positive_ordered_decl_r   
             [_val = add_var_f(_1,boost::phoenix::ref(var_map_),_a,_r2,
                               boost::phoenix::ref(error_msgs_))]
             | corr_matrix_decl_r   
@@ -387,10 +493,10 @@ namespace stan {
       vector_decl_r.name("vector declaration");
       vector_decl_r 
         %= lit("vector")
-        > lit('(')
+        > lit('[')
         > expression_g
         [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
-        > lit(')')
+        > lit(']')
         > identifier_r 
         > opt_dims_r
         > lit(';');
@@ -398,10 +504,10 @@ namespace stan {
       row_vector_decl_r.name("row vector declaration");
       row_vector_decl_r 
         %= lit("row_vector")
-        > lit('(')
+        > lit('[')
         > expression_g
         [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
-        > lit(')')
+        > lit(']')
         > identifier_r 
         > opt_dims_r
         > lit(';');
@@ -409,13 +515,13 @@ namespace stan {
       matrix_decl_r.name("matrix declaration");
       matrix_decl_r 
         %= lit("matrix")
-        > lit('(')
+        > lit('[')
         > expression_g
-        [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
+          [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
         > lit(',')
         > expression_g
-        [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
-        > lit(')')
+          [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
+        > lit(']')
         > identifier_r 
         > opt_dims_r
         > lit(';');
@@ -423,21 +529,32 @@ namespace stan {
       simplex_decl_r.name("simplex declaration");
       simplex_decl_r 
         %= lit("simplex")
-        > lit('(')
+        > lit('[')
         > expression_g
         [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
-        > lit(')')
+        > lit(']')
         > identifier_r 
         > opt_dims_r
         > lit(';'); 
 
-      pos_ordered_decl_r.name("positive ordered declaration");
-      pos_ordered_decl_r 
-        %= lit("pos_ordered")
-        > lit('(')
+      ordered_decl_r.name("ordered declaration");
+      ordered_decl_r 
+        %= lit("ordered")
+        > lit('[')
         > expression_g
         [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
-        > lit(')')
+        > lit(']')
+        > identifier_r 
+        > opt_dims_r
+        > lit(';');
+
+      positive_ordered_decl_r.name("positive_ordered declaration");
+      positive_ordered_decl_r 
+        %= lit("positive_ordered")
+        > lit('[')
+        > expression_g
+        [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
+        > lit(']')
         > identifier_r 
         > opt_dims_r
         > lit(';');
@@ -445,10 +562,10 @@ namespace stan {
       corr_matrix_decl_r.name("correlation matrix declaration");
       corr_matrix_decl_r 
         %= lit("corr_matrix")
-        > lit('(')
+        > lit('[')
         > expression_g
         [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
-        > lit(')')
+        > lit(']')
         > identifier_r 
         > opt_dims_r
         > lit(';');
@@ -456,10 +573,10 @@ namespace stan {
       cov_matrix_decl_r.name("covariance matrix declaration");
       cov_matrix_decl_r 
         %= lit("cov_matrix")
-        > lit('(')
+        > lit('[')
         > expression_g
-        [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
-        > lit(')')
+          [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))]
+        > lit(']')
         > identifier_r 
         > opt_dims_r
         > lit(';');
@@ -479,31 +596,66 @@ namespace stan {
         > lit(']')
         ;
 
-      range_brackets_int_r.name("range expression pair, brackets");
+      range_brackets_int_r.name("integer range expression pair, brackets");
       range_brackets_int_r 
-        %= lit('(') 
-        > -(expression_g
-            [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))])
-        > lit(',')
-        > -(expression_g
-            [_pass = validate_int_expr_f(_1,boost::phoenix::ref(error_msgs_))])
-        > lit(')');
+        = lit('<') [_val = empty_range_f(boost::phoenix::ref(error_msgs_))]
+        > ( 
+           ( (lit("lower")
+              > lit('=')
+              > expression_g
+              [ _pass = set_int_range_lower_f(_val,_1,
+                                               boost::phoenix::ref(error_msgs_)) ])
+             > -( lit(',')
+                  > lit("upper")
+                  > lit('=')
+                  > expression_g
+                    [ _pass = set_int_range_upper_f(_val,_1,
+                                                    boost::phoenix::ref(error_msgs_)) ] ) )
+           | 
+           ( lit("upper")
+             > lit('=')
+             > expression_g
+             [ _pass = set_int_range_upper_f(_val,_1,
+                                             boost::phoenix::ref(error_msgs_)) ])
+            )
+        > lit('>');
 
-      range_brackets_double_r.name("range expression pair, brackets");
+      range_brackets_double_r.name("real range expression pair, brackets");
       range_brackets_double_r 
-        %= lit('(') 
-        > -(expression_g
-            [_pass = validate_double_expr_f(_1,boost::phoenix::ref(error_msgs_))])
-        > lit(',')
-        > -(expression_g
-            [_pass 
-             = validate_double_expr_f(_1,boost::phoenix::ref(error_msgs_))])
-        > lit(')');
+        = lit('<') [_val = empty_range_f(boost::phoenix::ref(error_msgs_))]
+        > ( 
+           ( (lit("lower")
+              > lit('=')
+              > expression_g
+              [ _pass = set_double_range_lower_f(_val,_1,
+                                               boost::phoenix::ref(error_msgs_)) ])
+             > -( lit(',')
+                  > lit("upper")
+                  > lit('=')
+                  > expression_g
+                    [ _pass = set_double_range_upper_f(_val,_1,
+                                                    boost::phoenix::ref(error_msgs_)) ] ) )
+           | 
+           ( lit("upper")
+             > lit('=')
+             > expression_g
+               [ _pass = set_double_range_upper_f(_val,_1,
+                                                  boost::phoenix::ref(error_msgs_)) ])
+            )
+        > lit('>');
 
       identifier_r.name("identifier");
       identifier_r
-        %= (lexeme[char_("a-zA-Z") 
-                   >> *char_("a-zA-Z0-9_.")]);
+        %= identifier_name_r
+          [_pass = validate_identifier_f(_1,boost::phoenix::ref(error_msgs_))]
+        ;
+
+      identifier_name_r.name("identifier subrule");
+      identifier_name_r
+        %= lexeme[char_("a-zA-Z") 
+                  >> *char_("a-zA-Z0-9_.")]
+        ;
+        
 
       range_r.name("range expression pair, colon");
       range_r 
