@@ -597,7 +597,7 @@ the scalar \farg{x} and the matrix \farg{y}}
 the scalar \farg{y} and vector \farg{x}}
 %
 \fitem{matrix}{operator*}{vector \farg{x}, row\_vector \farg{y}}{The product
-of the row vector \farg{x} and vector \farg{y}}
+of the vector \farg{x} and row vector \farg{y}}
 %
 %
 \fitem{row\_vector}{operator*}{row\_vector \farg{x}, real \farg{y}}{The product of
@@ -743,6 +743,41 @@ The dot product of the vector \farg{x} with itself}
 %
 \fitem{real}{dot\_self}{row\_vector \farg{x}}{
 The dot product of the row vector \farg{x} with itself}
+\end{description}
+
+\subsection{Specialized Products}
+
+
+\begin{description}
+%
+\fitem{matrix}{tcrossprod}{matrix \farg{x}}{
+The product of \farg{x} postmultiplied by its own transpose, similar 
+to the tcrossprod(x) function in R. The result is a symmetric matrix 
+$\mbox{\code{x}}\,\mbox{\code{x}}^{\top}$.}
+%
+\end{description}
+
+
+\begin{description}
+%
+\fitem{matrix}{crossprod}{matrix \farg{x}}{
+The product of \farg{x} premultiplied by its own transpose,
+similar to the crossprod(x) function in R. The result is a symmetric matrix 
+$\mbox{\code{x}}^{\top}\,\mbox{\code{x}}$.}
+%
+\end{description}
+
+\begin{description}
+%
+\fitem{matrix}{multiply\_lower\_tri\_self\_transpose}{matrix \farg{x}}{
+The product of the lower triangular portion of \farg{x} (including
+the diagonal) times its own transpose;  that is, if \code{L} is a
+matrix of the same dimensions as \farg{x}\, with \code{L(m,n)} equal to
+  \code{\farg{x}(m,n)} for $\mbox{\code{n}} \leq \mbox{\code{m}}$ and
+\code{L(m,n)} equal to 0 if $\mbox{\code{n}} > \mbox{\code{m}}$, the
+result is the symmetric matrix $\mbox{\code{L}}\,\mbox{\code{L}}^{\top}$.
+This is a specialization of tcrossprod(x) for lower-triangular matrices.}
+%
 \end{description}
 
 
@@ -910,13 +945,53 @@ The softmax of \farg{x}}
 %
 \fitem{row\_vector}{operator/}{row\_vector \farg{b}, matrix \farg{A}}{
 The right division of \farg{b} by \farg{A}; equivalently
-\code{\farg{b} * inv(\farg{A})}}
+\code{\farg{b} * inverse(\farg{A})}}
 %
 \fitem{vector}{operator\textbackslash}{matrix \farg{A}, vector \farg{b}}
 The left division of \farg{b} by \farg{A}; equivalently
-\code{inv(\farg{A}) * \farg{b}}
+\code{inverse(\farg{A}) * \farg{b}}
 %
 \end{description}
+
+\subsection{Lower-Triangular Matrix-Division Functions}
+
+There are four division functions which use lower triangular views of
+a matrix.  The lower triangular view of a matrix $\mbox{tri}(A)$ is defined by
+\[
+\mbox{tri}(A)[m,n] = 
+\left\{
+\begin{array}{ll}
+A[m,n] & \mbox{if } m \geq n, \mbox{ and}
+\\[4pt]
+0 & \mbox{otherwise}.
+\end{array}
+\right.
+\]
+
+
+\begin{description}
+%
+\fitem{row\_vector}{mdivide\_right\_tri\_low}{row\_vector \farg{b}, matrix \farg{a}}{
+The right division of \farg{b} by \code{tri(\farg{a})}, a lower triangular
+view of \farg{a}; equivalently \code{\farg{b} * inverse(tri(\farg{a}))}}
+%
+%
+\fitem{matrix}{mdivide\_right\_tri\_low}{matrix \farg{b}, matrix \farg{a}}{
+The right division of \farg{b} by \code{tri(\farg{a})}, a lower triangular
+view of \farg{a}; equivalently \code{\farg{b} * inverse(tri(\farg{a}))}}
+%
+\fitem{vector}{mdivide\_left\_tri\_low}{matrix \farg{a}, vector \farg{b}}
+The left division of \farg{b} by a triangular view of
+\code{tri(\farg{a})}, a lower triangular view of \farg{a}; equivalently
+\code{inverse(tri(\farg{a})) * \farg{b}}
+%
+\fitem{matrix}{mdivide\_left\_tri\_low}{matrix \farg{a}, matrix \farg{b}}
+The left division of \farg{b} by a triangular view of
+\code{tri(\farg{a})}, a lower triangular view of \farg{a}; equivalently
+\code{inverse(tri(\farg{a})) * \farg{b}}
+%
+\end{description}
+
 
 \subsection{Linear Algebra Functions}
 
@@ -1350,8 +1425,8 @@ If $\mu \in \reals$ and $\sigma \in \posreals$, then for $y \in \reals$,
 \]
 
 \begin{description}
-\fitem{real}{logistic\_log}{real \farg{y}, real \farg{mu},
-real \farg{sigma}}{ The log of the logistic density of \farg{y} given
+\fitem{real}{logistic\_log}{reals \farg{y}, reals \farg{mu},
+reals \farg{sigma}}{ The log of the logistic density of \farg{y} given
 location \farg{mu} and scale \farg{sigma}}
 \end{description}
 
@@ -1380,7 +1455,7 @@ If $\mu \in \reals$ and $\sigma \in \posreals$, then for $y \in
 \]
 
 \begin{description}
- \fitem{real}{lognormal\_log}{real \farg{y}, real \farg{mu}, real
+ \fitem{real}{lognormal\_log}{reals \farg{y}, reals \farg{mu}, reals
   \farg{sigma}}{The log of the lognormal density of \farg{y} given location
   \farg{mu} and scale \farg{sigma}}
 %
@@ -1405,7 +1480,7 @@ y^{\nu/2 - 1}
 \]
 
 \begin{description}
-\fitem{real}{chi\_square\_log}{real \farg{y}, real \farg{nu}}{The
+\fitem{real}{chi\_square\_log}{reals \farg{y}, reals \farg{nu}}{The
   log of the Chi-square density of \farg{y} given degrees of freedom
   \farg{nu}}
 \end{description}
@@ -1426,7 +1501,7 @@ y^{-(\nu/2 - 1)}
 \]
 
 \begin{description}
-\fitem{real}{inv\_chi\_square\_log}{real \farg{y}, real
+\fitem{real}{inv\_chi\_square\_log}{reals \farg{y}, reals
   \farg{nu}}{The log of the inverse Chi-square density of \farg{y} given
   degrees of freedom \farg{nu}}
 \end{description}
@@ -1453,8 +1528,8 @@ y^{-(\nu/2 + 1)}
 
 
 \begin{description}
-  \fitem{real}{scaled\_inv\_chi\_square\_log}{real \farg{y}, real
-    \farg{nu}, real \farg{s}}{The log of the scaled inverse Chi-square
+  \fitem{real}{scaled\_inv\_chi\_square\_log}{reals \farg{y}, reals
+    \farg{nu}, reals \farg{s}}{The log of the scaled inverse Chi-square
     density of \farg{y} given degrees of freedom \farg{nu} and scale
     \farg{s}}
 \end{description}
@@ -1472,7 +1547,7 @@ If $\beta \in \posreals$, then for $y \in \posreals$,
 \]
 
 \begin{description}
-  \fitem{real}{exponential\_log}{real \farg{y}, real \farg{beta}}{The
+  \fitem{real}{exponential\_log}{reals \farg{y}, reals \farg{beta}}{The
     log of the exponential density of \farg{y} given inverse scale \farg{beta}}
 %
 \fitem{real}{exponential\_cdf}{real \farg{y}, real \farg{beta}}{The
@@ -1575,7 +1650,7 @@ $y \in \posreals$,
 \]
 
 \begin{description}
-  \fitem{real}{pareto\_log}{real \farg{y}, real \farg{y\_min}, real
+  \fitem{real}{pareto\_log}{reals \farg{y}, reals \farg{y\_min}, reals
     \farg{alpha}}{The log of the Pareto density of \farg{y} given
     positive minimum value \farg{y\_min} and shape \farg{alpha}}
 \end{description}
@@ -1841,8 +1916,10 @@ positive-definite $W \in \reals^{K \times K}$,
 
 \fitem{real}{lkj\_cov\_log}{matrix \farg{W}, vector \farg{mu}, vector
 \farg{sigma}, real \farg{eta}}{The log of the LKJ density for covariance matrix
-\farg{W} given location vector \farg{mu}, scale vector \farg{sigma},
-and shape \farg{eta}; see \citep{LewandowskiKurowickaJoe:2009} for definitions}
+\farg{W} is the sum of log of the lognormal density of the standard deviations
+given location vector \farg{mu} and scale vector \farg{sigma} and the log of the 
+lkj\_corr density of the correlation matrix given shape \farg{eta}. 
+See the next section for details on the lkj\_corr density.}
 
 \end{description}
 
@@ -1861,8 +1938,14 @@ so that the diagonal of $L L^{\top}$ is the unit $K$-vector.
 %
   \fitem{real}{lkj\_corr\_log}{matrix \farg{y}, real
     \farg{eta}}{The log of the LKJ density for the correlation matrix
-    \farg{y} given shape
-    \farg{eta}; see \citep{LewandowskiKurowickaJoe:2009} for definitions}
+    \farg{y} given nonnegative shape \farg{eta}. The LKJ density is 
+    proportional to $\det(y)^{(\eta - 1)}$. The shape parameter \farg{eta}
+    can be interpreted like the shape parameter of a symmetric beta
+    distribution. If $\eta = 1$, then the density is uniform over all
+    correlation  matrices of a given order. If $\eta > 1$, the identity
+    matrix is the modal correlation matrix, especially as $\eta$ becomes
+    large. For $0 < \eta < 1$, the density has a trough at the identity
+    matrix. See \citep{LewandowskiKurowickaJoe:2009} for definitions.}
 %
 \end{description}
 
@@ -1874,7 +1957,9 @@ so that the diagonal of $L L^{\top}$ is the unit $K$-vector.
   \fitem{real}{lkj\_corr\_cholesky\_log}{matrix \farg{L}, real
     \farg{eta}}{The log of the LKJ density for the lower-triangular
     Cholesky factor \farg{L} of a correlation matrix given shape
-    \farg{eta}; see \citep{LewandowskiKurowickaJoe:2009} for definitions}
+    \farg{eta}. The LKJ density is proportional to 
+    $\det(L L^\top)^{(\eta - 1)} = \det(L)^{(2 \eta - 2)}$. See the
+    previous subsection for details on interpreting the shape \farg{eta}.}
 %
 \end{description}
 

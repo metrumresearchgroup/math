@@ -320,13 +320,13 @@ config_argss <- function(chains, iter, warmup, thin,
 } 
 
 is_dir_writable <- function(path) {
-  (file.access(path, mode = 2) > 0) && (file.access(path, mode = 1) > 0)  
+  (file.access(path, mode = 2) == 0) && (file.access(path, mode = 1) == 0)  
 } 
 
 writable_sample_file <- 
-function(file, warning = TRUE, 
+function(file, warn = TRUE, 
          wfun = function(x, x2) {
-           paste('Warning: "', x, '" is not writable; use "', x2, '" instead.', sep = '')
+           paste('"', x, '" is not writable; use "', x2, '" instead', sep = '')
          }) { 
   # Check if the path for file is writable, if not using tempdir() 
   # 
@@ -341,13 +341,11 @@ function(file, warning = TRUE,
   #  Otherwise, change the path to tempdir(). 
   
   dir <- dirname(file) 
-  if (!is_dir_writable(dir)) { 
-    dir2 <- tempdir()
-    if (warning)
-      cat(wfun(dir, dir2))
-    return(file.path(dir2, basename(file)))
-  } 
-  file
+  if (is_dir_writable(dir)) return(file)  
+
+  dir2 <- tempdir()
+  if (warn) warning(wfun(dir, dir2))
+  file.path(dir2, basename(file))
 } 
 
 
@@ -915,8 +913,8 @@ stan_plot_inferences <- function(sim, summary, pars, model_info, display_paralle
   # we have this so that even the # of parameters are less than
   # 30, we still have equal space between parameters for 
   # the whole plot. 
-  standard.width <- rstan_options('plot_standard_npar') 
-  max.width <- rstan_options('plot_max_npar') 
+  standard_width <- rstan_options('plot_standard_npar') 
+  max_width <- rstan_options('plot_max_npar') 
 
   pars <- if (missing(pars)) sim$pars_oi else check_pars(sim, pars) 
   n_pars <- length(pars) 
@@ -976,8 +974,8 @@ stan_plot_inferences <- function(sim, summary, pars, model_info, display_paralle
     k_num_p <- length(index) 
 
     # number of parameter we would plot
-    J <- min(k_num_p, max.width)
-    spacing <- 3.5 / max(J, standard.width)
+    J <- min(k_num_p, max_width)
+    spacing <- 3.5 / max(J, standard_width)
 
     # the medians for all the kept samples merged 
     sprobs = default_summary_probs()  

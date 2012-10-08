@@ -532,8 +532,10 @@ namespace stan {
         if (!(x.range_.has_low() || x.range_.has_high()))
           return; // unconstrained
         generate_begin_for_dims(x.dims_);
+        generate_indent(indents_ + x.dims_.size(),o_);
+        o_ << "try { " << EOL;
         if (x.range_.has_low()) {
-          generate_indent(indents_ + x.dims_.size(),o_);
+          generate_indent(indents_ + 1 + x.dims_.size(),o_);
           o_ << "check_greater_or_equal(function__,";
           generate_loop_var(x.name_,x.dims_.size());
           o_ << ",";
@@ -543,7 +545,7 @@ namespace stan {
           o_ << "\");" << EOL;
         }
         if (x.range_.has_high()) {
-          generate_indent(indents_ + x.dims_.size(),o_);
+          generate_indent(indents_ + 1 + x.dims_.size(),o_);
           o_ << "check_less_or_equal(function__,";
           generate_loop_var(x.name_,x.dims_.size());
           o_ << ",";
@@ -552,6 +554,8 @@ namespace stan {
           generate_loop_var(x.name_,x.dims_.size());
           o_ << "\");" << EOL;
         }
+        generate_indent(indents_ + x.dims_.size(),o_);
+        o_ << "} catch (std::domain_error e) { throw std::domain_error(std::string(\"Invalid value of " << x.name_ << ": \") + std::string(e.what())); };" << EOL;
         generate_end_for_dims(x.dims_.size());
       }
       void operator()(int_var_decl const& x) const {
@@ -574,11 +578,11 @@ namespace stan {
                              const std::string& type_name) const {
         generate_begin_for_dims(x.dims_);
         generate_indent(indents_ + x.dims_.size(),o_);
-        o_ << "stan::math::check_" << type_name << "(function__,";
+        o_ << "try { stan::math::check_" << type_name << "(function__,";
         generate_loop_var(x.name_,x.dims_.size());
         o_ << ",\"";
         generate_loop_var(x.name_,x.dims_.size());
-        o_ << "\");" << EOL;
+        o_ << "\"); } catch (std::domain_error e) { throw std::domain_error(std::string(\"Invalid value of " << x.name_ << ": \") + std::string(e.what())); };" << EOL;
         generate_end_for_dims(x.dims_.size());
       }
       void operator()(simplex_var_decl const& x) const {
@@ -1038,8 +1042,32 @@ namespace stan {
           generate_expression(x.dist_.args_[i],o_);
         }
         o_ << ");" << EOL;
-        if (x.truncation_.has_low() && x.truncation_.has_high()) {
+        // generate bounds test
+        if (x.truncation_.has_low()) {
           generate_indent(indent_,o_);
+          o_ << "if (";
+          generate_expression(x.expr_,o_);
+          o_ << " < ";
+          generate_expression(x.truncation_.low_.expr_,o_); // low
+                                                            // bound
+          o_ << ") lp__ -= std::numeric_limits<double>::infinity();" << EOL;
+        }
+        if (x.truncation_.has_high()) {
+          generate_indent(indent_,o_);
+          if (x.truncation_.has_low()) o_ << "else ";
+          o_ << "if (";
+          generate_expression(x.expr_,o_);
+          o_ << " > ";
+          generate_expression(x.truncation_.high_.expr_,o_); // low
+                                                            // bound
+          o_ << ") lp__ -= std::numeric_limits<double>::infinity();" << EOL;
+        }
+        if (x.truncation_.has_low() || x.truncation_.has_high()) {
+          generate_indent(indent_,o_);
+          o_ << "else ";
+        }
+        // generate log denominator
+        if (x.truncation_.has_low() && x.truncation_.has_high()) {
           o_ << "lp__ -= log(";
           o_ << x.dist_.family_ << "_cdf(";
           generate_expression(x.truncation_.high_.expr_,o_);
@@ -1055,7 +1083,6 @@ namespace stan {
           }
           o_ << "));" << EOL;
         } else if (!x.truncation_.has_low() && x.truncation_.has_high()) {
-          generate_indent(indent_,o_);
           o_ << "lp__ -= log(";
           o_ << x.dist_.family_ << "_cdf(";
           generate_expression(x.truncation_.high_.expr_,o_);
@@ -1065,7 +1092,6 @@ namespace stan {
           }
           o_ << "));" << EOL;
         } else if (x.truncation_.has_low() && !x.truncation_.has_high()) {
-          generate_indent(indent_,o_);
           o_ << "lp__ -= log1m(";
           o_ << x.dist_.family_ << "_cdf(";
           generate_expression(x.truncation_.low_.expr_,o_);

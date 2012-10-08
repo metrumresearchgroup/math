@@ -3,11 +3,12 @@
 # make 3.81.
 ##
 
-## Disable implicit rules.
-SUFFIXES:
 
 # The default target of this Makefile is...
 help:
+
+## Disable implicit rules.
+SUFFIXES:
 
 ##
 # Users should only need to set these three variables for use.
@@ -189,7 +190,7 @@ MODEL_SPECS := $(wildcard src/test/gm/model_specs/*.stan)
 .PHONY: clean clean-demo clean-dox clean-manual clean-models clean-all
 clean:
 	$(RM) $(wildcard *.dSYM) $(wildcard *.d.*)
-	$(RM) $(wildcard $(MODEL_SPECS:%.stan=%.cpp) $(MODEL_SPECS:%.stan=%$(EXE)))
+	$(RM) $(wildcard $(MODEL_SPECS:%.stan=%.cpp) $(MODEL_SPECS:%.stan=%$(EXE)) $(MODEL_SPECS:%.stan=%.o))
 
 clean-dox:
 	$(RM) -r doc/api

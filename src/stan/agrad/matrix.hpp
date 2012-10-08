@@ -778,6 +778,11 @@ namespace stan {
         vari** v_;
         size_t size_;
       public:
+        dot_self_vari(vari** v, size_t size) 
+          : vari(var_dot_self(v,size)), 
+            v_(v),
+            size_(size) {
+        }
         template <int R, int C>
         dot_self_vari(const Eigen::Matrix<var,R,C>& v) :
           vari(var_dot_self(v)), size_(v.size()) {
@@ -786,6 +791,12 @@ namespace stan {
             v_[i] = v(i).vi_;
         }
         inline static double square(double x) { return x * x; }
+        inline static double var_dot_self(vari** v, size_t size) {
+          double sum = 0.0;
+          for (size_t i = 0; i < size; ++i)
+            sum += square(v[i]->val_);
+          return sum;
+        }
         template <int R, int C>
         inline static double var_dot_self(const Eigen::Matrix<var,R,C> &v) {
           double sum = 0.0;
@@ -863,7 +874,20 @@ namespace stan {
             result += v1[i].vi_->val_ * v2[i].vi_->val_;
           return result;
         }
+        inline static double var_dot(vari** v1, vari** v2, size_t length) {
+          double result = 0;
+          for (size_t i = 0; i < length; ++i)
+            result += v1[i]->val_ * v2[i]->val_;
+          return result;
+        }
       public:
+        dot_product_vv_vari(vari** v1, vari** v2, size_t length)
+          : vari(var_dot(v1,v2,length)),
+            v1_(v1), 
+            v2_(v2), 
+            length_(length) {
+
+        }
         dot_product_vv_vari(const var* v1, const var* v2, size_t length,
                             dot_product_vv_vari* shared_v1 = NULL,
                             dot_product_vv_vari* shared_v2 = NULL) : 
@@ -1639,6 +1663,60 @@ namespace stan {
       return dot_product(rv, v);
     }
 
+    inline matrix_v 
+    multiply_lower_tri_self_transpose(const matrix_v& L) {
+      stan::math::validate_square(L,"multiply_lower_tri_self_transpose");
+      int K = L.rows();
+      matrix_v LLt(K,K);
+      if (K == 0) return LLt;
+      // if (K == 1) {
+      //   LLt(0,0) = L(0,0) * L(0,0);
+      //   return LLt;
+      // }
+      int Knz = (K * (K + 1)) / 2;  // nonzero: (K choose 2) below
+                                    // diag + K on diag
+      vari** vs = (vari**)memalloc_.alloc( Knz * sizeof(vari*) );
+      int pos = 0;
+      for (int m = 0; m < K; ++m)
+        for (int n = 0; n <= m; ++n)
+          vs[pos++] = L(m,n).vi_;
+      for (int m = 0, mpos=0; m < K; ++m, mpos += m) {
+        // FIXME: replace with dot_self
+        LLt(m,m) = var(new dot_self_vari(vs + mpos, m + 1));
+        for (int n = 0, npos = 0; n < m; ++n, npos += n)
+          LLt(m,n) = LLt(n,m) = var(new dot_product_vv_vari(vs + mpos, vs + npos, n + 1));
+      }
+      return LLt;
+    }
+
+    /**
+     * Returns the result of post-multiplying a matrix by its
+     * own transpose.
+     * @param M Matrix to multiply.
+     * @return M times its transpose.
+     */
+    inline matrix_v
+    tcrossprod(const matrix_v& M) {
+      if(M.rows() == 0)
+        return matrix_v(0,0);
+      if(M.rows() == 1) {
+        return M * M.transpose(); // FIXME: replace with dot_self
+      }
+      matrix_v result(M.rows(),M.rows());
+      return result.setZero().selfadjointView<Eigen::Upper>().rankUpdate(M);
+    }
+
+    /**
+     * Returns the result of pre-multiplying a matrix by its
+     * own transpose.
+     * @param M Matrix to multiply.
+     * @return Transpose of M times M
+     */
+    inline matrix_v
+    crossprod(const matrix_v& M) {
+      return tcrossprod(M.transpose());
+    }
+
     /**
      * Return the specified row minus 1 of the specified matrix.  That is,
      * indexing is from 1, not 0, so this function returns the same
@@ -1740,6 +1818,15 @@ namespace stan {
       return to_var(A).template triangularView<Eigen::Lower>().solve(b);
     }
 
+    inline Eigen::Matrix<var,Eigen::Dynamic,Eigen::Dynamic>
+    mdivide_left_tri_low(const Eigen::Matrix<var,Eigen::Dynamic,Eigen::Dynamic> &A) {
+      stan::math::validate_square(A,"mdivide_left_tri_low");
+      int n = A.rows();
+      Eigen::Matrix<var,Eigen::Dynamic,Eigen::Dynamic> b;
+      b.setIdentity(n,n);
+      A.triangularView<Eigen::Lower>().solveInPlace(b);
+      return(b);
+    }
 
     /**
      * Returns the solution of the system Ax=b when A is triangular.
@@ -1788,6 +1875,24 @@ namespace stan {
       stan::math::validate_square(A,"mdivide_left_tri");
       stan::math::validate_multiplicable(A,b,"mdivide_left_tri");
       return to_var(A).template triangularView<TriView>().solve(b);
+    }
+
+    /**
+     * Returns the solution of the system Ax=b when A is triangular and b = I.
+     * @param[in] A Triangular matrix.  Upper or lower is defined by TriView being
+     * either Eigen::Upper or Eigen::Lower.
+     * @return x = A^-1 .
+     * @throws std::domain_error if A is not square
+     */
+    template<int TriView>
+    inline Eigen::Matrix<var,Eigen::Dynamic,Eigen::Dynamic>
+    mdivide_left_tri(const Eigen::Matrix<var,Eigen::Dynamic,Eigen::Dynamic> &A) {
+      stan::math::validate_square(A,"mdivide_left_tri_low");
+      int n = A.rows();
+      Eigen::Matrix<var,Eigen::Dynamic,Eigen::Dynamic> b;
+      b.setIdentity(n,n);
+      A.triangularView<TriView>().solveInPlace(b);
+      return b;
     }
 
     /**
@@ -1882,6 +1987,45 @@ namespace stan {
       stan::math::validate_multiplicable(b,A,"mdivide_right");
       return to_var(A).transpose().lu().solve(b.transpose()).transpose();
     }
+
+   /**
+     * Returns the solution of the system Ax=b when A is triangular
+     * @param A matrix.  
+     * @param b Right hand side matrix or vector.
+     * @return x = A^-1 b, solution of the linear system.
+     * @tparam TriView triangular view of data, Eigen::Upper or Eigen::Lower
+     * @throws std::domain_error if A is not square or the rows of b don't
+     * match the size of A.
+     */
+    template<int TriView,typename T1,typename T2,int R1,int C1,int R2,int C2>
+    inline Eigen::Matrix<typename boost::math::tools::promote_args<T1,T2>::type,R1,C2>
+    mdivide_right_tri(const Eigen::Matrix<T1,R1,C1> &b,
+                      const Eigen::Matrix<T2,R2,C2> &A) {
+      stan::math::validate_square(A,"mdivide_right_tri_low");
+      stan::math::validate_multiplicable(b,A,"mdivide_right_tri_low");
+      return to_var(A)
+        .template triangularView<TriView>()
+        .transpose()
+        .solve(to_var(b).transpose())
+        .transpose();
+    }
+   /**
+     * Returns the solution of the system tri(A)x=b when tri(A) is a
+     * triangular view of A.
+     * @param A Matrix.  Specify upper or lower with TriView
+     * being Eigen::Upper or Eigen::Lower.
+     * @param b Right hand side matrix or vector.
+     * @return x = A^-1 b, solution of the linear system.
+     * @throws std::domain_error if A is not square or the rows of b don't
+     * match the size of A.
+     */
+    template<typename T1,typename T2,int R1,int C1,int R2,int C2>
+    inline Eigen::Matrix<typename boost::math::tools::promote_args<T1,T2>::type,R1,C2>
+    mdivide_right_tri_low(const Eigen::Matrix<T1,R1,C1> &b,
+                          const Eigen::Matrix<T2,R2,C2> &A) {
+      return mdivide_right_tri<Eigen::Lower,T1,T2,R1,C1,R2,C2>(b,A);
+    }
+
     /**
      * Return the real component of the eigenvalues of the specified
      * matrix in descending order of magnitude.

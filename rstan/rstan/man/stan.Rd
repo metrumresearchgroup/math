@@ -114,6 +114,12 @@ stan(file, model_name = "anon_model", model_code = "",
     show the progress every \code{refresh} iterations). 
     By default, \code{refresh = max(iter/10, 1)}. 
     The progress indicator is turned off if \code{refresh < 0}.
+
+    Another parameter is \code{test_grad} (\code{TRUE} or \code{FALSE}).  
+    If \code{test_grad=TRUE}, Stan will not do any sampling. Instead,
+    the gradient calculation is tested and printed out and the fitted
+    \code{stanfit} object is in test gradient mode.  By default, it is
+    \code{FALSE}. 
   } 
 
   \item{boost_lib}{The path for an alternative version of the Boost C++ 
@@ -139,7 +145,11 @@ stan(file, model_name = "anon_model", model_code = "",
   for the model is reused. 
 }
 \value{
-  Fitted results as an object of S4 class \code{stanfit}.
+  Fitted results as an object of S4 class \code{stanfit}. If error occurs 
+  before or during sampling, and if \code{test_grad = TRUE}, the returned
+  object would not contain samples. But the compiled binary object for the 
+  model is still included, so we can reuse the returned object for another
+  sampling. 
 }
 
 \note{

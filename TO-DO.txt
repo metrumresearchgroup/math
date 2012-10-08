@@ -9,45 +9,52 @@ The to-do list is organized into the following sections:
 * Modeling Language             * Manual
 * Build                         * Web Pages
 * Testing                       * Release Mgmt
-* Command-Line                  * Models
+* Command-Line                  * ModelsC++ API
 
- 
-V 1.0.2 Release Notes
+
+v 1.0.3 Release Notes
 ======================================================================
-
-To Do for 1.0.2
-  -- patch truncation returns for variates outside of range; test
-     that cdf exists in compile
-  -- update manual on returning -inf if out of truncation range
-  ?? remove (unsigned) long long instances in dump and error testing
-  ?? manual section on reparameterization and change of vars
- 
 Bug Fixes:
-  -- fixed sd() and variance() to return 0.0 for sequences of size 1
-  -- check ranges for LHS of assignment to prevent seg faults
-  -- indexing fixed for arrays of matrix/vector/row_vector
-  -- vectorized several probability functions (see the manual)
-  -- fixed void return type in auto_covariance
-  -- removed template variable names from distribution error msgs
-  -- added matrix size and shape tests to avoid seg faults
-  -- changed matrix to throw domain_error rather than illegal_argument
-  -- boundary conditions at limits of support for cdfs
-  -- patch truncation to return -inf for variates out of range
-  -- upgraded BUGS ring model to use constraints plus tan2()
-
+ -- error output in stanc now directed to standard error
 New Features:
-  -- print statements
-
+ -- mdivide_left_tri_low, mdivide_right_tri_low functions
+ -- better error checking for transforms 
+ -- catching all exceptions thrown in stanc to prevent core dumps
+ -- new error return type in stanc for invalid arguments
 Manual Additions:
-  -- programming guide: IRT models 
-  -- new appendix: style guide
-  -- new appendix: migrating from Stan
-  -- new index: function and distribution index
-
+ -- example of defining new distribution with parameters
 
 C++ API
 ======================================================================
 [items go here first, then to RStan/cmd]
+
+* switch error checking for agrad::var matrix ops to
+  convert to double-based matrix for check as in vectorized univariates
+* Vectorize distributions
+  - Allows vectorized inputs (but without partials calculated):
+    univariate/continuous
+    + chi_square
+    + exponential
+    + inv_chi_square
+    + scaled_inv_chi_square
+
+  - Fully vectorized with partials calculated:
+    univariate/continuous
+    + beta
+    + cauchy
+    + double_exponential
+    + normal
+    + gamma
+    + inv_gamma
+    + logistic
+    + lognormal
+    + pareto
+    univariate/discrete
+    + bernoulli
+    + bernoulli_logit
+     
+
+* remove (unsigned) long long instances in dump and error testing
 
 * bring isinf in line with revised Boost
 
@@ -156,6 +163,7 @@ C++ API
   - normalize sample to zero sample mean, unit sample variance
 
 * cumulative distribution functions
+  - boundary conditions at limits of support for cdfs
   - should we have the basic cdfs on the log scale?
   - need for truncated distros mostly
         foo_cdf_lb_log(L|...) == log(1 - foo_cdf(L|...))
@@ -767,8 +775,6 @@ Manuals
   - minor: some new functions, backward compatible
   - major: big changes, breaking backward compatibility
 
-* put a table of vectorized functions in the doc
-
 * add prior to getting started examples in doc
 
 * use "draw" for a single parameter value and "sample" for
@@ -800,7 +806,6 @@ Manuals
 * Add an Index
 
 * Description of reverse-mode auto-dif or too C++-like?
-
 
 
 

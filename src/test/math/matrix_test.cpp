@@ -879,12 +879,20 @@ TEST(matrixTest,mdivide_right_val) {
 TEST(matrixTest,mdivide_left_tri_val) {
   using stan::math::mdivide_left_tri;
   matrix_d Ad(2,2);
+  matrix_d Ad_inv(2,2);
   matrix_d I;
 
   Ad << 2.0, 0.0, 
         5.0, 7.0;
 
   I = mdivide_left_tri<Eigen::Lower>(Ad,Ad);
+  EXPECT_NEAR(1.0,I(0,0),1.0E-12);
+  EXPECT_NEAR(0.0,I(0,1),1.0E-12);
+  EXPECT_NEAR(0.0,I(1,0),1.0E-12);
+  EXPECT_NEAR(1.0,I(1,1),1.0e-12);
+
+  Ad_inv = mdivide_left_tri<Eigen::Lower>(Ad);
+  I = Ad * Ad_inv;
   EXPECT_NEAR(1.0,I(0,0),1.0E-12);
   EXPECT_NEAR(0.0,I(0,1),1.0E-12);
   EXPECT_NEAR(0.0,I(1,0),1.0E-12);
@@ -1435,3 +1443,98 @@ TEST(MathMatrix, minus) {
   using stan::math::singular_values;
   EXPECT_NO_THROW(singular_values(m0));
 }
+void test_multiply_lower_tri_self_transpose(const matrix_d& x) {
+  using stan::math::multiply_lower_tri_self_transpose;
+  matrix_d y = multiply_lower_tri_self_transpose(x);
+  matrix_d xxt = x * x.transpose();
+  EXPECT_EQ(y.rows(),xxt.rows());
+  EXPECT_EQ(y.cols(),xxt.cols());
+  for (int m = 0; m < y.rows(); ++m)
+    for (int n = 0; n < y.cols(); ++n)
+      EXPECT_FLOAT_EQ(xxt(m,n),y(m,n));
+}
+TEST(MathMatrix,MultiplyLowerTriSelfTranspose) {
+  matrix_d x;
+  test_multiply_lower_tri_self_transpose(x);
+
+  x = matrix_d(1,1);
+  x << 3.0;
+  test_multiply_lower_tri_self_transpose(x);
+
+  x = matrix_d(2,2);
+  x << 
+    1.0, 0.0,
+    2.0, 3.0;
+  test_multiply_lower_tri_self_transpose(x);
+
+  x = matrix_d(3,3);
+  x << 
+    1.0, 0.0, 0.0,
+    2.0, 3.0, 0.0,
+    4.0, 5.0, 6.0;
+  test_multiply_lower_tri_self_transpose(x);
+}
+void test_tcrossprod(const matrix_d& x) {
+  using stan::math::tcrossprod;
+  matrix_d y = tcrossprod(x);
+  matrix_d xxt = x * x.transpose();
+  EXPECT_EQ(y.rows(),xxt.rows());
+  EXPECT_EQ(y.cols(),xxt.cols());
+  for (int m = 0; m < y.rows(); ++m)
+    for (int n = 0; n < y.cols(); ++n)
+      EXPECT_FLOAT_EQ(xxt(m,n),y(m,n));
+}
+TEST(MathMatrix,tcrossprod) {
+  matrix_d x;
+  test_tcrossprod(x);
+
+  x = matrix_d(1,1);
+  x << 3.0;
+  test_tcrossprod(x);
+
+  x = matrix_d(2,2);
+  x <<
+    1.0, 0.0,
+    2.0, 3.0;
+  test_tcrossprod(x);
+
+  x = matrix_d(3,3);
+  x <<
+    1.0, 0.0, 0.0,
+    2.0, 3.0, 0.0,
+    4.0, 5.0, 6.0;
+  test_tcrossprod(x);
+}
+void test_crossprod(const matrix_d& x) {
+  using stan::math::crossprod;
+  matrix_d y = crossprod(x);
+  matrix_d xtx = x.transpose() * x;
+  EXPECT_EQ(y.rows(),xtx.rows());
+  EXPECT_EQ(y.cols(),xtx.cols());
+  for (int m = 0; m < y.rows(); ++m)
+    for (int n = 0; n < y.cols(); ++n)
+      EXPECT_FLOAT_EQ(xtx(m,n),y(m,n));
+}
+TEST(MathMatrix,crossprod) {
+  matrix_d x;
+  test_crossprod(x);
+
+  x = matrix_d(1,1);
+  x << 3.0;
+  test_crossprod(x);
+
+  x = matrix_d(2,2);
+  x <<
+    1.0, 0.0,
+    2.0, 3.0;
+  test_crossprod(x);
+
+  x = matrix_d(3,3);
+  x <<
+    1.0, 0.0, 0.0,
+    2.0, 3.0, 0.0,
+    4.0, 5.0, 6.0;
+  test_crossprod(x);
+}
+
+

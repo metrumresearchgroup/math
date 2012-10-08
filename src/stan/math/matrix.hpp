@@ -1363,7 +1363,57 @@ namespace stan {
      */
     matrix_d multiply(double c, const matrix_d& m);
 
+    /**
+     * Returns the result of multiplying the lower triangular
+     * portion of the square input matrix by its own transpose.
+     * @param L Matrix to multiply.
+     * @return The lower triangular values in L times their own
+     * transpose.
+     * @throw std::domain_error If the input matrix is not square.
+     */
+    inline matrix_d
+    multiply_lower_tri_self_transpose(const matrix_d& L) {
+      stan::math::validate_square(L,"multiply_lower_tri_self_transpose");
+      if (L.rows() == 0)
+        return matrix_d(0,0);
+      if (L.rows() == 1) {
+        matrix_d result(1,1);
+        result(0,0) = L(0,0) * L(0,0);
+        return result;
+      }
+      // FIXME:  write custom following agrad/matrix because can't get L_tri into
+      // multiplication as no template support for tri * tri
+      matrix_d L_tri = L.transpose().triangularView<Eigen::Upper>();
+      return L.triangularView<Eigen::Lower>() * L_tri;
+    }
 
+    /**
+     * Returns the result of post-multiplying a matrix by its
+     * own transpose.
+     * @param M Matrix to multiply.
+     * @return M times its transpose.
+     */
+    inline matrix_d
+    tcrossprod(const matrix_d& M) {
+        if(M.rows() == 0)
+          return matrix_d(0,0);
+        if(M.rows() == 1) {
+          return M * M.transpose();
+        }
+        matrix_d result(M.rows(),M.rows());
+        return result.setZero().selfadjointView<Eigen::Upper>().rankUpdate(M);
+    }
+
+    /**
+     * Returns the result of pre-multiplying a matrix by its
+     * own transpose.
+     * @param M Matrix to multiply.
+     * @return Transpose of M times M
+     */
+    inline matrix_d
+    crossprod(const matrix_d& M) {
+        return tcrossprod(M.transpose());
+    }
 
     /**
      * Return the specified row of the specified matrix, using
@@ -1453,6 +1503,16 @@ namespace stan {
       return A.template triangularView<Eigen::Lower>().solve(b);
     }
 
+    inline Eigen::MatrixXd mdivide_left_tri_low(const Eigen::MatrixXd &A) {
+      if (A.cols() != A.rows())
+        throw std::domain_error("A is not square");
+      int n = A.rows();
+      Eigen::MatrixXd b;
+      b.setIdentity(n,n);
+      A.triangularView<Eigen::Lower>().solveInPlace(b);
+      return b;
+    }
+
     /**
      * Returns the solution of the system Ax=b when A is triangular
      * @param A Triangular matrix.  Specify upper or lower with TriView
@@ -1472,6 +1532,23 @@ namespace stan {
       return A.template triangularView<TriView>().solve(b);
     }
     /**
+     * Returns the solution of the system Ax=b when A is triangular and b=I.
+     * @param A Triangular matrix.  Specify upper or lower with TriView
+     * being Eigen::Upper or Eigen::Lower.
+     * @return x = A^-1 .
+     * @throws std::domain_error if A is not square
+     */
+    template<int TriView>
+    inline Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> mdivide_left_tri(const Eigen::MatrixXd &A) {
+      if (A.cols() != A.rows())
+        throw std::domain_error("A is not square");
+      int n = A.rows();
+      Eigen::MatrixXd b;
+      b.setIdentity(n,n);
+      A.triangularView<TriView>().solveInPlace(b);
+      return b;
+    }
+    /**
      * Returns the solution of the system Ax=b when A is triangular
      * @param A Triangular matrix.  Specify upper or lower with TriView
      * being Eigen::Upper or Eigen::Lower.
@@ -1489,6 +1566,22 @@ namespace stan {
         throw std::domain_error("A.rows() != b.cols()");
       return A.template triangularView<TriView>().transpose().solve(b.transpose()).transpose();
     }
+    /**
+     * Returns the solution of the system tri(A)x=b when tri(A) is a
+     * lower triangular view of the matrix A.
+     * @param A Matrix.
+     * @param b Right hand side matrix or vector.
+     * @return x = tri(A)^-1 b, solution of the linear system.
+     * @throws std::domain_error if A is not square or the rows of b don't
+     * match the size of A.
+     */
+    template<int R1,int C1,int R2,int C2>
+    inline Eigen::Matrix<double,R1,C2> mdivide_right_tri_low(const Eigen::Matrix<double,R1,C1> &b,
+                                                             const Eigen::Matrix<double,R2,C2> &A) {
+      return mdivide_right_tri<Eigen::Lower>(b,A);
+    }
+
+
     /**
      * Returns the solution of the system Ax=b.
      * @param A Matrix.
