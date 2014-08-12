@@ -1,6 +1,7 @@
 #include <stan/math/matrix/add.hpp>
 #include <stan/math/matrix/typedefs.hpp>
 #include <gtest/gtest.h>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 TEST(MathMatrix,add_v_exception) {
   stan::math::vector_d d1, d2;
@@ -120,4 +121,61 @@ TEST(MathMatrix, add) {
   EXPECT_THROW(add(v1,v2),std::domain_error);
   EXPECT_THROW(add(rv1,rv2),std::domain_error);
   EXPECT_THROW(add(m1,m2),std::domain_error);
+}
+
+
+
+TEST(MathMatrix, add_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  stan::math::matrix_d m1(3,2);
+  m1 << 1, nan,
+        3, 4.1,
+        nan, 6;
+  stan::math::matrix_d m2(3,2);
+  m2 << 10.1, 100,
+        nan, 0,
+        -10, -12;
+        
+  stan::math::matrix_d mr;
+
+  using stan::math::add;
+  using boost::math::isnan;
+  
+  mr = add(m1, m2);
+  
+  EXPECT_DOUBLE_EQ(11.1, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(0, 1));
+  EXPECT_PRED1(isnan<double>, mr(1, 0));
+  EXPECT_DOUBLE_EQ(4.1, mr(1, 1));
+  EXPECT_PRED1(isnan<double>, mr(2, 0));  
+  EXPECT_DOUBLE_EQ(-6, mr(2, 1));
+  
+  mr = add(m1, 0.1);
+  
+  EXPECT_DOUBLE_EQ(1.1, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(0, 1));
+  EXPECT_DOUBLE_EQ(3.1, mr(1, 0));
+  EXPECT_DOUBLE_EQ(4.2, mr(1, 1));
+  EXPECT_PRED1(isnan<double>, mr(2, 0));  
+  EXPECT_DOUBLE_EQ(6.1, mr(2, 1));
+   
+  mr = add(0.1, m2);
+  
+  EXPECT_DOUBLE_EQ(10.2, mr(0, 0));
+  EXPECT_DOUBLE_EQ(100.1, mr(0, 1));
+  EXPECT_PRED1(isnan<double>, mr(1, 0));
+  EXPECT_DOUBLE_EQ(0.1, mr(1, 1));
+  EXPECT_DOUBLE_EQ(-9.9, mr(2, 0)); 
+  EXPECT_DOUBLE_EQ(-11.9, mr(2, 1)); 
+  
+  mr = add(m2, nan);
+  for (int j = 0; j < 2; j++)
+    for (int i = 0; i < 3; i++)
+      EXPECT_PRED1(isnan<double>, mr(i, j));
+  
+  mr = add(nan, m1);
+  for (int j = 0; j < 2; j++)
+    for (int i = 0; i < 3; i++)
+      EXPECT_PRED1(isnan<double>, mr(i, j));
 }
