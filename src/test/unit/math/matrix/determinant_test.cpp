@@ -15,3 +15,29 @@ TEST(MathMatrix,dimensionValidation) {
   xx << 1, 2, 3, 1, 4, 9;
   EXPECT_THROW(stan::math::determinant(xx),std::domain_error);
 }
+
+TEST(MathMatrix, determinant_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::MatrixXd m1(3,3);
+  m1 << 14, 1, 3,
+        nan, 10, 4.1,
+        3.1, 4.1, 8;
+        
+  Eigen::MatrixXd m2(3,3);
+  m2 << 10.1, 1.0, 1.0,
+        1.1, 5.4, 1.5,
+        1.3, 1.5, nan;
+        
+  Eigen::MatrixXd m3(3,3);
+  m3 << 0, 1.0, 1.0,
+        0, 0.1, 1.5,
+        0, 1.5, nan;
+        
+  using stan::math::determinant;
+  using boost::math::isnan;
+    
+  EXPECT_PRED1(isnan<double>, determinant(m1));
+  EXPECT_PRED1(isnan<double>, determinant(m2));
+  EXPECT_PRED1(isnan<double>, determinant(m3));
+}
