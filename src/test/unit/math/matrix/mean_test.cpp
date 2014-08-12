@@ -1,6 +1,7 @@
 #include <stan/math/matrix/mean.hpp>
 #include <stan/math/matrix/typedefs.hpp>
 #include <gtest/gtest.h>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 TEST(MathMatrix, mean) {
   using stan::math::mean;
@@ -65,4 +66,31 @@ TEST(MathMatrix,mean_exception) {
   EXPECT_NO_THROW(stan::math::mean(m_nz));
   EXPECT_NO_THROW(stan::math::mean(v_nz));
   EXPECT_NO_THROW(stan::math::mean(rv_nz));
+}
+
+TEST(MathMatrix, mean_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::MatrixXd m1(3,2);
+  m1 << 1, nan,
+        3, 4.1,
+        nan, 6;
+  Eigen::MatrixXd m2(3,2);
+  m2 << 10.1, 100,
+        nan, 0,
+        -10, -12;
+        
+  Eigen::VectorXd v1(3);
+  v1 << 10.1, nan, 1.1;
+        
+  std::vector<double> v2(14, 1.1);
+  v2[7] = nan;
+        
+  using stan::math::mean;
+  using boost::math::isnan;
+    
+  EXPECT_PRED1(isnan<double>, mean(m1));
+  EXPECT_PRED1(isnan<double>, mean(m2));
+  EXPECT_PRED1(isnan<double>, mean(v1));
+  EXPECT_PRED1(isnan<double>, mean(v2));
 }
