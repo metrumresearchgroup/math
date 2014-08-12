@@ -1,6 +1,7 @@
 #include <stan/math/matrix/resize.hpp>
 #include <stan/math/matrix/typedefs.hpp>
 #include <gtest/gtest.h>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 using Eigen::Matrix;
 using Eigen::Dynamic;
@@ -127,3 +128,41 @@ TEST(MathMatrix, resize_svec_svec_matrix_double) {
   EXPECT_EQ(3,mm[3][4].cols());
 }
 
+
+TEST(MathMatrix, resize_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::MatrixXd m1(4,3);
+  m1 << 1, nan, 1.1,
+        3, 4.1, 2.1,
+        2, 0.1, 5.1,
+        nan, 6, nan;
+
+  std::vector<double> v2(14, 1.1);
+  v2[0] = 1.2;
+  v2[1] = nan;
+  
+  using stan::math::resize;
+  using boost::math::isnan;
+  
+  std::vector<size_t> dim_(2, 2);
+  dim_[1] = 6;
+  resize(m1, dim_); //2 x 6
+  EXPECT_EQ(1, m1(0, 0));
+  EXPECT_EQ(3, m1(1, 0));
+  EXPECT_EQ(2, m1(0, 1));
+  EXPECT_PRED1(isnan<double>, m1(1, 1));
+  EXPECT_PRED1(isnan<double>, m1(0, 2));
+  EXPECT_EQ(4.1, m1(1, 2));
+  EXPECT_EQ(0.1, m1(0, 3));
+  EXPECT_EQ(6, m1(1, 3));
+  EXPECT_EQ(1.1, m1(0, 4));
+  EXPECT_EQ(2.1, m1(1, 4));
+  EXPECT_EQ(5.1, m1(0, 5));
+  EXPECT_PRED1(isnan<double>, m1(1, 5));
+  
+  resize(v2, std::vector<size_t>(1, 3));
+  EXPECT_EQ(1.2, v2[0]);
+  EXPECT_PRED1(isnan<double>, v2[1]);
+  EXPECT_EQ(1.1, v2[2]);    
+}
