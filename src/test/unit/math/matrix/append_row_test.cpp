@@ -1,6 +1,7 @@
 #include <stan/math/matrix/append_row.hpp>
 #include <test/unit/math/matrix/expect_matrix_eq.hpp>
 #include <gtest/gtest.h>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 using stan::math::append_row;
 using Eigen::Dynamic;
@@ -172,10 +173,10 @@ TEST(MathMatrix, append_row_nan) {
   EXPECT_PRED1(isnan<double>, mr(2, 0));  
   EXPECT_EQ(6, mr(2, 1));
   
-  EXPECT_EQ(10.1, mr(0, 2));
-  EXPECT_EQ(100, mr(0, 3));
-  EXPECT_PRED1(isnan<double>, mr(1, 2));
-  EXPECT_EQ(0, mr(1, 3));
-  EXPECT_EQ(-10, mr(2, 2));
-  EXPECT_EQ(-12, mr(2, 3));
+  EXPECT_EQ(10.1, mr(3, 0));
+  EXPECT_EQ(100, mr(3, 1));
+  EXPECT_PRED1(isnan<double>, mr(4, 0));
+  EXPECT_EQ(0, mr(4, 1));
+  EXPECT_EQ(-10, mr(5, 0));
+  EXPECT_EQ(-12, mr(5, 1));
 }
