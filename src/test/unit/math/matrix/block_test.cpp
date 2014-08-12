@@ -1,9 +1,9 @@
 #include <stdexcept>
 #include <stan/math/matrix/block.hpp>
-
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <gtest/gtest.h>
 
-TEST(MathMatrixBlock,Block1) {
+TEST(MathMatrix, block1) {
   using Eigen::Matrix;
   using Eigen::Dynamic;
   using stan::math::block;
@@ -53,5 +53,46 @@ TEST(MathMatrixBlock,Block1) {
   EXPECT_THROW(block(m,1,7,1,1), std::domain_error);
   EXPECT_THROW(block(m,1,1,6,1), std::domain_error);
   EXPECT_THROW(block(m,1,1,1,6), std::domain_error);
+}
+
+TEST(MathMatrix, block_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::MatrixXd m1(3,2);
+  m1 << 1.1, nan,
+        3.0, 4.1,
+        nan, 6;
+        
+  Eigen::MatrixXd mr;
+
+  using stan::math::block;
+  using boost::math::isnan;
+
+  mr = block(m1, 1, 1, 3, 2);
+  EXPECT_EQ(1.1, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(0, 1));
+  EXPECT_EQ(3.0, mr(1, 0));
+  EXPECT_EQ(4.1, mr(1, 1));
+  EXPECT_PRED1(isnan<double>, mr(2, 0));
+  EXPECT_EQ(6.0, mr(2, 1));
+  
+  mr = block(m1, 3, 1, 1, 1);
+  EXPECT_PRED1(isnan<double>, mr(0, 0));
+    
+  mr = block(m1, 1, 1, 3, 1);
+  EXPECT_EQ(1.1, mr(0, 0));
+  EXPECT_EQ(3.0, mr(1, 0));
+  EXPECT_PRED1(isnan<double>, mr(2, 0));
+  
+  mr = block(m1, 2, 1, 2, 1);
+  EXPECT_EQ(3.0, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(1, 0));
+  
+  mr = block(m1, 3, 1, 1, 1);
+  EXPECT_PRED1(isnan<double>, mr(0, 0));
+  
+  mr = block(m1, 1, 1, 1, 2);
+  EXPECT_EQ(1.1, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(0, 1));
 }
 
