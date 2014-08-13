@@ -1,5 +1,6 @@
 #include <stan/math/matrix/rows_dot_self.hpp>
 #include <gtest/gtest.h>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 TEST(MathMatrix,rows_dot_self) {
   using stan::math::rows_dot_self;
@@ -17,4 +18,23 @@ TEST(MathMatrix,rows_dot_self) {
   y = rows_dot_self(m3);
   EXPECT_NEAR(13.0,y(0,0),1E-12);
   EXPECT_NEAR(41.0,y(1,0),1E-12);
+}
+
+TEST(MathMatrix,rows_dot_self_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::MatrixXd m1(3, 2);
+  m1 << 14, nan,
+        3, 4.1,
+        10, 4.1;
+
+  Eigen::VectorXd vr;
+  
+  using stan::math::rows_dot_self;
+  using boost::math::isnan;
+
+  vr = rows_dot_self(m1);
+  EXPECT_PRED1(isnan<double>, vr(0));
+  EXPECT_DOUBLE_EQ(3*3 + 4.1*4.1, vr(1));
+  EXPECT_DOUBLE_EQ(10*10 + 4.1*4.1, vr(2));
 }
