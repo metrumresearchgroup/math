@@ -48,11 +48,11 @@ TEST(MathMatrix, mdivide_left_spd_nan) {
         
   using stan::math::mdivide_left_spd;
     
-  expect_matrix_nan(mdivide_left_spd(m1, v1));
-  expect_matrix_nan(mdivide_left_spd(m2, v1));
+  expect_matrix_is_nan(mdivide_left_spd(m1, v1));
+  expect_matrix_is_nan(mdivide_left_spd(m2, v1));
   expect_matrix_not_nan(mdivide_left_spd(m3, v1));
-  expect_matrix_nan(mdivide_left_spd(m0, v2));
-  expect_matrix_nan(mdivide_left_spd(m1, v2));
-  expect_matrix_nan(mdivide_left_spd(m2, v2));
-  expect_matrix_nan(mdivide_left_spd(m3, v2));
+  expect_matrix_is_nan(mdivide_left_spd(m0, v2));
+  expect_matrix_is_nan(mdivide_left_spd(m1, v2));
+  expect_matrix_is_nan(mdivide_left_spd(m2, v2));
+  expect_matrix_is_nan(mdivide_left_spd(m3, v2));
 }

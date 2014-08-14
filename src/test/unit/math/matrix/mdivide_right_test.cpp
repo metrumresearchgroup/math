@@ -70,11 +70,11 @@ TEST(MathMatrix, mdivide_right_nan) {
         
   using stan::math::mdivide_right;
     
-  expect_matrix_nan(mdivide_right(v1, m1));
-  expect_matrix_nan(mdivide_right(v1, m2));
-  expect_matrix_nan(mdivide_right(v1, m3));
-  expect_matrix_nan(mdivide_right(v2, m0));
-  expect_matrix_nan(mdivide_right(v2, m1));
-  expect_matrix_nan(mdivide_right(v2, m2));
-  expect_matrix_nan(mdivide_right(v2, m3));
+  expect_matrix_is_nan(mdivide_right(v1, m1));
+  expect_matrix_is_nan(mdivide_right(v1, m2));
+  expect_matrix_is_nan(mdivide_right(v1, m3));
+  expect_matrix_is_nan(mdivide_right(v2, m0));
+  expect_matrix_is_nan(mdivide_right(v2, m1));
+  expect_matrix_is_nan(mdivide_right(v2, m2));
+  expect_matrix_is_nan(mdivide_right(v2, m3));
 }
