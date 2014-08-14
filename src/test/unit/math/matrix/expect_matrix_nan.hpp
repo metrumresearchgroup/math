@@ -11,4 +11,10 @@ void expect_matrix_nan(const Eigen::Matrix<double, R, C> & mat) {
     EXPECT_PRED1(boost::math::isnan<double>, mat(i));
 }
 
+template <int R, int C>
+void expect_matrix_not_nan(const Eigen::Matrix<double, R, C> & mat) {
+  for (int i = 0, size_ = mat.size(); i < size_; i++)
+    EXPECT_FALSE(boost::math::isnan<double>(mat(i)));
+}
+
 #endif
