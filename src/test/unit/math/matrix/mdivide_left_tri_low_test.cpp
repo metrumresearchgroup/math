@@ -100,22 +100,22 @@ TEST(MathMatrix, mdivide_left_tri_low_nan) {
   expect_matrix_is_nan(mdivide_left_tri_low(m5, v3));
   
   //1 arg function tests begin
-  vr = mdivide_left_tri_low(m1);
-  EXPECT_DOUBLE_EQ(vr(0), 0.1);
-  //EXPECT_PRED1(boost::math::isnan<double>, vr(1));
-  //EXPECT_PRED1(boost::math::isnan<double>, vr(2));
-  
-  vr = mdivide_left_tri_low(m2);
-  EXPECT_DOUBLE_EQ(vr(0), 0.1);
-  //EXPECT_PRED1(boost::math::isnan<double>, vr(1));
-  //EXPECT_PRED1(boost::math::isnan<double>, vr(2));
-  
-  expect_matrix_not_nan(mdivide_left_tri_low(m3));
-  expect_matrix_is_nan(mdivide_left_tri_low(m4));
+  {
+    Eigen::MatrixXd m0(2, 2);
+    m0 << 2, 7,
+          nan, 1;
+          
+    Eigen::MatrixXd m1(2, 2);
+    m1 << nan, 7,
+          6, 1;
+          
+    Eigen::MatrixXd mr = mdivide_left_tri_low(m0);
+    EXPECT_DOUBLE_EQ(mr(0, 0), 0.5);
+    EXPECT_DOUBLE_EQ(mr(0, 1), 0);
+    EXPECT_PRED1(boost::math::isnan<double>, mr(1, 0));
+    EXPECT_PRED1(boost::math::isnan<double>, mr(1, 1));
 
-  vr = mdivide_left_tri_low(m5);
-  EXPECT_DOUBLE_EQ(vr(0), 0.1);
-  //EXPECT_DOUBLE_EQ(vr(1), 0.089);
-  //EXPECT_PRED1(boost::math::isnan<double>, vr(2));
+    expect_matrix_is_nan(mdivide_left_tri_low(m1));
+  }
   
 }
