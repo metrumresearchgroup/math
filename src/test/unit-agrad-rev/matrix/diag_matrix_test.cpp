@@ -22,3 +22,18 @@ TEST(AgradRevMatrix,diagMatrix) {
   EXPECT_EQ(4,m(1,1).val());
   EXPECT_EQ(9,m(2,2).val());
 }
+
+TEST(AgradRevMatrix,diagMatrix_nan) {
+  using stan::math::diag_matrix;
+  using stan::agrad::matrix_v;
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_v v(3);
+  v << 1, nan, 9;
+  matrix_v m = diag_matrix(v);
+  EXPECT_EQ(1,m(0,0).val());
+  EXPECT_TRUE(boost::math::isnan(m(1,1).val()));
+  EXPECT_EQ(9,m(2,2).val());
+}
