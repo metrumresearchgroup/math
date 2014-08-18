@@ -42,3 +42,25 @@ TEST(AgradRevMatrix, crossprod) {
   //  test_tcrossprod_grad(K, K.rows(), K.cols());
 
 }
+
+TEST(AgradRevMatrix, crossprod_nan) {
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v L(3,3);
+  L << 1, nan, 0,
+    2, 3, 0,
+    nan, 5, 6;
+
+  matrix_v output = stan::agrad::crossprod(L);
+  EXPECT_TRUE(boost::math::isnan(output(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(output(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(output(0,2).val()));
+  EXPECT_TRUE(boost::math::isnan(output(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(output(1,1).val()));
+  EXPECT_TRUE(boost::math::isnan(output(1,2).val()));
+  EXPECT_TRUE(boost::math::isnan(output(2,0).val()));
+  EXPECT_TRUE(boost::math::isnan(output(2,1).val()));
+  EXPECT_FLOAT_EQ(36, output(2,2).val());
+
+}
