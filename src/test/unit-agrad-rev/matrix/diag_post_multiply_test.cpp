@@ -224,3 +224,113 @@ TEST(MathMatrix,diagPostMultiplyException) {
   v << 1, 2, 3;
   EXPECT_THROW(diag_post_multiply(m,v), std::domain_error);
 }
+
+TEST(MathMatrix,diagPostMultiply2_vv_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  Matrix<var,Dynamic,Dynamic> m(3,3);
+  m << nan, 2, 3, 4, 5, nan, 7, 8, 9;
+
+  Matrix<var,Dynamic,1> v(3);
+  v << nan, 2, nan;
+
+  Matrix<var,Dynamic,Dynamic> res1 = diag_post_multiply(m,v);
+
+  Matrix<var,1,Dynamic> rv(3);
+  rv << 1, nan, 3;
+
+  Matrix<var,Dynamic,Dynamic> res2 = diag_post_multiply(m,rv);
+
+  EXPECT_TRUE(boost::math::isnan(res1(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(0,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(1,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(2,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(2,2).val()));
+  EXPECT_FLOAT_EQ(4, res1(0,1).val());
+  EXPECT_FLOAT_EQ(10, res1(1,1).val());
+  EXPECT_FLOAT_EQ(16, res1(2,1).val());
+
+  EXPECT_TRUE(boost::math::isnan(res2(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(1,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(1,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(2,1).val()));
+
+  EXPECT_FLOAT_EQ(9, res2(0,2).val());
+  EXPECT_FLOAT_EQ(4, res2(1,0).val());
+  EXPECT_FLOAT_EQ(7, res2(2,0).val());
+  EXPECT_FLOAT_EQ(27, res2(2,2).val());
+}
+
+TEST(MathMatrix,diagPostMultiply2_vd_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  Matrix<var,Dynamic,Dynamic> m(3,3);
+  m << nan, 2, 3, 4, 5, nan, 7, 8, 9;
+
+  Matrix<double,Dynamic,1> v(3);
+  v << nan, 2, nan;
+
+  Matrix<double,1,Dynamic> rv(3);
+  rv << 1, nan, 3;
+
+  Matrix<var,Dynamic,Dynamic> res1 = diag_post_multiply(m,v);
+  Matrix<var,Dynamic,Dynamic> res2 = diag_post_multiply(m,rv);
+
+  EXPECT_TRUE(boost::math::isnan(res1(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(0,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(1,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(2,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(2,2).val()));
+  EXPECT_FLOAT_EQ(4, res1(0,1).val());
+  EXPECT_FLOAT_EQ(10, res1(1,1).val());
+  EXPECT_FLOAT_EQ(16, res1(2,1).val());
+
+  EXPECT_TRUE(boost::math::isnan(res2(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(1,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(1,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(2,1).val()));
+
+  EXPECT_FLOAT_EQ(9, res2(0,2).val());
+  EXPECT_FLOAT_EQ(4, res2(1,0).val());
+  EXPECT_FLOAT_EQ(7, res2(2,0).val());
+  EXPECT_FLOAT_EQ(27, res2(2,2).val());
+}
+
+TEST(MathMatrix,diagPreMultiply2_dv_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  Matrix<double,Dynamic,Dynamic> m(3,3);
+  m << nan, 2, 3, 4, 5, nan, 7, 8, 9;
+
+  Matrix<var,Dynamic,1> v(3);
+  v << nan, 2, nan;
+
+  Matrix<var,Dynamic,Dynamic> res1 = diag_post_multiply(m,v);
+
+  Matrix<var,1,Dynamic> rv(3);
+  rv << 1, nan, 3;
+
+  Matrix<var,Dynamic,Dynamic> res2 = diag_post_multiply(m,rv);
+
+  EXPECT_TRUE(boost::math::isnan(res1(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(0,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(1,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(2,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(2,2).val()));
+  EXPECT_FLOAT_EQ(4, res1(0,1).val());
+  EXPECT_FLOAT_EQ(10, res1(1,1).val());
+  EXPECT_FLOAT_EQ(16, res1(2,1).val());
+
+  EXPECT_TRUE(boost::math::isnan(res2(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(1,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(1,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(2,1).val()));
+
+  EXPECT_FLOAT_EQ(9, res2(0,2).val());
+  EXPECT_FLOAT_EQ(4, res2(1,0).val());
+  EXPECT_FLOAT_EQ(7, res2(2,0).val());
+  EXPECT_FLOAT_EQ(27, res2(2,2).val());
+}
