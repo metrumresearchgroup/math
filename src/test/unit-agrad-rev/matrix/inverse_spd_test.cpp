@@ -98,3 +98,15 @@ TEST(AgradRevMatrix,inverse_spd_inverse_spd_sum) {
     }
   }
 }
+
+TEST(AgradRevMatrix,inverse_spd_nan) {
+  using stan::math::inverse_spd;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v a(2,2);
+  a << 2.0, nan, 
+    3.0, 7.0;
+
+  EXPECT_THROW(inverse_spd(a), std::domain_error);
+}
