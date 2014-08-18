@@ -78,3 +78,18 @@ TEST(AgradRevMatrix,log_determinant_grad) {
   EXPECT_FLOAT_EQ(3.0,g[2]);
   EXPECT_FLOAT_EQ(-2.0,g[3]);
 }
+
+TEST(AgradRevMatrix,log_determinant_nan) {
+  using stan::agrad::matrix_v;
+  using stan::math::log_determinant;
+
+  matrix_v X(2,2);
+  AVAR a = 2.0;
+  AVAR b = std::numeric_limits<double>::quiet_NaN();
+  AVAR c = 5.0;
+  AVAR d = 7.0;
+  X << a, b, c, d;
+
+  AVAR f = log_determinant(X);
+  EXPECT_TRUE(boost::math::isnan(f.val()));
+}
