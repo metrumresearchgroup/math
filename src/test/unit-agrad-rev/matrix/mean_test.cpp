@@ -105,3 +105,49 @@ TEST(AgradRevMatrix, meanStdVector) {
   EXPECT_FLOAT_EQ(0.5, grad[1]);
   EXPECT_EQ(2U, grad.size());
 }
+
+TEST(AgradRevMatrix, mean_vector_nan) {
+  using stan::math::mean;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_v v1(3);
+  v1 << nan, 0, -3;
+  
+  AVAR output;
+  output = mean(v1);
+  EXPECT_TRUE(boost::math::isnan(output.val()));
+}
+TEST(AgradRevMatrix, mean_rowvector_nan) {
+  using stan::math::mean;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_v v1(3);
+  v1 << nan, 0, -3;
+  
+  AVAR output;
+  output = mean(v1);
+  EXPECT_TRUE(boost::math::isnan(output.val()));
+}
+TEST(AgradRevMatrix, mean_matrix_nan) {
+  using stan::math::mean;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v v1(1,3);
+  v1 << nan, 0, -3;
+  
+  AVAR output;
+  output = mean(v1);
+  EXPECT_TRUE(boost::math::isnan(output.val()));
+}
+TEST(AgradRevMatrix, meanStdVector_nan) {
+  using stan::math::mean;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  AVEC x(0);
+  x.push_back(nan);
+  x.push_back(2.0);
+  EXPECT_TRUE(boost::math::isnan(mean(x).val()));
+}
