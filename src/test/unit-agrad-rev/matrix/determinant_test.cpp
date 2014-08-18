@@ -73,3 +73,18 @@ TEST(AgradRevMatrix,determinant3by3) {
   AVAR h = determinant(Z);
   h = h; // supresses set but not used warning
 }
+
+TEST(AgradRevMatrix,determinant_nan) {
+  using stan::agrad::matrix_v;
+  using stan::math::determinant;
+
+  matrix_v X(2,2);
+  AVAR a = 2.0;
+  AVAR b = std::numeric_limits<double>::quiet_NaN();
+  AVAR c = 5.0;
+  AVAR d = 7.0;
+  X << a, b, c, d;
+
+  AVAR f = determinant(X);
+  EXPECT_TRUE(boost::math::isnan(f.val()));
+}
