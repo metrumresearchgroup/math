@@ -36,3 +36,16 @@ TEST(AgradRevMatrix,prod) {
   EXPECT_FLOAT_EQ(3.0,g[0]);
   EXPECT_FLOAT_EQ(2.0,g[1]);
 }
+
+TEST(AgradRevMatrix, prod_nan) {
+  using stan::math::prod;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_v v1(3);
+  v1 << nan, 0, -3;
+  
+  AVAR output;
+  output = prod(v1);
+  EXPECT_TRUE(boost::math::isnan(output.val()));
+}
