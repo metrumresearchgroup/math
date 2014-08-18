@@ -197,3 +197,100 @@ TEST(AgradRevMatrix, add_matrix_matrix_exception) {
   EXPECT_THROW(add(v1, d2), std::domain_error);
   EXPECT_THROW(add(v1, v2), std::domain_error);
 }
+
+TEST(AgradRevMatrix, add_nan_mat) {
+  using stan::math::matrix_d;
+  using stan::agrad::matrix_v;
+  using stan::math::add;
+
+  matrix_d mat_a(2,2);
+  matrix_d mat_b(2,2);
+  matrix_v mat_a_v(2,2);
+  matrix_v mat_b_v(2,2);
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  mat_a << nan,2,3,4;
+  mat_b << 5,6,nan,8;
+  mat_a_v << nan,2,3,4;
+  mat_b_v << 5,6,nan,8;
+
+  matrix_v res1 = add(mat_a, mat_b_v);
+  matrix_v res2 = add(mat_a_v, mat_b);
+  matrix_v res3 = add(mat_a_v, mat_b_v);
+
+  EXPECT_PRED1(isnan<double>, res1(0,0).val());
+  EXPECT_FLOAT_EQ(8.0, res1(0,1).val());
+  EXPECT_PRED1(isnan<double>, res1(1,0).val());
+  EXPECT_FLOAT_EQ(12.0, res1(1,1).val());
+
+  EXPECT_PRED1(isnan<double>, res2(0,0).val());
+  EXPECT_FLOAT_EQ(8.0, res2(0,1).val());
+  EXPECT_PRED1(isnan<double>, res2(1,0).val());
+  EXPECT_FLOAT_EQ(12.0, res2(1,1).val());
+
+  EXPECT_PRED1(isnan<double>, res3(0,0).val());
+  EXPECT_FLOAT_EQ(8.0, res3(0,1).val());
+  EXPECT_PRED1(isnan<double>, res3(1,0).val());
+  EXPECT_FLOAT_EQ(12.0, res3(1,1).val());
+}
+
+TEST(AgradRevMatrix, add_nan_vec) {
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  using stan::math::add;
+
+  vector_d vec_a(2);
+  vector_d vec_b(2);
+  vector_v vec_a_v(2);
+  vector_v vec_b_v(2);
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vec_a << nan,2;
+  vec_b << 5,6;
+  vec_a_v << nan,2;
+  vec_b_v << 5,6;
+
+  vector_v res1 = add(vec_a, vec_b_v);
+  vector_v res2 = add(vec_a_v, vec_b);
+  vector_v res3 = add(vec_a_v, vec_b_v);
+
+  EXPECT_PRED1(isnan<double>, res1(0).val());
+  EXPECT_FLOAT_EQ(8.0, res1(1).val());
+
+  EXPECT_PRED1(isnan<double>, res2(0).val());
+  EXPECT_FLOAT_EQ(8.0, res2(1).val());
+
+  EXPECT_PRED1(isnan<double>, res3(0).val());
+  EXPECT_FLOAT_EQ(8.0, res3(1).val());
+}
+
+TEST(AgradRevMatrix, add_nan_row_vec) {
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+  using stan::math::add;
+
+  row_vector_d row_veca(2);
+  row_vector_d row_vecb(2);
+  row_vector_v row_veca_v(2);
+  row_vector_v row_vecb_v(2);
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_veca << nan,2;
+  row_vecb << 5,6;
+  row_veca_v << nan,2;
+  row_vecb_v << 5,6;
+
+  row_vector_v res1 = add(row_veca, row_vecb_v);
+  row_vector_v res2 = add(row_veca_v, row_vecb);
+  row_vector_v res3 = add(row_veca_v, row_vecb_v);
+
+  EXPECT_PRED1(isnan<double>, res1(0).val());
+  EXPECT_FLOAT_EQ(8.0, res1(1).val());
+
+  EXPECT_PRED1(isnan<double>, res2(0).val());
+  EXPECT_FLOAT_EQ(8.0, res2(1).val());
+
+  EXPECT_PRED1(isnan<double>, res3(0).val());
+  EXPECT_FLOAT_EQ(8.0, res3(1).val());
+}
+
