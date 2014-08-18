@@ -193,3 +193,49 @@ TEST(AgradRevSd, finiteDiffsMatchAnalytic) {
     EXPECT_FLOAT_EQ(analytic, finite_diff);
   }
 }
+
+TEST(AgradRevMatrix, sd_vector_nan) {
+  using stan::math::sd;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_v v1(3);
+  v1 << nan, 0, -3;
+  
+  AVAR output;
+  output = sd(v1);
+  EXPECT_TRUE(boost::math::isnan(output.val()));
+}
+TEST(AgradRevMatrix, sd_rowvector_nan) {
+  using stan::math::sd;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_v v1(3);
+  v1 << nan, 0, -3;
+  
+  AVAR output;
+  output = sd(v1);
+  EXPECT_TRUE(boost::math::isnan(output.val()));
+}
+TEST(AgradRevMatrix, sd_matrix_nan) {
+  using stan::math::sd;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v v1(1,3);
+  v1 << nan, 0, -3;
+  
+  AVAR output;
+  output = sd(v1);
+  EXPECT_TRUE(boost::math::isnan(output.val()));
+}
+TEST(AgradRevMatrix, sdStdVector_nan) {
+  using stan::math::sd;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  AVEC x(0);
+  x.push_back(nan);
+  x.push_back(2.0);
+  EXPECT_TRUE(boost::math::isnan(sd(x).val()));
+}
