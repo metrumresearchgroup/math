@@ -77,3 +77,19 @@ TEST(AgradRevMatrix,inverse_inverse_sum) {
   for (size_t k = 0; k < x.size(); ++k)
     EXPECT_FLOAT_EQ(1.0,g[k]);
 }
+
+TEST(AgradRevMatrix,inverse_nan) {
+  using stan::math::inverse;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v a(2,2);
+  a << 2.0, nan, 
+    5.0, nan;
+
+  matrix_v a_inv = inverse(a);
+  EXPECT_TRUE(boost::math::isnan(a_inv(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(a_inv(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(a_inv(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(a_inv(1,1).val()));
+}
