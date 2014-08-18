@@ -4,6 +4,7 @@
 #include <stan/math/matrix/sum.hpp>
 #include <stan/math/matrix/typedefs.hpp>
 #include <stan/agrad/rev/matrix/typedefs.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 TEST(AgradRevMatrix, sum_vector) {
   using stan::math::sum;
@@ -73,4 +74,41 @@ TEST(AgradRevMatrix, sum_matrix) {
   v.resize(0, 0);
   EXPECT_FLOAT_EQ(0.0, sum(d));
   EXPECT_FLOAT_EQ(0.0, sum(v).val());
+}
+
+TEST(AgradRevMatrix, sum_vector_nan) {
+  using stan::math::sum;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_v v(6);
+  v << 1, 2, nan, 4, nan, 6;
+  
+  AVAR output;
+  output = sum(v);
+  EXPECT_TRUE(boost::math::isnan(output.val()));
+}
+TEST(AgradRevMatrix, sum_rowvector_nan) {
+  using stan::math::sum;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_v v(6);
+  v << 1, 2, nan, 4, nan, 6;
+  
+  AVAR output;
+  output = sum(v);
+  EXPECT_TRUE(boost::math::isnan(output.val()));
+}
+TEST(AgradRevMatrix, sum_matrix_nan) {
+  using stan::math::sum;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v v(2, 3);
+  v << 1, 2, nan, 4, nan, 6;
+  
+  AVAR output;
+  output = sum(v);
+  EXPECT_TRUE(boost::math::isnan(output.val()));
 }
