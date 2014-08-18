@@ -39,3 +39,23 @@ TEST(AgradRevMatrix,eigenval_sum) {
   EXPECT_NEAR(0.0,g[4],1.0E-10);
   EXPECT_NEAR(0.0,g[5],1.0E-10);
 }
+
+TEST(AgradRevMatrix,eigenval_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  using stan::math::sum;
+  using stan::agrad::matrix_v;
+  using stan::agrad::vector_v;
+  using stan::math::eigenvalues_sym;
+
+  matrix_v a(3,3);
+  a << 
+    nan, 2.0, 3.0,
+    2.0, 5.0, 7.9,
+    3.0, nan, 1.08;
+
+  vector_v a_ = eigenvalues_sym(a);
+
+  EXPECT_TRUE(boost::math::isnan(a_(0).val()));
+  EXPECT_TRUE(boost::math::isnan(a_(1).val()));
+  EXPECT_TRUE(boost::math::isnan(a_(2).val()));
+}
