@@ -22,3 +22,19 @@ TEST(AgradRevMatrix, log_matrix) {
     for (j = 0; j < 2; j++)
       EXPECT_FLOAT_EQ(expected_output(i,j), output(i,j).val());
 }
+
+TEST(AgradRevMatrix, log_matrix_nan) {
+  using stan::math::log;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v mv(2,2), output;
+
+  mv << 1, nan, 3, 4;
+  output = log(mv);
+
+  EXPECT_FLOAT_EQ(std::log(1.0), output(0,0).val());
+  EXPECT_TRUE(boost::math::isnan(output(0,1).val()));
+  EXPECT_FLOAT_EQ(std::log(3.0), output(1,0).val());
+  EXPECT_FLOAT_EQ(std::log(4.0), output(1,1).val());
+}
