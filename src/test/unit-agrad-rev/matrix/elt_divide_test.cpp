@@ -174,3 +174,132 @@ TEST(AgradRevMatrix,elt_divide_mat_dv) {
   EXPECT_FLOAT_EQ(2.0 / (- 10.0 * 10.0), g[0]);
   EXPECT_FLOAT_EQ(0.0,g[1]);
 }
+
+TEST(AgradRevMatrix,elt_divide_vec_vv_nan) {
+  using stan::math::elt_divide;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_v x(2);
+  x << nan, 5;
+  vector_v y(2);
+  y << 10, nan;
+  vector_v z = elt_divide(x,y);
+  EXPECT_TRUE(boost::math::isnan(z(0).val()));
+  EXPECT_TRUE(boost::math::isnan(z(1).val()));
+}
+TEST(AgradRevMatrix,elt_divide_vec_vd_nan) {
+  using stan::math::elt_divide;
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_v x(2);
+  x << nan, 5;
+  vector_d y(2);
+  y << 10, nan;
+  vector_v z = elt_divide(x,y);
+  EXPECT_TRUE(boost::math::isnan(z(0).val()));
+  EXPECT_TRUE(boost::math::isnan(z(1).val()));
+}
+TEST(AgradRevMatrix,elt_divide_vec_dv_nan) {
+  using stan::math::elt_divide;
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_d x(2);
+  x << nan, 5;
+  vector_v y(2);
+  y << 10, nan;
+  vector_v z = elt_divide(x,y);
+  EXPECT_TRUE(boost::math::isnan(z(0).val()));
+  EXPECT_TRUE(boost::math::isnan(z(1).val()));
+}
+
+TEST(AgradRevMatrix,elt_divide_rowvec_vv_nan) {
+  using stan::math::elt_divide;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_v x(2);
+  x << nan, 5;
+  row_vector_v y(2);
+  y << 10, nan;
+  row_vector_v z = elt_divide(x,y);
+  EXPECT_TRUE(boost::math::isnan(z(0).val()));
+  EXPECT_TRUE(boost::math::isnan(z(1).val()));
+}
+TEST(AgradRevMatrix,elt_divide_rowvec_vd_nan) {
+  using stan::math::elt_divide;
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_v x(2);
+  x << nan, 5;
+  row_vector_d y(2);
+  y << 10, nan;
+  row_vector_v z = elt_divide(x,y);
+  EXPECT_TRUE(boost::math::isnan(z(0).val()));
+  EXPECT_TRUE(boost::math::isnan(z(1).val()));
+}
+TEST(AgradRevMatrix,elt_divide_rowvec_dv_nan) {
+  using stan::math::elt_divide;
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_d x(2);
+  x << nan, 5;
+  row_vector_v y(2);
+  y << 10, nan;
+  row_vector_v z = elt_divide(x,y);
+  EXPECT_TRUE(boost::math::isnan(z(0).val()));
+  EXPECT_TRUE(boost::math::isnan(z(1).val()));
+}
+
+TEST(AgradRevMatrix,elt_divide_mat_vv_nan) {
+  using stan::math::elt_divide;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v x(2,3);
+  x << nan, 5, nan, 13, 29, 112;
+  matrix_v y(2,3);
+  y << 10, nan, 1000, 10000, 100000, 1000000;
+  matrix_v z = elt_divide(x,y);
+  EXPECT_TRUE(boost::math::isnan(z(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(z(0,1).val()));
+  EXPECT_FLOAT_EQ(112.0/1000000.0,z(1,2).val());
+}
+TEST(AgradRevMatrix,elt_divide_mat_vd_nan) {
+  using stan::math::elt_divide;
+  using stan::math::matrix_d;
+  using stan::agrad::matrix_v;
+    double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v x(2,3);
+  x << nan, 5, nan, 13, 29, 112;
+  matrix_d y(2,3);
+  y << 10, nan, 1000, 10000, 100000, 1000000;
+  matrix_v z = elt_divide(x,y);
+  EXPECT_TRUE(boost::math::isnan(z(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(z(0,1).val()));
+  EXPECT_FLOAT_EQ(112.0/1000000.0,z(1,2).val());
+}
+TEST(AgradRevMatrix,elt_divide_mat_dv_nan) {
+  using stan::math::elt_divide;
+  using stan::math::matrix_d;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_d x(2,3);
+  x << nan, 5, nan, 13, 29, 112;
+  matrix_v y(2,3);
+  y << 10, nan, 1000, 10000, 100000, 1000000;
+  matrix_v z = elt_divide(x,y);
+  EXPECT_TRUE(boost::math::isnan(z(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(z(0,1).val()));
+  EXPECT_FLOAT_EQ(112.0/1000000.0,z(1,2).val());
+}
