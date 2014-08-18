@@ -17,3 +17,18 @@ TEST(mathMatrix,getLp) {
   EXPECT_FLOAT_EQ(17.5, get_lp(lp,lp_accum).val());
 }
 
+TEST(mathMatrix,getLp_nan) {
+  using stan::math::accumulator;
+  using stan::math::get_lp;
+  using stan::agrad::var;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  var lp = nan;
+  accumulator<var> lp_accum;
+  EXPECT_TRUE(boost::math::isnan(get_lp(lp,lp_accum).val()));
+
+  lp_accum.add(2);
+  lp_accum.add(3);
+  EXPECT_TRUE(boost::math::isnan(get_lp(lp,lp_accum).val()));
+}
+
