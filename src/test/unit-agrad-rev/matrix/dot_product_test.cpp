@@ -241,3 +241,79 @@ TEST(AgradRevMatrix, dot_product_vd_vec) {
   EXPECT_EQ(grad[2], 3);
 }
 
+TEST(AgradRevMatrix, dot_product_vector_vector_nan) {
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_d vd_1(3), vd_2(3);
+  vector_v vv_1(3), vv_2(3);
+  
+  vd_1 << nan, 3, -5;
+  vv_1 << nan, 3, -5;
+  vd_2 << 4, -2, -1;
+  vv_2 << 4, -2, -1;
+
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(vv_1, vd_2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(vd_1, vv_2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(vv_1, vv_2).val()));
+}
+TEST(AgradRevMatrix, dot_product_rowvector_vector_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+
+  row_vector_d d1(3);
+  row_vector_v v1(3);
+  vector_d d2(3);
+  vector_v v2(3);
+  
+  d1 << nan, 3, -5;
+  v1 << nan, 3, -5;
+  d2 << 4, -2, -1;
+  v2 << 4, -2, -1;
+
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(v1, d2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(d1, v2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(v1, v2).val()));
+}
+TEST(AgradRevMatrix, dot_product_vector_rowvector_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+
+  vector_d d1(3);
+  vector_v v1(3);
+  row_vector_d d2(3);
+  row_vector_v v2(3);
+  
+  d1 << nan, 3, -5;
+  v1 << nan, 3, -5;
+  d2 << 4, -2, -1;
+  v2 << 4, -2, -1;
+  
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(v1, d2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(d1, v2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(v1, v2).val()));
+}
+TEST(AgradRevMatrix, dot_product_rowvector_rowvector_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+
+  row_vector_d d1(3), d2(3);
+  row_vector_v v1(3), v2(3);
+  
+  d1 << nan, 3, -5;
+  v1 << nan, 3, -5;
+  d2 << 4, -2, -1;
+  v2 << 4, -2, -1;
+
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(v1, d2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(d1, v2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::agrad::dot_product(v1, v2).val()));
+}
