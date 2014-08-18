@@ -1,6 +1,7 @@
 #include <stan/agrad/rev/matrix/initialize_variable.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/agrad/util.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 TEST(AgradRevMatrix, initializeVariable) {
   using stan::agrad::initialize_variable;
@@ -49,4 +50,54 @@ TEST(AgradRevMatrix, initializeVariable) {
     for (int m = 0; m < dd[0].rows(); ++m)
       for (int n = 0; n < dd[0].cols(); ++n)
         EXPECT_FLOAT_EQ(11.0, dd[i](m,n).val());
+}
+
+TEST(AgradRevMatrix, initializeVariable_nan) {
+  using stan::agrad::initialize_variable;
+  using std::vector;
+
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  AVAR a;
+  initialize_variable(a, AVAR(nan));
+  EXPECT_TRUE(boost::math::isnan(a.val()));
+
+  AVEC b(3);
+  initialize_variable(b, AVAR(nan));
+  EXPECT_EQ(3U,b.size());
+  EXPECT_TRUE(boost::math::isnan(b[0].val()));
+  EXPECT_TRUE(boost::math::isnan(b[1].val()));
+  EXPECT_TRUE(boost::math::isnan(b[2].val()));
+
+  vector<AVEC > c(4,AVEC(3));
+  initialize_variable(c, AVAR(nan));
+  for (size_t m = 0; m < c.size(); ++m)
+    for (size_t n = 0; n < c[0].size(); ++n)
+      EXPECT_TRUE(boost::math::isnan(c[m][n].val()));
+
+  Matrix<AVAR, Dynamic, Dynamic> aa(5,7);
+  initialize_variable(aa, AVAR(nan));
+  for (int m = 0; m < aa.rows(); ++m)
+    for (int n = 0; n < aa.cols(); ++n)
+      EXPECT_TRUE(boost::math::isnan(aa(m,n).val()));
+
+  Matrix<AVAR, Dynamic, 1> bb(5);
+  initialize_variable(bb, AVAR(nan));
+  for (int m = 0; m < bb.size(); ++m) 
+    EXPECT_TRUE(boost::math::isnan(bb(m).val()));
+
+  Matrix<AVAR,1,Dynamic> cc(12);
+  initialize_variable(cc, AVAR(nan));
+  for (int m = 0; m < cc.size(); ++m) 
+    EXPECT_TRUE(boost::math::isnan(cc(m).val()));
+  
+  Matrix<AVAR,Dynamic,Dynamic> init_val(3,4);
+  vector<Matrix<AVAR,Dynamic,Dynamic> > dd(5, init_val);
+  initialize_variable(dd, AVAR(nan));
+  for (size_t i = 0; i < dd.size(); ++i)
+    for (int m = 0; m < dd[0].rows(); ++m)
+      for (int n = 0; n < dd[0].cols(); ++n)
+        EXPECT_TRUE(boost::math::isnan(dd[i](m,n).val()));
 }
