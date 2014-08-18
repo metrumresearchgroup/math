@@ -58,7 +58,24 @@ TEST(AgradRev,logSumExpMatrix) {
   Matrix<double,Dynamic,Dynamic> d(3,2);
   d << -1, -2, -4, 5, 6, 4;
   test_log_sum_exp_matrix(d);
-  
+}
 
-  
+TEST(AgradRev,logSumExpMatrix_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Matrix<stan::agrad::var,Dynamic,1> a(2);
+  a << nan, 2;
+
+  stan::agrad::var res = stan::agrad::log_sum_exp(a);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+
+  Matrix<stan::agrad::var,1,Dynamic> c(3);
+  c << 4.9, nan, 1.7;
+  res = stan::agrad::log_sum_exp(c);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+
+  Matrix<stan::agrad::var,Dynamic,Dynamic> d(3,2);
+  d << -1, -2, -4, nan, 6, 4;
+  res = stan::agrad::log_sum_exp(d);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
 }
