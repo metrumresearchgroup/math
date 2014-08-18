@@ -59,3 +59,46 @@ TEST(AgradRevMatrix, cumulative_sum) {
   test_cumulative_sum<Eigen::Matrix<var,1,Eigen::Dynamic> >();
 }
 
+TEST(AgradRevMatrix, cumulative_sum_std_vec_nan) {
+  using stan::agrad::var;
+  using stan::math::cumulative_sum;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  std::vector<var> a;
+  a.push_back(1.0);
+  a.push_back(nan);
+  a.push_back(3.0);
+
+  std::vector<var> res = cumulative_sum(a);
+  EXPECT_FLOAT_EQ(1.0, res[0].val());
+  EXPECT_TRUE(boost::math::isnan(res[1].val()));
+  EXPECT_TRUE(boost::math::isnan(res[2].val()));
+}
+
+TEST(AgradRevMatrix, cumulative_sum_vector_nan) {
+  using stan::agrad::var;
+  using stan::math::cumulative_sum;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  stan::agrad::vector_v a(3);
+  a << 1.0, nan, 3.0;
+
+  stan::agrad::vector_v res = cumulative_sum(a);
+  EXPECT_FLOAT_EQ(1.0, res(0).val());
+  EXPECT_TRUE(boost::math::isnan(res(1).val()));
+  EXPECT_TRUE(boost::math::isnan(res(2).val()));
+}
+
+TEST(AgradRevMatrix, cumulative_sum_row_vector_nan) {
+  using stan::agrad::var;
+  using stan::math::cumulative_sum;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  stan::agrad::row_vector_v a(3);
+  a << 1.0, nan, 3.0;
+
+  stan::agrad::row_vector_v res = cumulative_sum(a);
+  EXPECT_FLOAT_EQ(1.0, res(0).val());
+  EXPECT_TRUE(boost::math::isnan(res(1).val()));
+  EXPECT_TRUE(boost::math::isnan(res(2).val()));
+}
