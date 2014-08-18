@@ -37,3 +37,40 @@ TEST(AgradRevMatrix,cols_matrix) {
   m.resize(5, 0);
   EXPECT_EQ(0U, cols(m));
 }
+
+TEST(AgradRevMatrix,cols_vector_nan) {
+  using stan::agrad::vector_v;
+  using stan::agrad::row_vector_v;
+  using stan::math::cols;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_v v(5);
+  v << 0, nan, 2, nan, 4;
+  EXPECT_EQ(1U, cols(v));
+
+  v.resize(0);
+  EXPECT_EQ(1U, cols(v));
+}
+TEST(AgradRevMatrix,cols_rowvector_nan) {
+  using stan::agrad::row_vector_v;
+  using stan::math::cols;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_v rv(5);
+  rv << 0, nan, 2, nan, 4;
+  EXPECT_EQ(5U, cols(rv));
+  
+  rv.resize(0);
+  EXPECT_EQ(0U, cols(rv));
+}
+TEST(AgradRevMatrix,cols_matrix_nan) {
+  using stan::agrad::matrix_v;
+  using stan::math::cols;
+
+  matrix_v m(2,3);
+  m << nan, 1, 2, nan, 4, 5;
+  EXPECT_EQ(3U, cols(m));
+  
+  m.resize(5, 0);
+  EXPECT_EQ(0U, cols(m));
+}
