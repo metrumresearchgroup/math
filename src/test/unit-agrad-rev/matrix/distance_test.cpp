@@ -204,3 +204,82 @@ TEST(AgradRevMatrix, distance_vd) {
   EXPECT_FLOAT_EQ((a(1).val() - b(1)) / 3.464102, grad[1]);
   EXPECT_FLOAT_EQ((a(2).val() - b(2)) / 3.464102, grad[2]);
 }
+
+TEST(AgradRevMatrix, distance_vector_vector_nan) {
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  using stan::agrad::squared_distance;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_d vd_1(3), vd_2(3);
+  vector_v vv_1(3), vv_2(3);
+  
+  vd_1 << 1, nan, -5;
+  vv_1 << 1, nan, -5;
+  vd_2 << nan, -2, -1;
+  vv_2 << nan, -2, -1;
+
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(vv_1, vd_2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(vd_1, vv_2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(vv_1, vv_2).val()));
+}
+
+TEST(AgradRevMatrix, distance_rowvector_vector_nan) {
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_d d1(3);
+  row_vector_v v1(3);
+  vector_d d2(3);
+  vector_v v2(3);
+  
+  d1 << 1, nan, -5;
+  v1 << 1, nan, -5;
+  d2 << nan, -2, -1;
+  v2 << nan, -2, -1;
+
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(v1, d2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(d1, v2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(v1, v2).val()));
+}
+TEST(AgradRevMatrix, distance_vector_rowvector_nan) {
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_d d1(3);
+  vector_v v1(3);
+  row_vector_d d2(3);
+  row_vector_v v2(3);
+  
+  d1 << 1, nan, -5;
+  v1 << 1, nan, -5;
+  d2 << nan, -2, -1;
+  v2 << nan, -2, -1;
+  
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(v1, d2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(d1, v2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(v1, v2).val()));
+}
+TEST(AgradRevMatrix, distance_rowvector_rowvector_nan) {
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_d d1(3), d2(3);
+  row_vector_v v1(3), v2(3);
+  
+  d1 << 1, nan, -5;
+  v1 << 1, nan, -5;
+  d2 << nan, -2, -1;
+  v2 << nan, -2, -1;
+
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(v1, d2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(d1, v2).val()));
+  EXPECT_TRUE(boost::math::isnan(stan::math::distance(v1, v2).val()));
+}
