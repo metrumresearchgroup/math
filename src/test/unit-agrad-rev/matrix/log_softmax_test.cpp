@@ -108,3 +108,18 @@ TEST(AgradRevLogSoftmax, Grad) {
       EXPECT_FLOAT_EQ(grad_expected[i], grad[i]);
   }
 }
+
+TEST(AgradRevMatrix,log_softmax_nan) {
+  using stan::math::log_softmax;
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Matrix<AVAR,Dynamic,1> x2(2);
+  x2 << nan, 1.0;
+  Matrix<AVAR,Dynamic,1> theta2 = log_softmax(x2);
+  EXPECT_EQ(2,theta2.size());
+  EXPECT_TRUE(boost::math::isnan(theta2[0].val()));
+  EXPECT_TRUE(boost::math::isnan(theta2[1].val()));
+}
