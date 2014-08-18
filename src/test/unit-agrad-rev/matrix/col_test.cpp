@@ -39,3 +39,17 @@ TEST(AgradRevMatrix,col_v_excHigh) {
   EXPECT_THROW(col(y,0),std::domain_error);
   EXPECT_THROW(col(y,5),std::domain_error);
 }
+
+TEST(AgradRevMatrix,col_nan) {
+  using stan::math::col;
+  using stan::agrad::matrix_v;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v y(2,3);
+  y << 1, 2, nan, nan, 5, 6;
+  vector_v z = col(y,1);
+  EXPECT_EQ(2,z.size());
+  EXPECT_FLOAT_EQ(1.0,z[0].val());
+  EXPECT_TRUE(boost::math::isnan(z[1].val()));
+}
