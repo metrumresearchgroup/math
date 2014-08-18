@@ -24,3 +24,16 @@ TEST(AgradRevMatrix,mv_trace) {
   EXPECT_FLOAT_EQ(0.0, g[2]);
   EXPECT_FLOAT_EQ(1.0, g[3]);
 }  
+
+TEST(AgradRevMatrix,mv_trace_nan) {
+  using stan::math::trace;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v a(2,2);
+  a << -1.0, nan, 
+    5.0, nan;
+  
+  AVAR s = trace(a);
+  EXPECT_TRUE(boost::math::isnan(s.val()));
+}  
