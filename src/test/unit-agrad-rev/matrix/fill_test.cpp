@@ -1,6 +1,7 @@
 #include <stan/math/matrix/fill.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/agrad/util.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 TEST(AgradRevMatrix, fill) {
   using stan::math::fill;
@@ -50,4 +51,46 @@ TEST(AgradRevMatrix, fillDouble) {
   fill(y,3.0);
   EXPECT_EQ(3,y.size());
   EXPECT_FLOAT_EQ(3.0,y[0]);
+}
+
+TEST(AgradRevMatrix, fill_nan) {
+  using stan::math::fill;
+  using std::vector;
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  AVAR x;
+  AVAR y = nan;
+  fill(x,y);
+  EXPECT_TRUE(boost::math::isnan(x.val()));
+
+  AVEC z(2);
+  AVAR a = nan;
+  fill(z,a);
+  EXPECT_TRUE(boost::math::isnan(z[0].val()));
+  EXPECT_TRUE(boost::math::isnan(z[1].val()));
+  EXPECT_EQ(2U,z.size());
+
+  Matrix<AVAR,Dynamic,Dynamic> m(2,3);
+  fill(m,AVAR(nan));
+  for (int i = 0; i < 2; ++i)
+    for (int j = 0; j < 3; ++j)
+      EXPECT_TRUE(boost::math::isnan(m(i,j).val()));
+  
+  Matrix<AVAR,Dynamic,1> rv(3);
+  fill(rv,AVAR(nan));
+  for (int i = 0; i < 3; ++i)
+    EXPECT_TRUE(boost::math::isnan(rv(i).val()));
+
+  Matrix<AVAR,1,Dynamic> v(4);
+  fill(v,AVAR(nan));
+  for (int i = 0; i < 4; ++i)
+    EXPECT_TRUE(boost::math::isnan(v(i).val()));
+
+  vector<vector<AVAR> > d(3,vector<AVAR>(2));
+  fill(d,AVAR(nan));
+  for (size_t i = 0; i < 3; ++i)
+    for (size_t j = 0; j < 2; ++j)
+      EXPECT_TRUE(boost::math::isnan(d[i][j].val()));
 }
