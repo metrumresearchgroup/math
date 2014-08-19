@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <stan/agrad/rev.hpp>
 #include <stan/math/matrix/sort_indices.hpp>
+#include <stan/agrad/rev/matrix/typedefs.hpp>
 
 void test_sort_indices_asc(VEC val) {
   using stan::math::sort_indices_asc;
@@ -164,4 +165,49 @@ TEST(AgradRev, sort_indices_no_thrown) {
   EXPECT_EQ(0, vec2.size());
   EXPECT_NO_THROW(sort_indices_asc(vec2));
   EXPECT_NO_THROW(sort_indices_desc(vec2));
+}
+
+TEST(AgradRev, sort_indices_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  using stan::math::sort_indices_asc;
+  using stan::math::sort_indices_desc;
+
+  AVEC a;
+  a.push_back(nan); a.push_back(2); a.push_back(2); a.push_back(3);
+  std::vector<int> res_asc = sort_indices_asc(a);
+  std::vector<int> res_desc = sort_indices_desc(a);
+  EXPECT_FLOAT_EQ(1, res_asc[0]);
+  EXPECT_FLOAT_EQ(2, res_asc[1]);
+  EXPECT_FLOAT_EQ(3, res_asc[2]);
+  EXPECT_FLOAT_EQ(4, res_asc[3]);
+  EXPECT_FLOAT_EQ(1, res_desc[0]);
+  EXPECT_FLOAT_EQ(4, res_desc[1]);
+  EXPECT_FLOAT_EQ(2, res_desc[2]);
+  EXPECT_FLOAT_EQ(3, res_desc[3]);
+
+  stan::agrad::row_vector_v vec1(4);
+  vec1 << nan, 2.0, 2.0, 3.0;
+  std::vector<int> res_asc1 = sort_indices_asc(vec1);
+  std::vector<int> res_desc1 = sort_indices_desc(vec1);
+  EXPECT_FLOAT_EQ(1, res_asc1[0]);
+  EXPECT_FLOAT_EQ(2, res_asc1[1]);
+  EXPECT_FLOAT_EQ(3, res_asc1[2]);
+  EXPECT_FLOAT_EQ(4, res_asc1[3]);
+  EXPECT_FLOAT_EQ(1, res_desc1[0]);
+  EXPECT_FLOAT_EQ(4, res_desc1[1]);
+  EXPECT_FLOAT_EQ(2, res_desc1[2]);
+  EXPECT_FLOAT_EQ(3, res_desc1[3]);
+
+  stan::agrad::vector_v vec3(4);
+  vec3 << nan, 2.0, 2.0, 3.0;
+  std::vector<int> res_asc2 = sort_indices_asc(vec3);
+  std::vector<int> res_desc2 = sort_indices_desc(vec3);
+  EXPECT_FLOAT_EQ(1, res_asc2[0]);
+  EXPECT_FLOAT_EQ(2, res_asc2[1]);
+  EXPECT_FLOAT_EQ(3, res_asc2[2]);
+  EXPECT_FLOAT_EQ(4, res_asc2[3]);
+  EXPECT_FLOAT_EQ(1, res_desc2[0]);
+  EXPECT_FLOAT_EQ(4, res_desc2[1]);
+  EXPECT_FLOAT_EQ(2, res_desc2[2]);
+  EXPECT_FLOAT_EQ(3, res_desc2[3]);
 }
