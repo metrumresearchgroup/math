@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <stan/agrad/rev.hpp>
 #include <stan/math/matrix/sort.hpp>
+#include <stan/agrad/rev/matrix/typedefs.hpp>
 
 void test_sort_asc(VEC val) {
   using stan::math::sort_asc;
@@ -166,4 +167,49 @@ TEST(AgradRev, sort_no_thrown) {
   EXPECT_EQ(0, vec2.size());
   EXPECT_NO_THROW(sort_asc(vec2));
   EXPECT_NO_THROW(sort_desc(vec2));
+}
+
+TEST(AgradRev, sort_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  using stan::agrad::sort_asc;
+  using stan::agrad::sort_desc;
+
+  AVEC a;
+  a.push_back(nan); a.push_back(2); a.push_back(2); a.push_back(3);
+  AVEC res_asc = sort_asc(a);
+  AVEC res_desc = sort_desc(a);
+  EXPECT_TRUE(boost::math::isnan(res_asc[0].val()));
+  EXPECT_TRUE(boost::math::isnan(res_desc[0].val()));
+  EXPECT_FLOAT_EQ(2, res_asc[1].val());
+  EXPECT_FLOAT_EQ(2, res_asc[2].val());
+  EXPECT_FLOAT_EQ(3, res_asc[3].val());
+  EXPECT_FLOAT_EQ(3, res_desc[1].val());
+  EXPECT_FLOAT_EQ(2, res_desc[2].val());
+  EXPECT_FLOAT_EQ(2, res_desc[3].val());
+
+  stan::agrad::row_vector_v vec1(4);
+  vec1 << nan, -33.1, 2.1, -33.1;
+  stan::agrad::row_vector_v res_asc1 = sort_asc(vec1);
+  stan::agrad::row_vector_v res_desc1 = sort_desc(vec1);
+  EXPECT_TRUE(boost::math::isnan(res_asc1(0).val()));
+  EXPECT_TRUE(boost::math::isnan(res_desc1(0).val()));
+  EXPECT_FLOAT_EQ(-33.1, res_asc1(1).val());
+  EXPECT_FLOAT_EQ(-33.1, res_asc1(2).val());
+  EXPECT_FLOAT_EQ(2.1, res_asc1(3).val());
+  EXPECT_FLOAT_EQ(2.1, res_desc1(1).val());
+  EXPECT_FLOAT_EQ(-33.1, res_desc1(2).val());
+  EXPECT_FLOAT_EQ(-33.1, res_desc1(3).val());
+
+  stan::agrad::vector_v vec3(4);
+  vec3 << nan, -33.1, 2.1, -33.1;
+  stan::agrad::vector_v res_asc2 = sort_asc(vec3);
+  stan::agrad::vector_v res_desc2 = sort_desc(vec3);
+  EXPECT_TRUE(boost::math::isnan(res_asc2(0).val()));
+  EXPECT_TRUE(boost::math::isnan(res_desc2(0).val()));
+  EXPECT_FLOAT_EQ(-33.1, res_asc2(1).val());
+  EXPECT_FLOAT_EQ(-33.1, res_asc2(2).val());
+  EXPECT_FLOAT_EQ(2.1, res_asc2(3).val());
+  EXPECT_FLOAT_EQ(2.1, res_desc2(1).val());
+  EXPECT_FLOAT_EQ(-33.1, res_desc2(2).val());
+  EXPECT_FLOAT_EQ(-33.1, res_desc2(3).val());
 }
