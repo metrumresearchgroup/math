@@ -1025,3 +1025,153 @@ TEST(AgradRevMatrix, trace_gen_inv_quad_form_ldlt_grad_vvv_basic) {
     EXPECT_FLOAT_EQ(grad_basic[n], grad[n]);
   }
 }
+
+TEST(AgradRevMatrix, trace_gen_inv_quad_form_ldlt_nan) {
+  using stan::agrad::matrix_v;
+  using stan::math::matrix_d;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v av(4,4);
+  matrix_d ad(4,4);
+  matrix_d bd(4,2);
+  matrix_v bv(4,2);
+  matrix_d cd(2,2);
+  matrix_v cv(2,2);
+  AVAR res;
+  AVEC vars;
+  VEC grad;
+  
+  
+  bd << nan, 10,
+  0,  1,
+  -3, -3,
+  5,  2;
+  bv << nan, 10,
+  0,  1,
+  -3, -3,
+  5,  2;
+  ad << 9.0,  3.0, 3.0,   3.0, 
+        nan, 10.0, 2.0,   2.0,
+        3.0,  2.0, 7.0,   1.0,
+        3.0,  2.0, 1.0, 112.0;
+  av << 9.0,  3.0, 3.0,   3.0, 
+        nan, 10.0, 2.0,   2.0,
+        3.0,  2.0, 7.0,   1.0,
+        3.0,  2.0, 1.0, 112.0;
+  cd.setIdentity(2,2);
+  cv.setIdentity(2,2);
+
+  stan::math::LDLT_factor<double,-1,-1> ldlt_ad;
+  stan::math::LDLT_factor<stan::agrad::var,-1,-1> ldlt_av;
+  ldlt_av.compute(av);
+  ASSERT_FALSE(ldlt_av.success());
+  ldlt_ad.compute(ad);
+  ASSERT_FALSE(ldlt_ad.success());
+  
+  // double-double-double
+  res = trace_gen_inv_quad_form_ldlt(cd,ldlt_ad,bd);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+  
+  // double-var-double
+  res = trace_gen_inv_quad_form_ldlt(cd,ldlt_av,bd);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+  
+  // double-double-var
+  res = trace_gen_inv_quad_form_ldlt(cd,ldlt_ad,bv);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+  
+  // double-var-var
+  res = trace_gen_inv_quad_form_ldlt(cd,ldlt_av,bv);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+
+  // var-double-double
+  res = trace_gen_inv_quad_form_ldlt(cv,ldlt_ad,bd);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+  
+  // var-var-double
+  res = trace_gen_inv_quad_form_ldlt(cv,ldlt_av,bd);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+  
+  // var-double-var
+  res = trace_gen_inv_quad_form_ldlt(cv,ldlt_ad,bv);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+  
+  // var-var-var
+  res = trace_gen_inv_quad_form_ldlt(cv,ldlt_av,bv);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+}
+
+TEST(AgradRevMatrix, trace_gen_inv_quad_form_ldlt_nan2) {
+  using stan::agrad::matrix_v;
+  using stan::math::matrix_d;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v av(4,4);
+  matrix_d ad(4,4);
+  matrix_d bd(4,2);
+  matrix_v bv(4,2);
+  matrix_d cd(2,2);
+  matrix_v cv(2,2);
+  AVAR res;
+  AVEC vars;
+  VEC grad;
+  
+  
+  bd << 100, 10,
+  0,  1,
+  -3, -3,
+  5,  2;
+  bv << 100, 10,
+  0,  1,
+  -3, -3,
+  5,  2;
+  ad << 9.0,  3.0, nan,   3.0, 
+        3.0, 10.0, 2.0,   2.0,
+        3.0,  2.0, 7.0,   1.0,
+        3.0,  2.0, 1.0, 112.0;
+  av << 9.0,  3.0, nan,   3.0, 
+        3.0, 10.0, 2.0,   2.0,
+        3.0,  2.0, 7.0,   1.0,
+        3.0,  2.0, 1.0, 112.0;
+  cd.setIdentity(2,2);
+  cv.setIdentity(2,2);
+
+  stan::math::LDLT_factor<double,-1,-1> ldlt_ad;
+  stan::math::LDLT_factor<stan::agrad::var,-1,-1> ldlt_av;
+  ldlt_av.compute(av);
+  ASSERT_TRUE(ldlt_av.success());
+  ldlt_ad.compute(ad);
+  ASSERT_TRUE(ldlt_ad.success());
+  
+  // double-double-double
+  res = trace_gen_inv_quad_form_ldlt(cd,ldlt_ad,bd);
+  EXPECT_FLOAT_EQ(1439.1061766207, res.val());
+  
+  // double-var-double
+  res = trace_gen_inv_quad_form_ldlt(cd,ldlt_av,bd);
+  EXPECT_FLOAT_EQ(1439.1061766207, res.val());
+  
+  // double-double-var
+  res = trace_gen_inv_quad_form_ldlt(cd,ldlt_ad,bv);
+  EXPECT_FLOAT_EQ(1439.1061766207, res.val());
+  
+  // double-var-var
+  res = trace_gen_inv_quad_form_ldlt(cd,ldlt_av,bv);
+  EXPECT_FLOAT_EQ(1439.1061766207, res.val());
+
+  // var-double-double
+  res = trace_gen_inv_quad_form_ldlt(cv,ldlt_ad,bd);
+  EXPECT_FLOAT_EQ(1439.1061766207, res.val());
+  
+  // var-var-double
+  res = trace_gen_inv_quad_form_ldlt(cv,ldlt_av,bd);
+  EXPECT_FLOAT_EQ(1439.1061766207, res.val());
+  
+  // var-double-var
+  res = trace_gen_inv_quad_form_ldlt(cv,ldlt_ad,bv);
+  EXPECT_FLOAT_EQ(1439.1061766207, res.val());
+  
+  // var-var-var
+  res = trace_gen_inv_quad_form_ldlt(cv,ldlt_av,bv);
+  EXPECT_FLOAT_EQ(1439.1061766207, res.val());
+}
