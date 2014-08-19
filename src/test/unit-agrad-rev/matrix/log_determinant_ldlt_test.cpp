@@ -62,3 +62,34 @@ TEST(AgradRevMatrix,log_determinant_ldlt) {
   EXPECT_FLOAT_EQ(0, grad[2]);
   EXPECT_FLOAT_EQ(1.0/3.0, grad[3]);
 }
+
+TEST(AgradRevMatrix,log_determinant_ldlt_nan) {
+  using stan::agrad::matrix_v;
+  stan::math::LDLT_factor<stan::agrad::var,-1,-1> ldlt_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v v(2,2);
+  v << 1, 0, nan, 3;
+  ldlt_v.compute(v);
+  ASSERT_FALSE(ldlt_v.success());
+  
+  AVAR f;
+  f = log_determinant_ldlt(ldlt_v);
+
+  EXPECT_TRUE(boost::math::isnan(f.val()));
+}
+TEST(AgradRevMatrix,log_determinant_ldlt_nan2) {
+  using stan::agrad::matrix_v;
+  stan::math::LDLT_factor<stan::agrad::var,-1,-1> ldlt_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v v(2,2);
+  v << nan, 0, 0, 3;
+  ldlt_v.compute(v);
+  ASSERT_FALSE(ldlt_v.success());
+  
+  AVAR f;
+  f = log_determinant_ldlt(ldlt_v);
+
+  EXPECT_TRUE(boost::math::isnan(f.val()));
+}
