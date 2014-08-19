@@ -4,6 +4,7 @@
 #include <stan/math/matrix/typedefs.hpp>
 #include <stan/math/matrix/mdivide_left.hpp>
 #include <stan/math/matrix/multiply.hpp>
+#include <test/unit-agrad-rev/matrix/expect_matrix_nan.hpp>
 
 TEST(AgradRevMatrix,mdivide_left_val) {
   using stan::math::matrix_d;
@@ -174,4 +175,44 @@ TEST(AgradRevMatrix,mdivide_left_grad_vd) {
       }
     }
   }
+}
+
+TEST(AgradRevMatrix, mdivide_left_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  stan::agrad::matrix_v m0(3,3);
+  m0 << 10, 1, 3.2,
+        1.1, 10, 4.1,
+        0.1, 4.1, 10;
+
+  stan::agrad::matrix_v m1(3,3);
+  m1 << 10, 1, 3.2,
+        nan, 10, 4.1,
+        0.1, 4.1, 10;
+        
+  stan::agrad::matrix_v m2(3,3);
+  m2 << 10, 1, 3.2,
+        1.1, nan, 4.1,
+        0.1, 4.1, 10;
+          
+  stan::agrad::matrix_v m3(3,3);
+  m3 << 10, 1, nan,
+        1.1, 10, 4.1,
+        0.1, 4.1, 10;
+  
+  stan::agrad::vector_v v1(3);
+  v1 << 1, 2, 3;
+  
+  stan::agrad::vector_v v2(3);
+  v2 << 1, nan, 3;
+        
+  using stan::math::mdivide_left;
+    
+  expect_matrix_is_nan(mdivide_left(m1, v1));
+  expect_matrix_is_nan(mdivide_left(m2, v1));
+  expect_matrix_is_nan(mdivide_left(m3, v1));
+  expect_matrix_is_nan(mdivide_left(m0, v2));
+  expect_matrix_is_nan(mdivide_left(m1, v2));
+  expect_matrix_is_nan(mdivide_left(m2, v2));
+  expect_matrix_is_nan(mdivide_left(m3, v2));
 }
