@@ -1,6 +1,7 @@
 #include <stan/math/matrix/col.hpp>
 #include <stan/math/matrix/typedefs.hpp>
 #include <gtest/gtest.h>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 TEST(MathMatrix, col) {
   stan::math::matrix_d m(3,4);
@@ -21,4 +22,18 @@ TEST(MathMatrix, col_exception) {
   EXPECT_THROW(col(m1,5),std::domain_error);
   EXPECT_THROW(col(m1,0),std::domain_error);
 
+}
+
+TEST(MathMatrix,col_nan) {
+  using stan::math::col;
+  using stan::math::matrix_d;
+  using stan::math::vector_d;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_d y(2,3);
+  y << 1, 2, nan, nan, 5, 6;
+  vector_d z = col(y,1);
+  EXPECT_EQ(2,z.size());
+  EXPECT_FLOAT_EQ(1.0,z[0]);
+  EXPECT_TRUE(boost::math::isnan(z[1]));
 }
