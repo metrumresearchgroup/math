@@ -10,6 +10,9 @@ void test_sum(stan::math::accumulator<stan::agrad::var>& a,
               int n) {
   EXPECT_FLOAT_EQ((n * (n + 1)) / 2, a.sum().val());
 }
+void test_sum_nan(stan::math::accumulator<stan::agrad::var>& a) {
+  EXPECT_TRUE(boost::math::isnan(a.sum().val()));
+}
 
 TEST(AgradRevMatrix,accumulateDouble) {
   using stan::math::accumulator;
@@ -26,7 +29,7 @@ TEST(AgradRevMatrix,accumulateDouble) {
   test_sum(a, 1000);
   
 }
-TEST(AgradRevMathMatrix,accumulateCollection) {
+TEST(AgradRevMatrix,accumulateCollection) {
   // tests int, double, vector<double>, vector<int>,
   // Matrix<double,...>,
   // var, vector<var>, Matrix<var,...>, 
@@ -131,5 +134,99 @@ TEST(AgradRevMathMatrix,accumulateCollection) {
   test_sum(a, pos-1);
 }
 
+TEST(AgradRevMatrix,accumulateDouble_nan) {
+  using stan::math::accumulator;
+  using stan::agrad::var;
+  double nan = std::numeric_limits<double>::quiet_NaN();
 
+  accumulator<var> a;
+  a.add(var(nan));
+  test_sum_nan(a);
 
+  for (int i = 2; i <= 1000; ++i)
+    a.add(var(i));
+  test_sum_nan(a);
+}
+TEST(AgradRevMatrix,accumulateCollection) {
+  // tests int, double, vector<double>, vector<int>,
+  // Matrix<double,...>,
+  // var, vector<var>, Matrix<var,...>, 
+  // and recursions of vector<T>
+
+  using stan::math::accumulator;
+  using std::vector;
+  using Eigen::VectorXd;
+  using Eigen::MatrixXd;
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  using stan::agrad::var;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  accumulator<var> a;
+
+  vector<var> v(10);
+  for (size_t i = 0; i < 10; ++i)
+    v[i] = var(nan);
+  a.add(v);                                         
+  test_sum_nan(a);
+
+  vector<double> d(10);
+  for (size_t i = 0; i < 10; ++i)
+    d[i] = i;
+  a.add(d);                                         
+  test_sum_nan(a);
+
+  var x = nan;
+  a.add(x);                        
+  test_sum_nan(a);
+
+  double xxx = nan;
+  a.add(xxx);
+  test_sum_nan(a);
+
+  MatrixXd m(5,6);
+  for (int i = 0; i < 5; ++i)
+    for (int j = 0; j < 6; ++j)
+      m(i,j) = i;
+  a.add(m);
+  test_sum_nan(a);
+
+  VectorXd mv(7);
+  for (int i = 0; i < 7; ++i)
+    mv(i) = i;
+  a.add(mv);
+  test_sum_nan(a);
+
+  vector<VectorXd> vvx(8);
+  for (size_t i = 0; i < 8; ++i) {
+    VectorXd vx(3);
+    for (int j = 0; j < 3; ++j)
+      vx(j) = i;
+    vvx[i] = vx;
+  }
+  a.add(vvx);
+  test_sum_nan(a);
+
+  Matrix<var,Dynamic,Dynamic> mvar(5,6);
+  for (int i = 0; i < 5; ++i)
+    for (int j = 0; j < 6; ++j)
+      mvar(i,j) = i;
+  a.add(mvar);
+  test_sum_nan(a);
+
+  Matrix<var,1,Dynamic> mvvar(7);
+  for (int i = 0; i < 7; ++i)
+    mvvar(i) = i;
+  a.add(mvvar);
+  test_sum_nan(a);
+
+  vector<Matrix<var,Dynamic,1> > vvx_var(8);
+  for (size_t i = 0; i < 8; ++i) {
+    Matrix<var,Dynamic,1> vx_var(3);
+    for (int j = 0; j < 3; ++j)
+      vx_var(j) = i;
+    vvx_var[i] = vx_var;
+  }
+  a.add(vvx_var);
+  test_sum_nan(a);
+}
