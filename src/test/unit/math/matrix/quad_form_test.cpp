@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <stan/math/matrix/quad_form.hpp>
 #include <stan/math/matrix/typedefs.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 TEST(MathMatrix, quad_form_mat) {
   using stan::math::quad_form;
@@ -142,4 +143,94 @@ TEST(MathMatrix, quad_form_sym_asymmetric) {
   
   // double-double
   EXPECT_THROW(quad_form_sym(ad,bd), std::domain_error);
+}
+
+TEST(MathMatrix, quad_form_mat_nan) {
+  using stan::math::quad_form;
+  using stan::math::matrix_d;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_d ad(4,4);
+  matrix_d bd(4,2);
+  matrix_d res;
+  
+  bd << nan, 10,
+          0,  1,
+         -3, -3,
+          5,  2;
+  ad << 2.0,  3.0, nan,   5.0, 
+  6.0, 10.0, 2.0,   2.0,
+  7.0,  2.0, 7.0,   1.0,
+  8.0,  2.0, 1.0, 112.0;
+  
+  res = quad_form(ad,bd);
+  EXPECT_TRUE(boost::math::isnan(res(0,0)));
+  EXPECT_TRUE(boost::math::isnan(res(0,1)));
+  EXPECT_TRUE(boost::math::isnan(res(1,0)));
+  EXPECT_TRUE(boost::math::isnan(res(1,1)));
+}
+
+TEST(MathMatrix, quad_form_sym_mat_nan) {
+  using stan::math::quad_form_sym;
+  using stan::math::matrix_d;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_d ad(4,4);
+  matrix_d bd(4,2);
+  matrix_d res;
+  
+  bd << nan, 10,
+  0,  1,
+  -3, -3,
+  5,  2;
+  ad << 2.0,  3.0, nan,   5.0, 
+  3.0, 10.0, 2.0,   2.0,
+  4.0,  2.0, 7.0,   1.0,
+  5.0,  2.0, 1.0, 112.0;
+  
+  res = quad_form_sym(ad,bd);
+  EXPECT_TRUE(boost::math::isnan(res(0,0)));
+  EXPECT_TRUE(boost::math::isnan(res(0,1)));
+  EXPECT_TRUE(boost::math::isnan(res(1,0)));
+  EXPECT_TRUE(boost::math::isnan(res(1,1)));
+}
+
+TEST(MathMatrix, quad_form_vec_nan) {
+  using stan::math::quad_form;
+  using stan::math::matrix_d;
+  using stan::math::vector_d;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_d ad(4,4);
+  vector_d bd(4);
+  double res;
+  
+  bd << nan, 0, -3, 5;
+  ad << 2.0,  3.0, nan,   5.0, 
+  6.0, 10.0, 2.0,   2.0,
+  7.0,  2.0, 7.0,   1.0,
+  8.0,  2.0, 1.0, 112.0;
+
+  // var-double
+  res = quad_form(ad,bd);
+  EXPECT_TRUE(boost::math::isnan(res));
+}
+TEST(MathMatrix, quad_form_sym_vec_nan) {
+  using stan::math::quad_form_sym;
+  using stan::math::matrix_d;
+  using stan::math::vector_d;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_d ad(4,4);
+  vector_d bd(4);
+  double res;
+  
+  bd << nan, 0, -3, 5;
+  ad << 2.0,  3.0, nan,   5.0, 
+  3.0, 10.0, 2.0,   2.0,
+  4.0,  2.0, 7.0,   1.0,
+  5.0,  2.0, 1.0, 112.0;
+  
+  res = quad_form_sym(ad,bd);
+  EXPECT_TRUE(boost::math::isnan(res));
 }
