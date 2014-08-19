@@ -4,6 +4,7 @@
 #include <stan/math/matrix/multiply.hpp>
 #include <stan/math/matrix/mdivide_left_tri.hpp>
 #include <stan/agrad/rev.hpp>
+#include <test/unit-agrad-rev/matrix/expect_matrix_nan.hpp>
 
 TEST(AgradRevMatrix,mdivide_left_tri_val) {
   using stan::math::matrix_d;
@@ -370,3 +371,242 @@ TEST(AgradRevMatrix,mdivide_left_tri_upper_grad_vd) {
 // //   I.setIdentity();
 // //   L = mdivide_left_tri<Eigen::Lower>(L, I);
 // // }
+
+TEST(AgradRevMatrix, mdivide_left_tri_lower_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  stan::agrad::matrix_v m0(3,3);
+  m0 << 10, 1, 3.2,
+        1.1, 10, 4.1,
+        0.1, 4.1, 10;
+
+  stan::agrad::matrix_v m1(3,3);
+  m1 << 10, 1, 3.2,
+        nan, 10, 4.1,
+        0.1, 4.1, 10;
+        
+  stan::agrad::matrix_v m2(3,3);
+  m2 << 10, 1, 3.2,
+        1.1, nan, 4.1,
+        0.1, 4.1, 10;
+          
+  stan::agrad::matrix_v m3(3,3);
+  m3 << 10, 1, nan,
+        1.1, 10, 4.1,
+        0.1, 4.1, 10;
+          
+  stan::agrad::matrix_v m4(3,3);
+  m4 << nan, 1, 3.2,
+        1.1, 10, 4.1,
+        0.1, 4.1, 10;
+          
+  stan::agrad::matrix_v m5(3,3);
+  m5 << 10, 1, 3.2,
+        1.1, 10, 4.1,
+        0.1, nan, 10;
+  
+  stan::agrad::vector_v v1(3);
+  v1 << 1, 2, 3;
+  
+  stan::agrad::vector_v v2(3);
+  v2 << 1, nan, 3;
+  
+  stan::agrad::vector_v v3(3);
+  v3 << nan, 2, 3;
+  
+  stan::agrad::vector_v vr;
+        
+  using stan::math::mdivide_left_tri;
+    
+  vr = mdivide_left_tri<Eigen::Lower>(m1, v1);
+  EXPECT_DOUBLE_EQ(0.1, vr(0).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(2).val());
+  
+  vr = mdivide_left_tri<Eigen::Lower>(m2, v1);
+  EXPECT_DOUBLE_EQ(0.1, vr(0).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(2).val());
+  
+  expect_matrix_not_nan(mdivide_left_tri<Eigen::Lower>(m3, v1));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Lower>(m4, v1));
+  
+  vr = mdivide_left_tri<Eigen::Lower>(m5, v1);
+  EXPECT_DOUBLE_EQ(0.1, vr(0).val());
+  EXPECT_DOUBLE_EQ(0.189, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(2).val());
+  
+  vr = mdivide_left_tri<Eigen::Lower>(m0, v2);
+  EXPECT_DOUBLE_EQ(0.1, vr(0).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(2).val());
+  
+  vr = mdivide_left_tri<Eigen::Lower>(m1, v2);
+  EXPECT_DOUBLE_EQ(0.1, vr(0).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(2).val());
+  
+  vr = mdivide_left_tri<Eigen::Lower>(m2, v2);
+  EXPECT_DOUBLE_EQ(0.1, vr(0).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(2).val());
+  
+  vr = mdivide_left_tri<Eigen::Lower>(m3, v2);
+  EXPECT_DOUBLE_EQ(0.1, vr(0).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(2).val());
+  
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Lower>(m4, v2));
+
+  vr = mdivide_left_tri<Eigen::Lower>(m5, v2);
+  EXPECT_DOUBLE_EQ(0.1, vr(0).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(2).val());
+  
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Lower>(m0, v3));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Lower>(m1, v3));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Lower>(m2, v3));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Lower>(m3, v3));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Lower>(m4, v3));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Lower>(m5, v3));
+  
+  
+  //1 arg function tests begin
+  {
+    stan::agrad::matrix_v m0(2, 2);
+    m0 << 2, 7,
+          nan, 1;
+          
+    stan::agrad::matrix_v m1(2, 2);
+    m1 << nan, 7,
+          6, 1;
+          
+    stan::agrad::matrix_v mr = mdivide_left_tri<Eigen::Lower>(m0);
+    EXPECT_DOUBLE_EQ(0.5, mr(0,0).val());
+    EXPECT_DOUBLE_EQ(0, mr(0, 1).val());
+    EXPECT_PRED1(boost::math::isnan<double>, mr(1, 0).val());
+    EXPECT_PRED1(boost::math::isnan<double>, mr(1, 1).val());
+
+    expect_matrix_is_nan(mdivide_left_tri<Eigen::Lower>(m1));
+  }
+  
+}
+
+TEST(AgradRevMatrix, mdivide_left_tri_upper_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  stan::agrad::matrix_v m0(3,3);
+  m0 << 10, 4.1, 0.1,
+        4.1, 10, 1.1,
+        3.2, 1, 10;
+
+  stan::agrad::matrix_v m1(3,3);
+  m1 << 10, 4.1, 0.1,
+        4.1, 10, nan,
+        3.2, 1, 10;
+        
+  stan::agrad::matrix_v m2(3,3);
+  m2 << 10, 4.1, 0.1,
+        4.1, nan, 1.1,
+        3.2, 1, 10;
+          
+  stan::agrad::matrix_v m3(3,3);
+  m3 << 10, 4.1, 0.1,
+        4.1, 10, 1.1,
+        nan, 1, 10;
+          
+  stan::agrad::matrix_v m4(3,3);
+  m4 << 10, 4.1, 0.1,
+        4.1, 10, 1.1,
+        3.2, 1, nan;
+          
+  stan::agrad::matrix_v m5(3,3);
+  m5 << 10, nan, 0.1,
+        4.1, 10, 1.1,
+        3.2, 1, 10;
+  
+  stan::agrad::vector_v v1(3);
+  v1 << 3, 2, 1;
+  
+  stan::agrad::vector_v v2(3);
+  v2 << 3, nan, 1;
+  
+  stan::agrad::vector_v v3(3);
+  v3 << 3, 2, nan;
+  
+  stan::agrad::vector_v vr;
+        
+  using stan::math::mdivide_left_tri;
+    
+  vr = mdivide_left_tri<Eigen::Upper>(m1, v1);
+  EXPECT_DOUBLE_EQ(0.1, vr(2).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(0).val());
+  
+  vr = mdivide_left_tri<Eigen::Upper>(m2, v1);
+  EXPECT_DOUBLE_EQ(0.1, vr(2).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(0).val());
+  
+  expect_matrix_not_nan(mdivide_left_tri<Eigen::Upper>(m3, v1));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Upper>(m4, v1));
+  
+  vr = mdivide_left_tri<Eigen::Upper>(m5, v1);
+  EXPECT_DOUBLE_EQ(0.1, vr(2).val());
+  EXPECT_DOUBLE_EQ(0.189, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(0).val());
+  
+  vr = mdivide_left_tri<Eigen::Upper>(m0, v2);
+  EXPECT_DOUBLE_EQ(0.1, vr(2).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(0).val());
+  
+  vr = mdivide_left_tri<Eigen::Upper>(m1, v2);
+  EXPECT_DOUBLE_EQ(0.1, vr(2).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(0).val());
+  
+  vr = mdivide_left_tri<Eigen::Upper>(m2, v2);
+  EXPECT_DOUBLE_EQ(0.1, vr(2).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(0).val());
+  
+  vr = mdivide_left_tri<Eigen::Upper>(m3, v2);
+  EXPECT_DOUBLE_EQ(0.1, vr(2).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(0).val());
+  
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Upper>(m4, v2));
+
+  vr = mdivide_left_tri<Eigen::Upper>(m5, v2);
+  EXPECT_DOUBLE_EQ(0.1, vr(2).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(1).val());
+  EXPECT_PRED1(boost::math::isnan<double>, vr(0).val());
+  
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Upper>(m0, v3));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Upper>(m1, v3));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Upper>(m2, v3));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Upper>(m3, v3));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Upper>(m4, v3));
+  expect_matrix_is_nan(mdivide_left_tri<Eigen::Upper>(m5, v3));
+  
+  //1 arg function tests begin
+  {
+    stan::agrad::matrix_v m0(2, 2);
+    m0 << 1, nan,
+          7, 2;
+          
+    stan::agrad::matrix_v m1(2, 2);
+    m1 << 1, 6,
+          7, nan;
+          
+    stan::agrad::matrix_v mr = mdivide_left_tri<Eigen::Upper>(m0);
+    EXPECT_DOUBLE_EQ(0.5, mr(1, 1).val());
+    EXPECT_DOUBLE_EQ(0, mr(1, 0).val());
+    EXPECT_PRED1(boost::math::isnan<double>, mr(0, 1).val());
+    EXPECT_PRED1(boost::math::isnan<double>, mr(0, 0).val());
+
+    expect_matrix_is_nan(mdivide_left_tri<Eigen::Upper>(m1));
+  }
+  
+}
