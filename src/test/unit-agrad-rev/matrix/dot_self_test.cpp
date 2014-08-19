@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <test/unit/agrad/util.hpp>
 #include <stan/math/matrix.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 template <int R, int C>
 void assert_val_grad(Eigen::Matrix<stan::agrad::var,R,C>& v) {
@@ -66,4 +67,39 @@ TEST(AgradRevMatrix,columns_dot_self) {
 
   Eigen::Matrix<AVAR,Eigen::Dynamic,Eigen::Dynamic> vvvv(1,3);
   assert_val_grad(vvvv);
+}
+
+TEST(AgradRevMatrix, dot_self_vec_nan) {
+  using stan::math::dot_self;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::Matrix<AVAR,Eigen::Dynamic,1> v1(1);
+  v1 << nan;
+  EXPECT_TRUE(boost::math::isnan(dot_self(v1).val()));
+  Eigen::Matrix<AVAR,Eigen::Dynamic,1> v2(2);
+  v2 << nan, 3.0;
+  EXPECT_TRUE(boost::math::isnan(dot_self(v2).val()));
+  Eigen::Matrix<AVAR,Eigen::Dynamic,1> v3(3);
+  v3 << nan, 3.0, 4.0;
+  EXPECT_TRUE(boost::math::isnan(dot_self(v3).val()));  
+}
+
+TEST(AgradRevMatrix,columns_dot_self_nan) {
+  using stan::math::columns_dot_self;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::Matrix<AVAR,Eigen::Dynamic,Eigen::Dynamic> m1(1,1);
+  m1 << nan;
+  EXPECT_TRUE(boost::math::isnan(columns_dot_self(m1)(0,0).val()));
+  Eigen::Matrix<AVAR,Eigen::Dynamic,Eigen::Dynamic> m2(1,2);
+  m2 << nan, 3.0;
+  Eigen::Matrix<AVAR,Eigen::Dynamic,Eigen::Dynamic> x;
+  x = columns_dot_self(m2);
+  EXPECT_TRUE(boost::math::isnan(x(0,0).val()));
+  EXPECT_NEAR(9.0,x(0,1).val(),1E-12);
+  Eigen::Matrix<AVAR,Eigen::Dynamic,Eigen::Dynamic> m3(2,2);
+  m3 << nan, 3.0, 4.0, 5.0;
+  x = columns_dot_self(m3);
+  EXPECT_TRUE(boost::math::isnan(x(0,0).val()));
+  EXPECT_NEAR(34.0,x(0,1).val(),1E-12);
 }
