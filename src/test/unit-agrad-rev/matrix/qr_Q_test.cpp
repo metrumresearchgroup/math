@@ -17,3 +17,23 @@ TEST(MathMatrix, qr_Q) {
   EXPECT_NO_THROW(qr_Q(m1));
   EXPECT_THROW(qr_Q(transpose(m1)),std::domain_error);
 }
+
+TEST(MathMatrix, qr_Q_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  stan::agrad::matrix_v m1(3,2);
+  m1 << nan, 2, 3, 4, 5, 6;
+
+  using stan::math::qr_Q;
+  using stan::math::transpose;
+
+  stan::agrad::matrix_v res = qr_Q(m1);
+  EXPECT_TRUE(boost::math::isnan(res(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res(0,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res(1,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res(1,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res(2,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res(2,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res(2,2).val()));
+}
