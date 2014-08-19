@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <stan/math/matrix/sort_indices.hpp>
 #include <gtest/gtest.h>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 template <typename T>
 void test_sort_indices_asc() {
@@ -82,4 +83,49 @@ TEST(MathMatrix,sort_indices_desc) {
   test_sort_indices_desc<std::vector<double> >();
   test_sort_indices_desc<Eigen::Matrix<double,Eigen::Dynamic,1> >();
   test_sort_indices_desc<Eigen::Matrix<double,1,Eigen::Dynamic> >();
+}
+
+TEST(MathMatrix, sort_indices_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  using stan::math::sort_indices_asc;
+  using stan::math::sort_indices_desc;
+
+  std::vector<double> a;
+  a.push_back(nan); a.push_back(2); a.push_back(2); a.push_back(3);
+  std::vector<int> res_asc = sort_indices_asc(a);
+  std::vector<int> res_desc = sort_indices_desc(a);
+  EXPECT_FLOAT_EQ(1, res_asc[0]);
+  EXPECT_FLOAT_EQ(2, res_asc[1]);
+  EXPECT_FLOAT_EQ(3, res_asc[2]);
+  EXPECT_FLOAT_EQ(4, res_asc[3]);
+  EXPECT_FLOAT_EQ(1, res_desc[0]);
+  EXPECT_FLOAT_EQ(4, res_desc[1]);
+  EXPECT_FLOAT_EQ(2, res_desc[2]);
+  EXPECT_FLOAT_EQ(3, res_desc[3]);
+
+  Eigen::RowVectorXd vec1(4);
+  vec1 << nan, 2.0, 2.0, 3.0;
+  std::vector<int> res_asc1 = sort_indices_asc(vec1);
+  std::vector<int> res_desc1 = sort_indices_desc(vec1);
+  EXPECT_FLOAT_EQ(1, res_asc1[0]);
+  EXPECT_FLOAT_EQ(2, res_asc1[1]);
+  EXPECT_FLOAT_EQ(3, res_asc1[2]);
+  EXPECT_FLOAT_EQ(4, res_asc1[3]);
+  EXPECT_FLOAT_EQ(1, res_desc1[0]);
+  EXPECT_FLOAT_EQ(4, res_desc1[1]);
+  EXPECT_FLOAT_EQ(2, res_desc1[2]);
+  EXPECT_FLOAT_EQ(3, res_desc1[3]);
+
+  Eigen::VectorXd vec3(4);
+  vec3 << nan, 2.0, 2.0, 3.0;
+  std::vector<int> res_asc2 = sort_indices_asc(vec3);
+  std::vector<int> res_desc2 = sort_indices_desc(vec3);
+  EXPECT_FLOAT_EQ(1, res_asc2[0]);
+  EXPECT_FLOAT_EQ(2, res_asc2[1]);
+  EXPECT_FLOAT_EQ(3, res_asc2[2]);
+  EXPECT_FLOAT_EQ(4, res_asc2[3]);
+  EXPECT_FLOAT_EQ(1, res_desc2[0]);
+  EXPECT_FLOAT_EQ(4, res_desc2[1]);
+  EXPECT_FLOAT_EQ(2, res_desc2[2]);
+  EXPECT_FLOAT_EQ(3, res_desc2[3]);
 }
