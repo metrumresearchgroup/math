@@ -86,3 +86,58 @@ TEST(AgradRevMatrix, minus_matrix) {
   EXPECT_FLOAT_EQ( 40, output(1,1).val());
   EXPECT_FLOAT_EQ( -2, output(1,2).val());
 }
+
+TEST(AgradRevMatrix, minus_scalar_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  using stan::math::minus;
+  AVAR v = nan;
+  
+  EXPECT_TRUE(boost::math::isnan(minus(v).val()));
+}
+TEST(AgradRevMatrix, minus_vector_nan) {
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  using stan::math::minus;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_v v(3);
+  v << nan, 0, 1;
+  
+  vector_v output;
+  output = minus(v);
+  EXPECT_TRUE(boost::math::isnan(output[0].val()));
+  EXPECT_FLOAT_EQ(0, output[1].val());
+  EXPECT_FLOAT_EQ(-1, output[2].val());
+}
+TEST(AgradRevMatrix, minus_rowvector_nan) {
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+  using stan::math::minus;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_v v(3);
+  v << nan, 0, 1;
+  
+  row_vector_v output;
+  output = minus(v);
+  EXPECT_TRUE(boost::math::isnan(output[0].val()));
+  EXPECT_FLOAT_EQ(0, output[1].val());
+  EXPECT_FLOAT_EQ(-1, output[2].val());
+}
+TEST(AgradRevMatrix, minus_matrix_nan) {
+  using stan::math::matrix_d;
+  using stan::agrad::matrix_v;
+  using stan::math::minus;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v v(2, 3);
+  v << nan, 0, 1, 20, -40, 2;
+
+  matrix_v output = minus(v);
+  EXPECT_TRUE(boost::math::isnan(output(0,0).val()));
+  EXPECT_FLOAT_EQ(  0, output(0,1).val());
+  EXPECT_FLOAT_EQ( -1, output(0,2).val());
+  EXPECT_FLOAT_EQ(-20, output(1,0).val());
+  EXPECT_FLOAT_EQ( 40, output(1,1).val());
+  EXPECT_FLOAT_EQ( -2, output(1,2).val());
+}
