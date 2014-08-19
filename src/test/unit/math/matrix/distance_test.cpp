@@ -91,3 +91,28 @@ TEST(MathMatrix, distance_special_values) {
   EXPECT_TRUE(boost::math::isinf(stan::math::distance(v1, v2)));
   EXPECT_TRUE(boost::math::isinf(stan::math::distance(v2, v1)));
 }
+
+TEST(MathMatrix, distance_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::VectorXd v1(3);
+  v1 << 10.2, 1, 1.1;
+  
+  Eigen::VectorXd v2(3);
+  v2 << nan, 6, 5;  
+  
+  Eigen::RowVectorXd rv1(3);
+  rv1 << 0.1, 0.2, nan;
+  
+  Eigen::RowVectorXd rv2(3);
+  rv2 << 10.1, 10,-12;  
+        
+  using stan::math::distance;
+  using boost::math::isnan;
+    
+  EXPECT_PRED1(isnan<double>, distance(v1, rv1));
+  EXPECT_PRED1(isnan<double>, distance(rv1, v1));
+  EXPECT_PRED1(isnan<double>, distance(rv2, rv1));
+  EXPECT_PRED1(isnan<double>, distance(rv1, rv2));
+  EXPECT_PRED1(isnan<double>, distance(v2, v2));
+}
