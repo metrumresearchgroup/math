@@ -4,6 +4,7 @@
 #include <stan/math/matrix/multiply.hpp>
 #include <stan/math/matrix/typedefs.hpp>
 #include <stan/agrad/rev/matrix/typedefs.hpp>
+#include <test/unit-agrad-rev/matrix/expect_matrix_nan.hpp>
 
 TEST(AgradRevMatrix, multiply_scalar_scalar) {
   using stan::agrad::multiply;
@@ -507,3 +508,182 @@ TEST(AgradRevMatrix,multiply_vector_int) {
   EXPECT_EQ(6.0, prod_vec[2]);
 }
 
+
+TEST(AgradRevMatrix, multiply_scalar_scalar_nan) {
+  using stan::agrad::multiply;
+  double d1, d2;
+  AVAR   v1, v2;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  d1 = nan;
+  v1 = nan;
+  d2 = -2;
+  v2 = -2;
+  
+  EXPECT_TRUE(boost::math::isnan(multiply(d1,d2)));
+  EXPECT_TRUE(boost::math::isnan(multiply(d1, v2).val()));
+  EXPECT_TRUE(boost::math::isnan(multiply(v1, d2).val()));
+  EXPECT_TRUE(boost::math::isnan(multiply(v1, v2).val()));
+}
+TEST(AgradRevMatrix, multiply_vector_scalar_nan) {
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_d d1(3);
+  vector_v v1(3);
+  double d2;
+  AVAR v2;
+  
+  d1 << 100, 0, -3;
+  v1 << 100, 0, -3;
+  d2 = nan;
+  v2 = nan;
+
+  expect_matrix_is_nan(multiply(d1,v2));
+  expect_matrix_is_nan(multiply(v1,d2));
+  expect_matrix_is_nan(multiply(v1,v2));
+}
+TEST(AgradRevMatrix, multiply_rowvector_scalar_nan) {
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_d d1(3);
+  row_vector_v v1(3);
+  double d2;
+  AVAR v2;
+  
+  d1 << 100, 0, -3;
+  v1 << 100, 0, -3;
+  d2 = nan;
+  v2 = nan;
+  
+  expect_matrix_is_nan(multiply(d1,v2));
+  expect_matrix_is_nan(multiply(v1,d2));
+  expect_matrix_is_nan(multiply(v1,v2));
+}
+TEST(AgradRevMatrix, multiply_matrix_scalar_nan) {
+  using stan::math::matrix_d;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_d d1(2,2);
+  matrix_v v1(2,2);
+  double d2;
+  AVAR v2;
+  
+  d1 << 100, 0, -3, 4;
+  v1 << 100, 0, -3, 4;
+  d2 = nan;
+  v2 = nan;
+  
+  expect_matrix_is_nan(multiply(d1,v2));
+  expect_matrix_is_nan(multiply(v1,d2));
+  expect_matrix_is_nan(multiply(v1,v2));
+}
+TEST(AgradRevMatrix, multiply_rowvector_vector_nan) {
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_d d1(3);
+  row_vector_v v1(3);
+  vector_d d2(3);
+  vector_v v2(3);
+  
+  d1 << 1, 3, -5;
+  v1 << 1, 3, -5;
+  d2 << nan, -2, -1;
+  v2 << nan, -2, -1;
+
+  EXPECT_TRUE(boost::math::isnan(multiply(v1, v2).val()));
+  EXPECT_TRUE(boost::math::isnan(multiply(v1, d2).val()));
+  EXPECT_TRUE(boost::math::isnan(multiply(d1, v2).val()));
+}
+TEST(AgradRevMatrix, multiply_vector_rowvector_nan) {
+  using stan::agrad::matrix_v;
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  vector_d d1(3);
+  vector_v v1(3);
+  row_vector_d d2(3);
+  row_vector_v v2(3);
+  
+  d1 << nan, nan, nan;
+  v1 << nan, nan, nan;
+  d2 << 4, nan, nan;
+  v2 << 4, nan, nan;
+
+  expect_matrix_is_nan(multiply(d1,v2));
+  expect_matrix_is_nan(multiply(v1,d2));
+  expect_matrix_is_nan(multiply(v1,v2));
+}
+TEST(AgradRevMatrix, multiply_matrix_vector_nan) {
+  using stan::math::matrix_d;
+  using stan::agrad::matrix_v;
+  using stan::math::vector_d;
+  using stan::agrad::vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_d d1(3,2);
+  matrix_v v1(3,2);
+  vector_d d2(2);
+  vector_v v2(2);
+  
+  d1 << 1, 3, -5, 4, -2, -1;
+  v1 << 1, 3, -5, 4, -2, -1;
+  d2 << nan, nan;
+  v2 << nan, nan;
+
+  expect_matrix_is_nan(multiply(d1,v2));
+  expect_matrix_is_nan(multiply(v1,d2));
+  expect_matrix_is_nan(multiply(v1,v2));
+}
+TEST(AgradRevMatrix, multiply_rowvector_matrix_nan) {
+  using stan::math::matrix_d;
+  using stan::agrad::matrix_v;
+  using stan::agrad::vector_v;
+  using stan::math::row_vector_d;
+  using stan::agrad::row_vector_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  row_vector_d d1(3);
+  row_vector_v v1(3);
+  matrix_d d2(3,2);
+  matrix_v v2(3,2);
+  
+  d1 << -2, 4, nan;
+  v1 << -2, 4, nan;
+  d2 << nan, 3, -5, 4, -2, -1;
+  v2 << nan, 3, -5, 4, -2, -1;
+
+  expect_matrix_is_nan(multiply(d1,v2));
+  expect_matrix_is_nan(multiply(v1,d2));
+  expect_matrix_is_nan(multiply(v1,v2));
+}
+TEST(AgradRevMatrix, multiply_matrix_matrix_nan) {
+  using stan::math::matrix_d;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_d d1(2,3);
+  matrix_v v1(2,3);
+  matrix_d d2(3,2);
+  matrix_v v2(3,2);
+  
+  d1 << nan, 24, 3, 46, nan, -33;
+  v1 << nan, 24, 3, 46, nan, -33;
+  d2 << 1, 3, nan, 4, -2, -1;
+  v2 << 1, 3, nan, 4, -2, -1;
+
+  expect_matrix_is_nan(multiply(d1,v2));
+  expect_matrix_is_nan(multiply(v1,d2));
+  expect_matrix_is_nan(multiply(v1,v2));
+}
