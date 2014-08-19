@@ -1,5 +1,6 @@
 #include <stan/agrad/rev/matrix/LDLT_alloc.hpp>
 #include <gtest/gtest.h>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 TEST(AgradRevMatrix, LDLT_alloc_default_constructor) {
   using stan::agrad::LDLT_alloc;
@@ -70,4 +71,49 @@ TEST(AgradRevMatrix, LDLT_alloc_compute) {
   for (int i = 0; i < 2; i++)
     for (int j = 0; j < 2; j++)
       EXPECT_FLOAT_EQ(expectedL(i,j), L(i,j));
+}
+TEST(AgradRevMatrix,LDLT_alloc_constructor_nan) {
+  using stan::agrad::LDLT_alloc;
+  using stan::agrad::var;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::Matrix<var,-1,-1> A(2,2);
+  A << nan,1,1,2;
+
+  LDLT_alloc<-1,-1> *alloc = new LDLT_alloc<-1,-1>(A); // DO NOT DELETE, allocated on the vari stack
+
+  EXPECT_EQ(2U, alloc->N_);
+  EXPECT_TRUE(boost::math::isnan(alloc->log_abs_det()));
+  EXPECT_EQ(Eigen::Success, alloc->_ldlt.info());
+
+  Eigen::Matrix<double,-1,-1> expectedL(2,2);
+  expectedL(0,0) = 1.0;
+  expectedL(0,1) = 0.0;
+  expectedL(1,0) = 1.0;
+  expectedL(1,1) = 1.0;
+  
+  Eigen::Matrix<double,-1,-1> L = alloc->_ldlt.matrixL();
+  for (int i = 0; i < 2; i++)
+    for (int j = 0; j < 2; j++)
+      EXPECT_FLOAT_EQ(expectedL(i,j), L(i,j));
+}
+TEST(AgradRevMatrix,LDLT_alloc_constructor_nan2) {
+  using stan::agrad::LDLT_alloc;
+  using stan::agrad::var;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::Matrix<var,-1,-1> A(2,2);
+  A << 2,1,nan,2;
+
+  LDLT_alloc<-1,-1> *alloc = new LDLT_alloc<-1,-1>(A); // DO NOT DELETE, allocated on the vari stack
+
+  EXPECT_EQ(2U, alloc->N_);
+  EXPECT_TRUE(boost::math::isnan(alloc->log_abs_det()));
+  EXPECT_EQ(Eigen::Success, alloc->_ldlt.info());
+
+  Eigen::Matrix<double,-1,-1> L = alloc->_ldlt.matrixL();
+  EXPECT_TRUE(boost::math::isnan(L(1,0)));
+  EXPECT_FLOAT_EQ(1, L(0,0));
+  EXPECT_FLOAT_EQ(0, L(0,1));
+  EXPECT_FLOAT_EQ(1, L(1,1));
 }
