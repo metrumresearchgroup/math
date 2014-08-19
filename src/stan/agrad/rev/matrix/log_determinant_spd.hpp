@@ -70,7 +70,7 @@ namespace stan {
             return dom_err("log_determinant_spd(%1%)",
                            y,
                            "matrix argument",
-                           "failed LDLT factorization","",
+                           "failed LDLT factorization %1%","",
                            &result);
           }
 
@@ -84,18 +84,17 @@ namespace stan {
             return dom_err("log_determinant_spd(%1%)",
                            y,
                            "matrix argument",
-                           "matrix is negative definite","",
+                           "matrix is negative definite %1% ","",
                            &result);
           }
 
           double ret = ldlt.vectorD().array().log().sum();
-          if (!boost::math::isfinite(ret)) {
-            double y = 0;
+          if (!boost::math::isfinite(ret) && !boost::math::isnan(ret)) {
             double result = -std::numeric_limits<double>::infinity();
             return dom_err("log_determinant_spd(%1%)",
-                           y,
+                           ret,
                            "matrix argument",
-                           "log determininant is infinite","",
+                           " is %1% but must be finite","",
                            &result);
           }
           return ret;

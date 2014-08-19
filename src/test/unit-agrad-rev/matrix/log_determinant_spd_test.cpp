@@ -2,7 +2,6 @@
 #include <gtest/gtest.h>
 #include <test/unit/agrad/util.hpp>
 #include <stan/math/matrix/determinant.hpp>
-#include <stan/math/matrix/log_determinant_spd.hpp>
 #include <stan/agrad/rev/functions/fabs.hpp>
 #include <stan/agrad/rev/functions/log.hpp>
 
@@ -36,7 +35,7 @@ TEST(AgradRevMatrix,log_determinant_spd_diff) {
 
 TEST(AgradRevMatrix,log_determinant_spd) {
   using stan::agrad::matrix_v;
-  using stan::math::log_determinant_spd;
+  using stan::agrad::log_determinant_spd;
   
   matrix_v v(2,2);
   v << 1, 0, 0, 3;
@@ -45,17 +44,43 @@ TEST(AgradRevMatrix,log_determinant_spd) {
   det = log_determinant_spd(v);
   EXPECT_FLOAT_EQ(std::log(3.0), det.val());
 }
+TEST(AgradRevMatrix, log_determinant_spd_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  using stan::agrad::matrix_v;
+
+  matrix_v m1(3,3);
+  m1 << 10, 1, 3.2,
+        nan, 10, 4.1,
+        0.1, 4.1, 10;
+
+  matrix_v m2(3,3);
+  m2 << 10, 1, 3.2,
+        1.1, nan, 4.1,
+        0.1, 4.1, 10;
+          
+  matrix_v m3(3,3);
+  m3 << 10, 1, nan,
+        1.1, 10, 4.1,
+        0.1, 4.1, 10;
+        
+  using stan::agrad::log_determinant_spd;
+  using boost::math::isnan;
+    
+  EXPECT_PRED1(isnan<double>, log_determinant_spd(m1).val());
+  EXPECT_PRED1(isnan<double>, log_determinant_spd(m2).val());
+  EXPECT_FLOAT_EQ(6.7100382, log_determinant_spd(m3).val());
+}
 #if 0
 TEST(AgradRevMatrix,log_deteriminant_exception) {
   using stan::agrad::matrix_v;
-  using stan::math::log_determinant;
+  using stan::agrad::log_determinant;
   
   EXPECT_THROW(log_determinant(matrix_v(2,3)), std::domain_error);
 }
 
 TEST(AgradRevMatrix,log_determinant_grad) {
   using stan::agrad::matrix_v;
-  using stan::math::log_determinant;
+  using stan::agrad::log_determinant;
   
   matrix_v X(2,2);
   AVAR a = 2.0;
