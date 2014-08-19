@@ -6,6 +6,7 @@
 #include <stan/math/matrix/sum.hpp>
 #include <stan/math/matrix/typedefs.hpp>
 #include <stan/agrad/rev/matrix/typedefs.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 TEST(AgradRevMatrix, trace_quad_form_mat) {
   using stan::math::trace_quad_form;
@@ -199,3 +200,44 @@ TEST(AgradRevMatrix, trace_quad_form_mat_grad_vv) {
       EXPECT_FLOAT_EQ(grad[pos], dqda(i,j));
 }
 
+TEST(AgradRevMatrix, trace_quad_form_mat_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  using stan::math::trace_quad_form;
+  using stan::agrad::matrix_v;
+  using stan::math::matrix_d;
+  
+  matrix_v av(4,4);
+  matrix_d ad(4,4);
+  matrix_d bd(4,2);
+  matrix_v bv(4,2);
+  AVAR res;
+  
+  bd << nan, 10,
+          0,  1,
+         -3, -3,
+          5,  2;
+  bv << nan, 10,
+          0,  1,
+         -3, -3,
+          5,  2;
+  ad << 2.0,  3.0, nan,   5.0, 
+  6.0, 10.0, 2.0,   2.0,
+  7.0,  2.0, 7.0,   1.0,
+  8.0,  2.0, 1.0, 112.0;
+  av << 2.0,  3.0, nan,   5.0, 
+  6.0, 10.0, 2.0,   2.0,
+  7.0,  2.0, 7.0,   1.0,
+  8.0,  2.0, 1.0, 112.0;
+  
+  // var-double
+  res = trace_quad_form(av,bd);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+  
+  // double-var
+  res = trace_quad_form(ad,bv);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+  
+  // var-var
+  res = trace_quad_form(av,bv);
+  EXPECT_TRUE(boost::math::isnan(res.val()));
+}
