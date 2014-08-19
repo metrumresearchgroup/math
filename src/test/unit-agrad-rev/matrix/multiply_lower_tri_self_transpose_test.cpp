@@ -3,7 +3,7 @@
 #include <test/unit/agrad/util.hpp>
 #include <stan/agrad/rev.hpp>
 #include <stan/agrad/rev/jacobian.hpp>
-
+#include <test/unit-agrad-rev/matrix/expect_matrix_nan.hpp>
 
 void test_mult_LLT(const stan::agrad::matrix_v& L) {
   using stan::agrad::matrix_v;
@@ -242,4 +242,25 @@ TEST(AgradRevMatrix, multiplyLowerTriSelfTranspose) {
 
   // matrix_v K(0,0);
   // test_mult_LLT(K);
+}
+
+TEST(AgradRevMatrix, multiplyLowerTriSelfTranspose_nan) {
+  using stan::agrad::multiply_lower_tri_self_transpose;
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+    
+  matrix_v L;
+
+  L = matrix_v(3,3);
+  L << nan, 0, 0,   
+    2, nan, 0,   
+    4, 5, nan;
+  expect_matrix_is_nan(multiply_lower_tri_self_transpose(L));
+
+  L = matrix_v(3,3);
+  L << 1, nan, nan,   
+    2, 2, nan,
+    1,2,3;
+  expect_matrix_not_nan(multiply_lower_tri_self_transpose(L));
+
 }
