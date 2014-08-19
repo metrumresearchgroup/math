@@ -3,6 +3,7 @@
 #include <test/unit/agrad/util.hpp>
 #include <stan/agrad/rev/jacobian.hpp>
 #include <stan/agrad/rev.hpp>
+#include <test/unit-agrad-rev/matrix/expect_matrix_nan.hpp>
 
 void test_tcrossprod(const stan::agrad::matrix_v& L) {
   using stan::agrad::matrix_v;
@@ -236,4 +237,15 @@ TEST(AgradRevMatrix, tcrossprodGrad3) {
   EXPECT_FLOAT_EQ(8.0,J[8][3]);
   EXPECT_FLOAT_EQ(10.0,J[8][4]);
   EXPECT_FLOAT_EQ(12.0,J[8][5]);
+}
+
+TEST(AgradRevMatrix, tcrossprod_nan) {
+  using stan::agrad::matrix_v;
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  matrix_v L(3,3);
+  L << nan, 0, 0,
+    2, nan, 0,
+    4, 5, nan;
+  expect_matrix_is_nan(tcrossprod(L));
 }
