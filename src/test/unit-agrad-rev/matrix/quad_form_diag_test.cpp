@@ -225,3 +225,106 @@ TEST(MathMatrix,quadFormDiagException) {
   v << 1, 2, 3;
   EXPECT_THROW(quad_form_diag(m,v), std::domain_error);
 }
+
+TEST(MathMatrix,quadFormDiag2_vv_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  Matrix<var,Dynamic,Dynamic> m(3,3);
+  Matrix<var,1,Dynamic> rv(3);
+  Matrix<var,Dynamic,1> v(3);
+
+  m << nan, 2, 3, 4, 5, 6, 7, 8, 9;
+  v << nan, 2, 3;
+  rv << nan, 2, 3;
+
+  Matrix<var, Dynamic, Dynamic> res1 = quad_form_diag(m, v);
+  Matrix<var, Dynamic, Dynamic> res2 = quad_form_diag(m, rv);
+
+  EXPECT_FLOAT_EQ(20, res1(1,1).val());
+  EXPECT_FLOAT_EQ(36, res1(1,2).val());
+  EXPECT_FLOAT_EQ(48, res1(2,1).val());
+  EXPECT_FLOAT_EQ(81, res1(2,2).val());
+  EXPECT_TRUE(boost::math::isnan(res1(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(0,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(2,0).val()));
+
+  EXPECT_FLOAT_EQ(20, res2(1,1).val());
+  EXPECT_FLOAT_EQ(36, res2(1,2).val());
+  EXPECT_FLOAT_EQ(48, res2(2,1).val());
+  EXPECT_FLOAT_EQ(81, res2(2,2).val());
+  EXPECT_TRUE(boost::math::isnan(res2(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(0,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(2,0).val()));
+}
+
+TEST(MathMatrix,quadFormDiag2_vd_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  Matrix<var,Dynamic,Dynamic> m(3,3);
+  Matrix<double,1,Dynamic> rv(3);
+  Matrix<double,Dynamic,1> v(3);
+
+  m << nan, 2, 3, 4, 5, 6, 7, 8, 9;
+  v << nan, 2, 3;
+  rv << nan, 2, 3;
+
+  Matrix<var, Dynamic, Dynamic> res1 = quad_form_diag(m, v);
+  Matrix<var, Dynamic, Dynamic> res2 = quad_form_diag(m, rv);
+
+  EXPECT_FLOAT_EQ(20, res1(1,1).val());
+  EXPECT_FLOAT_EQ(36, res1(1,2).val());
+  EXPECT_FLOAT_EQ(48, res1(2,1).val());
+  EXPECT_FLOAT_EQ(81, res1(2,2).val());
+  EXPECT_TRUE(boost::math::isnan(res1(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(0,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(2,0).val()));
+
+  EXPECT_FLOAT_EQ(20, res2(1,1).val());
+  EXPECT_FLOAT_EQ(36, res2(1,2).val());
+  EXPECT_FLOAT_EQ(48, res2(2,1).val());
+  EXPECT_FLOAT_EQ(81, res2(2,2).val());
+  EXPECT_TRUE(boost::math::isnan(res2(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(0,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(2,0).val()));
+}
+
+TEST(MathMatrix,quadFormDiag2_dv_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  Matrix<double,Dynamic,Dynamic> m(3,3);
+  Matrix<var,1,Dynamic> rv(3);
+  Matrix<var,Dynamic,1> v(3);
+
+  m << nan, 2, 3, 4, 5, 6, 7, 8, 9;
+  v << nan, 2, 3;
+  rv << nan, 2, 3;
+
+  Matrix<var, Dynamic, Dynamic> res1 = quad_form_diag(m, v);
+  Matrix<var, Dynamic, Dynamic> res2 = quad_form_diag(m, rv);
+
+  EXPECT_FLOAT_EQ(20, res1(1,1).val());
+  EXPECT_FLOAT_EQ(36, res1(1,2).val());
+  EXPECT_FLOAT_EQ(48, res1(2,1).val());
+  EXPECT_FLOAT_EQ(81, res1(2,2).val());
+  EXPECT_TRUE(boost::math::isnan(res1(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(0,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res1(2,0).val()));
+
+  EXPECT_FLOAT_EQ(20, res2(1,1).val());
+  EXPECT_FLOAT_EQ(36, res2(1,2).val());
+  EXPECT_FLOAT_EQ(48, res2(2,1).val());
+  EXPECT_FLOAT_EQ(81, res2(2,2).val());
+  EXPECT_TRUE(boost::math::isnan(res2(0,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(0,1).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(0,2).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(1,0).val()));
+  EXPECT_TRUE(boost::math::isnan(res2(2,0).val()));
+
+}
