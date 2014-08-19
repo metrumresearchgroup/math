@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <stan/math/matrix/sort.hpp>
 #include <gtest/gtest.h>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 template <typename T>
 void test_sort_asc() {
@@ -83,4 +84,49 @@ TEST(MathMatrix,sort_desc) {
   test_sort_desc<std::vector<double> >();
   test_sort_desc<Eigen::Matrix<double,Eigen::Dynamic,1> >();
   test_sort_desc<Eigen::Matrix<double,1,Eigen::Dynamic> >();
+}
+
+TEST(MathMatrix, sort_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  using stan::math::sort_asc;
+  using stan::math::sort_desc;
+
+  std::vector<double> a;
+  a.push_back(nan); a.push_back(2); a.push_back(2); a.push_back(3);
+  std::vector<double> res_asc = sort_asc(a);
+  std::vector<double> res_desc = sort_desc(a);
+  EXPECT_TRUE(boost::math::isnan(res_asc[0]));
+  EXPECT_TRUE(boost::math::isnan(res_desc[0]));
+  EXPECT_FLOAT_EQ(2, res_asc[1]);
+  EXPECT_FLOAT_EQ(2, res_asc[2]);
+  EXPECT_FLOAT_EQ(3, res_asc[3]);
+  EXPECT_FLOAT_EQ(3, res_desc[1]);
+  EXPECT_FLOAT_EQ(2, res_desc[2]);
+  EXPECT_FLOAT_EQ(2, res_desc[3]);
+
+  Eigen::RowVectorXd vec1(4);
+  vec1 << nan, -33.1, 2.1, -33.1;
+  Eigen::RowVectorXd res_asc1 = sort_asc(vec1);
+  Eigen::RowVectorXd res_desc1 = sort_desc(vec1);
+  EXPECT_TRUE(boost::math::isnan(res_asc1(0)));
+  EXPECT_TRUE(boost::math::isnan(res_desc1(0)));
+  EXPECT_FLOAT_EQ(-33.1, res_asc1(1));
+  EXPECT_FLOAT_EQ(-33.1, res_asc1(2));
+  EXPECT_FLOAT_EQ(2.1, res_asc1(3));
+  EXPECT_FLOAT_EQ(2.1, res_desc1(1));
+  EXPECT_FLOAT_EQ(-33.1, res_desc1(2));
+  EXPECT_FLOAT_EQ(-33.1, res_desc1(3));
+
+  Eigen::VectorXd vec3(4);
+  vec3 << nan, -33.1, 2.1, -33.1;
+  Eigen::VectorXd res_asc2 = sort_asc(vec3);
+  Eigen::VectorXd res_desc2 = sort_desc(vec3);
+  EXPECT_TRUE(boost::math::isnan(res_asc2(0)));
+  EXPECT_TRUE(boost::math::isnan(res_desc2(0)));
+  EXPECT_FLOAT_EQ(-33.1, res_asc2(1));
+  EXPECT_FLOAT_EQ(-33.1, res_asc2(2));
+  EXPECT_FLOAT_EQ(2.1, res_asc2(3));
+  EXPECT_FLOAT_EQ(2.1, res_desc2(1));
+  EXPECT_FLOAT_EQ(-33.1, res_desc2(2));
+  EXPECT_FLOAT_EQ(-33.1, res_desc2(3));
 }
