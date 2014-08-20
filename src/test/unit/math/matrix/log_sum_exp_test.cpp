@@ -1,4 +1,5 @@
-#include "stan/math/matrix/log_sum_exp.hpp"
+#include <stan/math/matrix/log_sum_exp.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <gtest/gtest.h>
 
 template <int R, int C>
@@ -35,5 +36,31 @@ TEST(MathFunctions, log_sum_exp) {
   m_trivial << 2;
   EXPECT_FLOAT_EQ(2, log_sum_exp(m_trivial));
 
+}
+
+TEST(MathMatrix, log_sum_exp_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::MatrixXd m1(3,3);
+  m1 << 14, 1, 3,
+        nan, 10, 4.1,
+        3.1, 4.1, 8;
+        
+  Eigen::MatrixXd m2(3,3);
+  m2 << 10.1, 1.0, 1.0,
+        1.1, 5.4, 1.5,
+        1.3, 1.5, nan;
+        
+  Eigen::VectorXd m3(9);
+  m3 << nan, 1.0, 1.0,
+        0.1, 0.1, 1.5,
+        0.5, 1.5, 1.1;
+        
+  using stan::math::log_sum_exp;
+  using boost::math::isnan;
+    
+  EXPECT_PRED1(isnan<double>, log_sum_exp(m1));
+  EXPECT_PRED1(isnan<double>, log_sum_exp(m2));
+  EXPECT_PRED1(isnan<double>, log_sum_exp(m3));
 }
 
