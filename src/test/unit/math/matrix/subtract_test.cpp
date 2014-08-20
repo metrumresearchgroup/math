@@ -1,6 +1,6 @@
 #include <stan/math/matrix/subtract.hpp>
 #include <stan/math/matrix/typedefs.hpp>
-#include <gtest/gtest.h>
+#include <test/unit/math/matrix/expect_matrix_nan.hpp>
 
 TEST(MathMatrix,subtract_v_exception) {
   stan::math::vector_d d1, d2;
@@ -119,4 +119,52 @@ TEST(MathMatrix, subtract_exception) {
   EXPECT_THROW(subtract(v1,v2),std::domain_error);
   EXPECT_THROW(subtract(rv1,rv2),std::domain_error);
   EXPECT_THROW(subtract(m1,m2),std::domain_error);
+}
+
+
+TEST(MathMatrix, subtract_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  stan::math::matrix_d m1(2,2);
+  m1 << 1, nan,
+        3, 6;
+        
+  stan::math::matrix_d m2(2,2);
+  m2 << 1, 100,
+        nan, 4.9;
+        
+  stan::math::matrix_d m3(2,2);
+  m3 << 10.1, 100,
+        1, 0;
+        
+  stan::math::matrix_d mr;
+
+  using stan::math::subtract;
+  using boost::math::isnan;
+  
+  mr = subtract(m1, m2);
+  
+  EXPECT_DOUBLE_EQ(0, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(0, 1));
+  EXPECT_PRED1(isnan<double>, mr(1, 0));
+  EXPECT_DOUBLE_EQ(1.1, mr(1, 1));
+  
+  mr = subtract(m1, 0.1);
+  
+  EXPECT_DOUBLE_EQ(0.9, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(0, 1));
+  EXPECT_DOUBLE_EQ(2.9, mr(1, 0));
+  EXPECT_DOUBLE_EQ(5.9, mr(1, 1));
+   
+  mr = subtract(0.1, m1);
+  
+  EXPECT_DOUBLE_EQ(-0.9, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(0, 1));
+  EXPECT_DOUBLE_EQ(-2.9, mr(1, 0));
+  EXPECT_DOUBLE_EQ(-5.9, mr(1, 1)); 
+  
+  expect_matrix_is_nan(subtract(m2, nan));
+  expect_matrix_is_nan(subtract(m3, nan));
+  expect_matrix_is_nan(subtract(nan, m1));
+  expect_matrix_is_nan(subtract(nan, m3));
 }
