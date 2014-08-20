@@ -1,7 +1,7 @@
 #include <stan/math/matrix/assign.hpp>
 #include <stan/math/matrix/multiply.hpp>
 #include <stan/math/matrix/typedefs.hpp>
-#include <gtest/gtest.h>
+#include <test/unit/math/matrix/expect_matrix_nan.hpp>
 
 TEST(MathMatrix,multiply_c_v) {
   stan::math::vector_d v(3);
@@ -137,4 +137,66 @@ TEST(AgradRevMatrix,multiply_vector_int) {
   EXPECT_EQ(2.0, prod_vec[0]);
   EXPECT_EQ(4.0, prod_vec[1]);
   EXPECT_EQ(6.0, prod_vec[2]);
+}
+
+TEST(MathMatrix, multiply_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  stan::math::matrix_d m1(2,2);
+  m1 << 1, nan,
+        3, 6;
+        
+  stan::math::matrix_d m2(2,2);
+  m2 << 1, 100,
+        nan, 4.9;
+        
+  stan::math::matrix_d m3(2,2);
+  m3 << 10.1, 100,
+        1, 0;
+        
+  stan::math::vector_d v1(3);
+  v1 << 10.1, nan;
+        
+  stan::math::row_vector_d v2(3);
+  v2 << 0.1, 4.6;
+        
+  stan::math::matrix_d mr;
+
+  using stan::math::multiply;
+  using boost::math::isnan;
+  
+  mr = multiply(m1, m2);
+  
+  EXPECT_PRED1(isnan<double>, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(0, 1));
+  EXPECT_PRED1(isnan<double>, mr(1, 0));
+  EXPECT_DOUBLE_EQ(3*100 + 6*4.9, mr(1, 1));
+  
+  mr = multiply(m1, 0.1);
+  
+  EXPECT_DOUBLE_EQ(0.1, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(0, 1));
+  EXPECT_DOUBLE_EQ(0.3, mr(1, 0));
+  EXPECT_DOUBLE_EQ(0.6, mr(1, 1));
+   
+  mr = multiply(-0.1, m1);
+  
+  EXPECT_DOUBLE_EQ(-0.1, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(0, 1));
+  EXPECT_DOUBLE_EQ(-0.3, mr(1, 0));
+  EXPECT_DOUBLE_EQ(-0.6, mr(1, 1));
+
+  mr = multiply(v1, v2);
+  
+  EXPECT_DOUBLE_EQ(10.1*0.1, mr(0, 0));
+  EXPECT_PRED1(isnan<double>, mr(1, 0));
+  EXPECT_DOUBLE_EQ(10.1*4.6, mr(0, 1));
+  EXPECT_PRED1(isnan<double>, mr(1, 1));
+  
+  EXPECT_PRED1(isnan<double>, multiply(v2, v1));
+  
+  expect_matrix_is_nan(multiply(m2, nan));
+  expect_matrix_is_nan(multiply(m3, nan));
+  expect_matrix_is_nan(multiply(nan, m1));
+  expect_matrix_is_nan(multiply(nan, m3));
 }
