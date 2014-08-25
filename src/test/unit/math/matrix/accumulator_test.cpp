@@ -3,6 +3,7 @@
 #include <stan/math/matrix/accumulator.hpp>
 #include <stan/math/matrix/typedefs.hpp>
 #include <gtest/gtest.h>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 // test sum of first n numbers for sum of a
 template <typename T>
@@ -89,6 +90,39 @@ TEST(MathMatrix,accumulateCollection) {
   }
   a.add(vvx);
   test_sum(a, pos-1);
+}
+TEST(MathMatrix, accumulator_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+  
+  using stan::math::accumulator;
+  using boost::math::isnan;
+  
+  accumulator<double> a;
+  a.add(nan);
+
+  EXPECT_PRED1(isnan<double>, a.sum());
+  
+  accumulator<double> b;
+  b.add(1);
+  b.add(3);
+  
+  stan::math::matrix_d m1(2, 1);
+  m1 << 1, nan;
+  
+  b.add(m1);
+
+  EXPECT_PRED1(isnan<double>, b.sum());
+  
+  accumulator<double> c;
+  for (size_t i = 0; i < 14; i++)
+    c.add(i);
+  
+  std::vector<double> v2(14, 1.1);
+  v2[7] = nan;
+  
+  c.add(v2);
+
+  EXPECT_PRED1(isnan<double>, c.sum());
 }
 
 
