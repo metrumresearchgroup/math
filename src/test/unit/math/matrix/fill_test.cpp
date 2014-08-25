@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <stan/math/matrix/fill.hpp>
+#include <test/unit/math/matrix/expect_matrix_nan.hpp>
 
 TEST(AgradRevMatrix, fill) {
   using stan::math::fill;
@@ -49,4 +50,28 @@ TEST(AgradRevMatrix, fillDouble) {
   fill(y,3.0);
   EXPECT_EQ(3,y.size());
   EXPECT_FLOAT_EQ(3.0,y[0]);
+}
+TEST(MathMatrix, fill_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::MatrixXd m1(3,2);
+  Eigen::MatrixXd m2(3,2);
+  Eigen::VectorXd v1(3);
+  Eigen::RowVectorXd v2(3);
+  std::vector<double> v3(14, 1.1);
+        
+  using stan::math::fill;
+  using boost::math::isnan;
+  
+  fill(m1, nan);
+  fill(m2, nan);
+  fill(v1, nan);
+  fill(v2, nan);
+  fill(v3, nan);
+    
+  expect_matrix_is_nan(m1);
+  expect_matrix_is_nan(m2);
+  expect_matrix_is_nan(v1);
+  expect_matrix_is_nan(v2);
+  expect_matrix_is_nan(v3);
 }
