@@ -2,7 +2,7 @@
 #include <vector>
 #include <stan/math/matrix/assign.hpp>
 #include <stan/math/matrix/get_base1_lhs.hpp>
-#include <gtest/gtest.h>
+#include <test/unit/math/matrix/expect_matrix_nan.hpp>
 
 TEST(MathMatrixAssign,int) {
   using stan::math::assign;
@@ -299,3 +299,59 @@ TEST(MathMatrix,getAssignRow) {
   EXPECT_FLOAT_EQ(1000.0, m(0,2));
 }
 
+
+TEST(MathMatrix, assign_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::MatrixXd m1(2,2);
+  m1 << 1, nan,
+        3, 6;
+        
+  Eigen::MatrixXd m2(2,2);
+  m2 << 1, 100,
+        nan, 4.9;
+        
+  Eigen::MatrixXd m3(2,2);
+  m3 << 10.1, 100,
+        1, 0;
+        
+  Eigen::VectorXd v1(3);
+  v1 << 10.1, nan, 1.1;
+        
+  Eigen::RowVectorXd v2(3);
+  v2 << 0.1, 4.6, nan;
+        
+  Eigen::MatrixXd mr;
+  Eigen::VectorXd vr;
+  Eigen::RowVectorXd rvr;
+
+  using stan::math::assign;
+  using boost::math::isnan;
+  
+  mr = Eigen::MatrixXd::Zero(2, 2);
+  assign(mr, m1);
+  expect_matrix_eq_or_both_nan(mr, m1);
+  
+  mr = Eigen::MatrixXd::Zero(2, 2);
+  assign(mr, m2);
+  expect_matrix_eq_or_both_nan(mr, m2);
+
+  mr = Eigen::MatrixXd::Zero(2, 2);  
+  assign(mr, m3);
+  expect_matrix_eq_or_both_nan(mr, m3);
+
+  vr = Eigen::VectorXd::Zero(3);  
+  assign(vr, v1);
+  expect_matrix_eq_or_both_nan(vr, v1);
+  
+  rvr = Eigen::RowVectorXd::Zero(3);  
+  assign(rvr, v2);
+  expect_matrix_eq_or_both_nan(rvr, v2);
+
+  std::vector<double> stdvec(14, 1.1);
+  v2[7] = nan;
+  
+  std::vector<double> stdvecr(14);
+  assign(stdvecr, stdvec);
+  expect_matrix_eq_or_both_nan(stdvecr, stdvec);
+}
