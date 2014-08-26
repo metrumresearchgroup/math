@@ -154,10 +154,10 @@ TEST(MathMatrix, multiply_nan) {
   m3 << 10.1, 100,
         1, 0;
         
-  stan::math::vector_d v1(3);
+  stan::math::vector_d v1(2);
   v1 << 10.1, nan;
         
-  stan::math::row_vector_d v2(3);
+  stan::math::row_vector_d v2(2);
   v2 << 0.1, 4.6;
         
   stan::math::matrix_d mr;
