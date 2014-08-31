@@ -1,5 +1,6 @@
 #include <stan/math/matrix/cholesky_decompose.hpp>
 #include <stan/math/matrix/typedefs.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <gtest/gtest.h>
 
 TEST(MathMatrix, cholesky_decompose) {
@@ -32,4 +33,63 @@ TEST(MathMatrix, cholesky_decompose_exception) {
   m << 1.0, 2.0,
     3.0, 4.0;
   EXPECT_THROW(stan::math::cholesky_decompose(m), std::domain_error);
+}
+
+TEST(MathMatrix,cholesky_decompose_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+        
+  Eigen::MatrixXd m1(2,2);
+  m1 << 1, 2,
+        2, 13.61;
+        
+  Eigen::MatrixXd m2(2,2);
+  m2 << nan, 2,
+        2, 13.61;
+        
+  Eigen::MatrixXd m3(2,2);
+  m3 << 1, nan,
+        nan, 13.61;
+        
+  Eigen::MatrixXd m4(2,2);
+  m4 << 1, 2,
+        2, nan;
+        
+  Eigen::MatrixXd m5(2,2);
+  m5 << nan, nan,
+        nan, nan;
+  
+  Eigen::MatrixXd mr;
+  
+  using stan::math::cholesky_decompose;
+  using boost::math::isnan;
+  
+  mr = cholesky_decompose(m1);
+  EXPECT_DOUBLE_EQ(mr(0), 1);
+  EXPECT_DOUBLE_EQ(mr(1), 2);
+  EXPECT_DOUBLE_EQ(mr(2), 0);
+  EXPECT_DOUBLE_EQ(mr(3), 3.1);
+  
+  mr = cholesky_decompose(m2);
+  EXPECT_PRED1(isnan<double>, mr(0));
+  EXPECT_PRED1(isnan<double>, mr(1));
+  EXPECT_DOUBLE_EQ(mr(2), 0);
+  EXPECT_PRED1(isnan<double>, mr(3));
+  
+  mr = cholesky_decompose(m3);
+  EXPECT_DOUBLE_EQ(mr(0), 1);
+  EXPECT_PRED1(isnan<double>, mr(1));
+  EXPECT_DOUBLE_EQ(mr(2), 0);
+  EXPECT_PRED1(isnan<double>, mr(3));
+  
+  mr = cholesky_decompose(m4);
+  EXPECT_DOUBLE_EQ(mr(0), 1);
+  EXPECT_DOUBLE_EQ(mr(1), 2);
+  EXPECT_DOUBLE_EQ(mr(2), 0);
+  EXPECT_PRED1(isnan<double>, mr(3));
+  
+  mr = cholesky_decompose(m5);
+  EXPECT_PRED1(isnan<double>, mr(0));
+  EXPECT_PRED1(isnan<double>, mr(1));
+  EXPECT_DOUBLE_EQ(mr(2), 0);
+  EXPECT_PRED1(isnan<double>, mr(3));
 }
