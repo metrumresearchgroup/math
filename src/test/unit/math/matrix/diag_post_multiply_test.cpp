@@ -1,7 +1,6 @@
-#include <stdexcept>
 #include <stan/math/matrix/diag_post_multiply.hpp>
 #include <test/unit/math/matrix/expect_matrix_eq.hpp>
-#include <gtest/gtest.h>
+#include <test/unit/math/matrix/expect_matrix_nan.hpp>
 
 using Eigen::Matrix;
 using Eigen::Dynamic;
@@ -52,4 +51,26 @@ TEST(MathMatrix,diagPostMultiplyException) {
   Matrix<double,Dynamic,1> v(3);
   v << 1, 2, 3;
   EXPECT_THROW(diag_post_multiply(m,v), std::domain_error);
+}
+
+TEST(MathMatrix, diag_post_multiply_nan) {
+  double nan = std::numeric_limits<double>::quiet_NaN();
+
+  Eigen::MatrixXd m(3,3);
+  m << 1, nan, 1.1,
+       5.1, 4.1, 4.5,
+       nan, 6.1, 5.1;
+        
+  Eigen::VectorXd vm(3);
+  vm << 10.1, 6, nan;
+  
+  Eigen::MatrixXd mr(3,3);
+  mr << 10.1, nan, nan,
+        51.51, 24.6, nan,
+        nan, 36.6, nan;  
+         
+  using stan::math::diag_post_multiply;
+  using boost::math::isnan;
+  
+  expect_matrix_eq_or_both_nan(mr, diag_post_multiply(m, vm));
 }
