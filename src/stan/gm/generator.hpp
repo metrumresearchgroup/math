@@ -262,16 +262,13 @@ namespace stan {
 
 
     void generate_usings(std::ostream& o) {
-      generate_using("std::vector",o);
+      generate_using("std::istream",o);
       generate_using("std::string",o);
       generate_using("std::stringstream",o);
-      generate_using("stan::model::prob_grad",o);
-      generate_using("stan::math::get_base1",o);
-      generate_using("stan::math::initialize",o);
-      generate_using("stan::math::stan_print",o);
-      generate_using("stan::math::lgamma",o);
+      generate_using("std::vector",o);
       generate_using("stan::io::dump",o);
-      generate_using("std::istream",o);
+      generate_using("stan::math::lgamma",o);
+      generate_using("stan::model::prob_grad",o);
       generate_using_namespace("stan::math",o);
       generate_using_namespace("stan::prob",o);
       o << EOL;
@@ -1640,7 +1637,7 @@ namespace stan {
         generate_indent(indent_,o_);
         o_ << '}' << EOL;
       }
-      void operator()(const raise_exception_statement& ps) const {
+      void operator()(const reject_statement& ps) const {
         generate_indent(indent_,o_);
         o_ << "std::stringstream errmsg_stream__;" << EOL;
         for (size_t i = 0; i < ps.printables_.size(); ++i) {
@@ -4283,21 +4280,30 @@ namespace stan {
       // need template metaprogram to construct return
       std::stringstream ss;
       ss << "typename boost::math::tools::promote_args<";
-      bool continuing_tps = false;
+      int num_open_brackets = 1;
+      int num_generated_params = 0; 
       for (size_t i = 0; i < num_args; ++i) {
         if (fun.arg_decls_[i].arg_type_.base_type_ != INT_T) {
-          if (continuing_tps)
+          // two conditionals cut and pasted below
+          if (num_generated_params > 0)
             ss << ", ";
+          if (num_generated_params == 4) {
+            ss << "typename boost::math::tools::promote_args<";
+            num_generated_params = 0;
+            ++num_open_brackets;
+          }
           ss << "T" << i << "__";
-          continuing_tps = true;
+          ++num_generated_params;
         }
       }
       if (is_lp) {
-        if (continuing_tps > 0)
+        if (num_generated_params > 0)
           ss << ", ";
+        // set threshold at 4 so always room for one more param at end
         ss << "T_lp__";
       }
-      ss << ">::type";
+      for (int i = 0; i < num_open_brackets; ++i)
+        ss << ">::type";
       return ss.str();
     }
     
