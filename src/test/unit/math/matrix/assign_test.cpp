@@ -349,7 +349,7 @@ TEST(MathMatrix, assign_nan) {
   expect_matrix_eq_or_both_nan(rvr, v2);
 
   std::vector<double> stdvec(14, 1.1);
-  v2[7] = nan;
+  stdvec[7] = nan;
   
   std::vector<double> stdvecr(14);
   assign(stdvecr, stdvec);

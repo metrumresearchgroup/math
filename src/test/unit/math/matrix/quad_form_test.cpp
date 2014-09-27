@@ -188,11 +188,7 @@ TEST(MathMatrix, quad_form_sym_mat_nan) {
   4.0,  2.0, 7.0,   1.0,
   5.0,  2.0, 1.0, 112.0;
   
-  res = quad_form_sym(ad,bd);
-  EXPECT_TRUE(boost::math::isnan(res(0,0)));
-  EXPECT_TRUE(boost::math::isnan(res(0,1)));
-  EXPECT_TRUE(boost::math::isnan(res(1,0)));
-  EXPECT_TRUE(boost::math::isnan(res(1,1)));
+  EXPECT_THROW(res = quad_form_sym(ad,bd), std::domain_error);
 }
 
 TEST(MathMatrix, quad_form_vec_nan) {
@@ -231,6 +227,5 @@ TEST(MathMatrix, quad_form_sym_vec_nan) {
   4.0,  2.0, 7.0,   1.0,
   5.0,  2.0, 1.0, 112.0;
   
-  res = quad_form_sym(ad,bd);
-  EXPECT_TRUE(boost::math::isnan(res));
+  EXPECT_THROW(res = quad_form_sym(ad,bd), std::domain_error);
 }

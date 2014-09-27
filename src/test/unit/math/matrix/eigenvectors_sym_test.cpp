@@ -34,13 +34,6 @@ TEST(MathMatrix,eigenvectors_sym_nan) {
   using stan::math::eigenvectors_sym;
   using boost::math::isnan;
 
-  mr = eigenvectors_sym(m1);
-  for (int j = 0; j < mr.cols(); j++)
-    for (int i = 0; i < mr.rows(); i++)
-      EXPECT_PRED1(isnan<double>, mr(i, j));
-
-  mr = eigenvectors_sym(m2);
-  for (int j = 0; j < mr.cols(); j++)
-    for (int i = 0; i < mr.rows(); i++)
-      EXPECT_PRED1(isnan<double>, mr(i, j));
+  EXPECT_THROW(mr = eigenvectors_sym(m1), std::domain_error);
+  EXPECT_THROW(mr = eigenvectors_sym(m2), std::domain_error);
 }

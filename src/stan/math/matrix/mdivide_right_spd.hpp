@@ -9,6 +9,7 @@
 #include <stan/math/error_handling/matrix/check_pos_definite.hpp>
 #include <stan/math/error_handling/matrix/check_symmetric.hpp>
 #include <stan/math/error_handling/matrix/check_square.hpp>
+#include <stan/math/error_handling/check_not_nan.hpp>
 
 namespace stan {
   namespace math {
@@ -20,13 +21,14 @@ namespace stan {
      * @param b Right hand side matrix or vector.
      * @return x = b A^-1, solution of the linear system.
      * @throws std::domain_error if A is not square or the rows of b don't
-     * match the size of A.
+     * match the size of A or if any elements of b or A are nan.
      */
     template <typename T1, typename T2, int R1, int C1, int R2, int C2>
     inline 
     Eigen::Matrix<typename boost::math::tools::promote_args<T1,T2>::type,R1,C2>
     mdivide_right_spd(const Eigen::Matrix<T1,R1,C1> &b,
                       const Eigen::Matrix<T2,R2,C2> &A) {
+      stan::math::check_not_nan("mdivide_right_spd(%1%)",A,"A",(double*)0);
       stan::math::check_symmetric("mdivide_right_spd(%1%)",A,"A",(double*)0);
       stan::math::check_pos_definite("mdivide_right_spd(%1%)",A,"A",(double*)0);
       stan::math::check_square("mdivide_right_spd(%1%)",A,"A",(double*)0);

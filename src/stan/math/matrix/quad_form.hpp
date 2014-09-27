@@ -7,6 +7,7 @@
 #include <stan/math/error_handling/matrix/check_multiplicable.hpp>
 #include <stan/math/error_handling/matrix/check_square.hpp>
 #include <stan/math/error_handling/matrix/check_symmetric.hpp>
+#include <stan/math/error_handling/check_not_nan.hpp>
 #include <stan/math/matrix/dot_product.hpp>
 #include <stan/math/matrix/multiply.hpp>
 #include <stan/math/matrix/transpose.hpp>
@@ -52,6 +53,7 @@ namespace stan {
       stan::math::check_square("quad_form_sym(%1%)",A,"A",(double*)0);
       stan::math::check_multiplicable("quad_form_sym(%1%)",A,"A",
                                       B,"B",(double*)0);
+      stan::math::check_not_nan("quad_form_sym(%1%)",A,"A",(double*)0);
       stan::math::check_symmetric("quad_form_sym(%1%)",A,"A",(double*)0);
       Eigen::Matrix<T,CB,CB> ret(multiply(stan::math::transpose(B),multiply(A,B)));
       return 0.5*(ret + stan::math::transpose(ret));
@@ -68,6 +70,7 @@ namespace stan {
       stan::math::check_square("quad_form_sym(%1%)",A,"A",(double*)0);
       stan::math::check_multiplicable("quad_form_sym(%1%)",A,"A",
                                       B,"B",(double*)0);    
+      stan::math::check_not_nan("quad_form_sym(%1%)",A,"A",(double*)0);
       stan::math::check_symmetric("quad_form_sym(%1%)",A,"A",(double*)0);
       return dot_product(B,multiply(A,B));
     }

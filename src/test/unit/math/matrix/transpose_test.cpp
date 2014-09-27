@@ -67,9 +67,8 @@ TEST(MathMatrix, transpose_nan) {
   EXPECT_EQ(5.1, vr(3));
   
   EXPECT_EQ(10, mr(0, 0));
-  EXPECT_EQ(3.2, mr(1, 0));
-  EXPECT_PRED1(isnan<double>, mr(2, 0));
-  EXPECT_EQ(5.1, mr(3, 0));
-    
+  EXPECT_EQ(3.2, mr(0, 1));
+  EXPECT_PRED1(isnan<double>, mr(0, 2));
+  EXPECT_EQ(5.1, mr(0, 3));
 }
 

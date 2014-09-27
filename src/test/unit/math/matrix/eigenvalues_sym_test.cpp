@@ -31,11 +31,6 @@ TEST(MathMatrix,eigenvalues_sym_nan) {
   using stan::math::eigenvalues_sym;
   using boost::math::isnan;
 
-  vr = eigenvalues_sym(m1);
-  for (int i = 0; i < vr.size(); i++)
-    EXPECT_PRED1(isnan<double>, vr(i));
-
-  vr = eigenvalues_sym(m2);
-  for (int i = 0; i < vr.size(); i++)
-    EXPECT_PRED1(isnan<double>, vr(i));
+  EXPECT_THROW(vr = eigenvalues_sym(m1), std::domain_error);
+  EXPECT_THROW(vr = eigenvalues_sym(m2), std::domain_error);
 }

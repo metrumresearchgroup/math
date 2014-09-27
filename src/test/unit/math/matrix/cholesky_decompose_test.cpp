@@ -69,27 +69,8 @@ TEST(MathMatrix,cholesky_decompose_nan) {
   EXPECT_DOUBLE_EQ(mr(2), 0);
   EXPECT_DOUBLE_EQ(mr(3), 3.1);
   
-  mr = cholesky_decompose(m2);
-  EXPECT_PRED1(isnan<double>, mr(0));
-  EXPECT_PRED1(isnan<double>, mr(1));
-  EXPECT_DOUBLE_EQ(mr(2), 0);
-  EXPECT_PRED1(isnan<double>, mr(3));
-  
-  mr = cholesky_decompose(m3);
-  EXPECT_DOUBLE_EQ(mr(0), 1);
-  EXPECT_PRED1(isnan<double>, mr(1));
-  EXPECT_DOUBLE_EQ(mr(2), 0);
-  EXPECT_PRED1(isnan<double>, mr(3));
-  
-  mr = cholesky_decompose(m4);
-  EXPECT_DOUBLE_EQ(mr(0), 1);
-  EXPECT_DOUBLE_EQ(mr(1), 2);
-  EXPECT_DOUBLE_EQ(mr(2), 0);
-  EXPECT_PRED1(isnan<double>, mr(3));
-  
-  mr = cholesky_decompose(m5);
-  EXPECT_PRED1(isnan<double>, mr(0));
-  EXPECT_PRED1(isnan<double>, mr(1));
-  EXPECT_DOUBLE_EQ(mr(2), 0);
-  EXPECT_PRED1(isnan<double>, mr(3));
+  EXPECT_THROW(cholesky_decompose(m2), std::domain_error);
+  EXPECT_THROW(mr = cholesky_decompose(m3), std::domain_error);
+  EXPECT_THROW(mr = cholesky_decompose(m4), std::domain_error);
+  EXPECT_THROW(mr = cholesky_decompose(m5), std::domain_error);
 }
