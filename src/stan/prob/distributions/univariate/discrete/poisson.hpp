@@ -346,13 +346,6 @@ namespace stan {
       using boost::math::gamma_q;
           
       agrad::OperandsAndPartials<T_rate> operands_and_partials(lambda);
-
-      // Explicit return for extreme values
-      // The gradients are technically ill-defined, but treated as neg infinity
-      for (size_t i = 0; i < stan::length(n); i++) {
-        if (value_of(n_vec[i]) < 0) 
-          return operands_and_partials.to_var(0.0);
-      }
         
       for (size_t i = 0; i < size; i++) {
         // Explicit results for extreme values
@@ -361,6 +354,12 @@ namespace stan {
           return operands_and_partials.to_var(stan::math::negative_infinity());
           
         const double n_dbl = value_of(n_vec[i]);
+        
+        // Explicit return for extreme values
+        // The gradients are technically ill-defined, but treated as neg infinity
+        if (n_dbl < 0)
+          continue;
+        
         const double lambda_dbl = value_of(lambda_vec[i]);
         const double Pi = 1.0 - gamma_q(n_dbl+1, lambda_dbl);
 

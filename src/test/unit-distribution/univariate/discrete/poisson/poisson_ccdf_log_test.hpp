@@ -20,6 +20,11 @@ public:
     param[1] = 3.0;          // lambda
     parameters.push_back(param);
     ccdf_log.push_back(std::log(1.0 - 0.04978707)); // expected ccdf_log
+    
+    param[0] = -1.0;          // n
+    param[1] = 6.0;          // lambda
+    parameters.push_back(param);
+    ccdf_log.push_back(std::log(1.0)); // expected ccdf_log
   }
   
   void invalid_values(vector<size_t>& index, 
