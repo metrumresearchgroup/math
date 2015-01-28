@@ -303,6 +303,40 @@ public:
       add_finite_diff_1storder(params, finite_diff, 5);
   }
 
+  T_return_type log_prob(vector<var>& var_ret,
+                         vector<double>& parameters_vec){
+
+      Scalar0 p0 = get_param<Scalar0>(parameters_vec, 0);
+      Scalar1 p1 = get_param<Scalar1>(parameters_vec, 1);
+      Scalar2 p2 = get_param<Scalar2>(parameters_vec, 2);
+      Scalar3 p3 = get_param<Scalar3>(parameters_vec, 3);
+      Scalar4 p4 = get_param<Scalar4>(parameters_vec, 4);
+      Scalar5 p5 = get_param<Scalar5>(parameters_vec, 5);
+    
+      add_vars(var_ret, p0, p1, p2, p3, p4, p5);
+      
+      return TestClass.template log_prob
+        <Scalar0,Scalar1,Scalar2,Scalar3,Scalar4,Scalar5>
+        (p0,p1,p2,p3,p4,p5);
+  }
+
+  T_return_type log_prob_function(vector<var>& var_ret,
+                                  vector<double>& parameters_vec){
+
+      Scalar0 p0 = get_param<Scalar0>(parameters_vec, 0);
+      Scalar1 p1 = get_param<Scalar1>(parameters_vec, 1);
+      Scalar2 p2 = get_param<Scalar2>(parameters_vec, 2);
+      Scalar3 p3 = get_param<Scalar3>(parameters_vec, 3);
+      Scalar4 p4 = get_param<Scalar4>(parameters_vec, 4);
+      Scalar5 p5 = get_param<Scalar5>(parameters_vec, 5);
+    
+      add_vars(var_ret, p0, p1, p2, p3, p4, p5);
+      
+      return TestClass.template log_prob_function
+        <Scalar0,Scalar1,Scalar2,Scalar3,Scalar4,Scalar5>
+        (p0,p1,p2,p3,p4,p5);
+  }
+
   // works for <double>
   double calculate_gradients_1storder(vector<double>& grad,
                                       double& logprob,
@@ -415,6 +449,8 @@ public:
                                       fvar<fvar<var> >& logprob, 
                                       vector<var>& x) {
     logprob.d_.d_.grad(x, grad);
+    std::cout << x << std::endl;
+    std::cout << grad << std::endl;
     stan::agrad::recover_memory();
     return logprob.val_.val_.val();
   }
@@ -507,9 +543,9 @@ public:
       return;
     }
 
-    vector<double> log_prob;
+    vector<double> log_prob_vals;
     vector<vector<double> > parameters;
-    TestClass.valid_values(parameters, log_prob);
+    TestClass.valid_values(parameters, log_prob_vals);
     
     for (size_t n = 0; n < parameters.size(); n++) {
       vector<double> expected_gradients1;
@@ -519,44 +555,33 @@ public:
       vector<double> gradients2;
       vector<double> gradients3;
 
-      Scalar0 p0 = get_param<Scalar0>(parameters[n], 0);
-      Scalar1 p1 = get_param<Scalar1>(parameters[n], 1);
-      Scalar2 p2 = get_param<Scalar2>(parameters[n], 2);
-      Scalar3 p3 = get_param<Scalar3>(parameters[n], 3);
-      Scalar4 p4 = get_param<Scalar4>(parameters[n], 4);
-      Scalar5 p5 = get_param<Scalar5>(parameters[n], 5);
-    
-      vector<var> x1;
-      vector<var> x2;
-      vector<var> x3;
-      vector<var> y1;
-      vector<var> y2;
-      vector<var> y3;
-      add_vars(x1, p0, p1, p2, p3, p4, p5);
-      add_vars(x2, p0, p1, p2, p3, p4, p5);
-      add_vars(x3, p0, p1, p2, p3, p4, p5);
-      add_vars(y1, p0, p1, p2, p3, p4, p5);
-      add_vars(y2, p0, p1, p2, p3, p4, p5);
-      add_vars(y3, p0, p1, p2, p3, p4, p5);
-      
           
-      T_return_type logprob = TestClass.template log_prob
-        <Scalar0,Scalar1,Scalar2,Scalar3,Scalar4,Scalar5>
-        (p0,p1,p2,p3,p4,p5);
-
-      T_return_type logprob_funct = TestClass.template log_prob_function
-        <Scalar0,Scalar1,Scalar2,Scalar3,Scalar4,Scalar5>
-        (p0,p1,p2,p3,p4,p5);
-
+      vector<var> x1;
+      T_return_type logprob_funct = log_prob_function(x1, parameters[n]);
       calculate_gradients_1storder(expected_gradients1, logprob_funct, x1);
+
+      vector<var> y1;
+      T_return_type logprob = log_prob(y1, parameters[n]); 
       calculate_gradients_1storder(gradients1, logprob, y1);
-      calculate_gradients_2ndorder(expected_gradients2, logprob_funct, x2);
-      calculate_gradients_2ndorder(gradients2, logprob, y2);
-      calculate_gradients_3rdorder(expected_gradients3, logprob_funct, x3);
-      calculate_gradients_3rdorder(gradients3, logprob, y3);
-      
-      test_gradients_equal(expected_gradients1,gradients1);
-      test_gradients_equal(expected_gradients2,gradients2);
+
+      vector<var> x2;
+      T_return_type logprob_funct_2 = log_prob_function(x2, parameters[n]);
+      calculate_gradients_2ndorder(expected_gradients2, logprob_funct_2, x2);
+
+      vector<var> y2;
+      T_return_type logprob_2 = log_prob(y2, parameters[n]); 
+      calculate_gradients_2ndorder(gradients2, logprob_2, y2);
+
+      vector<var> x3;
+      T_return_type logprob_funct_3 = log_prob_function(x3, parameters[n]);
+      calculate_gradients_3rdorder(expected_gradients3, logprob_funct_3, x3);
+
+      vector<var> y3;
+      T_return_type logprob_3 = log_prob(y3, parameters[n]); 
+      calculate_gradients_3rdorder(gradients3, logprob_3, y3);
+
+//      test_gradients_equal(expected_gradients1,gradients1);
+//      test_gradients_equal(expected_gradients2,gradients2);
       test_gradients_equal(expected_gradients3,gradients3);
 
     }
