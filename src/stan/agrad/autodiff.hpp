@@ -359,6 +359,44 @@ namespace stan {
       stan::agrad::recover_memory_nested();
     }
 
+    // O(N ^ 3)
+    template <typename F>
+    void
+    grad_hessian(const F& f,
+                 const Eigen::Matrix<double,Eigen::Dynamic,1>& x,
+                 double& fx,
+                 Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>& H,
+                 std::vector<Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> >& grad_H) {
+      start_nested();
+      try {
+        size_type d = x.size();
+        H.resize(d, d);
+        for (int i = 0; i < d; ++i)
+          grad_H.push_back(Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>(d,d));
+        for (int i = 0; i < d; ++i) {
+          for (int j = i; j < d; ++j) {
+            Eigen::Matrix<fvar<fvar<var> >, Eigen::Dynamic, 1> x_ffvar(d);
+            for (int k = 0; k < d; ++k) 
+              x_ffvar(k) = fvar<fvar<var> >(fvar<var>(x(k),i==k),
+                                            fvar<var>(j==k,0));
+            fvar<fvar<var> > fx_ffvar = f(x_ffvar);
+            H(i,j) = fx_ffvar.d_.d_.val();
+            H(j,i) = H(i,j);
+            if (i == 0) fx = fx_ffvar.val_.val_.val();
+            stan::agrad::grad(fx_ffvar.d_.d_.vi_);
+            for (int k = 0; k < d; ++k){
+              grad_H[i](j,k) = x_ffvar(k).val_.val_.adj();
+              grad_H[j](i,k) = grad_H[i](j,k);
+            }
+          }
+        }
+      } catch (const std::exception& e) {
+        stan::agrad::recover_memory_nested();
+        throw;
+      }
+      stan::agrad::recover_memory_nested();
+    }
+
   }
 }
 #endif

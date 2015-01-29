@@ -65,6 +65,52 @@ namespace stan {
 
     }
 
+    template <typename F>
+    void
+    finite_diff_hessian(const F& f,
+                        const Eigen::Matrix<double,Eigen::Dynamic,1>& x,
+                        double& fx,
+                        Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>& hess_fx, 
+                        const double epsilon = 1e-6) {
+
+      size_type d = x.size();
+
+      Eigen::Matrix<double,Eigen::Dynamic,1> x_temp(x);
+      hess_fx.resize(d, d);
+
+      fx = f(x);
+      
+      double f_diff(0.0);
+      for (int i = 0; i < d; ++i){
+        for (int j = 0; j < d; ++j){
+          x_temp(i) += epsilon;
+          if(i != j){
+            f_diff = 0;
+            x_temp(j) += epsilon;
+            f_diff += f(x_temp);
+            x_temp(j) = x(j) - epsilon;
+            f_diff -= f(x_temp);
+            x_temp(i) = x(i) - epsilon;
+            f_diff += f(x_temp);
+            x_temp(j) = x(j) + epsilon;
+            f_diff -= f(x_temp);
+            f_diff /= 4;
+            x_temp(j) = x(j);
+          } else {
+            f_diff = -2 * fx;
+            f_diff += f(x_temp);
+            x_temp(i) = x(i) - epsilon;
+            f_diff += f(x_temp);
+          }
+
+          x_temp(i) = x(i);
+          f_diff /= epsilon * epsilon;
+          
+          hess_fx(j,i) = f_diff;
+        }
+      }
+    }
+
     /**
      * Calculate the value and the hessian of the specified function
      * at the specified argument using finite difference.  
@@ -90,11 +136,11 @@ namespace stan {
      */
     template <typename F>
     void
-    finite_diff_hessian(const F& f,
-                        const Eigen::Matrix<double,Eigen::Dynamic,1>& x,
-                        double& fx,
-                        Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>& hess_fx, 
-                        const double epsilon = 1e-6) {
+    finite_diff_hessian_auto(const F& f,
+                             const Eigen::Matrix<double,Eigen::Dynamic,1>& x,
+                             double& fx,
+                             Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>& hess_fx, 
+                             const double epsilon = 1e-6) {
 
       size_type d = x.size();
 
