@@ -42,21 +42,19 @@ namespace stan {
      * <p>The functor must implement 
      * 
      * <code>
-     * T
+     * double
      * operator()(const
-     * Eigen::Matrix<T,Eigen::Dynamic,1>&)
+     * Eigen::Matrix<double,Eigen::Dynamic,1>&)
      * </code>
      *
-     * Where <code>T</code> is of type
-     * stan::agrad::var, stan::agrad::fvar<double>,
-     * stan::agrad::fvar<stan::agard::var> or 
-     * stan::agrad::fvar<stan::agrad::fvar<stan::agrad::var> >
+     * Error should be on order of epsilon ^ 6
      * 
      * @tparam F Type of function
      * @param[in] f Function
      * @param[in] x Argument to function
      * @param[out] fx Function applied to argument
      * @param[out] grad_fx Gradient of function at argument
+     * @param[in] epsilon perturbation size
      */
     template <typename F>
     void
@@ -94,11 +92,34 @@ namespace stan {
         delta_f -= 45.0 * f(x_temp);
 
         delta_f /= 60 * epsilon;
+
         x_temp(i) = x(i);
         grad_fx(i) = delta_f;
       }
 
     }
+
+    /**
+     * Calculate the value and the Hessian of the specified function
+     * at the specified argument using second-order finite difference.  
+     *
+     * <p>The functor must implement 
+     * 
+     * <code>
+     * double
+     * operator()(const
+     * Eigen::Matrix<double,Eigen::Dynamic,1>&)
+     * </code>
+     *
+     * Error should be on order of epsilon ^ 4
+     * 
+     * @tparam F Type of function
+     * @param[in] f Function
+     * @param[in] x Argument to function
+     * @param[out] fx Function applied to argument
+     * @param[out] hess_fx Hessian of function at argument
+     * @param[in] epsilon perturbation size
+     */
 
     template <typename F>
     void
@@ -150,26 +171,23 @@ namespace stan {
 
     /**
      * Calculate the value and the hessian of the specified function
-     * at the specified argument using finite difference.  
+     * at the specified argument using first-order autodiff and 
+     * first-order finite difference.  
      *
      * <p>The functor must implement 
      * 
      * <code>
-     * stan::agrad::var
+     * double
      * operator()(const
-     * std::vector<T>&)
+     * Eigen::Matrix<double,Eigen::Dynamic,1>&)
      * </code>
      *
-     * Where <code>T</code> is of type
-     * stan::agrad::var, stan::agrad::fvar<double>,
-     * stan::agrad::fvar<stan::agard::var> or 
-     * stan::agrad::fvar<stan::agrad::fvar<stan::agrad::var> >
-     * 
      * @tparam F Type of function
      * @param[in] f Function
      * @param[in] x Argument to function
      * @param[out] fx Function applied to argument
-     * @param[out] grad_fx Gradient of function at argument
+     * @param[out] hess_fx Hessian of function at argument
+     * @param[in] epsilon perturbation size
      */
     template <typename F>
     void
@@ -213,6 +231,26 @@ namespace stan {
 
     }
     
+    /** 
+     * Calculate the value and the gradient of the hessian of the specified
+     * function at the specified argument using second-order autodiff and
+     * first-order finite difference.  
+     *
+     * <p>The functor must implement 
+     * 
+     * <code>
+     * double
+     * operator()(const
+     * Eigen::Matrix<double,Eigen::Dynamic,1>&)
+     * </code>
+     *
+     * @tparam F Type of function
+     * @param[in] f Function
+     * @param[in] x Argument to function
+     * @param[out] fx Function applied to argument
+     * @param[out] grad_hess_fx gradient of Hessian of function at argument
+     * @param[in] epsilon perturbation size
+     */
     template <typename F>
     void
     finite_diff_grad_hessian_auto(const F& f,

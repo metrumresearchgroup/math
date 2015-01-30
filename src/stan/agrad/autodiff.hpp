@@ -265,9 +265,6 @@ namespace stan {
       fx = fx_fvar.val_;
       grad_fx_dot_v = fx_fvar.d_;
     }
-                           
-
-
 
     template <typename F>
     void
@@ -359,7 +356,36 @@ namespace stan {
       stan::agrad::recover_memory_nested();
     }
 
-    // O(N ^ 3)
+    /**
+     * Calculate the value and the gradient of the specified function
+     * at the specified argument.  
+     *
+     * <p>The functor must implement 
+     * 
+     * <code>
+     * using stan::agrad::fvar;
+     * using stan::agrad::var;
+     *
+     * fvar<fvar<var> >
+     * operator()(const
+     * Eigen::Matrix<fvar<fvar<var> >,Eigen::Dynamic,1>&)
+     * </code>
+     *
+     * using only operations that are defined for
+     * <code>stan::agrad::fvar</code> and <code>stan::agrad::var</code>.  
+     *
+     * This latter constraint usually
+     * requires the functions to be defined in terms of the libraries
+     * defined in Stan or in terms of functions with appropriately
+     * general namespace imports that eventually depend on functions
+     * defined in Stan.
+     *
+     * @tparam F Type of function
+     * @param[in] f Function
+     * @param[in] x Argument to function
+     * @param[out] fx Function applied to argument
+     * @param[out] grad_H Gradient of the Hessian of function at argument
+     */
     template <typename F>
     void
     grad_hessian(const F& f,
