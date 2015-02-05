@@ -357,8 +357,8 @@ namespace stan {
     }
 
     /**
-     * Calculate the value and the gradient of the specified function
-     * at the specified argument.  
+     * Calculate the value, the Hessian, and the gradient of the Hessian 
+     * of the specified function at the specified argument.  
      *
      * <p>The functor must implement 
      * 
@@ -384,6 +384,7 @@ namespace stan {
      * @param[in] f Function
      * @param[in] x Argument to function
      * @param[out] fx Function applied to argument
+     * @param[out] H Hessian of function at argument
      * @param[out] grad_H Gradient of the Hessian of function at argument
      */
     template <typename F>
@@ -394,8 +395,9 @@ namespace stan {
                  Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>& H,
                  std::vector<Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> >& grad_H) {
       start_nested();
+      fx = f(x);
       try {
-        size_type d = x.size();
+        int d = x.size();
         H.resize(d, d);
         for (int i = 0; i < d; ++i)
           grad_H.push_back(Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>(d,d));
@@ -408,7 +410,6 @@ namespace stan {
             fvar<fvar<var> > fx_ffvar = f(x_ffvar);
             H(i,j) = fx_ffvar.d_.d_.val();
             H(j,i) = H(i,j);
-            if (i == 0) fx = fx_ffvar.val_.val_.val();
             stan::agrad::grad(fx_ffvar.d_.d_.vi_);
             for (int k = 0; k < d; ++k){
               grad_H[i](j,k) = x_ffvar(k).val_.val_.adj();
