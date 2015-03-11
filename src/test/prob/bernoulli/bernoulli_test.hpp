@@ -81,6 +81,9 @@ public:
       return log(theta);
     else if (n == 0)
       return log1m(theta);
+
+    throw std::domain_error("n is an invalid value");
+    return log(0);
   }
 };
 
