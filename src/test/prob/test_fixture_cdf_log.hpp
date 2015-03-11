@@ -4,6 +4,9 @@
 #include <stan/math/rev/core.hpp>
 #include <stdexcept>
 #include <stan/math/prim/scal/fun/value_of.hpp>
+#include <stan/math/prim/scal/fun/is_nan.hpp>
+#include <stan/math/rev/scal/fun/is_nan.hpp>
+#include <stan/math/fwd/scal/fun/is_nan.hpp>
 #include <test/prob/utility.hpp>
 #include <boost/type_traits/is_same.hpp>
 
@@ -16,6 +19,8 @@ using stan::is_vector;
 using stan::is_constant;
 using stan::is_constant_struct;
 using stan::math::value_of;
+using stan::agrad::is_nan;
+using stan::math::is_nan;
 
 class AgradCdfLogTest {
 public:
@@ -136,6 +141,8 @@ public:
         << "cdf_log value must be less than or equal to 0. cdf_log value: "
         << cdf_log;
 
+      EXPECT_FALSE(is_nan(cdf_log));
+      
       if (all_scalar<T0,T1,T2,T3,T4,T5>::value) {
         EXPECT_TRUE(stan::agrad::abs(expected_cdf_log[n] - cdf_log) < 1e-8)
           << "For all scalar inputs cdf_log should match the provided value. Failed at index: " << n << std::endl
@@ -430,6 +437,11 @@ public:
 
     ASSERT_EQ(expected_gradients.size(), gradients.size()) 
       << "Number of expected gradients and calculated gradients must match -- error in test fixture";
+
+    for (size_t i = 0; i < expected_gradients.size(); i++) {
+      EXPECT_FALSE(is_nan(gradients[i])) << "gradient is nan";
+    }
+    
     for (size_t i = 0; i < expected_gradients.size(); i++) {
       EXPECT_FLOAT_EQ(expected_gradients[i], gradients[i])
         << "Comparison of expected gradient to calculated gradient failed";
@@ -751,6 +763,18 @@ public:
         (p0,p1,p2,p3,p4,p5);
       EXPECT_TRUE(stan::math::negative_infinity() == cdf_log_at_lower_bound)
         << "cdf_log evaluated at lower bound should equal negative infinity";
+
+      T_return_type cdf_log = TestClass.template cdf_log
+        <T0,T1,T2,T3,T4,T5>
+        (p0,p1,p2,p3,p4,p5);
+      vector<var> x;
+      add_vars(x, p0, p1, p2, p3, p4, p5);
+      vector<double> g;
+      calculate_gradients_1storder(g, cdf_log, x);
+
+      for (size_t i = 0; i < g.size(); i++) {
+        EXPECT_FALSE(is_nan(g[i])) << "gradient is nan";
+      }
     }
   }
   
@@ -787,6 +811,18 @@ public:
         (p0,p1,p2,p3,p4,p5);
       EXPECT_TRUE(0.0 == cdf_log_at_upper_bound)
         << "cdf_log evaluated at upper bound should equal 0";
+ 
+      T_return_type cdf_log = TestClass.template cdf_log
+        <T0,T1,T2,T3,T4,T5>
+        (p0,p1,p2,p3,p4,p5);
+      vector<var> x;
+      add_vars(x, p0, p1, p2, p3, p4, p5);
+      vector<double> g;
+      calculate_gradients_1storder(g, cdf_log, x);
+
+      for (size_t i = 0; i < g.size(); i++) {
+        EXPECT_FALSE(is_nan(g[i])) << "gradient is nan";
+      }
     }
   }
 

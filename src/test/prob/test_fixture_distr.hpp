@@ -4,6 +4,9 @@
 #include <stan/math/rev/core.hpp>
 #include <stan/math/fwd/core.hpp>
 #include <stan/math/prim/scal/fun/value_of.hpp>
+#include <stan/math/prim/scal/fun/is_nan.hpp>
+#include <stan/math/rev/scal/fun/is_nan.hpp>
+#include <stan/math/fwd/scal/fun/is_nan.hpp>
 #include <test/prob/utility.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <stdexcept>
@@ -18,6 +21,8 @@ using stan::is_vector;
 using stan::is_constant;
 using stan::is_constant_struct;
 using stan::math::value_of;
+using stan::agrad::is_nan;
+using stan::math::is_nan;
 
 
 /** 
@@ -110,6 +115,8 @@ public:
               (p0,p1,p2,p3,p4,p5); }))
         << "Valid parameters failed at index: " << n << " -- " 
         << parameters[n];
+
+      EXPECT_FALSE(is_nan(lp));
 
       if (all_constant<T0,T1,T2,T3,T4,T5>::value) {
         // all double inputs should result in a log probability of 0
@@ -484,11 +491,16 @@ public:
     }
   }
   
-  void  test_gradients_equal(const vector<double>& expected_gradients,
+  void test_gradients_equal(const vector<double>& expected_gradients,
                              const vector<double>& gradients ) {
 
     ASSERT_EQ(expected_gradients.size(), gradients.size()) 
       << "Number of expected gradients and calculated gradients must match -- error in test fixture";
+    
+    for (size_t i = 0; i < expected_gradients.size(); i++) {
+      EXPECT_FALSE(is_nan(gradients[i])) << "gradient is nan";
+    }
+    
     for (size_t i = 0; i < expected_gradients.size(); i++) {
       EXPECT_FLOAT_EQ(expected_gradients[i], gradients[i])
         << "Comparison of expected gradient to calculated gradient failed";
