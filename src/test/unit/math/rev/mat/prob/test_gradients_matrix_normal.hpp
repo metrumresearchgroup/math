@@ -25,6 +25,54 @@ std::vector<double> vdouble_from_vvar(std::vector<double> vv) {
   return vv;
 }
 
+struct matrix_normal_fun {
+  const int rows_;
+  const int cols_;
+
+  matrix_normal_fun(int rows, int cols) : rows_(rows), cols_(cols) { }
+
+  template <typename T_y, typename T_mu, typename T_sigma, typename T_D>
+  typename boost::math::tools::promote_args<T_y, T_mu, T_sigma, T_D>::type
+  operator() (const std::vector<T_y>& y_vec,
+              const std::vector<T_mu>& mu_vec,
+              const std::vector<T_sigma>& sigma_vec,
+              const std::vector<T_D>& D_vec) const {
+    Eigen::Matrix<T_y,-1,-1> y(rows_,cols_);
+    Eigen::Matrix<T_mu,-1,-1> mu(rows_,cols_);
+    Eigen::Matrix<T_sigma,-1,-1> Sigma(cols_, cols_);
+    Eigen::Matrix<T_D,-1,-1> D(rows_, rows_);
+
+    size_t pos = 0;
+    for (int k = 0; k < cols_; ++k) 
+      for (int l = 0; l < rows_; ++l)
+        y(l,k) = y_vec[pos++];
+
+    pos = 0;        
+    for (int k = 0; k < cols_; ++k) 
+      for (int l = 0; l < rows_; ++l)
+        mu(l,k) = mu_vec[pos++];
+    
+    pos = 0;
+    for (int i = 0; i < cols_; ++i) {
+      for (int j = 0; j <= i; ++j) {
+        Sigma(j,i) = sigma_vec[pos++];
+        Sigma(i,j) = Sigma(j,i);
+      }
+    }
+
+    pos = 0;
+    for (int i = 0; i < rows_; ++i) {
+      for (int j = 0; j <= i; ++j) {
+        D(j,i) = D_vec[pos++];
+        D(i,j) = D(j,i);
+      }
+    }
+    
+    return stan::prob::matrix_normal_prec_log<false>(y, mu, D, Sigma);
+  }
+};
+  
+
 template <typename F, typename T_y, typename T_mu, typename T_sigma, typename T_D>
 std::vector<double> 
 finite_diffs_matrix_normal(const F& fun,
@@ -132,7 +180,6 @@ grad_matrix_normal(const F& fun,
   stan::agrad::recover_memory_nested();
   return grad;
 }
-
 
 template <typename F, typename T_y, typename T_mu, typename T_sigma, typename T_D>
 void test_grad_matrix_normal(const F& fun,
