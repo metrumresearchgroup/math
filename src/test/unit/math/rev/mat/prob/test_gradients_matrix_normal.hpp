@@ -161,8 +161,9 @@ grad_matrix_normal(const F& fun,
   std::vector<double> grad;
   std::vector<stan::agrad::var> vec_vars;
   if (!stan::is_constant<T_y>::value) {
-    for (size_t i = 0; i < vec_y.size(); i++)
+    for (size_t i = 0; i < vec_y.size(); i++){
       vec_vars.push_back(vec_y[i]);
+    }
   }
   if (!stan::is_constant<T_mu>::value) {
     for (size_t i = 0; i < vec_mu.size(); i++)
@@ -183,10 +184,10 @@ grad_matrix_normal(const F& fun,
 
 template <typename F, typename T_y, typename T_mu, typename T_sigma, typename T_D>
 void test_grad_matrix_normal(const F& fun,
-               const std::vector<T_y> & vec_y,
-               const std::vector<T_mu> & vec_mu,
-               const std::vector<T_sigma> & vec_sigma,
-               const std::vector<T_D> & vec_D) {
+                             const std::vector<T_y>& vec_y,
+                             const std::vector<T_mu>& vec_mu,
+                             const std::vector<T_sigma>& vec_sigma,
+                             const std::vector<T_D>& vec_D) {
   using std::fabs;
   std::vector<double> diffs_finite = finite_diffs_matrix_normal(fun,vec_y,vec_mu,vec_sigma,vec_D);
   std::vector<double> diffs_var = grad_matrix_normal(fun,vec_y,vec_mu,vec_sigma,vec_D);
