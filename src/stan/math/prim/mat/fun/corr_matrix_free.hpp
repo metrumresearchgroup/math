@@ -2,6 +2,7 @@
 #define STAN_MATH_PRIM_MAT_FUN_CORR_MATRIX_FREE_HPP
 
 #include <stan/math/prim/mat/fun/Eigen.hpp>
+#include <stan/math/prim/mat/fun/factor_cov_matrix.hpp>
 #include <stan/math/prim/mat/meta/index_type.hpp>
 #include <boost/throw_exception.hpp>
 #include <cmath>
