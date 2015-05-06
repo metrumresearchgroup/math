@@ -30,6 +30,10 @@
 #include <stan/math/prim/scal/meta/VectorViewMvt.hpp>
 #include <stan/math/prim/scal/meta/length.hpp>
 #include <stan/math/prim/scal/meta/max_size_mvt.hpp>
+#include <stan/math/prim/mat/meta/contains_matrix.hpp>
+#include <stan/math/prim/scal/meta/contains_matrix.hpp>
+#include <stan/math/prim/scal/meta/VectorViewMat.hpp>
+#include <stan/math/prim/scal/meta/VectorViewMvt.hpp>
 
 using stan::length;
 
@@ -44,6 +48,32 @@ TEST(MetaTraits, isConstant) {
   EXPECT_TRUE(is_constant<float>::value);
   EXPECT_TRUE(is_constant<unsigned int>::value);
   EXPECT_TRUE(is_constant<int>::value);
+}
+
+TEST(MetaTraits, contains_matrix) {
+  using stan::contains_matrix;
+  using std::vector;
+  using Eigen::Matrix;
+
+  EXPECT_FALSE(contains_matrix<double>::value);
+  EXPECT_FALSE(contains_matrix<float>::value);
+  EXPECT_FALSE(contains_matrix<unsigned int>::value);
+  EXPECT_FALSE(contains_matrix<int>::value);
+  EXPECT_FALSE(contains_matrix<vector<int> >::value);
+  EXPECT_FALSE(contains_matrix<vector<double> >::value);
+  EXPECT_FALSE(contains_matrix<vector<vector<double> > >::value);
+  typedef Matrix<double, -1, -1> temp_mat;
+  typedef Matrix<double, 1, -1> rowvec;
+  typedef Matrix<double, -1, 1> vec;
+  EXPECT_TRUE(contains_matrix<temp_mat>::value);
+  EXPECT_TRUE(contains_matrix<rowvec>::value);
+  EXPECT_TRUE(contains_matrix<vec>::value);
+  EXPECT_TRUE(contains_matrix<vector<temp_mat> >::value);
+  EXPECT_TRUE(contains_matrix<vector<rowvec> >::value);
+  EXPECT_TRUE(contains_matrix<vector<vec> >::value);
+  EXPECT_TRUE(contains_matrix<vector<vector<temp_mat> > >::value);
+  EXPECT_TRUE(contains_matrix<vector<vector<rowvec> > >::value);
+  EXPECT_TRUE(contains_matrix<vector<vector<vec> > >::value);
 }
 
 
@@ -77,6 +107,18 @@ TEST(MetaTraits, is_vector) {
   typedef Matrix<double,Dynamic,Dynamic> temp_matrix_d;
   EXPECT_FALSE(is_vector<temp_matrix_d>::value);
   EXPECT_FALSE(is_vector<const temp_matrix_d>::value);
+
+  typedef vector<Matrix<double, Dynamic, 1> > temp_stdvec_vec_d;
+  EXPECT_TRUE(is_vector<temp_stdvec_vec_d>::value);
+  EXPECT_TRUE(is_vector<const temp_stdvec_vec_d>::value);
+
+  typedef vector<Matrix<double, 1, Dynamic> > temp_stdvec_rowvec_d;
+  EXPECT_TRUE(is_vector<temp_stdvec_rowvec_d>::value);
+  EXPECT_TRUE(is_vector<const temp_stdvec_rowvec_d>::value);
+
+  typedef vector<Matrix<double, Dynamic, Dynamic> > temp_stdvec_mat_d;
+  EXPECT_TRUE(is_vector<temp_stdvec_mat_d>::value);
+  EXPECT_TRUE(is_vector<const temp_stdvec_mat_d>::value);
 }
 
 TEST(MetaTraits, contains_vector) {
@@ -190,6 +232,17 @@ TEST(MetaTraits, length) {
   Eigen::Matrix<double,1,Eigen::Dynamic> v(2);
   v << 1, 2;
   EXPECT_EQ(2U, length(v));
+
+  Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> q(5,3);
+  EXPECT_EQ(15U, length(q));
+
+  std::vector<Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> > l;
+  for (size_t i = 1; i <= 5; ++i) {
+    int k = static_cast<int>(i);
+    l.push_back(Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>(k, k));
+  }
+  EXPECT_EQ(55U, length(l));
+
 }
 
 TEST(MetaTraits, get) {
@@ -512,6 +565,36 @@ TEST(MetaTraits,VectorView) {
       ++pos;
     }
   }
+}
+
+TEST(MetaTraits,VectorViewMat) {
+  using stan::VectorViewMat;
+  using stan::VectorViewMvt;
+  using std::vector;
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+
+  std::vector<Eigen::Matrix<double, -1, -1> > test;
+  test.push_back(Eigen::Matrix<double, -1, -1>(5,2));
+  test.push_back(Eigen::Matrix<double, -1, -1>(3,4));
+  test.push_back(Eigen::Matrix<double, -1, -1>(3,3));
+
+  double* testarr = static_cast<double*>(::operator new(sizeof(double) * (10 + 12 + 9)));
+  int k = 0;
+  for (size_t i = 0; i < test.size(); ++i) 
+    for (int j = 0; j < test[i].size(); ++j) {
+      test[i](j) = j * (i + 1);
+      testarr[k] = test[i](j);
+      ++k;
+  }
+  VectorViewMat<vector<Matrix<double, Dynamic, Dynamic> >, double*> vv(test, testarr);
+  VectorViewMvt<vector<Matrix<double, Dynamic, Dynamic> > > va(test);
+
+  for (size_t i = 0; i < test.size(); ++i){
+    for (int m = 0; m < test[i].cols(); ++m) 
+      for (int n = 0; n < test[i].rows(); ++n) {
+        EXPECT_FLOAT_EQ(test[i](n,m),vv(static_cast<int>(i), n, m));
+      }
 }
 
 TEST(MetaTraits,containsFvar) {

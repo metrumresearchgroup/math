@@ -100,6 +100,25 @@ namespace stan {
                               const std::vector<double>& gradients) {
       return var(new precomputed_gradients_vari(value, operands, gradients));
     }
+
+    /**
+     * This function returns a var for an expression that has the
+     * specified value, vector of operands, and vector of partial
+     * derivatives of value with respect to the operands.
+     *
+     * @param[in] value The value of the resulting dependent variable.
+     * @param[in] operands operands.
+     * @param[in] gradients vector of partial derivatives of result with
+     * respect to operands.
+     * @return An auto-diff variable that uses the precomputed
+     *   gradients provided.
+     */
+    var precomputed_gradients(double val,
+                              size_t size,
+                              vari** varis,
+                              double* gradients) {
+      return var(new precomputed_gradients_vari(val, size, varis, gradients));
+    }
   }
 }
 #endif
