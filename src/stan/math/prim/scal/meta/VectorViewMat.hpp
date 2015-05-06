@@ -45,6 +45,12 @@ namespace stan {
       }
       return scal_[vecind];
     }
+    scalar_t& operator()(int i, int j) {
+      return operator()(i, j, 0);
+    }
+    scalar_t& operator()(int i) {
+      return operator()(0, 0, i);
+    }
     int matind2vecind(int i, int j, int k, int rows) {
       return i + k * rows + j;
     }
