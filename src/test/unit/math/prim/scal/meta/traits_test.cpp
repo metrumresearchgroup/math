@@ -534,3 +534,24 @@ TEST(MetaTraits,scalar_type_pre) {
   expect_same_type<scalar_type_pre<vector<vector<Matrix<double, -1, 1> > > >::type, Matrix<double, -1, 1> >();
   expect_same_type<scalar_type_pre<vector<vector<Matrix<double, 1, -1> > > >::type, Matrix<double, 1, -1> >();
 }
+
+template <typename T>
+struct typeidentity {
+  typedef T type;
+  T a_;
+
+  explicit typeidentity(T a) : a_(a) { }
+};
+
+TEST(MetaTraits,VectorViewMvt) {
+  using stan::VectorViewMvt;
+  using std::vector;
+  using Eigen::Matrix;
+
+  vector<Matrix<double, -1, -1> > avecmat;
+  avecmat.push_back(Matrix<double, -1, -1>(5,5));
+  avecmat.push_back(Matrix<double, -1, -1>(5,5));
+  VectorViewMvt<vector<Matrix<double, -1, -1> >, true, false> a(avecmat);
+  typeidentity b(a[0]);
+  expect_same_type<b.type, Matrix<double, -1, -1> >();
+}
