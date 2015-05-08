@@ -31,6 +31,8 @@
 #include <stan/math/prim/scal/meta/length.hpp>
 #include <stan/math/prim/scal/meta/max_size_mvt.hpp>
 
+#include <test/unit/math/prim/scal/fun/promote_type_test_util.hpp>
+
 using stan::length;
 
 TEST(MetaTraits, error_index) {
@@ -517,4 +519,18 @@ TEST(MetaTraits,VectorView) {
 TEST(MetaTraits,containsFvar) {
   using stan::contains_fvar;
   EXPECT_FALSE(contains_fvar<double>::value);
+}
+
+TEST(MetaTraits,scalar_type_pre) {
+  using stan::scalar_type_pre;
+  using std::vector;
+  using Eigen::Matrix;
+
+  expect_same_type<scalar_type_pre<Matrix<double, -1, -1> >::type, Matrix<double, -1, -1> >();
+  expect_same_type<scalar_type_pre<vector<Matrix<double, -1, -1> > >::type, Matrix<double, -1, -1> >();
+  expect_same_type<scalar_type_pre<vector<Matrix<double, 1, -1> > >::type, Matrix<double, 1, -1> >();
+  expect_same_type<scalar_type_pre<vector<Matrix<double, -1, 1> > >::type, Matrix<double, -1, 1> >();
+  expect_same_type<scalar_type_pre<vector<vector<Matrix<double, -1, -1> > > >::type, vector<Matrix<double, -1, -1> > >();
+  expect_same_type<scalar_type_pre<vector<vector<Matrix<double, -1, 1> > > >::type, Matrix<double, -1, 1> >();
+  expect_same_type<scalar_type_pre<vector<vector<Matrix<double, 1, -1> > > >::type, Matrix<double, 1, -1> >();
 }
