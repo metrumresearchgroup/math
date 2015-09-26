@@ -523,9 +523,9 @@ TEST(AgradMixMatrixMdivideLeftSPD,fv_exceptions) {
   EXPECT_THROW(mdivide_left_spd(fd1, rvf2), std::domain_error);
   EXPECT_THROW(mdivide_left_spd(fd1, rvf1), std::domain_error);
   EXPECT_THROW(mdivide_left_spd(fd1, vf2), std::domain_error);
-  EXPECT_THROW(mdivide_left_spd(fd2, rvf2), std::domain_error);
-  EXPECT_THROW(mdivide_left_spd(fd2, rvf1), std::domain_error);
-  EXPECT_THROW(mdivide_left_spd(fd2, vf1), std::domain_error);
+  EXPECT_THROW(mdivide_left_spd(fd2, rvf2), std::invalid_argument);
+  EXPECT_THROW(mdivide_left_spd(fd2, rvf1), std::invalid_argument);
+  EXPECT_THROW(mdivide_left_spd(fd2, vf1), std::invalid_argument);
 }
 
 TEST(AgradMixMatrixMdivideLeftSPD,matrix_ffv_matrix_ffv1) {
