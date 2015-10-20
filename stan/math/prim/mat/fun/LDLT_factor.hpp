@@ -119,10 +119,10 @@ namespace stan {
         return _ldltP->matrixLDLT();
       }
 
-      inline size_t rows() const { return N_; }
-      inline size_t cols() const { return N_; }
+      inline Eigen::DenseIndex rows() const { return N_; }
+      inline Eigen::DenseIndex cols() const { return N_; }
 
-      typedef size_t size_type;
+      typedef Eigen::DenseIndex size_type;
       typedef double value_type;
 
       size_t N_;
