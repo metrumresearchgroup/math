@@ -30,9 +30,6 @@
 #include <stan/math/prim/scal/meta/VectorViewMvt.hpp>
 #include <stan/math/prim/scal/meta/length.hpp>
 #include <stan/math/prim/scal/meta/max_size_mvt.hpp>
-#include <stan/math/prim/mat/meta/contains_matrix.hpp>
-#include <stan/math/prim/scal/meta/contains_matrix.hpp>
-#include <stan/math/prim/scal/meta/VectorViewMat.hpp>
 #include <stan/math/prim/scal/meta/VectorViewMvt.hpp>
 
 using stan::length;
@@ -49,33 +46,6 @@ TEST(MetaTraits, isConstant) {
   EXPECT_TRUE(is_constant<unsigned int>::value);
   EXPECT_TRUE(is_constant<int>::value);
 }
-
-TEST(MetaTraits, contains_matrix) {
-  using stan::contains_matrix;
-  using std::vector;
-  using Eigen::Matrix;
-
-  EXPECT_FALSE(contains_matrix<double>::value);
-  EXPECT_FALSE(contains_matrix<float>::value);
-  EXPECT_FALSE(contains_matrix<unsigned int>::value);
-  EXPECT_FALSE(contains_matrix<int>::value);
-  EXPECT_FALSE(contains_matrix<vector<int> >::value);
-  EXPECT_FALSE(contains_matrix<vector<double> >::value);
-  EXPECT_FALSE(contains_matrix<vector<vector<double> > >::value);
-  typedef Matrix<double, -1, -1> temp_mat;
-  typedef Matrix<double, 1, -1> rowvec;
-  typedef Matrix<double, -1, 1> vec;
-  EXPECT_TRUE(contains_matrix<temp_mat>::value);
-  EXPECT_TRUE(contains_matrix<rowvec>::value);
-  EXPECT_TRUE(contains_matrix<vec>::value);
-  EXPECT_TRUE(contains_matrix<vector<temp_mat> >::value);
-  EXPECT_TRUE(contains_matrix<vector<rowvec> >::value);
-  EXPECT_TRUE(contains_matrix<vector<vec> >::value);
-  EXPECT_TRUE(contains_matrix<vector<vector<temp_mat> > >::value);
-  EXPECT_TRUE(contains_matrix<vector<vector<rowvec> > >::value);
-  EXPECT_TRUE(contains_matrix<vector<vector<vec> > >::value);
-}
-
 
 
 TEST(MetaTraits, is_vector) {
@@ -565,36 +535,6 @@ TEST(MetaTraits,VectorView) {
       ++pos;
     }
   }
-}
-
-TEST(MetaTraits,VectorViewMat) {
-  using stan::VectorViewMat;
-  using stan::VectorViewMvt;
-  using std::vector;
-  using Eigen::Matrix;
-  using Eigen::Dynamic;
-
-  std::vector<Eigen::Matrix<double, -1, -1> > test;
-  test.push_back(Eigen::Matrix<double, -1, -1>(5,2));
-  test.push_back(Eigen::Matrix<double, -1, -1>(3,4));
-  test.push_back(Eigen::Matrix<double, -1, -1>(3,3));
-
-  double* testarr = static_cast<double*>(::operator new(sizeof(double) * (10 + 12 + 9)));
-  int k = 0;
-  for (size_t i = 0; i < test.size(); ++i) 
-    for (int j = 0; j < test[i].size(); ++j) {
-      test[i](j) = j * (i + 1);
-      testarr[k] = test[i](j);
-      ++k;
-  }
-  VectorViewMat<vector<Matrix<double, Dynamic, Dynamic> >, double*> vv(test, testarr);
-  VectorViewMvt<vector<Matrix<double, Dynamic, Dynamic> > > va(test);
-
-  for (size_t i = 0; i < test.size(); ++i){
-    for (int m = 0; m < test[i].cols(); ++m) 
-      for (int n = 0; n < test[i].rows(); ++n) {
-        EXPECT_FLOAT_EQ(test[i](n,m),vv(static_cast<int>(i), n, m));
-      }
 }
 
 TEST(MetaTraits,containsFvar) {
