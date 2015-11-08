@@ -2,26 +2,18 @@
 #define STAN_MATH_PRIM_SCAL_META_OPERANDSANDPARTIALSMV_HPP
 
 #include <stan/math/rev/core/precomputed_gradients.hpp>
-#include <stan/math/prim/scal/meta/is_vector.hpp>
-#include <stan/math/prim/mat/meta/is_vector.hpp>
-#include <stan/math/prim/arr/meta/is_vector.hpp>
 #include <stan/math/prim/arr/meta/length.hpp>
 #include <stan/math/prim/mat/meta/length.hpp>
 #include <stan/math/prim/scal/meta/length.hpp>
 #include <stan/math/prim/scal/meta/length_mvt.hpp>
-#include <stan/math/prim/mat/meta/is_vector_like.hpp>
-#include <stan/math/prim/scal/meta/is_vector_like.hpp>
-#include <stan/math/prim/scal/meta/VectorViewMat.hpp>
+#include <stan/math/prim/scal/meta/container_view.hpp>
 #include <stan/math/prim/scal/meta/is_constant_struct.hpp>
-#include <stan/math/prim/scal/meta/contains_fvar.hpp>
 #include <stan/math/prim/scal/meta/partials_return_type.hpp>
 #include <stan/math/prim/scal/meta/partials_type.hpp>
 #include <stan/math/prim/scal/meta/return_type.hpp>
 #include <stan/math/rev/core.hpp>
-#include <stan/math/rev/scal/meta/is_var.hpp>
+#include <boost/conditional.hpp>
 #include <stan/math/rev/scal/meta/partials_type.hpp>
-#include <stan/math/prim/scal/meta/contains_matrix.hpp>
-#include <stan/math/prim/mat/meta/contains_matrix.hpp>
 
 namespace stan {
   namespace agrad {
@@ -53,26 +45,26 @@ namespace stan {
         }
       };
 
-      template<typename T,
-               bool is_vec = is_vector<T>::value,
-               bool contains_mat = contains_matrix<T>::value,
-               bool is_const = is_constant_struct<T>::value>
+      template <typename c>
       struct set_varis_mvt {
         inline size_t set(agrad::vari** /*varis*/, const T& /*x*/) {
           return 0U;
         }
       };
-      template<typename T>
-      struct set_varis_mvt<T, true, false, false> {
-        inline size_t set(agrad::vari** varis, const T& x) {
-          for (size_t n = 0; n < length(x); ++n)
-            varis[n] = x[n].vi_;
-          return length(x);
+      template <typename R, typename C>
+      struct set_varis_mvt<Eigen::Matrix<stan::agrad::var, R, C> > {
+        inline size_t set(agrad::vari** varis, 
+                          const Eigen::Matrix<stan::agrad::var, R, C>& x) {
+          size_t len_x = length(x);
+          for (size_t n = 0; n < len_x; ++n)
+            varis[n] = x(n).vi_;
+          return len_x;
         }
       };
-      template<typename T>
-      struct set_varis_mvt<T, true, true, false> {
-        inline size_t set(agrad::vari** varis, const T& x) {
+      template <typename R, typename C>
+      struct set_varis_mvt<std::vector<Eigen::Matrix<stan::agrad::var, R, C> > > {
+        inline size_t set(agrad::vari** varis, 
+                          const std::vector<Eigen::Matrix<stan::agrad::var, R, C> >& x) {
           size_t n = 0;
           for (size_t i = 0; i < length_mvt(x); ++i)
             for (int j = 0; j < length(x[i]); ++j) {
@@ -82,30 +74,33 @@ namespace stan {
           return n;
         }
       };
-      template<typename T>
-      struct set_varis_mvt<T, false, true, false> {
-        inline size_t set(agrad::vari** varis, const T& x) {
-          for (size_t n = 0; n < length(x); ++n)
-            varis[n] = x(n).vi_;
-          return length(x);
+      template <>
+      struct set_varis_mvt<std::vector<stan::agrad::var> > {
+        inline size_t set(agrad::vari** varis, 
+                          const std::vector<stan::agrad::var>& x) {
+          size_t len_x = length(x);
+          for (size_t i = 0; i < len_x; ++i)
+              varis[n] = x[i].vi_;
+          return len_x;
         }
       };
       template<>
-      struct set_varis_mvt<agrad::var, false, false, false> {
+      struct set_varis_mvt<agrad::var> {
         inline size_t set(agrad::vari** varis, const agrad::var& x) {
           varis[0] = x.vi_;
-          return (1);
+          return 1;
         }
       };
-    
 
     /**
      * A variable implementation that stores operands and
      * derivatives with respect to the variable.
      */
     template<typename T1 = double, typename T2 = double, typename T3 = double,
-             typename T4 = double, typename T5 = double, typename T6 = double>
-    struct OperandsAndPartials {
+             typename T4 = double, typename T5 = double, typename T6 = double,
+             typename V1 = double, typename V2 = double, typename V3 = double,
+             typename V4 = double, typename V5 = double, typename V6 = double>
+    struct OperandsAndPartialsMV {
       typedef
       typename stan::partials_return_type<T1, T2, T3, T4, T5, T6>::type
       T_partials_return;
@@ -118,24 +113,24 @@ namespace stan {
       agrad::vari** all_varis;
       T_partials_return* all_partials;
 
-      VectorViewMat<T_partials_return,
-                 is_vector_like<T1>::value,
-                 is_constant_struct<T1>::value> d_x1;
-      VectorViewMat<T_partials_return,
-                 is_vector_like<T2>::value,
-                 is_constant_struct<T2>::value> d_x2;
-      VectorViewMat<T_partials_return,
-                 is_vector_like<T3>::value,
-                 is_constant_struct<T3>::value> d_x3;
-      VectorViewMat<T_partials_return,
-                 is_vector_like<T4>::value,
-                 is_constant_struct<T4>::value> d_x4;
-      VectorViewMat<T_partials_return,
-                 is_vector_like<T5>::value,
-                 is_constant_struct<T5>::value> d_x5;
-      VectorViewMat<T_partials_return,
-                 is_vector_like<T6>::value,
-                 is_constant_struct<T6>::value> d_x6;
+      container_view<boost::conditional<
+        is_constant_struct<T1>::value,
+        dummy,T1>::value,V1> d_x1;
+      container_view<boost::conditional<
+        is_constant_struct<T2>::value,
+        dummy,T2>::value,V2> d_x2;
+      container_view<boost::conditional<
+        is_constant_struct<T3>::value,
+        dummy,T3>::value,V3> d_x3;
+      container_view<boost::conditional<
+        is_constant_struct<T4>::value,
+        dummy,T4>::value,V4> d_x4;
+      container_view<boost::conditional<
+        is_constant_struct<T5>::value,
+        dummy,T5>::value,V5> d_x5;
+      container_view<boost::conditional<
+        is_constant_struct<T6>::value,
+        dummy,T6>::value,V6> d_x6;
 
       OperandsAndPartials(const T1& x1 = 0, const T2& x2 = 0, const T3& x3 = 0,
                           const T4& x4 = 0, const T5& x5 = 0, const T6& x6 = 0)
@@ -145,12 +140,10 @@ namespace stan {
                  !is_constant_struct<T4>::value * length(x4) +
                  !is_constant_struct<T5>::value * length(x5) +
                  !is_constant_struct<T6>::value * length(x6)),
-          all_varis(static_cast<agrad::vari**>
-                    (agrad::chainable::operator new
-                     (sizeof(agrad::vari*) * nvaris))),
-          all_partials(static_cast<T_partials_return*>
-                       (agrad::chainable::operator new
-                        (sizeof(T_partials_return) * nvaris))),
+          all_varis(ChainableStack::memalloc_.alloc_array<vari*>
+                    (nvaris)),
+          all_partials(ChainableStack::memalloc_.alloc_array<T_parials_return*>
+                       (nvaris)),
           d_x1(x1, all_partials),
           d_x2(x2, all_partials
                + (!is_constant_struct<T1>::value) * length(x1)),
