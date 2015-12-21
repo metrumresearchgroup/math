@@ -199,8 +199,6 @@ namespace stan {
                                         all_partials);
       }
     };
-
-
   }
 }
 
