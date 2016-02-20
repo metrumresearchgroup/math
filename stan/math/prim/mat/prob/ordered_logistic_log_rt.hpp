@@ -22,15 +22,6 @@ namespace stan {
 
   namespace math {
 
-    template <typename T>
-    inline T log_inv_logit_diff(const T& alpha, const T& beta) {
-      using std::exp;
-      using stan::math::log1m_exp;
-      using stan::math::log1p_exp;
-      return beta + log1m_exp(alpha - beta) - log1p_exp(alpha)
-        - log1p_exp(beta);
-    }
-
     template <typename T1, typename T2, typename T3>
     size_t max_size_mixed(const T1& x1, const T2& x2, const T3& x3) {
       size_t result = length(x1);
@@ -127,18 +118,39 @@ namespace stan {
         for (int j = 1; j < size_c; ++j)
           check_greater(function, "Cut points parameter", c_vec[i](j), c(j - 1));
 
+      operands_paritals_container<typename T_lambda, double,
+                                  typename T_loc, Matrix<double, Dynamic, 1> > 
+                                    opc(lambda, c);
+
       for (size_t i = 0; i < size_vec; ++i) {
         int y_el = y_vec[i];
-        const T_partials_return lam_el = value_of(lambda_vec[i]);
+        const T_partials_return d_lam = value_of(lambda_vec[i]);
+        Matrix<double,Dynamic,1> cs(size_c,0.0);
+        cs.setZero();
 
         // log(1 - inv_logit(lambda))
-        if (y_el == 1) 
-          lp += -log1p_exp(lam_el - value_of(c_vec[i](0)));
-        else if (y_el == K) 
-          lp += -log1p_exp(value_of(c_vec[i](K-2)) - lam_el);
+        if (y_el == 1) {
+          d_c = value_of(c_vec[i](0));
+          lp += -log1p_exp(d_lam - d_c);
+          inv_log = 1./(1+exp(d_c-d_lam));
+          opc.dx1[i] += -inv_log;
+          cs(0) = inv_log;
+          opc.dx2[i] += cs;
+        }
+        else if (y_el == K) {
+          d_c = value_of(c_vec[i](K-2));
+          inv_log = 1./(1+exp(d_lam-d_c));
+          opc.dx1[i] += inv_log;
+          cs(K-2) = -inv_log
+          opc.dx2[i] += cs;
+          lp += -log1p_exp(value_of(c_vec[i](K-2)) - d_lam);
+        }
         else {
-          lp += log_inv_logit_diff(value_of(c_vec[i](y_el-2)) - lam_el,
-                                    value_of(c_vec[i](y_el-1)) - lam_el);
+          d_cym2 = value_of(c_vec[i](y_el-2));
+          d_cym1 = value_of(c_vec[i](y_el-1));
+          lp += d_cym1 - lam_el
+            -log1m_exp(d_cym2-d_cym1)-log1p_exp(d_cym2-d_lam)
+            -log1p_exp(d_cym1-d_lam);
         }
       }
     }
