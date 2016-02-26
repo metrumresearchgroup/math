@@ -2,7 +2,6 @@
 #include <stan/math/prim/arr/meta/get.hpp>
 #include <stan/math/prim/mat/meta/length.hpp>
 #include <stan/math/prim/mat/meta/is_vector.hpp>
-#include <stan/math/prim/mat/meta/is_vector_like.hpp>
 #include <stan/math/rev/mat/fun/crossprod.hpp>
 #include <stan/math/prim/mat/fun/crossprod.hpp>
 #include <gtest/gtest.h>

@@ -4,7 +4,6 @@
 #include <stan/math/prim/mat/meta/length.hpp>
 #include <stan/math/prim/mat/meta/get.hpp>
 #include <stan/math/prim/mat/meta/is_vector.hpp>
-#include <stan/math/prim/mat/meta/is_vector_like.hpp>
 #include <gtest/gtest.h>
 #include <stan/math/prim/mat/prob/inv_wishart_log.hpp>
 #include <test/unit/math/rev/mat/prob/expect_eq_diffs.hpp>
