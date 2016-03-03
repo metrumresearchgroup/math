@@ -1,7 +1,7 @@
 #include <stan/math/rev/scal.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/math/rev/scal/fun/nan_util.hpp>
+#include <test/unit/math/rev/mat/fun/util.hpp>
 
 TEST(AgradRev,a_times_b) {
   AVAR a = 2.0;

@@ -1,6 +1,6 @@
+#include <stan/math/prim/scal.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/math/fwd/scal/fun/nan_util.hpp>
-#include <stan/math/prim/scal/meta/return_type.hpp>
 
 TEST(AgradFwdOperatorMultiplication, Fvar) {
   using stan::math::fvar;
