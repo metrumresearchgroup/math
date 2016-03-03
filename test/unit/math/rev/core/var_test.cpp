@@ -1,8 +1,5 @@
-#include <stan/math/rev/core.hpp>
+#include <stan/math/rev/scal.hpp>
 #include <gtest/gtest.h>
-#include <stan/math/prim/mat/fun/Eigen.hpp>  // only used for stack tests
-#include <stan/math/rev/mat/fun/multiply.hpp>
-#include <stan/math/rev/mat/fun/quad_form.hpp>
 #include <test/unit/math/rev/mat/fun/util.hpp>
 
 struct AgradRev : public testing::Test {

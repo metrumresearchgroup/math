@@ -1,5 +1,5 @@
+#include <stan/math/fwd/scal.hpp>
 #include <gtest/gtest.h>
-#include <stan/math/fwd/core.hpp>
 
 TEST(AgradFwdOperatorDivideEqual, Fvar) {
   using stan::math::fvar;

@@ -1,9 +1,8 @@
-#include <stan/math/rev/core.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+#include <stan/math/rev/scal.hpp>
 #include <gtest/gtest.h>
 
 TEST(AgradRev,a_neq_y) {
-  AVAR a = 2.0;
+  stan::math::var a = 2.0;
   double y = 3.0;
   EXPECT_TRUE(a != y);
   EXPECT_TRUE(y != a);

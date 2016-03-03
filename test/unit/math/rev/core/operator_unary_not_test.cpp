@@ -1,11 +1,10 @@
-#include <stan/math/rev/core.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+#include <stan/math/rev/scal.hpp>
 #include <gtest/gtest.h>
 
 TEST(AgradRev,not_a) {
-  AVAR a(6.0);
+  stan::math::var a(6.0);
   EXPECT_EQ(0, !a);
-  AVAR b(0.0);
+  stan::math::var b(0.0);
   EXPECT_EQ(1, !b);
 }
 

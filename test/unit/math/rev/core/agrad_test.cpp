@@ -1,7 +1,6 @@
+#include <stan/math/mix/scal.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/math/rev/mat/fun/util.hpp>
-#include <stan/math/rev/core.hpp>
-#include <stan/math/rev/scal/fun/sin.hpp>
 
 TEST(AgradRev, multiple_grads) {
   for (int i = 0; i < 100; ++i) {

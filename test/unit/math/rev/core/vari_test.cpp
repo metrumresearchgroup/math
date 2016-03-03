@@ -1,6 +1,5 @@
-#include <stan/math/rev/core.hpp>
+#include <stan/math/rev/scal.hpp>
 #include <gtest/gtest.h>
-#include <sstream>
 
 TEST(AgradRev, insertion_operator) {
   stan::math::vari v(5);
