@@ -1,5 +1,7 @@
-#include <stan/math/rev/mat.hpp>  // FIX ME - more specific
+#include <stan/math/rev/mat.hpp>
 #include <stan/math/torsten/PKModel/Pred/fTwoCpt.hpp>
+#include <test/unit/math/prim/mat/fun/expect_matrix_eq.hpp>
+#include <test/unit/math/prim/mat/fun/expect_near_matrix_eq.hpp>
 #include <gtest/gtest.h>
 #include <ostream>
 #include <fstream>
@@ -23,7 +25,6 @@ struct FK_functor {
     using Eigen::Matrix;
     using Eigen::Dynamic;
     typedef typename boost::math::tools::promote_args<T0, T1, T2, T3>::type scalar;
-
     // PK variables
     scalar
       CL = parms[0],
@@ -41,28 +42,67 @@ struct FK_functor {
       circ0 = parms[6],
       alpha = parms[7],
       gamma = parms[8],
-      ktr = 4 / MTT,
-      prol = x[3] + circ0,
-      transit1 = x[4] + circ0,
-      transit2 = x[5] + circ0,
-      transit3 = x[6] + circ0,
-      circ = x[7] + circ0;
+      ktr = 4 / MTT;
 
-    std::vector<scalar> dxdt(8);
-    dxdt[0] = -ka * x[0];
-    dxdt[1] = ka * x[0] - (k10 + k12) * x[1] + k21 * x[2];
-    dxdt[2] = k12 * x[1] - k21 * x[2];
+    int nStates = 8;
+    int N = x_i[0];  // number of "patients"
 
-    scalar conc = x[1] / VC;
-    scalar Edrug = alpha * conc;
+    std::vector<scalar> dxdt(N * nStates);
 
-    dxdt[3] = ktr * prol * ((1 - Edrug) * pow((circ0 / circ), gamma) - 1);
-    dxdt[4] = ktr * (prol - transit1);
-    dxdt[5] = ktr * (transit1 - transit2);
-    dxdt[6] = ktr * (transit2 - transit3);
-    dxdt[7] = ktr * (transit3 - circ);
+    for (int i = 0; i < (N * nStates - 1); i += nStates) {
+      scalar
+        prol = x[i + 3] + circ0,
+        transit1 = x[i + 4] + circ0,
+        transit2 = x[i + 5] + circ0,
+        transit3 = x[i + 6] + circ0,
+        circ = x[i + 7] + circ0;
+
+     dxdt[i] = -ka * x[i];
+     dxdt[i + 1] = ka * x[i] - (k10 + k12) * x[i + 1] + k21 * x[i + 2];
+     dxdt[i + 2] = k12 * x[i + 1] - k21 * x[i + 2];
+
+     scalar conc = x[i + 1] / VC;
+     scalar Edrug = alpha * conc;
+
+      dxdt[i + 3] = ktr * prol * ((1 - Edrug) * pow((circ0 / circ), gamma) - 1);
+      dxdt[i + 4] = ktr * (prol - transit1);
+      dxdt[i + 5] = ktr * (transit1 - transit2);
+      dxdt[i + 6] = ktr * (transit2 - transit3);
+      dxdt[i + 7] = ktr * (transit3 - circ);
+    }
 
     return dxdt;
+  }
+};
+
+struct run_num_pm {
+   // pm regime: parameters are var, but inits aren't.
+
+  template <typename T>
+  inline
+  Eigen::Matrix<T, Eigen::Dynamic, 1>
+  operator() (Eigen::Matrix<T, Eigen::Dynamic, 1>& x) const {
+    using std::vector;
+    using stan::math::to_array_1d;
+    using stan::math::integrate_ode_rk45;
+    
+    // fixed data argument.
+    int N = 100;  // number of "patients"
+    int nOde = 8;
+    vector<double> init(N * nOde, 0);
+    for (int i = 0; i < (N * nOde - 1); i += nOde)
+      init[i] = 80000;  // bolus dose
+
+    double t0 = 0;
+    double t = 1.0;
+    vector<double> dt(1, t - t0);
+    vector<double> x_r(0);
+    vector<int> x_i(1, N);
+    
+    vector<T> theta = to_array_1d(x);
+
+    return to_vector(integrate_ode_rk45(FK_functor(), init, 0, dt, theta,
+                                        x_r, x_i)[0]);
   }
 };
 
@@ -78,11 +118,13 @@ struct FK_mix_functor {
   operator()(const T0& t,
              const std::vector<T1>& x,
              const std::vector<T2>& parms,
-             const std::vector<T3>& rate,
-             const std::vector<int>& dummy, std::ostream* pstream__) const {
+             const std::vector<T3>& x_r,
+             const std::vector<int>& x_i,
+             std::ostream* pstream__) const {
     using std::vector;
     using Eigen::Matrix;
     using Eigen::Dynamic;
+    using stan::math::to_vector;  // test
     typedef typename boost::math::tools::promote_args<T0, T1, T2, T3>::type scalar;
     // PK variables
     scalar VC = parms[2];
@@ -94,281 +136,171 @@ struct FK_mix_functor {
       alpha = parms[7],
       gamma = parms[8],
       ktr = 4 / MTT,
-      prol = x[0] + circ0,
-      transit1 = x[1] + circ0,
-      transit2 = x[2] + circ0,
-      transit3 = x[3] + circ0,
-      circ = x[4] + circ0;
+      prol, transit1, transit2, transit3, circ;
 
-    vector<T2> initPK(3);
-    // Matrix<T2, 1, Dynamic> initPK(3);
-    initPK[0] = parms[9];
-    initPK[1] = parms[10];
-    initPK[2] = parms[11];
-
+    int nPK = 3, nPD = 5, N = x_i[0];
     vector<scalar> parmsPK(5);
-    // Matrix<T2, 1, Dynamic> parmsPK(5);
     for (size_t i = 0; i < parmsPK.size(); i++)
       parmsPK[i] = parms[i];
 
-    vector<scalar> predPK = fTwoCpt(t, parmsPK, initPK, rate);
-    // Matrix<T2, 1, Dynamic> predPK = predTwoCpt(t, parmsPK, initPK);
+    vector<scalar> initPK(nPK);
+    vector<double> rate0(nPK, 0);  // no rates
+    scalar conc, Edrug;
 
-    scalar conc = predPK[1] / VC;
-    scalar Edrug = alpha * conc;
+    vector<scalar> dxdt(N * nPD);
 
-    // return object
-    std::vector<scalar> dxdt(5);
-    dxdt[0] = ktr * prol * ((1 - Edrug) * (pow((circ0 / circ), gamma)) - 1);
-    dxdt[1] = ktr * (prol - transit1);
-    dxdt[2] = ktr * (transit1 - transit2);
-    dxdt[3] = ktr * (transit2 - transit3);
-    dxdt[4] = ktr * (transit3 - circ);
+    for (int i = 0; i < N; i++) {  
+      initPK[0] = x_r[i * nPK];
+      initPK[1] = x_r[i * nPK + 1];
+      initPK[2] = x_r[i * nPK + 2];
+      conc = fTwoCpt(t, parmsPK, initPK, rate0)[1] / VC;
+      Edrug = alpha * conc;
 
+      prol = x[i * nPD] + circ0;
+      transit1 = x[i * nPD + 1] + circ0;
+      transit2 = x[i * nPD + 2] + circ0;
+      transit3 = x[i * nPD + 3] + circ0;
+      circ = x[i * nPD + 4] + circ0;
+
+      // return object
+      dxdt[i * nPD] = ktr * prol * ((1 - Edrug) * (pow((circ0 / circ), gamma)) - 1);
+      dxdt[i * nPD + 1] = ktr * (prol - transit1);
+      dxdt[i * nPD + 2] = ktr * (transit1 - transit2);
+      dxdt[i * nPD + 3] = ktr * (transit2 - transit3);
+      dxdt[i * nPD + 4] = ktr * (transit3 - circ);      
+    }
+    
     return dxdt;
    }
 };
 
-TEST(mixed_solver, dbl) {
-  /**
-   * TEST 1: -- everything is passed as doubles
-   * No sensitivities need to be calculated.
-   */
-  using std::vector;
+struct run_mix_pm {
+
+  template <typename T>
+  inline
+  Eigen::Matrix<T, Eigen::Dynamic, 1>
+  operator() (Eigen::Matrix<T, Eigen::Dynamic, 1> x) const {
+    using std::vector;
+    using stan::math::to_array_1d;
+    using stan::math::integrate_ode_rk45;
+
+   // fixed data
+   int N = 100;
+   int nOde = 8;
+   vector<double> init(N * nOde, 0);
+   for (int i = 0; i < (N * nOde - 1); i += nOde) init[i] = 80000;
+
+   double t0 = 0, t = 1;
+   vector<double> dt(1, t - t0);
+
+   int nBase = 3, nStates = 5;
+
+   vector<T> theta = to_array_1d(x);
+   
+   // The base initial states are passed as data.
+   vector<double> x_r(N * nBase);
+   for (int j = 0; j < N; j++)
+     for (int i = 0; i < nBase; i++)
+       x_r[j * nBase + i] = init[j * nOde + i];
+
+   // store the number of "patients" in x_i.
+   vector<int> x_i(1, N);
+
+   // get initial states for num subsystem
+   vector<double> init_num(N * nStates);
+   for (int i = 0; i < N; i++)
+      for (int j = 0; j < nStates; j++)
+        init_num[i] = init[i * nOde +  nBase + j];
+
+   // solve numerical subsystem
+    vector<T>
+      temp_num = integrate_ode_rk45(FK_mix_functor(), init_num, 0, dt,
+                                    theta, x_r, x_i)[0];   
+
+   Eigen::Matrix<T, Eigen::Dynamic, 1> temp_mix(N * (nBase + nStates));
+   // store numerical solution in return object
+   for (int j = 0; j < N; j++)
+     for (int i = 0; i < nStates; i++)
+       temp_mix(nOde * j + nBase + i) = temp_num[nStates * j + i];
+
+   // solve analytical subsystem
+   vector<T> temp_an(N * nBase);
+   vector<T> pred1_two(nBase);
+   vector<double> rate(nBase, 0);
+   vector<T> parmsPK(5);
+   for (size_t i = 0; i < parmsPK.size(); i++) parmsPK[i] = x(i);
+   vector<double> initPK(nBase);
+
+    for (int i = 0; i < N; i++) {
+      initPK[0] = x_r[i * nBase];
+      initPK[1] = x_r[i * nBase + 1];
+      initPK[2] = x_r[i * nBase + 2];
+      pred1_two = fTwoCpt(dt[0], parmsPK, initPK, rate);
+      
+      // store analytical solution in return object
+      for (int j = 0; j < nBase; j++)
+        temp_mix(nOde * i + j) = pred1_two[j];
+    }
+
+    return temp_mix;
+  }
+};
+
+
+TEST(mix_solver, FK)  {
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  using Eigen::VectorXd;
   using stan::math::var;
-  using stan::math::integrate_ode_rk45;
-  using stan::math::to_vector;
+  using stan::math::jacobian;
 
-  typedef double scalar;
+  Matrix<double, Dynamic, 1> x(9);
+  x(0) = 10;  // CL
+  x(1) = 15;  // Q
+  x(2) = 35;  // VC
+  x(3) = 105;  // VP
+  x(4) = 2;  // ka
+  x(5) = 125;  // MTT
+  x(6) = 5;  // Circ0
+  x(7) = 3e-4;  // alpha
+  x(8) = 0.17;  // gamma
 
-  vector<double> init(8, 0);
-  init[0] = 80000;  // bolus dose in the gut
-  double t0 = 0;
-  vector<double> t(1);
-  t[0] = 1;
+  VectorXd fx_num, fx_mix;
+  Matrix<double, Dynamic, Dynamic> J_num, J_mix;
+  
+  std::cout << fx_num << std::endl;
 
-  vector<scalar> parms(9);
-  parms[0] = 10;  // CL
-  parms[1] = 15;  // Q
-  parms[2] = 35;  // VC
-  parms[3] = 105;  // VP
-  parms[4] = 2;  // ka
-  parms[5] = 125;  // MTT
-  parms[6] = 5;  // Circ0
-  parms[7] = 3e-4;  // alpha
-  parms[8] = 0.17;  // gamma
+  jacobian(run_num_pm(), x, fx_num, J_num);
+  jacobian(run_mix_pm(), x, fx_mix, J_mix);
 
-  vector<double> x_r(1, 0);
-  vector<int> x_i(1, 0);
+  // std::cout << fx_mix << std::endl;
 
-   vector<double> rate(8, 0);  // required for fTwoCpt
-
-  // need to make sure we pass dt (for fTwoCpt)
-  vector<double> dt(1);
-  dt[0] = t[0] - t0;
-
-  // results from mrgsolve (use to make sure the solver works)
-  vector<double> mrgSolution(8);
-  mrgSolution[0] = 10826.82;
-  mrgSolution[1] = 44779.91;
-  mrgSolution[2] = 14296.11;
-  mrgSolution[3] = -0.04823222;
-  mrgSolution[4] = -0.0006261043;
-  mrgSolution[5] = -5.620476e-06;
-  mrgSolution[6] = -3.883612e-08;
-  mrgSolution[7] = -2.188286e-10;
-
-  // Save CPU times inside output file
-  std::ofstream myfile;
-  myfile.open ("test/unit/math/torsten/mixSolver/mixSolverResult_dd.csv");
-
-  int N = 1000;  // number of simulations
-  for (int i = 0; i < N; i++) myfile << i << ", ";
-  myfile << "0\n";
-
-  // Use full numerical method
-  for (int i = 0; i < N; i++) {
-    clock_t start = clock();
-
-    vector<vector<scalar> >
-      temp = integrate_ode_rk45(FK_functor(), init, 0, dt, parms, x_r, x_i);
-
-    clock_t end = clock();
-
-    myfile << (float)(end - start) / CLOCKS_PER_SEC << ", ";
-
-    // Check accuracy of result
-    for (int i = 0; i < 8; i++) {
-      // FIX ME - what value should I use for the relative error?
-      double rel_err  = std::max(std::abs(1e-3 * mrgSolution[i]), 5e-13);
-      EXPECT_NEAR(mrgSolution[i], temp[0][i], rel_err);
-    }
+  // Check solution
+  int N = 100;  // number of patients
+  int nOde = 8;
+  VectorXd fx_mrgSolve(N * nOde);
+  for (int i = 0; i < N; i ++) {
+    fx_mrgSolve(nOde * i) = 10826.82;
+    fx_mrgSolve(nOde * i + 1) = 44779.91;
+    fx_mrgSolve(nOde * i + 2) = 14296.11;
+    fx_mrgSolve(nOde * i + 3) = -0.04823222;
+    fx_mrgSolve(nOde * i + 4) = -0.0006261043;
+    fx_mrgSolve(nOde * i + 5) = -5.620476e-06;
+    fx_mrgSolve(nOde * i + 6) = -3.883612e-08;
+    fx_mrgSolve(nOde * i + 7) = -2.188286e-10;
   }
-  myfile << "0\n";
-
-  // Use mix solver
-  for (int i = 0; i < N; i++) {
-    clock_t start2 = clock();
-
-    parms.push_back(init[0]);
-    parms.push_back(init[1]);
-    parms.push_back(init[2]);
-
-    int nStates = 5;
-    vector<double> init_mix(nStates);
-    for (int i = 0; i < nStates; i++) init_mix[i] = init[3 + i];
-
-    vector<vector<scalar> >
-      temp_PD = integrate_ode_rk45(FK_mix_functor(), init_mix, 0, dt, parms,
-                                   rate, x_i);
-
-    int nParmsPK = 5;
-    vector<scalar> parmsPK(nParmsPK);
-    for (int i = 0; i < nParmsPK; i++) parmsPK[i] = parms[i];
-
-    int nPK = 3;
-    vector<scalar> initPK(nPK);
-    for (int i = 0; i < nPK; i++) initPK[i] = init[i];
-
-    vector<scalar> tempPK = fTwoCpt(dt[0], parmsPK, initPK, rate);
-
-    vector<vector<scalar> > temp_mix(1);
-    temp_mix[0].resize(8);
-    for (int i = 0 ; i < 3; i++) temp_mix[0][i] = tempPK[i];
-    for (int i = 0 ; i < 5; i++) temp_mix[0][3 + i] = temp_PD[0][i];
-
-    clock_t end2 = clock();
-    myfile << (float)(end2 - start2) / CLOCKS_PER_SEC << ", ";
-
-    for (int i = 0; i < 8; i++) {
-      // FIX ME - what value should I use for the relative error?
-      double rel_err  = std::max(std::abs(1e-3 * mrgSolution[i]), 5e-13);
-      EXPECT_NEAR(mrgSolution[i], temp_mix[0][i], rel_err);
-    }
-  }
-
-  myfile << "0\n";
-  myfile.close();
+  
+  expect_matrix_eq(fx_mrgSolve, fx_num);
+  expect_near_matrix_eq(fx_mrgSolve, fx_mix, 1e-6);  // why do I need an approx?
+  
+  // Compare the Jacobians produced by both methods.
+  // expect_near_matrix_eq(J_num, J_mix, 1e-6);
+  
+  // FIX ME - determine the relative errors empirically
+  
 }
+    
+    
+    
+    
 
-TEST(mixed_solver, var) {
-  /**
-   * TEST 1: -- everything is passed as var
-   * Sensitivities with respect to parameters and
-   * initial estimated need  to be calculated.
-   */
-  using std::vector;
-  using stan::math::var;
-  using stan::math::integrate_ode_rk45;
-  using stan::math::to_vector;
-
-  typedef var scalar;
-
-  vector<scalar> init(8, 0);
-  init[0] = 80000;  // bolus dose in the gut
-  double t0 = 0;
-  vector<double> t(1);
-  t[0] = 1;
-
-  vector<scalar> parms(9);
-  parms[0] = 10;  // CL
-  parms[1] = 15;  // Q
-  parms[2] = 35;  // VC
-  parms[3] = 105;  // VP
-  parms[4] = 2;  // ka
-  parms[5] = 125;  // MTT
-  parms[6] = 5;  // Circ0
-  parms[7] = 3e-4;  // alpha
-  parms[8] = 0.17;  // gamma
-
-  vector<double> x_r(1, 0);
-  vector<int> x_i(1, 0);
-
-  // need to make sure we pass dt (for fTwoCpt)
-  vector<double> dt(1);
-  dt[0] = t[0] - t0;
-
-  // results from mrgsolve (use to make sure the solver works)
-  vector<double> mrgSolution(8);
-  mrgSolution[0] = 10826.82;
-  mrgSolution[1] = 44779.91;
-  mrgSolution[2] = 14296.11;
-  mrgSolution[3] = -0.04823222;
-  mrgSolution[4] = -0.0006261043;
-  mrgSolution[5] = -5.620476e-06;
-  mrgSolution[6] = -3.883612e-08;
-  mrgSolution[7] = -2.188286e-10;
-
-  // Save CPU times inside output file
-  std::ofstream myfile;
-  myfile.open ("test/unit/math/torsten/mixSolver/mixSolverResult_vv.csv");
-
-  int N = 1000;  // number of simulations
-  for (int i = 0; i < N; i++) myfile << i << ", ";
-  myfile << "0\n";
-
-  // Use full numerical method
-  for (int i = 0; i < N; i++) {
-    clock_t start = clock();
-
-    vector<vector<scalar> >
-      temp = integrate_ode_rk45(FK_functor(), init, 0, dt, parms, x_r, x_i);
-
-    clock_t end = clock();
-
-    myfile << (float)(end - start) / CLOCKS_PER_SEC << ", ";
-
-    for (int i = 0; i < 8; i++) {
-      // FIX ME - what value should I use for the relative error?
-      double rel_err  = std::max(std::abs(1e-3 * mrgSolution[i]), 5e-13);
-      EXPECT_NEAR(mrgSolution[i], temp[0][i].val(), rel_err);
-    }
-  }
-  myfile << "0\n";
-
-  // Use mix solver
-  for (int i = 0; i < N; i++) {
-    clock_t start2 = clock();
-
-    parms.push_back(init[0]);
-    parms.push_back(init[1]);
-    parms.push_back(init[2]);
-
-    vector<double> rate(8, 0);  // required for fTwoCpt
-
-    int nStates = 5;
-    vector<scalar> init_mix(nStates);
-    for (int i = 0; i < nStates; i++) init_mix[i] = init[3 + i];
-
-    vector<vector<scalar> >
-      temp_PD = integrate_ode_rk45(FK_mix_functor(), init_mix, 0, dt, parms,
-                                 rate, x_i);
-
-    int nParmsPK = 5;
-    vector<scalar> parmsPK(nParmsPK);
-    for (int i = 0; i < nParmsPK; i++) parmsPK[i] = parms[i];
-
-    int nPK = 3;
-    vector<scalar> initPK(nPK);
-    for (int i = 0; i < nPK; i++) initPK[i] = init[i];
-
-    vector<scalar> tempPK = fTwoCpt(dt[0], parmsPK, initPK, rate);
-
-    vector<vector<scalar> > temp_mix(1);
-    temp_mix[0].resize(8);
-    for (int i = 0 ; i < 3; i++) temp_mix[0][i] = tempPK[i];
-    for (int i = 0 ; i < 5; i++) temp_mix[0][3 + i] = temp_PD[0][i];
-
-    clock_t end2 = clock();
-    myfile << (float)(end2 - start2) / CLOCKS_PER_SEC << ", ";
-
-    for (int i = 0; i < 8; i++) {
-      // FIX ME - what value should I use for the relative error?
-      double rel_err  = std::max(std::abs(1e-3 * mrgSolution[i]), 5e-13);
-      EXPECT_NEAR(mrgSolution[i], temp_mix[0][i].val(), rel_err);
-    }
-  }
-
-  myfile << "0\n";
-  myfile.close();
-}
