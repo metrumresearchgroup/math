@@ -59,6 +59,7 @@ struct OneCpt_mix_functor {
     using Eigen::Matrix;
     using Eigen::Dynamic;
     typedef typename boost::math::tools::promote_args<T0, T1, T2, T3>::type scalar;
+
     T2
       CL = parms[0],
       VC = parms[1],
