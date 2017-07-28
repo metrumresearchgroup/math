@@ -72,7 +72,7 @@ struct Pred1_general {
     using boost::math::tools::promote_args;
 
     typedef typename promote_args<T_time, T_init, T_parameters>::type scalar;
-
+  
     assert((size_t) init.cols() == rate.size());
 
     T_time EventTime = parameter.get_time();  // time of current event
@@ -148,7 +148,8 @@ struct Pred1_general {
     for (size_t i = 0; i < rate.size(); i++)
       theta[nOdeParm + i] = rate[i];
 
-    vector<scalar> init_vector = to_array_1d(init);
+    vector<scalar> init_vector(init.size());
+    for (size_t i = 0; i < init_vector.size(); i++) init_vector[i] = init(i);
     vector<double> x_r;
 
     Eigen::Matrix<scalar, 1, Eigen::Dynamic> pred;

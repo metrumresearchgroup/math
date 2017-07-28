@@ -60,7 +60,6 @@ struct SS_system_dd {
              std::ostream* msgs) const {
     using stan::math::to_array_1d;
     using stan::math::to_vector;
-    using stan::math::to_vector;
     using Eigen::Matrix;
     using Eigen::Dynamic;
     using std::vector;
@@ -190,9 +189,8 @@ struct SS_system_vd {
              std::ostream* msgs) const {
     using stan::math::to_array_1d;
     using stan::math::to_vector;
-    using std::vector;
-    using stan::math::to_vector;
     using stan::math::invalid_argument;
+    using std::vector;
 
     typedef typename boost::math::tools::promote_args<T0, T1>::type scalar;
     typedef typename stan::return_type<T0, T1>::type T_deriv;
@@ -238,6 +236,116 @@ struct SS_system_vd {
       result = to_vector(derivative);
     }
 
+    return result;
+  }
+};
+
+/**
+ * A structure to store the algebraic system
+ * which gets solved when computing the steady
+ * state solution.
+ * 
+ * In this structure, amt is fixed and rate is
+ * a random variable.
+ */
+template <typename F, typename F2>
+struct SS_system_dv {
+  F f_;
+  F2 f2_;
+  double ii_;
+  int cmt_;  // dosing compartment
+  integrator_structure integrator_;
+  int nPK_;
+  int nParms_;
+  int nOde_;
+  
+  SS_system_dv() { }
+  
+  SS_system_dv(const F& f,
+               const F2& f2,
+               double ii,
+               int cmt,
+               const integrator_structure& integrator,
+               int nParms, int nOde)
+    : f_(f), f2_(f2), ii_(ii), cmt_(cmt), integrator_(integrator),
+      nPK_(0), nParms_(nParms), nOde_(nOde) { }
+
+  SS_system_dv(const F& f,
+               const F2& f2,
+               double ii,
+               int cmt,
+               const integrator_structure& integrator,
+               int nPK, int nParms, int nOde)
+    : f_(f), f2_(f2), ii_(ii), cmt_(cmt), integrator_(integrator),
+      nPK_(nPK), nParms_(nParms), nOde_(nOde) { }
+
+  /**
+  *  dv regime.
+  *  dat comtaoms the adjusted amount (biovar * amt).
+  *  Theta is augmented with the rates.
+  */
+  template <typename T0, typename T1>
+  inline
+    Eigen::Matrix<typename boost::math::tools::promote_args<T0, T1>::type,
+                  Eigen::Dynamic, 1>
+  operator()(const Eigen::Matrix<T0, Eigen::Dynamic, 1>& x,
+             const Eigen::Matrix<T1, Eigen::Dynamic, 1>& y,
+             const std::vector<double>& dat,
+             const std::vector<int>& dat_int,
+             std::ostream* msgs) const {
+    using stan::math::to_array_1d;
+    using stan::math::to_vector;
+    using stan::math::invalid_argument;
+    using Eigen::Matrix;
+    using Eigen::Dynamic;
+    using std::vector;
+
+    typedef typename boost::math::tools::promote_args<T0, T1>::type scalar;
+    typedef typename stan::return_type<T0, T1>::type T_deriv;
+
+    double t0 = 0;
+    vector<double> ts(1);
+
+    vector<scalar> x0(x.size());
+    for (size_t i = 0; i < x0.size(); i++) x0[i] = x(i);
+    double amt = dat[dat.size() - 1];
+    double rate = unpromote(y[nParms_ + cmt_ - 1]);
+
+    // augment y with the rates in each compartment
+    std::vector<T1> y_ode(y.size());
+    Eigen::Map<Matrix<T1, Dynamic, 1> >(&y_ode[0], y.size()) = y;
+    for (int i = 0; i < nOde_; i++) y_ode.push_back(0);
+    y_ode[nParms_ + nOde_ - 1] = rate;
+
+    // real data, which gets passed to the integrator, shoud not have
+    // amt in it. Important for the mixed solver where the last element
+    // is expected to be the absolute time (in this case, 0).
+    vector<double> dat_ode = dat;
+    dat_ode.pop_back();
+
+    Eigen::Matrix<scalar, Eigen::Dynamic, 1> result(x.size());
+
+    if (rate == 0) {  // bolus dose
+      if ((cmt_ - nPK_) >= 0) x0[cmt_ - nPK_ - 1] += amt;
+      ts[0] = ii_;
+
+      vector<scalar> pred = integrator_(f_, x0, t0, ts, y_ode,
+                                        dat_ode, dat_int)[0];
+
+      for (int i = 0; i < result.size(); i++)
+        result(i) = x(i) - pred[i];
+
+    } else if (ii_ > 0) {  // multiple truncated infusions
+      invalid_argument("Steady State Event",
+                       "Current version does not handle the case of",
+                       "", " multiple truncated infusions ",
+                       "(i.e ii > 0 and rate > 0) when rate is a parameter.");
+    } else {  // constant infusion
+      vector<T_deriv> derivative = f_(0, to_array_1d(x), y_ode,
+                                      dat_ode, dat_int, 0);
+      result = to_vector(derivative);
+    }
+    
     return result;
   }
 };
