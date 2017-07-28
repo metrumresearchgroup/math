@@ -72,11 +72,22 @@ finite_diff_params(const std::vector<double>& time,
       }
     }
 
+  vector<double> rate_ub(rate.size()), rate_lb(rate.size());
+  for (size_t i = 0; i < rate.size(); i++) {
+    if (i == param_row && parmType == "rate") {
+      rate_ub[i] = rate[i] + diff;
+      rate_lb[i] = rate[i] - diff;
+    } else {
+      rate_ub[i] = rate[i];
+      rate_lb[i] = rate[i];
+    }
+  }
+
   Matrix<double, Dynamic, Dynamic> pk_res_ub;
   Matrix<double, Dynamic, Dynamic> pk_res_lb;
-  pk_res_ub = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+  pk_res_ub = PKModelOneCpt(time, amt, rate_ub, ii, evid, cmt, addl, ss,
                             pMatrix_ub, biovar_ub, tlag_ub);
-  pk_res_lb = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+  pk_res_lb = PKModelOneCpt(time, amt, rate_lb, ii, evid, cmt, addl, ss,
                             pMatrix_lb, biovar_lb, tlag_lb);
 
   return (pk_res_ub - pk_res_lb) / (2 * diff);
@@ -350,6 +361,72 @@ void test_PKModelOneCpt_finite_diff_ddv(
     }
 }
 
+/**
+ * Test generalOdeModel with only rate as vars and all other continuous
+ * arguments as double.
+ */
+void test_PKModelOneCpt_finite_diff_ddd_dv(
+    const std::vector<double>& time,
+    const std::vector<double>& amt,
+    const std::vector<double>& rate,
+    const std::vector<double>& ii,
+    const std::vector<int>& evid,
+    const std::vector<int>& cmt,
+    const std::vector<int>& addl,
+    const std::vector<int>& ss,
+    const std::vector<std::vector<double> >& pMatrix,
+    const std::vector<std::vector<double> >& biovar,
+    const std::vector<std::vector<double> >& tlag,
+    const double& diff,
+    const double& diff2) {
+  using std::vector;
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  using stan::math::var;
+
+  size_t nParms = rate.size();
+  vector<Matrix<double, Dynamic, Dynamic> > finite_diff_res(nParms);
+
+  for (size_t i = 0; i < nParms; i++)
+    finite_diff_res[i] = finite_diff_params(time, amt, rate, ii, evid, cmt,
+                                            addl,  ss, pMatrix, biovar, tlag,
+                                            i, 0, diff, "rate");
+  // Create rate with vars
+  vector<var> rate_v(nParms);
+  for (size_t i = 0; i < nParms; i++)
+    rate_v[i] = rate[i];
+
+  Matrix<var, Dynamic, Dynamic> ode_res;
+  ode_res = PKModelOneCpt(time, amt, rate_v, ii, evid, cmt, addl, ss,
+                          pMatrix, biovar, tlag);
+
+  size_t nEvent = time.size();
+  int nCmt = 2;
+
+  vector<double> grads_eff(nEvent * nCmt);
+  for (size_t i = 0; i < nEvent; i++)
+    for (int j = 0; j < nCmt; j++) {
+      grads_eff.clear();
+      ode_res(i, j).grad(rate_v, grads_eff);
+
+      std::cout << "MARKER A" << std::endl;
+      for (size_t k = 0; k < nParms; k++) {
+      // for (size_t k = 0; k < 1; k++) {
+        EXPECT_NEAR(grads_eff[k], finite_diff_res[k](i, j), diff2)
+        << "Gradient of generalOdeModel failed with known"
+        << " biovar, tlags, parameters, and amt, "
+        << " and unknown rates at event " << i
+        << ", in compartment " << j
+        << ", and parameter index (" << k << ")";
+
+        std::cout << grads_eff[k] << std::endl;
+      }
+
+      stan::math::set_zero_all_adjoints();
+    }
+}
+
+
 void test_PKModelOneCpt(const std::vector<double>& time,
                         const std::vector<double>& amt,
                         const std::vector<double>& rate,
@@ -377,6 +454,12 @@ void test_PKModelOneCpt(const std::vector<double>& time,
     test_PKModelOneCpt_finite_diff_ddv(time, amt, rate, ii, evid,
                                        cmt, addl, ss, pMatrix, biovar, tlag,
                                        diff, diff2);
+  
+  if (skip != 4)
+    test_PKModelOneCpt_finite_diff_ddd_dv(time, amt, rate, ii, evid,
+                                          cmt, addl, ss, pMatrix, biovar, tlag,
+                                          diff, diff2);
+    
 }
 
 // More tests

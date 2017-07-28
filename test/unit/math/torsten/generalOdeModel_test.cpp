@@ -38,7 +38,7 @@ struct oneCptModelODE_functor {
         return oneCptModelODE(t, x, parms, rate, dummy, pstream__);
     }
 };
-
+/*
 TEST(Torsten, genCpt_One_SS) {
   // Steady state induced by multiple bolus doses (SS = 1, rate = 0)
   using std::vector;
@@ -132,7 +132,7 @@ TEST(Torsten, genCpt_One_SS) {
                        time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix, biovar, tlag,
                        rel_tol, abs_tol, max_num_steps, diff, diff2, "bdf");
-}
+} */
 
 TEST(Torsten, genCpt_One_SS_2) {
   // Steady state with constant rate infusion (SS = 1, rate != 0, ii = 0)
@@ -160,22 +160,15 @@ TEST(Torsten, genCpt_One_SS_2) {
   vector<double> time(10);
   time[0] = 0.0;
   for(int i = 1; i < 10; i++) time[i] = time[i - 1] + 2.5;
-
   vector<double> amt(10, 0);
-
   vector<double> rate(10, 0);
   rate[0] = 150;
-
   vector<int> cmt(10, 2);
   cmt[0] = 1;
-
   vector<int> evid(10, 0);
   evid[0] = 1;
-
   vector<double> ii(10, 0);
-
   vector<int> addl(10, 0);
-
   vector<int> ss(10, 0);
   ss[0] = 1;
 
@@ -201,22 +194,22 @@ TEST(Torsten, genCpt_One_SS_2) {
   x_an = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix, biovar, tlag);
 
-  double err;
-  for (int i = 0; i < x_an.rows(); i++) {
-    // relative error is determined empirically
-    // (seems to be relatively high -- could be the method is not that precised)
-    err = std::max(std::max(x_an(i, 0), x_rk45(i, 0)) * 3.5e-3, 1e-11);
-    EXPECT_NEAR(x_an(i, 0), x_rk45(i, 0), err);
-
-    err = std::max(std::max(x_an(i, 1), x_rk45(i, 1)) * 3.5e-3, 1e-11);
-    EXPECT_NEAR(x_an(i, 1), x_rk45(i, 1), err);
-
-    err = std::max(std::max(x_an(i, 0), x_bdf(i, 0)) * 1e-2, 1e-11);
-    EXPECT_NEAR(x_an(i, 0), x_bdf(i, 0), err);
-
-    err = std::max(std::max(x_an(i, 1), x_bdf(i, 1)) * 1e-2, 1e-11);
-    EXPECT_NEAR(x_an(i, 1), x_bdf(i, 1), err);
-  }
+  // double err;
+  // for (int i = 0; i < x_an.rows(); i++) {
+  //   // relative error is determined empirically
+  //   // (seems to be relatively high -- could be the method is not that precised)
+  //   err = std::max(std::max(x_an(i, 0), x_rk45(i, 0)) * 3.5e-3, 1e-11);
+  //   EXPECT_NEAR(x_an(i, 0), x_rk45(i, 0), err);
+  // 
+  //   err = std::max(std::max(x_an(i, 1), x_rk45(i, 1)) * 3.5e-3, 1e-11);
+  //   EXPECT_NEAR(x_an(i, 1), x_rk45(i, 1), err);
+  // 
+  //   err = std::max(std::max(x_an(i, 0), x_bdf(i, 0)) * 1e-2, 1e-11);
+  //   EXPECT_NEAR(x_an(i, 0), x_bdf(i, 0), err);
+  // 
+  //   err = std::max(std::max(x_an(i, 1), x_bdf(i, 1)) * 1e-2, 1e-11);
+  //   EXPECT_NEAR(x_an(i, 1), x_bdf(i, 1), err);
+  // }
 
   // Test AutoDiff against FiniteDiff
   double diff = 1e-8, diff2 = 5e-3;
@@ -224,12 +217,12 @@ TEST(Torsten, genCpt_One_SS_2) {
                        time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix, biovar, tlag,
                        rel_tol, abs_tol, max_num_steps, diff, diff2, "rk45");
-  test_generalOdeModel(oneCptModelODE_functor(), nCmt,
-                       time, amt, rate, ii, evid, cmt, addl, ss,
-                       pMatrix, biovar, tlag,
-                       rel_tol, abs_tol, max_num_steps, diff, diff2, "bdf");
+  // test_generalOdeModel(oneCptModelODE_functor(), nCmt,
+  //                      time, amt, rate, ii, evid, cmt, addl, ss,
+  //                      pMatrix, biovar, tlag,
+  //                      rel_tol, abs_tol, max_num_steps, diff, diff2, "bdf");
 }
-
+/*
 TEST(Torsten, genCpt_One_SS_3) {
   // Steady state with multiple truncated infusions
   // (SS = 1, rate != 0, ii > 0)
@@ -1433,7 +1426,7 @@ TEST(Torsten, genCptOne_MultipleDoses_timePara) {
                        pMatrix, biovar, tlag,
                        rel_tol, abs_tol, max_num_steps, diff, diff2, "bdf");
 }
-
+*/
 
 TEST(Torsten, genCptOne_Rate) {
   using std::vector;
@@ -1461,25 +1454,18 @@ TEST(Torsten, genCptOne_Rate) {
   time[0] = 0;
   for(int i = 1; i < 9; i++) time[i] = time[i - 1] + 0.25;
   time[9] = 4.0;
-
   vector<double> amt(10, 0);
   amt[0] = 1200;
-
   vector<double> rate(10, 0);
   rate[0] = 1200;
-
   vector<int> cmt(10, 2);
   cmt[0] = 1;
-
   vector<int> evid(10, 0);
   evid[0] = 1;
-
   vector<double> ii(10, 0);
   ii[0] = 12;
-
   vector<int> addl(10, 0);
   addl[0] = 14;
-
   vector<int> ss(10, 0);
 
   double rel_tol = 1e-6, abs_tol = 1e-6;
@@ -1528,7 +1514,7 @@ TEST(Torsten, genCptOne_Rate) {
                        rel_tol, abs_tol, max_num_steps, diff, diff2, "bdf");
 }
 
-
+/*
 struct twoCptModelODE_functor {
   template <typename T0, typename T1, typename T2, typename T3>
   inline
@@ -1817,4 +1803,4 @@ TEST(Torsten, genCpt_FK_SS) {
   //                      time, amt, rate, ii, evid, cmt, addl, ss,
   //                      theta_v, biovar_v, tlag_v,
   //                      rel_tol, abs_tol, max_num_steps, diff, diff2, "bdf");
-}
+} */

@@ -51,7 +51,7 @@ finite_diff_params(const F& f,
       }
     }
     
-    vector<double> biovarParameters(biovar[0].size());
+  vector<double> biovarParameters(biovar[0].size());
   vector<vector<double> > biovar_ub(biovar.size(), biovarParameters);
   vector<vector<double> > biovar_lb(biovar.size(), biovarParameters);
   for (size_t i = 0; i < biovar.size(); i++)
@@ -65,7 +65,7 @@ finite_diff_params(const F& f,
       }
     }
     
-    vector<double> tlagParameters(tlag[0].size());
+  vector<double> tlagParameters(tlag[0].size());
   vector<vector<double> > tlag_ub(tlag.size(), tlagParameters);
   vector<vector<double> > tlag_lb(biovar.size(), tlagParameters);
   for (size_t i = 0; i < tlag.size(); i++)
@@ -79,27 +79,38 @@ finite_diff_params(const F& f,
       }
     }
 
+  vector<double> rate_ub(rate.size()), rate_lb(rate.size());
+  for (size_t i = 0; i < rate.size(); i++) {
+    if (i == param_row && parmType == "rate") {
+      rate_ub[i] = rate[i] + diff;
+      rate_lb[i] = rate[i] - diff;
+    } else {
+      rate_ub[i] = rate[i];
+      rate_lb[i] = rate[i];
+    }
+  }
+
   Matrix<double, Dynamic, Dynamic> pk_res_ub;
   Matrix<double, Dynamic, Dynamic> pk_res_lb;
   if (odeInt == "rk45") {
-    pk_res_ub = generalOdeModel_rk45(f, nCmt, time, amt, rate, ii,
+    pk_res_ub = generalOdeModel_rk45(f, nCmt, time, amt, rate_ub, ii,
                                      evid, cmt, addl, ss,
                                      pMatrix_ub, biovar_ub, tlag_ub,
                                      0,
                                      rel_tol, abs_tol, max_num_steps);
-    pk_res_lb = generalOdeModel_rk45(f, nCmt, time, amt, rate, ii,
+    pk_res_lb = generalOdeModel_rk45(f, nCmt, time, amt, rate_lb, ii,
                                      evid, cmt, addl, ss,
                                      pMatrix_lb, biovar_lb, tlag_lb,
                                      0,
                                      rel_tol, abs_tol, max_num_steps);
   }
   if (odeInt == "bdf") {
-    pk_res_ub = generalOdeModel_bdf(f, nCmt, time, amt, rate, ii,
+    pk_res_ub = generalOdeModel_bdf(f, nCmt, time, amt, rate_ub, ii,
                                     evid, cmt, addl, ss,
                                     pMatrix_ub, biovar_ub, tlag_ub,
                                     0,
                                     rel_tol, abs_tol, max_num_steps);
-    pk_res_lb = generalOdeModel_bdf(f, nCmt, time, amt, rate, ii,
+    pk_res_lb = generalOdeModel_bdf(f, nCmt, time, amt, rate_lb, ii,
                                     evid, cmt, addl, ss,
                                     pMatrix_lb, biovar_lb, tlag_lb,
                                     0,
@@ -206,7 +217,7 @@ void test_generalOdeModel_finite_diff_vdd(
 }
 
 /**
- * Test generalOdeModel with only pMatrix as vars and all other continuous
+ * Test generalOdeModel with only biovar as vars and all other continuous
  * arguments as double.
  */
 template <typename F>
@@ -304,7 +315,7 @@ void test_generalOdeModel_finite_diff_dvd(
 }
 
 /**
- * Test generalOdeModel with only pMatrix as vars and all other continuous
+ * Test generalOdeModel with only tlags as vars and all other continuous
  * arguments as double.
  * Note: There is known issue when computing the derivative w.r.t the
  * lag time of a dosing compartment. The issue is reported on GitHub,
@@ -433,6 +444,94 @@ void test_generalOdeModel_finite_diff_ddv(
     }
 }
 
+/**
+ * Test generalOdeModel with only rate as vars and all other continuous
+ * arguments as double.
+ */
+template <typename F>
+void test_generalOdeModel_finite_diff_ddd_dv(
+    const F& f,
+    const int nCmt,
+    const std::vector<double>& time,
+    const std::vector<double>& amt,
+    const std::vector<double>& rate,
+    const std::vector<double>& ii,
+    const std::vector<int>& evid,
+    const std::vector<int>& cmt,
+    const std::vector<int>& addl,
+    const std::vector<int>& ss,
+    const std::vector<std::vector<double> >& pMatrix,
+    const std::vector<std::vector<double> >& biovar,
+    const std::vector<std::vector<double> >& tlag,
+    double rel_tol,
+    double abs_tol,
+    long int max_num_steps,
+    const double& diff,
+    const double& diff2,
+    const std::string odeInt) {
+  using std::vector;
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  using stan::math::var;
+  
+  size_t nParms = rate.size();
+  vector<Matrix<double, Dynamic, Dynamic> > finite_diff_res(nParms);
+  
+  for (size_t i = 0; i < nParms; i++)
+    finite_diff_res[i] = finite_diff_params(f, nCmt, time, amt,
+                                            rate, ii, evid, cmt, addl,
+                                            ss, pMatrix, biovar, tlag,
+                                            rel_tol, abs_tol,
+                                            max_num_steps, i, 0, diff,
+                                            odeInt, "rate");
+  
+  // Create rate with vars
+  vector<var> rate_v(nParms);
+  for (size_t i = 0; i < nParms; i++)
+    rate_v[i] = rate[i];
+
+  std::cout << "marker a" << std::endl;
+
+  Matrix<var, Dynamic, Dynamic> ode_res;
+  if (odeInt == "rk45")
+    ode_res = generalOdeModel_rk45(f, nCmt,
+                                   time, amt, rate_v, ii, evid, cmt, addl, ss,
+                                   pMatrix, biovar, tlag,
+                                   0,
+                                   rel_tol, abs_tol, max_num_steps);
+  
+  if (odeInt == "bdf")
+    ode_res = generalOdeModel_bdf(f, nCmt,
+                                  time, amt, rate_v, ii, evid, cmt, addl, ss,
+                                  pMatrix, biovar, tlag,
+                                  0,
+                                  rel_tol, abs_tol, max_num_steps);
+  
+  size_t nEvent = time.size();
+  
+  vector<double> grads_eff(nEvent * nCmt);
+  for (size_t i = 0; i < nEvent; i++)
+    for (int j = 0; j < nCmt; j++) {
+      grads_eff.clear();
+      ode_res(i, j).grad(rate_v, grads_eff);
+      
+      std::cout << "MARKER A" << std::endl;
+      // for (size_t k = 0; k < nParms; k++) {
+      for (size_t k = 0; k < 1; k++) {
+        EXPECT_NEAR(grads_eff[k], finite_diff_res[k](i, j), diff2)
+        << "Gradient of generalOdeModel failed with known"
+        << " biovar, tlags, parameters, and amt, "
+        << " and unknown rates at event " << i
+        << ", in compartment " << j
+        << ", and parameter index (" << k << ")";
+      
+      std::cout << grads_eff[k] << std::endl;
+      }
+        
+        stan::math::set_zero_all_adjoints();
+    }
+}
+
 template <typename F>
 void test_generalOdeModel(const F& f,
                           const int nCmt,
@@ -472,6 +571,13 @@ void test_generalOdeModel(const F& f,
                                          pMatrix, biovar, tlag, 
                                          rel_tol, abs_tol, max_num_steps,
                                          diff, diff2, odeInt);
+
+  if (skip != 4)
+    test_generalOdeModel_finite_diff_ddd_dv(f, nCmt, time, amt, rate,
+                                            ii, evid, cmt, addl, ss,
+                                            pMatrix, biovar, tlag,
+                                            rel_tol, abs_tol, max_num_steps,
+                                            diff, diff2, odeInt);
 }
 
 // More tests

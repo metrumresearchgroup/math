@@ -7,7 +7,7 @@
 using std::vector;
 using Eigen::Matrix;
 using Eigen::Dynamic;
-
+/*
 TEST(Torsten, PKModelOneCpt_MultipleDoses) {
 	vector<vector<double> > pMatrix(1);
 	pMatrix[0].resize(3);
@@ -579,7 +579,7 @@ TEST(Torsten, PKModelOneCpt_SS) {
     // Test auto-diff
     test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix, biovar, tlag, 1e-8, 1e-4);
-}
+} */
 
 TEST(Torsten, PKModelOneCpt_SS_rate) {
 
@@ -651,7 +651,7 @@ TEST(Torsten, PKModelOneCpt_SS_rate) {
     test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
-
+/*
 TEST(Torsten, PKModelOneCpt_MultipleDoses_timePara) {
 
   int nEvent = 11;
@@ -789,7 +789,7 @@ TEST(Torsten, PKModelOneCptModel_Rate) {
   test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                      pMatrix, biovar, tlag, 1e-8, 5e-4);
 }
-
+*/
 
 /*
 TEST(Torsten, PKModelOneCptModel_SS_rate_2) {
