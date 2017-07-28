@@ -135,7 +135,7 @@ Pred(const std::vector<T_time>& time,
     rate2.copy(rates.GetRate(iRate));
 
     for (int j = 0; j < nCmt; j++)
-      rate2.rate[j] *= parameters.GetValueBio(i, j);
+      rate2.rate_[j] *= parameters.GetValueBio(i, j);
     
     parameter = parameters.GetModelParameters(i);
 

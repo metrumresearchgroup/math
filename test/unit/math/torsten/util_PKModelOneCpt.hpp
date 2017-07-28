@@ -409,17 +409,13 @@ void test_PKModelOneCpt_finite_diff_ddd_dv(
       grads_eff.clear();
       ode_res(i, j).grad(rate_v, grads_eff);
 
-      std::cout << "MARKER A" << std::endl;
       for (size_t k = 0; k < nParms; k++) {
-      // for (size_t k = 0; k < 1; k++) {
         EXPECT_NEAR(grads_eff[k], finite_diff_res[k](i, j), diff2)
         << "Gradient of generalOdeModel failed with known"
         << " biovar, tlags, parameters, and amt, "
         << " and unknown rates at event " << i
         << ", in compartment " << j
         << ", and parameter index (" << k << ")";
-
-        std::cout << grads_eff[k] << std::endl;
       }
 
       stan::math::set_zero_all_adjoints();

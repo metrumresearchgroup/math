@@ -17,38 +17,33 @@ template<typename T_time, typename T_rate> class RateHistory;
 template<typename T_time, typename T_rate>
 class Rate {
 private:
-  T_time time;
-  std::vector<T_rate> rate;  // rate for each compartment
+  T_time time_;
+  std::vector<T_rate> rate_;  // rate for each compartment
 
 public:
-  Rate() {
-    std::vector<T_rate> v(1, 0);
-    time = 0;
-    rate = v;
-  }
+  Rate() { }
 
-  Rate(T_time p_time, std::vector<T_rate> p_rate) {
-    time = p_time;
-    rate = p_rate;
-  }
+  Rate(T_time time, std::vector<T_rate> rate)
+    : time_(time), rate_(rate) { }
 
   // access functions
-  T_time get_time() const { return time; }
-  std::vector<T_rate> get_rate() const { return rate; }
+  T_time get_time() const { return time_; }
+  std::vector<T_rate> get_rate() const { return rate_; }
 
   // Overload = operator
   // Allows us to construct a rate of var from a rate of double
+  // CHECK - do I need this? Pitfalls?
   template <typename T0, typename T1>
   void copy(const Rate<T0, T1>& rate1) {
-    time = rate1.get_time();
-    rate.resize(rate1.get_rate().size());
-    for (size_t i = 0; i < rate.size(); i++)
-      rate[i] = rate1.get_rate()[i];
+    time_ = rate1.get_time();
+    rate_.resize(rate1.get_rate().size());
+    for (size_t i = 0; i < rate_.size(); i++)
+      rate_[i] = rate1.get_rate()[i];
   }
 
   void Print() {
-    std::cout << time << " ";
-    for (int i = 0; i < rate.size(); i++) std::cout << rate[i] << " ";
+    std::cout << time_ << " ";
+    for (int i = 0; i < rate_.size(); i++) std::cout << rate_[i] << " ";
     std::cout << std::endl;
   }
 
@@ -88,72 +83,65 @@ public:
 template <typename T_time, typename T_rate>
 class RateHistory {
 private:
-  std::vector<Rate<T_time, T_rate> > Rates;
+  std::vector<Rate<T_time, T_rate> > Rates_;
 
 public:
-  RateHistory() {
-    Rate<T_time, T_rate> initRate;
-    Rates.resize(1);
-    Rates[0] = initRate;
-  }
+  RateHistory() { }
 
-  template <typename T0, typename T1>
-  RateHistory(std::vector<T0> p_time, std::vector<std::vector<T1> > p_rate) {
-    int nRate = p_rate.size();
-    Rates.resize(nRate);
-    for (int i = 0; i < nRate; i++) Rates[i] = Rate<T_time, T_rate>(p_time[i],
-      p_rate[i]);
+  RateHistory(const std::vector<T_time>& time,
+              const std::vector<T_rate>& rate) {
+    Rates_.resize(rate.size());
+    for (size_t i = 0; i < rate.size(); i++)
+      Rates_[i] = Rate<T_time, T_rate>(rate, time);
   }
 
   explicit RateHistory(int nEvent) {
-    Rate<T_time, T_rate> initRate;
-    Rates.resize(nEvent);
-    for (int i = 0; i < nEvent; i++) Rates[i] = initRate;
+    Rates_.resize(nEvent);
+    for (int i = 0; i < nEvent; i++) Rates_[i] = Rate<T_time, T_rate>();
   }
 
-  T_time get_time(int i) { return Rates[i].time; }
-  std::vector<T_rate> get_rate(int i) { return Rates[i].rate; }
+  T_time get_time(int i) { return Rates_[i].time_; }
+  std::vector<T_rate> get_rate(int i) { return Rates_[i].rate_; }
 
   bool Check() {
-    int i = Rates.size() - 1;
+    int i = Rates_.size() - 1;
     bool ordered = true;
-
+    
     while ((i > 0) && (ordered)) {
-      ordered = (Rates[i].time >= Rates[i - 1].time);
+      ordered = (Rates_[i].time_ >= Rates_[i - 1].time_);
       i--;
     }
     return ordered;
   }
 
   Rate<T_time, T_rate> GetRate(int i) {
-    Rate<T_time, T_rate> newRate(Rates[i].time, Rates[i].rate);
-    return newRate;
+    return Rate<T_time, T_rate>(Rates_[i].time_, Rates_[i].rate_);
   }
 
-  void InsertRate(Rate<T_time, T_rate> p_Rate) { Rates.push_back(p_Rate); }
+  void InsertRate(Rate<T_time, T_rate> Rate) { Rates_.push_back(Rate); }
 
   void RemoveRate(int i) {
     assert(i >= 0);
-    Rates.erase(Rates.begin() + i);
+    Rates_.erase(Rates_.begin() + i);
   }
 
-  int Size() { return Rates.size(); }
+  int Size() { return Rates_.size(); }
 
   void Print(int j) {
-    std::cout << Rates[j].time << " ";
-    for (int i = 0; i < Rates[j].rate.size(); i++)
-      std::cout << Rates[j].rate[i] << " ";
+    std::cout << Rates_[j].time << " ";
+    for (int i = 0; i < Rates_[j].rate.size(); i++)
+      std::cout << Rates_[j].rate[i] << " ";
     std::cout << std::endl;
   }
 
   struct by_time {
-    bool operator()(Rate<T_time, T_rate> const &a, Rate<T_time, T_rate>
-      const &b) {
-      return a.time < b.time;
+    bool operator()(const Rate<T_time, T_rate>& a, 
+                    const Rate<T_time, T_rate>& b) {
+      return a.time_ < b.time_;
     }
   };
 
-  void Sort() { std::sort(Rates.begin(), Rates.end(), by_time()); }
+  void Sort() { std::sort(Rates_.begin(), Rates_.end(), by_time()); }
 
   template <typename T_amt, typename T_ii>
   void MakeRates(EventHistory<T_time, T_amt, T_rate, T_ii>& events, int nCmt) {
@@ -165,32 +153,32 @@ public:
     Rate<T_time, T_rate> newRate(0, rate_init);
     for (int j = 0; j < events.get_size(); j++)
       if (j == 0 || events.get_time(j) != events.get_time(j - 1)) {
-        newRate.time = events.get_time(j);
+        newRate.time_ = events.get_time(j);
         InsertRate(newRate);
       }
 
-    RemoveRate(0);  // remove rate created by default constructor.
+      // RemoveRate(0);  // remove rate created by default constructor.
 
-    if (!Check()) Sort();
+      if (!Check()) Sort();
 
-    // Create time vector for rates
-    vector<T_time> RateTimes(Size(), 0);
-    for (int j = 0; j < Size(); j++) RateTimes[j] = Rates[j].time;
+      // Create time vector for rates
+      vector<T_time> RateTimes(Size(), 0);
+      for (int j = 0; j < Size(); j++) RateTimes[j] = Rates_[j].time_;
 
-    // Create time vector for events
-    vector<T_time> EventTimes(events.get_size(), 0);
-    for (int j = 0; j < events.get_size(); j++)
-      EventTimes[j] = events.get_time(j);
+      // Create time vector for events
+      vector<T_time> EventTimes(events.get_size(), 0);
+      for (int j = 0; j < events.get_size(); j++)
+        EventTimes[j] = events.get_time(j);
 
-    int i = 0, k, l;
-    T_time endTime;
-    Event<T_time, T_amt, T_rate, T_ii> newEvent;
-    while (i < events.get_size()) {
-      if ((events.get_evid(i) == 1 || events.get_evid(i) == 4)
-        && (events.get_rate(i) > 0 && events.get_amt(i) > 0)) {
-          endTime = events.get_time(i) + events.get_amt(i)/events.get_rate(i);
+      int i = 0, k, l;
+      T_time endTime;
+      Event<T_time, T_amt, T_rate, T_ii> newEvent;
+      while (i < events.get_size()) {
+        if ((events.get_evid(i) == 1 || events.get_evid(i) == 4)
+              && (events.get_rate(i) > 0 && events.get_amt(i) > 0)) {
+          endTime = events.get_time(i) + events.get_amt(i) / events.get_rate(i);
           newEvent = newEvent(endTime, 0, 0, 0, 2, events.get_cmt(i), 0, 0,
-            false, true);
+                              false, true);
           events.InsertEvent(newEvent);
           if (!events.Check()) events.Sort();
           EventTimes.push_back(endTime);
@@ -199,34 +187,34 @@ public:
           // Only create a new Rate if endTime does not correspond to a time
           // that is already in RateHistory. - CHECK
           if (!find_time(RateTimes, endTime)) {
-            newRate.time = endTime;
+            newRate.time_ = endTime;
             InsertRate(newRate);
             if (!Check()) Sort();
             RateTimes.push_back(endTime);
             std::sort(RateTimes.begin(), RateTimes.end());
           }
-
+          
           // Find indexes at which time of event and endtime occur.
           l = SearchReal(RateTimes, events.get_size(), events.get_time(i));
           k = SearchReal(RateTimes, events.get_size(), endTime);
-
+          
           // Compute Rates for each element between the two times
           for (int iRate = l ; iRate < k; iRate++)
-            Rates[iRate].rate[events.get_cmt(i) - 1] += events.get_rate(i);
+            Rates_[iRate].rate_[events.get_cmt(i) - 1] += events.get_rate(i);
         }
         i++;
-    }
+      }
 
-    // Sort events and rates
-    if (!Check()) Sort();
-    if (!events.Check()) events.Sort();
-  }
+      // Sort events and rates
+      if (!Check()) Sort();
+      if (!events.Check()) events.Sort();
+  } 
 
   // declare friends
   friend class Rate<T_time, T_rate>;
   template <typename T_amt, typename T_ii>
   friend void MakeRates(EventHistory<T_time, T_amt, T_rate, T_ii>&,
-    RateHistory<T_time, T_amt>&);
+                        RateHistory<T_time, T_amt>&);
 };
 
 #endif

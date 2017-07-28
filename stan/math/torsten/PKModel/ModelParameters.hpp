@@ -301,7 +301,7 @@ public:
         MPV_[i].tlag_ = MPV_[0].tlag_;
         MPV_[i].K_ = MPV_[0].K_;
         MPV_[i].time_ = events.get_time(i);
-        events.Events[i].isnew = false;
+        events.Events_[i].isnew_ = false;
       }
     } else {  // parameters are event dependent.
       std::vector<T_time> times(nEvent, 0);
@@ -338,7 +338,7 @@ public:
 
           newParameter.time_ = events.get_time(iEvent);
           MPV_[len_Parameters + j] = newParameter;
-          events.Events[iEvent].isnew = false;
+          events.Events_[iEvent].isnew_ = false;
           if (iEvent < nEvent - 1) iEvent++;
           j++;
         }
