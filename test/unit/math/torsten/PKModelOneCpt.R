@@ -22,9 +22,9 @@ $TABLE
 capture DV = CP * exp(EPS(1));
 $CAPTURE CP
 '
+mod <- mread("acum", tempdir(), code)
 
 ## Input 1: multiple truncated infusions
-mod <- mread("acum", tempdir(), code)
 e1 <- ev(amt = 1200, rate = 1200, addl = 14, ii = 12)
 mod %>% ev(e1) %>% mrgsim(end = 500) %>% plot # plot data
 
@@ -70,6 +70,24 @@ xdata
 # 8   1 1.75 109.69295 140.740426
 # 9   1 2.00 113.66026 169.427503
 # 10  1 4.00 123.97128 388.679360
+
+e1 <- ev(amt = 1200, rate = 150, ii = 12, ss = 1)
+time <- seq(from = 0, to = 40, by = 5)
+xdata <- mod %>% ev(e1) %>% mrgsim(Req = "GUT, CENT",
+                                   end = -1, add = time,
+                                   rescort = 3) %>% as.data.frame
+xdata
+# ID time          GUT      CENT
+# 1   1    0 0.000000e+00   0.00000
+# 2   1    0 1.028649e+00 659.93847
+# 3   1    5 1.246927e+02 837.19590
+# 4   1   10 1.133898e+01 836.19470
+# 5   1   15 2.810653e-02 454.32645
+# 6   1   20 6.966912e-05 243.20014
+# 7   1   25 1.726925e-07 130.17570
+# 8   1   30 4.280618e-10  69.67803
+# 9   1   35 1.061059e-12  37.29596
+# 10  1   40 2.630103e-15  19.96309
 
 
 ## Input 3: multiple drug infusion, where the duration of the infusion

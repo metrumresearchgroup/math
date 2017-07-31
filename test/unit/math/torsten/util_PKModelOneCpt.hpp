@@ -381,21 +381,16 @@ void test_PKModelOneCpt_finite_diff_ddd_dv(
   size_t nParms = rate.size();
   vector<Matrix<double, Dynamic, Dynamic> > finite_diff_res(nParms);
 
-  for (size_t i = 0; i < nParms; i++)
-    finite_diff_res[i] = finite_diff_params(time, amt, rate, ii, evid, cmt,
-                                            addl,  ss, pMatrix, biovar, tlag,
-                                            i, 0, diff, "rate");
+  size_t nEvent = time.size();
+  int nCmt = 2;
+
   // Create rate with vars
   vector<var> rate_v(nParms);
-  for (size_t i = 0; i < nParms; i++)
-    rate_v[i] = rate[i];
+  for (size_t i = 0; i < nParms; i++) rate_v[i] = rate[i];
 
   Matrix<var, Dynamic, Dynamic> ode_res;
   ode_res = PKModelOneCpt(time, amt, rate_v, ii, evid, cmt, addl, ss,
                           pMatrix, biovar, tlag);
-
-  size_t nEvent = time.size();
-  int nCmt = 2;
 
   vector<double> grads_eff(nEvent * nCmt);
   for (size_t i = 0; i < nEvent; i++)
@@ -403,19 +398,29 @@ void test_PKModelOneCpt_finite_diff_ddd_dv(
       grads_eff.clear();
       ode_res(i, j).grad(rate_v, grads_eff);
 
-      // The gradient will not properly be evaluated (by finite
-      // differentiation) at an event that coincides with the
-      // end of an infusion. See issue #11. The following IF 
-      // cascade identifies such entries.
+      // When rate is zero, all the gradients w.r.t to rate go to
+      // 0, because of an if (rate == 0) statement.
+      // When the rate is non-zero, the gradient will not properly
+      // be evaluated (by finite differentiation) at an event that
+      // coincides with the end of an infusion. See issue #11. 
+      // The following IF cascade identifies such entries, with some
+      // limitation. It does not check infusions that result from
+      // additional doses (would have to go into the augmented event
+      // schedule).
       bool skip = false;
       for (size_t m = 0; m < nEvent; m++)
-        if ((evid[m] == 1 || evid[m] == 4)
-              && (cmt[m] - 1) == j) {
-          if ((time[m] + amt[m] / rate[m]) == time[i]) {
-            skip = true;
-            std::cout << "SKIP" << std::endl;
-          }
+        if (evid[m] == 1 || evid[m] == 4) {
+          if (rate[m] == 0) skip = true;
+          else if ((time[m] + amt[m] / rate[m]) == time[i]
+                     && (cmt[m] - 1) == j) skip = true;
         }
+        
+      if (skip == false)
+        for (size_t i = 0; i < nParms; i++)
+          finite_diff_res[i] = finite_diff_params(time, amt, rate, ii,
+                                                  evid, cmt, addl,  ss,
+                                                  pMatrix, biovar, tlag,
+                                                  i, 0, diff, "rate");
 
       if (skip == false)
         for (size_t k = 0; k < nParms; k++) {
