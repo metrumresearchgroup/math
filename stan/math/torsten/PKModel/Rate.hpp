@@ -143,6 +143,10 @@ public:
 
   void Sort() { std::sort(Rates_.begin(), Rates_.end(), by_time()); }
 
+  /**
+   * For each UNIQUE time in Events, create an entry in the RateHistory
+   * object.
+   */
   template <typename T_amt, typename T_ii>
   void MakeRates(EventHistory<T_time, T_amt, T_rate, T_ii>& events, int nCmt) {
     using std::vector;
@@ -157,10 +161,7 @@ public:
         InsertRate(newRate);
       }
 
-      // RemoveRate(0);  // remove rate created by default constructor.
-
       if (!Check()) Sort();
-
       // Create time vector for rates
       vector<T_time> RateTimes(Size(), 0);
       for (int j = 0; j < Size(); j++) RateTimes[j] = Rates_[j].time_;

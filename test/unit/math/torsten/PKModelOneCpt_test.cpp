@@ -712,10 +712,11 @@ TEST(Torsten, PKModelOneCptModel_Rate) {
   time[0] = 0;
   for(int i = 1; i < 9; i++) time[i] = time[i - 1] + 0.25;
   time[9] = 4.0;
+  std::cout << "time: " << stan::math::to_vector(time).transpose() << std::endl;
   vector<double> amt(10, 0);
   amt[0] = 1200;
   vector<double> rate(10, 0);
-  rate[0] = 1200;
+  rate[0] = 1205;
   vector<int> cmt(10, 2);
   cmt[0] = 1;
   vector<int> evid(10, 0);
