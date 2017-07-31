@@ -341,12 +341,6 @@ void test_PKModelOneCpt_finite_diff_ddv(
              }
            }
 
-          // std::cout << "SKIP: " << skip
-          //           << " EVID: " << evid[i]
-          //           << " TLAG: " << parameters[k * parmCols + l]
-          //           << " GRAD: " << grads_eff[k * parmCols + l]
-          //           << std::endl;
-
           if (skip == false) {
             EXPECT_NEAR(grads_eff[k * parmCols + l],
                         finite_diff_res[k][l](i, j), diff2)
@@ -409,14 +403,29 @@ void test_PKModelOneCpt_finite_diff_ddd_dv(
       grads_eff.clear();
       ode_res(i, j).grad(rate_v, grads_eff);
 
-      for (size_t k = 0; k < nParms; k++) {
-        EXPECT_NEAR(grads_eff[k], finite_diff_res[k](i, j), diff2)
-        << "Gradient of generalOdeModel failed with known"
-        << " biovar, tlags, parameters, and amt, "
-        << " and unknown rates at event " << i
-        << ", in compartment " << j
-        << ", and parameter index (" << k << ")";
-      }
+      // The gradient will not properly be evaluated (by finite
+      // differentiation) at an event that coincides with the
+      // end of an infusion. See issue #11. The following IF 
+      // cascade identifies such entries.
+      bool skip = false;
+      for (size_t m = 0; m < nEvent; m++)
+        if ((evid[m] == 1 || evid[m] == 4)
+              && (cmt[m] - 1) == j) {
+          if ((time[m] + amt[m] / rate[m]) == time[i]) {
+            skip = true;
+            std::cout << "SKIP" << std::endl;
+          }
+        }
+
+      if (skip == false)
+        for (size_t k = 0; k < nParms; k++) {
+          EXPECT_NEAR(grads_eff[k], finite_diff_res[k](i, j), diff2)
+          << "Gradient of generalOdeModel failed with known"
+          << " biovar, tlags, parameters, and amt, "
+          << " and unknown rates at event " << i
+          << ", in compartment " << j
+          << ", and parameter index (" << k << ")";
+        }
 
       stan::math::set_zero_all_adjoints();
     }

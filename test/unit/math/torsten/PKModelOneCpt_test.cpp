@@ -716,7 +716,7 @@ TEST(Torsten, PKModelOneCptModel_Rate) {
   vector<double> amt(10, 0);
   amt[0] = 1200;
   vector<double> rate(10, 0);
-  rate[0] = 1205;
+  rate[0] = 1200;
   vector<int> cmt(10, 2);
   cmt[0] = 1;
   vector<int> evid(10, 0);
@@ -743,7 +743,7 @@ TEST(Torsten, PKModelOneCptModel_Rate) {
              210.47626, 876.28631,
              19.09398, 844.11769;
 
-  // expect_matrix_eq(amounts, x);
+  expect_matrix_eq(amounts, x);
 
   // Test AutoDiff against FiniteDiff
   test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
