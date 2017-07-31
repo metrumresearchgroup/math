@@ -356,7 +356,7 @@ void test_PKModelOneCpt_finite_diff_ddv(
 }
 
 /**
- * Test generalOdeModel with only rate as vars and all other continuous
+ * Test PKModelOneCpt with only rate as vars and all other continuous
  * arguments as double.
  */
 void test_PKModelOneCpt_finite_diff_ddd_dv(

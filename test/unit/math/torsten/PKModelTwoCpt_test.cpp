@@ -34,24 +34,17 @@ TEST(Torsten, PKModelTwoCpt_MultipleDoses) {
 	time[0] = 0.0;
 	for(int i = 1; i < 9; i++) time[i] = time[i - 1] + 0.25;
 	time[9] = 4.0;
-
 	vector<double> amt(10, 0);
 	amt[0] = 1000;
-
 	vector<double> rate(10, 0);
-
 	vector<int> cmt(10, 2);
 	cmt[0] = 1;
-
 	vector<int> evid(10, 0);
 	evid[0] = 1;
-
 	vector<double> ii(10, 0);
 	ii[0] = 12;
-	
 	vector<int> addl(10, 0);
 	addl[0] = 14;
-	
 	vector<int> ss(10, 0);
 
 	Matrix<double, Dynamic, Dynamic> x;
@@ -104,24 +97,17 @@ TEST(Torsten, PKModelTwoCpt_MultipleDoses_overload) {
   time[0] = 0.0;
   for(int i = 1; i < 9; i++) time[i] = time[i - 1] + 0.25;
   time[9] = 4.0;
-  
   vector<double> amt(10, 0);
   amt[0] = 1000;
-  
-  vector<double> rate(10, 0);
-  
+ vector<double> rate(10, 0);
   vector<int> cmt(10, 2);
   cmt[0] = 1;
-  
   vector<int> evid(10, 0);
   evid[0] = 1;
-  
   vector<double> ii(10, 0);
   ii[0] = 12;
-  
   vector<int> addl(10, 0);
   addl[0] = 14;
-  
   vector<int> ss(10, 0);
 
   Matrix<double, Dynamic, Dynamic> x_122, x_112, x_111, x_121, x_212,
@@ -211,24 +197,17 @@ TEST(Torsten, PKModelTwoCpt_signature_test) {
   time[0] = 0.0;
   for(int i = 1; i < 9; i++) time[i] = time[i - 1] + 0.25;
   time[9] = 4.0;
-  
   vector<double> amt(10, 0);
   amt[0] = 1000;
-  
   vector<double> rate(10, 0);
-  
   vector<int> cmt(10, 2);
   cmt[0] = 1;
-  
   vector<int> evid(10, 0);
   evid[0] = 1;
-  
   vector<double> ii(10, 0);
   ii[0] = 12;
-  
   vector<int> addl(10, 0);
   addl[0] = 14;
-  
   vector<int> ss(10, 0);
   
   Matrix<double, Dynamic, Dynamic> amounts(10, 3);
@@ -425,24 +404,17 @@ TEST(Torsten, PKModelTwoCpt_SS) {
 	time[0] = 0.0;
 	time[1] = 0.0;
 	for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
-
 	vector<double> amt(10, 0);
 	amt[0] = 1200;
-
 	vector<double> rate(10, 0);
-
 	vector<int> cmt(10, 2);
 	cmt[0] = 1;
-
 	vector<int> evid(10, 0);
 	evid[0] = 1;
-
 	vector<double> ii(10, 0);
 	ii[0] = 12;
-
 	vector<int> addl(10, 0);
 	addl[0] = 10;
-
 	vector<int> ss(10, 0);
 	ss[0] = 1;
 
@@ -474,13 +446,13 @@ TEST(Torsten, PKModelTwoCpt_SS) {
 
 
 TEST(Torsten, PKModelTwoCpt_SS_rate) {
-	
+
 	vector<vector<double> > pMatrix(1);
   pMatrix[0].resize(5);
   pMatrix[0][0] = 5;  // CL
   pMatrix[0][1] = 8;  // Q
-  pMatrix[0][2] = 20;  // Vc
-  pMatrix[0][3] = 70;  // Vp
+  pMatrix[0][2] = 35;  // Vc
+  pMatrix[0][3] = 105;  // Vp
   pMatrix[0][4] = 1.2;  // ka
   
   vector<vector<double> > biovar(1);
@@ -497,27 +469,18 @@ TEST(Torsten, PKModelTwoCpt_SS_rate) {
 
 	vector<double> time(10);
 	time[0] = 0.0;
-	time[1] = 0.0;
-	for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
-
+	for(int i = 1; i < 10; i++) time[i] = time[i - 1] + 5;
 	vector<double> amt(10, 0);
 	amt[0] = 1200;
-
 	vector<double> rate(10, 0);
 	rate[0] = 150;
-
 	vector<int> cmt(10, 2);
 	cmt[0] = 1;
-
 	vector<int> evid(10, 0);
 	evid[0] = 1;
-
 	vector<double> ii(10, 0);
 	ii[0] = 12;
-
 	vector<int> addl(10, 0);
-	addl[0] = 10;
-
 	vector<int> ss(10, 0);
 	ss[0] = 1;
 
@@ -526,16 +489,16 @@ TEST(Torsten, PKModelTwoCpt_SS_rate) {
                    pMatrix, biovar, tlag);
 
 	Matrix<double, Dynamic, Dynamic> amounts(10, 3);
-	amounts << 1.028649, 286.5656, 1391.610,
-	           1.028649, 286.5656, 1391.610,
-	           124.692706, 452.4021, 1377.667,
-	           11.338982, 367.1773, 1461.416,
-	           121.612641, 410.2024, 1340.203,
-	           124.991604, 477.3286, 1452.499,
-	           87.660547, 315.1768, 1352.746,
-	           124.907445, 463.2236, 1402.095,
-	           3.415236, 318.7214, 1432.451,
-	           123.979747, 436.1057, 1355.890;
+	amounts << 1.028649e+00, 562.0698, 2109.5917,
+             1.246927e+02, 758.1440, 2071.4754,
+             1.133898e+01, 686.1621, 2152.0095,
+             2.810653e-02, 466.1906, 1988.7904,
+             6.966912e-05, 391.4036, 1760.2212,
+             1.726925e-07, 341.7953, 1548.6370,
+             4.280618e-10, 300.1529, 1361.3663,
+             1.061059e-12, 263.7890, 1196.6058,
+             2.630103e-15, 231.8555, 1051.7691,
+             6.519373e-18, 203.7908,  924.4614;
 
 	for(int i = 0; i < amounts.rows(); i++) {
 		EXPECT_NEAR(amounts(i, 0), x(i, 0), std::max(amounts(i, 0), x(i, 0)) * 1e-6);
@@ -576,24 +539,17 @@ TEST(Torsten, PKModelTwoCpt_MultipleDoses_timePara) {
 	vector<double> time(nEvent);
 	time[0] = 0.0;
 	for(int i = 1; i < nEvent; i++) time[i] = time[i - 1] + 2.5;
-
 	vector<double> amt(nEvent, 0);
 	amt[0] = 1000;
-
 	vector<double> rate(nEvent, 0);
-
 	vector<int> cmt(nEvent, 2);
 	cmt[0] = 1;
-
 	vector<int> evid(nEvent, 0);
 	evid[0] = 1;
-
 	vector<double> ii(nEvent, 0);
 	ii[0] = 12;
-
 	vector<int> addl(nEvent, 0);
 	addl[0] = 1;
-
 	vector<int> ss(nEvent, 0);
 
 	Matrix<double, Dynamic, Dynamic> x;
@@ -647,25 +603,18 @@ TEST(Torsten, PKModelTwoCptModel_Rate) {
   time[0] = 0;
   for(int i = 1; i < 9; i++) time[i] = time[i - 1] + 0.25;
   time[9] = 4.0;
-
   vector<double> amt(10, 0);
   amt[0] = 1200;
-
   vector<double> rate(10, 0);
   rate[0] = 1200;
-
   vector<int> cmt(10, 2);
   cmt[0] = 1;
-
   vector<int> evid(10, 0);
   evid[0] = 1;
-
   vector<double> ii(10, 0);
   ii[0] = 12;
-
   vector<int> addl(10, 0);
   addl[0] = 14;
-
   vector<int> ss(10, 0);
 
   Matrix<double, Dynamic, Dynamic> x;
