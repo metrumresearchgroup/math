@@ -1,0 +1,101 @@
+#+TITLE: Torsten refactor notes
+#+SUBTITLE: User Manual @@latex:\\@@ @@html:<br>@@ (Torsten Version 0.84, Stan version 2.17.1)
+
+# title page
+#+LATEX_HEADER: \newcommand\subtitle[1]{\newcommand\mrgsubtitle{#1}}
+#+LATEX_HEADER: \newcommand\mrgproject{Torsten}
+#+LATEX_HEADER: \newcommand\mrgtitle{Refactor}
+#+LATEX_HEADER: \newcommand\mrgsubtitle{\Large{Notes} \linebreak (Torsten Version 0.84, Stan version 2.17.1)}
+#+LATEX_HEADER: \newcommand\mrgcategory{Refactor}
+#+LATEX_HEADER: \newcommand\mrgPI{\href{mailto:billg@metrumrg.com}{billg@metrumrg.com} }
+
+#+SETUPFILE: mrgtheme.org
+
+#+MACRO: torstenversion 0.84
+#+MACRO: stanversion 2.17.1
+#+MACRO: newline @@latex:\\@@ @@html:<br>@@ @@ascii:|@@
+#+MACRO: torsten_path /Users/yiz/Work/Torsten
+
+#+LATEX_HEADER: \numberwithin{equation}{chapter}
+#+LATEX_HEADER: \numberwithin{figure}{chapter}
+#+LATEX_HEADER: \numberwithin{table}{chapter}
+# #+LATEX_HEADER: \usepackage{draftwatermark}
+#+MACRO: eref Equation \eqref{$1}
+
+#+OPTIONS: title:t, num:2
+
+* Major components
+** =PKEventList=
+   List of PK events as provided by NONMEM, not necessarily
+   ordered, hence refrain using "history" in name.
+
+   It describes PK and is facing users. It evoles when Stan
+   provides more friendly types such as tuples.
+
+   Example:
+   | time | amt | rate | ii | evid | cmt | addl | ss |
+   |------+-----+------+----+------+-----+------+----|
+   | ...  |     |      |    |      |     |      |    |
+
+- =PKSystem=: PK parameters as a 1-1 mapping to an ODE system.
+
+
+** =PKSolver=
+   A =PKSolver= iterates through =PKSystem= to solve the ODE
+   using various solution methods. 
+
+   It solves ODE and is facing developers.
+
+   It is orthogonal to =PKSystem=.
+
+   Could be several things:
+*** Named
+    For built-in models
+*** Matrix exp
+    For linear ODE model and built-in.
+*** Numerical integration
+    For all kinds of =PKModel=.
+
+** =PKPopulation=
+   A list of =PKSystem=.
+
+
+* =PKModel=
+   A =PKModel= is what utilizes parameters in =PKSystem= to
+   describe a PK system, e.g. 2-cpt model. 
+
+   It /is/ ODE and is facing developers.
+
+   Could be several things:
+- Named: For built-in models such as 1-cpt, 2-cpt, etc.
+- Matrix: For linear ODE model
+- Functor: For general ODE model
+  
+  A =PKModel= is orthogonal to =PKEventList=.
+** Implementation
+ A =PKModel= can have arbitrary number of
+ parameters, e.g. =biovar=, =k12=, =k10=, =ka=. Each parameter
+ can be data or var, or even user-define type such as
+ non-constant =rate=.
+   #+BEGIN_SRC c++
+     template<class... Ts>
+     struct PKModel {
+       // ...
+     }
+   #+END_SRC
+
+* =PKSystem=
+   PK parameters as a 1-1 mapping to an ODE system, consisting
+   of =PKModel= and corresponding parameters, ordered in
+   time. It consumes =tlag= & =rate= data to re-order and augment the
+   event history. It also incorporates =ModelParameterHistory=.
+
+   It describes ODE and is facing developers & power users.
+
+   Example:
+   | time | parameters(theta, rate, biovar) | =PKModel= |
+   |------+---------------------------------+-----------|
+   | ...  |                                 |           |
+
+   =parameters= can be backed by =std::tuple= so that it is
+   a combination of data and =var=, improving MCMC efficiency.

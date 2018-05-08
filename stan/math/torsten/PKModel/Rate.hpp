@@ -54,6 +54,10 @@ public:
     std::cout << std::endl;
   }
 
+  std::vector<T_rate>& get_rate_x(){
+    return rate;
+  }
+
   friend class RateHistory<T_time, T_rate>;
   template <typename T_amt, typename T_ii>
   friend void MakeRates(torsten::EventHistory<T_time, T_amt, T_rate, T_ii>&,
