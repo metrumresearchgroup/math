@@ -171,6 +171,12 @@ Pred2(const std::vector<T_time>& time,
       auto model_rate = rate2.get_rate();
       auto model_par = parameter.get_RealParameters();
       model_type pkmodel {model_time, init, model_rate, model_par};
+      // pred1 = multiply(PredSS(parameter,
+      //                         parameters.GetValueBio(i, event.get_cmt() - 1)
+      //                           * event.get_amt(),
+      //                         event.get_rate(), event.get_ii(),
+      //                         event.get_cmt()),
+      //                  scalar(1.0));
       pred1 = multiply(T_ssol().solve(pkmodel,
                                       parameters.GetValueBio(i, event.get_cmt() - 1) * event.get_amt(),
                                       event.get_rate(), 
