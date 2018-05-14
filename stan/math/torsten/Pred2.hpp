@@ -9,6 +9,11 @@
 
 namespace torsten{
 
+  template<template<typename...> class T_model,
+           typename T_sol, typename T_ssol>
+  struct PredWrapper{
+    PredWrapper() {}
+
 /**
  * Every Torsten function calls Pred.
  *
@@ -148,12 +153,12 @@ Pred2(const std::vector<T_time>& time,
     } else {
       dt = event.get_time() - tprev;
       typedef typename promote_args<T_rate, T_biovar>::type T_rate2;
-      using model_type = refactor::PKTwoCptModel<T_tau, scalar, T_rate2, T_parameters>;
+      using model_type = T_model<T_tau, scalar, T_rate2, T_parameters>;
       T_tau model_time = event.get_time();
       auto model_rate = rate2.get_rate();
       auto model_par = parameter.get_RealParameters();
       model_type pkmodel {model_time , init, model_rate, model_par};
-      pred1 = refactor::PKTwoCptModelSolver().solve(pkmodel, dt);
+      pred1 = T_sol().solve(pkmodel, dt);
       // pred1 = Pred1(dt, parameter, init, rate2.get_rate());
       init = pred1;
     }
@@ -161,16 +166,17 @@ Pred2(const std::vector<T_time>& time,
     if (((event.get_evid() == 1 || event.get_evid() == 4)
       && (event.get_ss() == 1 || event.get_ss() == 2)) ||
       event.get_ss() == 3) {  // steady state event
-      using model_type = refactor::PKTwoCptModel<T_tau, scalar, T_rate2, T_parameters>;
+      // using model_type = refactor::PKTwoCptModel<T_tau, scalar, T_rate2, T_parameters>;
+      using model_type = T_model<T_tau, scalar, T_rate2, T_parameters>;
       T_tau model_time = event.get_time();
       auto model_rate = rate2.get_rate();
       auto model_par = parameter.get_RealParameters();
       model_type pkmodel {model_time, init, model_rate, model_par};
-      pred1 = multiply(refactor::PKTwoCptModelSolverSS().solve(pkmodel,
-                                                               parameters.GetValueBio(i, event.get_cmt() - 1) * event.get_amt(),
-                                                               event.get_rate(), 
-                                                               event.get_ii(),
-                                                               event.get_cmt()),
+      pred1 = multiply(T_ssol().solve(pkmodel,
+                                      parameters.GetValueBio(i, event.get_cmt() - 1) * event.get_amt(),
+                                      event.get_rate(), 
+                                      event.get_ii(),
+                                      event.get_cmt()),
                        scalar(1.0));
 
       // the object PredSS returns doesn't always have a scalar type. For
@@ -198,6 +204,8 @@ Pred2(const std::vector<T_time>& time,
 
   return pred;
 }
+
+  };
 
 }
 
