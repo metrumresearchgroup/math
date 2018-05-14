@@ -5,6 +5,7 @@
 #include <vector>
 #include <stan/math/torsten/pk_twocpt_model.hpp>
 #include <stan/math/torsten/pk_twocpt_solver.hpp>
+#include <stan/math/torsten/pk_twocpt_solver_ss.hpp>
 
 namespace torsten{
 
@@ -121,8 +122,6 @@ Pred2(const std::vector<T_time>& time,
   Matrix<scalar, Dynamic, Dynamic>
     pred = Matrix<scalar, Dynamic, Dynamic>::Zero(nKeep, nCmt);
 
-  scalar Scalar = 1;  // trick to promote variables to scalar
-
   T_tau dt, tprev = events.get_time(0);
   Matrix<scalar, Dynamic, 1> pred1;
   Event<T_tau, T_amt, T_rate, T_ii> event;
@@ -162,12 +161,17 @@ Pred2(const std::vector<T_time>& time,
     if (((event.get_evid() == 1 || event.get_evid() == 4)
       && (event.get_ss() == 1 || event.get_ss() == 2)) ||
       event.get_ss() == 3) {  // steady state event
-      pred1 = multiply(PredSS(parameter,
-                              parameters.GetValueBio(i, event.get_cmt() - 1)
-                                * event.get_amt(),
-                              event.get_rate(), event.get_ii(),
-                              event.get_cmt()),
-                       Scalar);
+      using model_type = refactor::PKTwoCptModel<T_tau, scalar, T_rate2, T_parameters>;
+      T_tau model_time = event.get_time();
+      auto model_rate = rate2.get_rate();
+      auto model_par = parameter.get_RealParameters();
+      model_type pkmodel {model_time, init, model_rate, model_par};
+      pred1 = multiply(refactor::PKTwoCptModelSolverSS().solve(pkmodel,
+                                                               parameters.GetValueBio(i, event.get_cmt() - 1) * event.get_amt(),
+                                                               event.get_rate(), 
+                                                               event.get_ii(),
+                                                               event.get_cmt()),
+                       scalar(1.0));
 
       // the object PredSS returns doesn't always have a scalar type. For
       // instance, PredSS does not depend on tlag, but pred does. So if
