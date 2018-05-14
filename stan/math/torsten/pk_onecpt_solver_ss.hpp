@@ -1,5 +1,5 @@
-#ifndef PK_TWOCPT_SOLVER_HPP
-#define PK_TWOCPT_SOLVER_HPP
+#ifndef PK_ONECPT_SOLVER_SS_HPP
+#define PK_ONECPT_SOLVER_SS_HPP
 
 namespace refactor {
 

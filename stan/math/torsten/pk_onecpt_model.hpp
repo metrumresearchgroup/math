@@ -1,5 +1,5 @@
-#ifndef PK_TWOCPT_MODEL_HPP
-#define PK_TWOCPT_MODEL_HPP
+#ifndef PK_ONECPT_MODEL_HPP
+#define PK_ONECPT_MODEL_HPP
 
 namespace refactor {
 
@@ -8,7 +8,7 @@ namespace refactor {
   // depend on model, we can have arbitrary number of
   // parameters, e.g. biovar, k12, k10, ka. Each parameter
   // can be data or var.
-  template<typename T_time, typename T_init, typename T_par, typename T_rate>
+  template<typename T_time, typename T_init, typename T_rate, typename T_par>
   class PKOneCptModel {
     const T_time &t0_;
     const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0_;
@@ -45,20 +45,20 @@ namespace refactor {
       PKOneCptModel(t0, y0, rate, par[0], par[1], par[2])
     {}
 
-    PKOneCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
-                  const Eigen::Matrix<T_par, Eigen::Dynamic, Eigen::Dynamic>& m) :
-      // TODO
-      t0_(t0_),
-      y0_(y0)
-      // CL_(m.Cl_),
-      // V2_(m.V2_),
-      // ka_(m.ka_)
-    {}
+    // PKOneCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
+    //               const Eigen::Matrix<T_par, Eigen::Dynamic, Eigen::Dynamic>& m) :
+    //   // TODO
+    //   t0_(t0_),
+    //   y0_(y0)
+    //   // CL_(m.Cl_),
+    //   // V2_(m.V2_),
+    //   // ka_(m.ka_)
+    // {}
 
-    // copy constructor
-    PKOneCptModel(const PKOneCptModel& m) :
-      PKOneCptModel(m.t0_, m.y0_, m.rate_, m.CL_, m.V2_, m.ka_)
-    {}
+    // // copy constructor
+    // PKOneCptModel(const PKOneCptModel& m) :
+    //   PKOneCptModel(m.t0_, m.y0_, m.rate_, m.CL_, m.V2_, m.ka_)
+    // {}
 
     // get
     const T_time              & t0()   { return t0_; }
