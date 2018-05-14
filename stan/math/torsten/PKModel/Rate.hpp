@@ -18,11 +18,11 @@ template<typename T_time, typename T_rate> class RateHistory;
  */
 template<typename T_time, typename T_rate>
 class Rate {
-private:
+public:
   T_time time;
   std::vector<T_rate> rate;  // rate for each compartment
 
-public:
+
   Rate() {
     std::vector<T_rate> v(1, 0);
     time = 0;
