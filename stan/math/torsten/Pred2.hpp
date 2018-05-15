@@ -9,8 +9,7 @@
 
 namespace torsten{
 
-  template<template<typename...> class T_model,
-           typename T_sol, typename T_ssol>
+  template<template<typename...> class T_model>
   struct PredWrapper{
     PredWrapper() {}
 
@@ -70,7 +69,10 @@ template<typename T_time,
         typename T_biovar,
         typename T_tlag,
         typename F_one,
-        typename F_SS>
+         typename F_SS,
+         typename T_sol,
+         typename T_ssol,
+           typename... Ts>
 Eigen::Matrix<typename boost::math::tools::promote_args<T_time, T_amt, T_rate,
   T_ii, typename boost::math::tools::promote_args<T_parameters, T_biovar,
   T_tlag>::type >::type, Eigen::Dynamic, Eigen::Dynamic>
@@ -89,7 +91,10 @@ Pred2(const std::vector<T_time>& time,
      const std::vector<Eigen::Matrix<T_parameters,
        Eigen::Dynamic, Eigen::Dynamic> >& system,
      const F_one& Pred1,
-     const F_SS& PredSS) {
+      const F_SS& PredSS,
+      T_sol sol,                // FIXME:reference
+      T_ssol ssol,              // FIXME:reference
+      const Ts... pars) {
   using Eigen::Matrix;
   using Eigen::Dynamic;
   using boost::math::tools::promote_args;
@@ -153,12 +158,12 @@ Pred2(const std::vector<T_time>& time,
     } else {
       dt = event.get_time() - tprev;
       typedef typename promote_args<T_rate, T_biovar>::type T_rate2;
-      using model_type = T_model<T_tau, scalar, T_rate2, T_parameters>;
+      using model_type = T_model<T_tau, scalar, T_rate2, T_parameters, Ts...>;
       T_tau                     model_time = event.get_time();
       std::vector<T_rate2>      model_rate = rate2.get_rate();
       std::vector<T_parameters> model_par = parameter.get_RealParameters();
-      model_type pkmodel {model_time, init, model_rate, model_par, parameter};
-      pred1 = T_sol().solve(pkmodel, dt);
+      model_type pkmodel {model_time, init, model_rate, model_par, parameter, pars...};
+      pred1 = sol.solve(pkmodel, dt);
       // pred1 = Pred1(dt, parameter, init, rate2.get_rate());
       init = pred1;
     }
@@ -166,11 +171,11 @@ Pred2(const std::vector<T_time>& time,
     if (((event.get_evid() == 1 || event.get_evid() == 4)
       && (event.get_ss() == 1 || event.get_ss() == 2)) ||
       event.get_ss() == 3) {  // steady state event
-      using model_type = T_model<T_tau, scalar, T_rate2, T_parameters>;
+      using model_type = T_model<T_tau, scalar, T_rate2, T_parameters, Ts...>;
       T_tau model_time = event.get_time();
       auto model_rate = rate2.get_rate();
       auto model_par = parameter.get_RealParameters();
-      model_type pkmodel {model_time, init, model_rate, model_par, parameter};
+      model_type pkmodel {model_time, init, model_rate, model_par, parameter, pars...};
       // model_type pkmodel {model_time, init, model_rate, model_par};
       // pred1 = multiply(PredSS(parameter,
       //                         parameters.GetValueBio(i, event.get_cmt() - 1)
@@ -178,7 +183,7 @@ Pred2(const std::vector<T_time>& time,
       //                         event.get_rate(), event.get_ii(),
       //                         event.get_cmt()),
       //                  scalar(1.0));
-      pred1 = multiply(T_ssol().solve(pkmodel,
+      pred1 = multiply(ssol.solve(pkmodel,
                                       parameters.GetValueBio(i, event.get_cmt() - 1) * event.get_amt(),
                                       event.get_rate(), 
                                       event.get_ii(),

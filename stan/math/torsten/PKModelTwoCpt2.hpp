@@ -110,11 +110,12 @@ PKModelTwoCpt2(const std::vector<T0>& time,
   vector<Matrix<T4, Dynamic, Dynamic> >
     dummy_systems(1, dummy_system);
 
-  PredWrapper<refactor::PKTwoCptModel, refactor::PKTwoCptModelSolver, refactor::PKTwoCptModelSolverSS> pr;
+  PredWrapper<refactor::PKTwoCptModel> pr;
   return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
-              pMatrix, biovar, tlag,
-              nCmt, dummy_systems,
-              Pred1_twoCpt(), PredSS_twoCpt());
+                  pMatrix, biovar, tlag,
+                  nCmt, dummy_systems,
+                  Pred1_twoCpt(), PredSS_twoCpt(),
+                  refactor::PKTwoCptModelSolver(), refactor::PKTwoCptModelSolverSS());
 }
 
 /**

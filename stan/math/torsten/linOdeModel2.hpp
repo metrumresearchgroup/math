@@ -80,10 +80,11 @@ linOdeModel2(const std::vector<T0>& time,
   torsten::pmetricsCheck(time, amt, rate, ii, evid, cmt, addl, ss,
                 pMatrix_dummy, biovar, tlag, function);
 
-  PredWrapper<refactor::PKLinODEModel, refactor::PKLinODEModelSolver, refactor::PKLinODEModelSolverSS> pr;
+  PredWrapper<refactor::PKLinODEModel> pr;
   return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
-              pMatrix_dummy, biovar, tlag, nCmt, system,
-              Pred1_linOde(), PredSS_linOde());
+                  pMatrix_dummy, biovar, tlag, nCmt, system,
+                  Pred1_linOde(), PredSS_linOde(),
+                  refactor::PKLinODEModelSolver(), refactor::PKLinODEModelSolverSS());
 }
 
 /**
