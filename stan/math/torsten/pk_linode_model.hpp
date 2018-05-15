@@ -15,7 +15,7 @@ namespace refactor {
     const T_time &t0_;
     const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0_;
     const std::vector<T_rate> &rate_;
-    const Matrix<T_par, Dynamic, Dynamic> &ode_;
+    const Matrix<T_par, Dynamic, Dynamic> ode_; // FIXME: use reference
 
   public:
     // static const int ncmt = ode_; 
@@ -23,19 +23,24 @@ namespace refactor {
     using par_type = T_par;
 
     // constructors
+    // PKLinODEModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
+    //               const std::vector<T_rate> &rate,
+    //               const Matrix<T_par, Dynamic, Dynamic> &ode) :
+    template<template<typename...> class T_mp, typename... Ts>
     PKLinODEModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
                   const std::vector<T_rate> &rate,
-                  const Matrix<T_par, Dynamic, Dynamic> &ode) :
+                  const std::vector<T_par> & par,
+                  const T_mp<Ts...> &parameter) :
       t0_(t0),
       y0_(y0),
       rate_(rate),
-      ode_(ode)
+      ode_(parameter.get_K())
     {}
 
     // copy constructor
-    PKLinODEModel(const PKLinODEModel& m) :
-      PKLinODEModel(m.t0_, m.y0_, m.rate_, m.ode_)
-    {}
+    // PKLinODEModel(const PKLinODEModel& m) :
+    //   PKLinODEModel(m.t0_, m.y0_, m.rate_, m.ode_)
+    // {}
 
     // get
     const T_time              & t0()   { return t0_; }

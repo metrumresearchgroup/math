@@ -24,8 +24,6 @@ namespace refactor {
 
       auto init = pkmodel.y0()   ;
       auto rate = pkmodel.rate() ;
-      auto ka   = pkmodel.ka()   ;
-      auto alpha= pkmodel.alpha();
 
       if (dt == 0) { return init;
       } else {

@@ -157,7 +157,7 @@ Pred2(const std::vector<T_time>& time,
       T_tau                     model_time = event.get_time();
       std::vector<T_rate2>      model_rate = rate2.get_rate();
       std::vector<T_parameters> model_par = parameter.get_RealParameters();
-      model_type pkmodel {model_time, init, model_rate, model_par};
+      model_type pkmodel {model_time, init, model_rate, model_par, parameter};
       pred1 = T_sol().solve(pkmodel, dt);
       // pred1 = Pred1(dt, parameter, init, rate2.get_rate());
       init = pred1;
@@ -170,7 +170,8 @@ Pred2(const std::vector<T_time>& time,
       T_tau model_time = event.get_time();
       auto model_rate = rate2.get_rate();
       auto model_par = parameter.get_RealParameters();
-      model_type pkmodel {model_time, init, model_rate, model_par};
+      model_type pkmodel {model_time, init, model_rate, model_par, parameter};
+      // model_type pkmodel {model_time, init, model_rate, model_par};
       // pred1 = multiply(PredSS(parameter,
       //                         parameters.GetValueBio(i, event.get_cmt() - 1)
       //                           * event.get_amt(),
