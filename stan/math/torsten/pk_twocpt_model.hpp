@@ -5,6 +5,38 @@ namespace refactor {
 
   using boost::math::tools::promote_args;
 
+  struct PKTwoCptODE {
+    template <typename T0, typename T1, typename T2, typename T3>
+    inline
+    std::vector<typename boost::math::tools::promote_args<T0, T1, T2, T3>::type>
+    operator()(const T0& t,
+               const std::vector<T1>& x,
+               const std::vector<T2>& parms,
+               const std::vector<T3>& rate,
+               const std::vector<int>& dummy, std::ostream* pstream__) const {
+      typedef typename boost::math::tools::promote_args<T0, T1, T2, T3>::type scalar;
+
+      scalar
+        CL = parms[0],
+        Q = parms[1],
+        V1 = parms[2],
+        V2 = parms[3],
+        ka = parms[4],
+        k10 = CL / V1,
+        k12 = Q / V1,
+        k21 = Q / V2;
+
+      std::vector<scalar> y(3, 0);
+      y[0] = -ka * x[0];
+      y[1] = ka * x[0] - (k10 + k12) * x[1] + k21 * x[2];
+      y[2] = k12 * x[1] - k21 * x[2];
+
+      return y;
+    }
+  };
+
+
+
   // depend on model, we can have arbitrary number of
   // parameters, e.g. biovar, k12, k10, ka. Each parameter
   // can be data or var.
@@ -26,6 +58,7 @@ namespace refactor {
 
   public:
     static const int ncmt = 3;
+    static constexpr PKTwoCptODE f_ = PKTwoCptODE();    // can be solved by gen ode solver
     using scalar_type = typename promote_args<T_time, T_rate, T_par, T_init>::type;
 
     // constructors
@@ -89,6 +122,7 @@ namespace refactor {
     const T_par               & k12()   { return k12_;   }
     const T_par               & k21()   { return k21_;   }
     const std::vector<T_par>  & alpha() { return alpha_; }
+    const PKTwoCptODE         & rhs_fun(){ return f_; }
 
     // can be solved by linear ode solver
   };

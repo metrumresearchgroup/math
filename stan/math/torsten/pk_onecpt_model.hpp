@@ -5,6 +5,28 @@ namespace refactor {
 
   using boost::math::tools::promote_args;
 
+  struct PKOneCptODE {
+    template <typename T0, typename T1, typename T2, typename T3>
+    inline
+    std::vector<typename boost::math::tools::promote_args<T0, T1, T2, T3>::type>
+    operator()(const T0& t,
+               const std::vector<T1>& x,
+               const std::vector<T2>& parms,
+               const std::vector<T3>& rate,
+               const std::vector<int>& dummy,
+               std::ostream* pstream__) const {
+      typedef typename boost::math::tools::promote_args<T0, T1, T2, T3>::type scalar;
+
+      scalar CL = parms[0], V1 = parms[1], ka = parms[2], k10 = CL / V1;
+      std::vector<scalar> y(2, 0);
+
+      y[0] = -ka * x[0];
+      y[1] = ka * x[0] - k10 * x[1];
+
+      return y;
+    }
+  };
+
   // depend on model, we can have arbitrary number of
   // parameters, e.g. biovar, k12, k10, ka. Each parameter
   // can be data or var.
@@ -21,6 +43,8 @@ namespace refactor {
 
   public:
     static const int ncmt = 2; 
+    static constexpr PKOneCptODE f_ = PKOneCptODE();    // can be solved by gen ode solver
+
     using scalar_type = typename promote_args<T_time, T_rate, T_par, T_init>::type;
 
     // constructors
@@ -47,21 +71,6 @@ namespace refactor {
       PKOneCptModel(t0, y0, rate, par[0], par[1], par[2])
     {}
 
-    // PKOneCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
-    //               const Eigen::Matrix<T_par, Eigen::Dynamic, Eigen::Dynamic>& m) :
-    //   // TODO
-    //   t0_(t0_),
-    //   y0_(y0)
-    //   // CL_(m.Cl_),
-    //   // V2_(m.V2_),
-    //   // ka_(m.ka_)
-    // {}
-
-    // // copy constructor
-    // PKOneCptModel(const PKOneCptModel& m) :
-    //   PKOneCptModel(m.t0_, m.y0_, m.rate_, m.CL_, m.V2_, m.ka_)
-    // {}
-
     // get
     const T_time              & t0()   { return t0_; }
     const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0() { return y0_; }
@@ -71,8 +80,9 @@ namespace refactor {
     const T_par               & ka()   { return ka_; }
     const T_par               & k10()  { return k10_; }
     const std::vector<T_par>  & alpha(){ return alpha_; }
+    const PKOneCptODE         & rhs_fun(){ return f_; }
+    // const int                 & ncmt() { return ncmt; }
 
-    // can be solved by linear ode solver
   };
 
 }
