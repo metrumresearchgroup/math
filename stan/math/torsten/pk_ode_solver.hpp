@@ -113,15 +113,14 @@ namespace refactor {
       // using par_type = typename T_model<Ts_par...>::par_type;
       // using f_type = typename T_model<Ts_par...>::f_type;
 
-      auto EventTime = pkmodel.t0();
       auto init = pkmodel.y0()   ;
       auto rate = pkmodel.rate() ;
       auto f = pkmodel.rhs_fun() ;
 
       assert((size_t) init.cols() == rate.size());
 
-      // T_time EventTime = parameter.get_time();  // time of current event
-      T_time InitTime = EventTime - dt;  // time of previous event
+      T_time InitTime = pkmodel.t0();
+      T_time EventTime = InitTime + dt;
 
       // Convert time parameters to fixed data for ODE integrator
       // FIX ME - see issue #30

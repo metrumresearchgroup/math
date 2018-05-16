@@ -159,7 +159,7 @@ Pred2(const std::vector<T_time>& time,
       dt = event.get_time() - tprev;
       typedef typename promote_args<T_rate, T_biovar>::type T_rate2;
       using model_type = T_model<T_tau, scalar, T_rate2, T_parameters, Ts...>;
-      T_tau                     model_time = event.get_time();
+      T_tau                     model_time = tprev;
       std::vector<T_rate2>      model_rate = rate2.get_rate();
       std::vector<T_parameters> model_par = parameter.get_RealParameters();
       model_type pkmodel {model_time, init, model_rate, model_par, parameter, pars...};
@@ -172,7 +172,7 @@ Pred2(const std::vector<T_time>& time,
       && (event.get_ss() == 1 || event.get_ss() == 2)) ||
       event.get_ss() == 3) {  // steady state event
       using model_type = T_model<T_tau, scalar, T_rate2, T_parameters, Ts...>;
-      T_tau model_time = event.get_time();
+      T_tau model_time = event.get_time(); // FIXME: time is not t0 but for adjust within SS solver
       auto model_rate = rate2.get_rate();
       auto model_par = parameter.get_RealParameters();
       model_type pkmodel {model_time, init, model_rate, model_par, parameter, pars...};
