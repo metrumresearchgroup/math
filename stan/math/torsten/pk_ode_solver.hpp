@@ -55,7 +55,7 @@ namespace refactor {
         }
     }
 
-    // overload
+    // overload for data rate
     template<typename T_scalar, typename F, typename T_par, typename T_init>
     void
     run_integrator(const F& f,
@@ -89,6 +89,7 @@ namespace refactor {
     }
 
   public:
+    // constructor
     PKODEModelSolver(const double& rel_tol,
                      const double& abs_tol,
                      const long int& max_num_steps,
@@ -97,6 +98,7 @@ namespace refactor {
       integrator_(rel_tol, abs_tol, max_num_steps, msgs, integratorType)
     {}
 
+    // constructor
     PKODEModelSolver(const torsten::integrator_structure integrator) :
       integrator_(integrator)
     {}
@@ -110,12 +112,13 @@ namespace refactor {
 
       using scalar = typename T_model<Ts_par...>::scalar_type;
       // using rate_type = typename T_model<Ts_par...>::rate_type;
-      // using par_type = typename T_model<Ts_par...>::par_type;
+      using par_type = typename T_model<Ts_par...>::par_type;
       // using f_type = typename T_model<Ts_par...>::f_type;
 
       auto init = pkmodel.y0()   ;
       auto rate = pkmodel.rate() ;
       auto f = pkmodel.rhs_fun() ;
+      std::vector<par_type> pars {pkmodel.par()};
 
       assert((size_t) init.cols() == rate.size());
 
@@ -129,11 +132,11 @@ namespace refactor {
 
       Eigen::Matrix<scalar, Eigen::Dynamic, 1> pred;
       run_integrator(f,
-                            pkmodel.par(),
-                            rate,
-                            init,
-                            InitTime_d,
-                            EventTime_d, pred);
+                     pars,
+                     rate,
+                     init,
+                     InitTime_d,
+                     EventTime_d, pred);
       return pred;
     }
 
