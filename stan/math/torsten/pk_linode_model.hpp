@@ -47,6 +47,7 @@ namespace refactor {
     const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0() { return y0_; }
     const std::vector<T_rate> & rate() { return rate_; }
     const Eigen::Matrix<T_par, Dynamic, Dynamic> &rhs_matrix () { return ode_; }
+    const int &ncmt () { return ode_.rows(); }
 
     // can be solved by linear ode solver
   };

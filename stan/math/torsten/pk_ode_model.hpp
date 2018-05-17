@@ -44,6 +44,20 @@ namespace refactor {
       ncmt_(ncmt)
     {}
 
+    PKODEModel(const T_time& t0,
+               const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
+               const std::vector<T_rate> &rate,
+               const std::vector<T_par> &par,
+               const F& f,
+               const Ti &ncmt) :
+      t0_(t0),
+      y0_(y0),
+      rate_(rate),
+      par_(par),
+      f_(f),
+      ncmt_(ncmt)
+    {}
+
     // copy constructor
     PKODEModel(const PKODEModel& other) :
       t0_(other.t0_),
