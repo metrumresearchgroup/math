@@ -16,7 +16,7 @@ namespace refactor {
              typename T_ii,
              template <class, class... > class T_model, class... Ts_par>
     Eigen::Matrix<typename T_model<Ts_par...>::scalar_type, Eigen::Dynamic, 1> 
-    solve(T_model<Ts_par...> pkmodel,
+    solve(const T_model<Ts_par...> &pkmodel,
           const T_amt& amt,
           const T_rate& rate,
           const T_ii& ii,

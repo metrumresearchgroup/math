@@ -26,7 +26,7 @@ namespace refactor {
                                                             typename T_model<Ts_par...>::par_type>::type, Eigen::Dynamic, 1>
     solve(
           // const int& ncmt,
-          T_model<Ts_par...> pkmodel,
+          const T_model<Ts_par...> &pkmodel,
           const double& amt,
           const double& rate,
           const T_ii& ii,

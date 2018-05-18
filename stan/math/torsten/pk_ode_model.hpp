@@ -69,12 +69,12 @@ namespace refactor {
     {}
 
     // get
-    const T_time  & t0()   { return t0_; }
-    const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0() { return y0_; }
-    const std::vector<T_rate> & rate() { return rate_; }
-    const std::vector<T_par>& par() { return par_; }
-    const F &rhs_fun () { return f_; }
-    const int &ncmt () { return ncmt_; }
+    const T_time              & t0()       const { return t0_; }
+    const PKRecord<T_init>    & y0()       const { return y0_; }
+    const std::vector<T_rate> & rate()     const { return rate_; }
+    const std::vector<T_par>  & par()      const { return par_; }
+    const F                   & rhs_fun () const { return f_; }
+    const int                 & ncmt ()    const { return ncmt_; }
 
     // can be solved by linear ode solver
   };

@@ -1,6 +1,8 @@
 #ifndef PK_LINODE_MODEL_HPP
 #define PK_LINODE_MODEL_HPP
 
+#include <stan/math/torsten/torsten_def.hpp>
+
 namespace refactor {
 
   using boost::math::tools::promote_args;
@@ -43,11 +45,11 @@ namespace refactor {
     // {}
 
     // get
-    const T_time              & t0()   { return t0_; }
-    const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0() { return y0_; }
-    const std::vector<T_rate> & rate() { return rate_; }
-    const Eigen::Matrix<T_par, Dynamic, Dynamic> &rhs_matrix () { return ode_; }
-    const int &ncmt () { return ode_.rows(); }
+    const T_time              & t0()          const { return t0_; }
+    const PKRecord<T_init>    & y0()          const { return y0_; }
+    const std::vector<T_rate> & rate()        const { return rate_; }
+    const PKLinSystem<T_par>  & rhs_matrix () const { return ode_; }
+    const int                 & ncmt ()       const { return ode_.rows(); }
 
     // can be solved by linear ode solver
   };

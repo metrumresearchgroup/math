@@ -1,6 +1,8 @@
 #ifndef PK_TWOCPT_MODEL_HPP
 #define PK_TWOCPT_MODEL_HPP
 
+#include <stan/math/torsten/torsten_def.hpp>
+
 namespace refactor {
 
   using boost::math::tools::promote_args;
@@ -116,20 +118,20 @@ namespace refactor {
     // {}
 
     // get
-    const T_time              & t0()   { return t0_; }
-    const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0() { return y0_; }
-    const std::vector<T_rate> & rate()  { return rate_; }
-    const T_par               & CL()    { return CL_;    }
-    const T_par               & Q()     { return Q_;     }
-    const T_par               & V2()    { return V2_;    }
-    const T_par               & V3()    { return V3_;    }
-    const T_par               & ka()    { return ka_;    }
-    const T_par               & k10()   { return k10_;   }
-    const T_par               & k12()   { return k12_;   }
-    const T_par               & k21()   { return k21_;   }
-    const std::vector<T_par>  & alpha() { return alpha_; }
-    const PKTwoCptODE         & rhs_fun(){ return f_; }
-    const int &ncmt () { return Ncmt; }
+    const T_time              & t0()      const { return t0_;    }
+    const PKRecord<T_init>    & y0()      const { return y0_;    }
+    const std::vector<T_rate> & rate()    const { return rate_;  }
+    const T_par               & CL()      const { return CL_;    }
+    const T_par               & Q()       const { return Q_;     }
+    const T_par               & V2()      const { return V2_;    }
+    const T_par               & V3()      const { return V3_;    }
+    const T_par               & ka()      const { return ka_;    }
+    const T_par               & k10()     const { return k10_;   }
+    const T_par               & k12()     const { return k12_;   }
+    const T_par               & k21()     const { return k21_;   }
+    const std::vector<T_par>  & alpha()   const { return alpha_; }
+    const PKTwoCptODE         & rhs_fun() const { return f_;     }
+    const int                 & ncmt ()   const { return Ncmt;   }
 
     // can be solved by linear ode solver
   };
