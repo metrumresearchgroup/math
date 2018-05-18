@@ -42,8 +42,8 @@ namespace refactor {
     const std::vector<T_par> alpha_;
 
   public:
-    static const int Ncmt = 2;
-    static constexpr PKOneCptODE f_ = PKOneCptODE();    // can be solved by gen ode solver
+    static constexpr int Ncmt = 2;
+    static constexpr PKOneCptODE f_ = PKOneCptODE();
 
     using scalar_type = typename promote_args<T_time, T_rate, T_par, T_init>::type;
 
@@ -63,6 +63,7 @@ namespace refactor {
       alpha_{k10_, ka_}
     {}
 
+    // constructor
     template<template<typename...> class T_mp, typename... Ts>
     PKOneCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
                   const std::vector<T_rate> &rate,
@@ -71,6 +72,7 @@ namespace refactor {
       PKOneCptModel(t0, y0, rate, par[0], par[1], par[2])
     {}
 
+    // constructor
     PKOneCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
                   const std::vector<T_rate> &rate,
                   const std::vector<T_par> & par) :
@@ -90,6 +92,13 @@ namespace refactor {
     const int &ncmt () { return Ncmt; }
 
   };
+
+  template<typename T_time, typename T_init, typename T_rate, typename T_par>
+  constexpr int PKOneCptModel<T_time, T_init, T_rate, T_par>::Ncmt;
+
+  template<typename T_time, typename T_init, typename T_rate, typename T_par>
+  constexpr PKOneCptODE PKOneCptModel<T_time, T_init, T_rate, T_par>::f_;
+
 
 }
 
