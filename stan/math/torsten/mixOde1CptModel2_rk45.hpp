@@ -146,7 +146,7 @@ mixOde1CptModel2_rk45(const F& f,
                   PredSS_mix1<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
                                   "rk45", nOde),
                   sol, sol,
-                  F0(f), nOde);
+                  f, nOde);
 }
 
 

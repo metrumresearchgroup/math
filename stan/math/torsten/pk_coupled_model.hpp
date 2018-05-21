@@ -104,12 +104,14 @@ namespace refactor {
   };
 
   // wrapper: one cpt model coupled with ode model
+  // wrapper: one cpt model coupled with ode model
   template<typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
   struct OneCptODEmodel {
     using model_type = PKCoupledModel2<PKOneCptModel<T_time, T_init, T_rate, T_par>,
-                                       PKODEModel<T_time, T_init, T_rate, T_par, F, Ti> >;
+                                       PKODEModel<T_time, T_init, T_rate, T_par, mix1_functor2<F>, Ti> >;
     using scalar_type = typename model_type::scalar_type;
     using rate_type = T_rate;
+    const mix1_functor2<F> f_;
     const model_type model;
 
     OneCptODEmodel(const T_time& t0,
@@ -118,9 +120,10 @@ namespace refactor {
                    const std::vector<T_par> & par,
                    const F& f,
                    const Ti& n2) :
+      f_(f),
       model{t0, y0, rate, par,
         PKOneCptModel<T_time, T_init, T_rate, T_par>::Ncmt, 
-        f, n2}
+        f_, n2}
     {}
 
     template<template<typename...> class T_mp, typename... Ts>
@@ -131,9 +134,10 @@ namespace refactor {
                    const T_mp<Ts...> &parameter,
                    const F& f,
                    const Ti& n2) :
+      f_(f),
       model{t0, y0, rate, par,
         PKOneCptModel<T_time, T_init, T_rate, T_par>::Ncmt, 
-        f, n2}
+        f_, n2}
     {}
   };
 

@@ -120,7 +120,7 @@ mixOde1CptModel2_bdf(const F& f,
                   PredSS_mix1<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
                                   "bdf", nOde),
                   sol, sol,
-                  F0(f), nOde);
+                  f, nOde);
 }
 
 /**
