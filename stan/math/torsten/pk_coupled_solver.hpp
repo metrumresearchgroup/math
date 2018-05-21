@@ -5,7 +5,6 @@
 
 namespace refactor {
 
-  using boost::math::tools::promote_args;
   using Eigen::Matrix;
   using Eigen::Dynamic;
   using stan::math::to_array_1d;

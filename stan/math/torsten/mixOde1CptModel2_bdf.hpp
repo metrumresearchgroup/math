@@ -3,9 +3,10 @@
 
 #include <Eigen/Dense>
 #include <stan/math/torsten/PKModel/PKModel.hpp>
-#include <stan/math/torsten/PKModel/functors/mix1_functor2.hpp>
+#include <stan/math/torsten/PKModel/functors/mix1_functor.hpp>
 #include <stan/math/torsten/PKModel/Pred/Pred1_mix1.hpp>
 #include <stan/math/torsten/PKModel/Pred/PredSS_mix1.hpp>
+#include <stan/math/torsten/pk_onecpt_ode_model.hpp>
 #include <stan/math/torsten/pk_coupled_model.hpp>
 #include <stan/math/torsten/pk_coupled_solver.hpp>
 #include <boost/math/tools/promotion.hpp>
@@ -98,7 +99,7 @@ mixOde1CptModel2_bdf(const F& f,
   vector<Matrix<T4, Dynamic, Dynamic> >
     dummy_systems(1, dummy_system);
 
-  typedef mix1_functor2<F> F0;
+  typedef mix1_functor<F> F0;
 
   refactor::PKOneCptModelSolver sol1;
   refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "bdf");

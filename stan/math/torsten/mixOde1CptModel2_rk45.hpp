@@ -3,7 +3,7 @@
 
 #include <Eigen/Dense>
 #include <stan/math/torsten/PKModel/PKModel.hpp>
-#include <stan/math/torsten/PKModel/functors/mix1_functor2.hpp>
+#include <stan/math/torsten/PKModel/functors/mix1_functor.hpp>
 #include <stan/math/torsten/PKModel/Pred/Pred1_mix1.hpp>
 #include <stan/math/torsten/PKModel/Pred/PredSS_mix1.hpp>
 // #include <stan/math/torsten/PKModel/Pred/PredSS_err.hpp>
@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 
+#include <stan/math/torsten/pk_onecpt_ode_model.hpp>
 #include <stan/math/torsten/Pred2.hpp>
 #include <stan/math/torsten/pk_ode_model.hpp>
 #include <stan/math/torsten/pk_ode_solver.hpp>
@@ -20,6 +21,7 @@
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_onecpt_solver.hpp>
 #include <stan/math/torsten/pk_onecpt_solver_ss.hpp>
+
 
 namespace torsten {
 
@@ -124,7 +126,7 @@ mixOde1CptModel2_rk45(const F& f,
   Matrix<T4, Dynamic, Dynamic> dummy_system;
   vector<Matrix<T4, Dynamic, Dynamic> > dummy_systems(1, dummy_system);
 
-  typedef mix1_functor2<F> F0;
+  typedef mix1_functor<F> F0;
 
   refactor::PKOneCptModelSolver sol1;
   refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "rk45");
