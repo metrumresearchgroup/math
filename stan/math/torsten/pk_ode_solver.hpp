@@ -23,7 +23,8 @@ namespace refactor {
                    const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& init,
                    double& InitTime_d,
                    std::vector<double>& EventTime_d,
-                   Eigen::Matrix<T_scalar, Eigen::Dynamic, 1>& pred) {
+                   Eigen::Matrix<T_scalar, Eigen::Dynamic, 1>& pred) const
+    {
         size_t nOdeParm = parameters.size();
         vector<typename promote_args<T_par, T_rate>::type> theta(nOdeParm + rate.size());
         for (size_t i = 0; i < nOdeParm; i++) theta[i] = parameters[i];
@@ -64,7 +65,8 @@ namespace refactor {
                    const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& init,
                    double& InitTime_d,
                    std::vector<double>& EventTime_d,
-                   Eigen::Matrix<T_scalar, Eigen::Dynamic, 1>& pred) {
+                   Eigen::Matrix<T_scalar, Eigen::Dynamic, 1>& pred) const
+    {
       const std::vector<T_par>& theta = parameters;
 
         if (EventTime_d[0] == InitTime_d) { pred = init;
@@ -105,7 +107,7 @@ namespace refactor {
 
     template<typename T_time, template <class, class... > class T_model, class... Ts_par>    
     Eigen::Matrix<typename T_model<Ts_par...>::scalar_type, Eigen::Dynamic, 1> 
-    solve(const T_model<Ts_par...> &pkmodel, const T_time& dt) {
+    solve(const T_model<Ts_par...> &pkmodel, const T_time& dt) const {
       using stan::math::to_array_1d;
       using std::vector;
       using boost::math::tools::promote_args;
@@ -120,7 +122,7 @@ namespace refactor {
       auto f = pkmodel.rhs_fun() ;
       std::vector<par_type> pars {pkmodel.par()};
 
-      assert((size_t) init.cols() == rate.size());
+      // assert((size_t) init.cols() == rate.size());
 
       T_time InitTime = pkmodel.t0();
       T_time EventTime = InitTime + dt;

@@ -9,8 +9,7 @@ namespace refactor {
 
   // nested class
   template<typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
-  class PKODEModel
-  {
+  class PKODEModel {
     const T_time &t0_;
     const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0_;
     const std::vector<T_rate> &rate_;
@@ -23,6 +22,8 @@ namespace refactor {
 
     // static const int ncmt = ode_; 
     using scalar_type = typename promote_args<T_time, T_rate, T_par, T_init>::type;
+    using aug_par_type = typename promote_args<T_rate, T_par, T_init>::type;
+    using init_type   = T_init;
     using time_type   = T_time;
     using par_type    = T_par;
     using rate_type   = T_rate;
@@ -67,6 +68,19 @@ namespace refactor {
       f_(other.f_),
       ncmt_(other.ncmt_)
     {}
+
+    template<typename T>
+    const PKODEModel<T_time, T_init, T_rate, T, F, Ti>
+    make_with_new_par(const std::vector<T> &new_par) const {
+      return PKODEModel<T_time, T_init, T_rate, T, F, Ti>(t0_, y0_, rate_, new_par, f_, ncmt_);
+    }
+
+    template<typename T>
+    const PKODEModel<T_time, T_init, T_rate, T, F, Ti>
+    make_with_new_par_rate(const std::vector<T> &new_par,
+                           const std::vector<T_rate> &new_rate) const {
+      return PKODEModel<T_time, T_init, T_rate, T, F, Ti>(t0_, y0_, new_rate, new_par, f_, ncmt_);
+    }
 
     // get
     const T_time              & t0()       const { return t0_; }
