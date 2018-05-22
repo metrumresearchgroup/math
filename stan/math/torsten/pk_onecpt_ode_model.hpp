@@ -5,7 +5,7 @@
 
 namespace refactor {
 
-  template <typename F0>
+  template <typename F0, typename T_pksolver, template<typename...> class T_pkmodel>
   struct mix1_functor2 {
     F0 f0_;
 
@@ -38,18 +38,18 @@ namespace refactor {
       typedef typename boost::math::tools::promote_args<T0, T1, T2, T3>::type
         scalar;
       typedef typename boost::math::tools::promote_args<T0, T2, T3>::type
-        T_pk;  // return object of torsten::torsten::fOneCpt  doesn't depend on T1
+        T_pk;  // return object of fOneCpt  doesn't depend on T1
+
+      int nPK = T_pkmodel<T0, T2, double, T2>::Ncmt;
+      int n_pk_par = T_pkmodel<T0, T2, double, T2>::Npar;
 
       // Get PK parameters
-      std::vector<T2> thetaPK {theta[0], theta[1], theta[2]};
+      std::vector<T2> thetaPK(theta.data(), theta.data() + n_pk_par);
 
       // Get initial PK states
-      int nPK = 2;
-      std::vector<T2> init_pk(nPK);
+
       size_t nTheta = theta.size();
       // The last two components of theta should contain the initial PK states
-      init_pk[0] = theta[nTheta - 2];
-      init_pk[1] = theta[nTheta - 1];
 
       // T0 dt = t - stan::math::value_of(theta.back());
 
@@ -57,9 +57,18 @@ namespace refactor {
       T0 dt = t - x_r[x_r.size() - 1];
       // T0 dt = t - stan::math::value_of(theta.back());
 
-      // std::cout << "taki test 1: " << stan::math::value_of(theta.back()) << "\n";
+      T0 t0 = x_r[x_r.size() - 1];
+      refactor::PKRecord<T2> y0_pk(nPK);
+      for (size_t i = 0; i < nPK; ++i) {
+        y0_pk(i) = theta[nTheta - nPK + i];
+      }
 
-      std::vector<T_pk> y_pk = torsten::fOneCpt(dt, thetaPK, init_pk, x_r);
+      T_pkmodel<T0, T2, double, T2> pkmodel(t0,
+                                            y0_pk,
+                                            x_r,
+                                            thetaPK);
+      auto y_pk0 = T_pksolver().solve(pkmodel, dt);
+      std::vector<T_pk> y_pk(y_pk0.data(), y_pk0.data() + y_pk0.size());
       std::vector<scalar> dydt = f0_(dt, y, y_pk, theta, x_r, x_i, pstream_);
 
       for (size_t i = 0; i < dydt.size(); i++)
@@ -90,16 +99,17 @@ namespace refactor {
       typedef typename boost::math::tools::promote_args<T0, T2, T3>::type
         T_pk;  // return object of fTwoCpt  doesn't depend on T1
 
-      size_t
-        nTheta = theta.size(),
-        nPK = 2,  // number of base PK states (equivalently rates and inits)
-        nPD = y.size(),  // number of other states
-        nODEparms = nTheta - 2 * nPK - nPD;  // number of ODE parameters
+      size_t nTheta = theta.size();
+      size_t nPK = T_pkmodel<T0, T2, T2, T2>::Ncmt;
+      size_t nPD = y.size();
+      size_t nODEparms = nTheta - 2 * nPK - nPD;  // number of ODE parameters
       nODEparms -= 1;
 
       // Theta first contains the base PK parameters, followed by
       // the other ODE parameters.
-      vector<T2> thetaPK {theta[0], theta[1], theta[2]};
+      int n_pk_par = T_pkmodel<T0, T2, double, T2>::Npar;
+
+      std::vector<T2> thetaPK(theta.data(), theta.data() + n_pk_par);
 
       // Next theta contains the rates for the base PK compartments.
       vector<T2> ratePK(nPK);
@@ -112,15 +122,22 @@ namespace refactor {
         ratePD[i] = theta[nODEparms + nPK + 1 + nPK + i];
 
       // The last elements of theta contain the initial base PK states
-      vector<T2> init_pk(nPK);
-      init_pk[0] = theta[nODEparms + nPK - 2];
-      init_pk[1] = theta[nODEparms + nPK - 1];
 
       // Last element of x_r contains the initial time
       // T0 dt = t - x_r[x_r.size() - 1];
       T0 dt = t - stan::math::value_of(theta[nODEparms + nPK]);
 
-      vector<T_pk> y_pk = torsten::fOneCpt(dt, thetaPK, init_pk, ratePK);
+      T0 t0 = stan::math::value_of(theta[nODEparms + nPK]);
+      refactor::PKRecord<T2> y0_pk(nPK);
+      for (size_t i = 0; i < nPK; ++i) {
+        y0_pk(i) = theta[nODEparms + nPK - nPK + i];
+      }
+      T_pkmodel<T0, T2, T2, T2> pkmodel(t0,
+                                        y0_pk,
+                                        ratePK,
+                                        thetaPK);
+      auto y_pk0 = T_pksolver().solve(pkmodel, dt);
+      vector<T_pk> y_pk(y_pk0.data(), y_pk0.data() + y_pk0.size());
       vector<scalar> dydt = f0_(dt, y, y_pk, theta, x_r, x_i, pstream_);
 
       for (size_t i = 0; i < dydt.size(); i++)
@@ -150,10 +167,15 @@ namespace refactor {
   template<typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
   struct OneCptODEmodel {
     using model_type = PKCoupledModel2<PKOneCptModel<T_time, T_init, T_rate, T_par>,
-                                       PKODEModel<T_time, T_init, T_rate, T_par, mix1_functor2<F>, Ti> >;
+                                       PKODEModel<T_time,
+                                                  T_init,
+                                                  T_rate,
+                                                  T_par,
+                                                  mix1_functor2<F,refactor::PKOneCptModelSolver,refactor::PKOneCptModel>,
+                                                  Ti> >;
     using scalar_type = typename model_type::scalar_type;
     using rate_type = T_rate;
-    const mix1_functor2<F> f_;
+    const mix1_functor2<F,refactor::PKOneCptModelSolver,refactor::PKOneCptModel> f_;
     const model_type model;
 
     OneCptODEmodel(const T_time& t0,

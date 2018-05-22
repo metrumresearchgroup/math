@@ -16,8 +16,7 @@ namespace refactor {
 
   template <typename...>
   class PKCoupledModel2;
-  template <
-            template <typename...> class T_model1,
+  template <template <typename...> class T_model1,
             template <typename...> class T_model2,
             typename...Ts1,
             typename...Ts2>

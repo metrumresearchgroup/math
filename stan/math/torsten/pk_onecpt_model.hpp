@@ -45,6 +45,7 @@ namespace refactor {
 
   public:
     static constexpr int Ncmt = 2;
+    static constexpr int Npar = 3;
     static constexpr PKOneCptODE f_ = PKOneCptODE();
 
     using scalar_type = typename promote_args<T_time, T_rate, T_par, T_init>::type;
@@ -102,6 +103,9 @@ namespace refactor {
 
   template<typename T_time, typename T_init, typename T_rate, typename T_par>
   constexpr int PKOneCptModel<T_time, T_init, T_rate, T_par>::Ncmt;
+
+  template<typename T_time, typename T_init, typename T_rate, typename T_par>
+  constexpr int PKOneCptModel<T_time, T_init, T_rate, T_par>::Npar;
 
   template<typename T_time, typename T_init, typename T_rate, typename T_par>
   constexpr PKOneCptODE PKOneCptModel<T_time, T_init, T_rate, T_par>::f_;

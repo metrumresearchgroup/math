@@ -60,6 +60,7 @@ namespace refactor {
 
   public:
     static constexpr int Ncmt = 3;
+    static constexpr int Npar = 5;
     static constexpr PKTwoCptODE f_ = PKTwoCptODE();    // can be solved by gen ode solver
     using scalar_type = typename promote_args<T_time, T_rate, T_par, T_init>::type;
 
@@ -138,6 +139,9 @@ namespace refactor {
 
   template<typename T_time, typename T_init, typename T_rate, typename T_par>
   constexpr int PKTwoCptModel<T_time, T_init, T_rate, T_par>::Ncmt;
+
+  template<typename T_time, typename T_init, typename T_rate, typename T_par>
+  constexpr int PKTwoCptModel<T_time, T_init, T_rate, T_par>::Npar;
 
   template<typename T_time, typename T_init, typename T_rate, typename T_par>
   constexpr PKTwoCptODE PKTwoCptModel<T_time, T_init, T_rate, T_par>::f_;
