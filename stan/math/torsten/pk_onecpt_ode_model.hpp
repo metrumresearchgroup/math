@@ -205,5 +205,48 @@ namespace refactor {
     {}
   };
 
+  // wrapper: one cpt model coupled with ode model
+  template<typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
+  struct TwoCptODEmodel {
+    using model_type = PKCoupledModel2<PKTwoCptModel<T_time, T_init, T_rate, T_par>,
+                                       PKODEModel<T_time,
+                                                  T_init,
+                                                  T_rate,
+                                                  T_par,
+                                                  mix1_functor2<F,refactor::PKTwoCptModelSolver,refactor::PKTwoCptModel>,
+                                                  Ti> >;
+    using scalar_type = typename model_type::scalar_type;
+    using rate_type = T_rate;
+    const mix1_functor2<F,refactor::PKTwoCptModelSolver,refactor::PKTwoCptModel> f_;
+    const model_type model;
+
+    TwoCptODEmodel(const T_time& t0,
+                   const PKRecord<T_init>& y0,
+                   const std::vector<T_rate>& rate,
+                   const std::vector<T_par> & par,
+                   const F& f,
+                   const Ti& n2) :
+      f_(f),
+      model{t0, y0, rate, par,
+        PKTwoCptModel<T_time, T_init, T_rate, T_par>::Ncmt, 
+        f_, n2}
+    {}
+
+    template<template<typename...> class T_mp, typename... Ts>
+    TwoCptODEmodel(const T_time& t0,
+                   const PKRecord<T_init>& y0,
+                   const std::vector<T_rate>& rate,
+                   const std::vector<T_par> & par,
+                   const T_mp<Ts...> &parameter,
+                   const F& f,
+                   const Ti& n2) :
+      f_(f),
+      model{t0, y0, rate, par,
+        PKTwoCptModel<T_time, T_init, T_rate, T_par>::Ncmt, 
+        f_, n2}
+    {}
+
+  };
+
 }
 #endif

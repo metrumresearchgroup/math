@@ -11,7 +11,7 @@ namespace refactor {
 
     template<typename T_time, template <class, class... > class T_model, class... Ts_par>    
     Eigen::Matrix<typename T_model<Ts_par...>::scalar_type, Eigen::Dynamic, 1> 
-    solve(const T_model<Ts_par...> &pkmodel, const T_time& dt) {
+    solve(const T_model<Ts_par...> &pkmodel, const T_time& dt) const {
       using Eigen::Matrix;
       using Eigen::Dynamic;
       using std::vector;

@@ -151,6 +151,38 @@ namespace refactor {
       return solve_rate_dbl(model.model, dt);
     }
 
+    template<typename T0, typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
+    Matrix<typename TwoCptODEmodel<T_time,
+                                   T_init,
+                                   T_rate,
+                                   T_par,
+                                   F,
+                                   Ti>::scalar_type, Dynamic, 1>
+    solve(const TwoCptODEmodel<T_time,
+          T_init,
+          T_rate,
+          T_par,
+          F,
+          Ti> &model, const T0& dt) const {
+      return solve_rate_var(model.model, dt);
+    }
+
+    template<typename T0, typename T_time, typename T_init, typename T_par, typename F, typename Ti>
+    Matrix<typename TwoCptODEmodel<T_time,
+                                   T_init,
+                                   double,
+                                   T_par,
+                                   F,
+                                   Ti>::scalar_type, Dynamic, 1>
+    solve(const TwoCptODEmodel<T_time,
+          T_init,
+          double,
+          T_par,
+          F,
+          Ti> &model, const T0& dt) const {
+      return solve_rate_dbl(model.model, dt);
+    }
+
   };
 
 }

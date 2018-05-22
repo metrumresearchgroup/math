@@ -62,7 +62,13 @@ namespace refactor {
     static constexpr int Ncmt = 3;
     static constexpr int Npar = 5;
     static constexpr PKTwoCptODE f_ = PKTwoCptODE();    // can be solved by gen ode solver
+
     using scalar_type = typename promote_args<T_time, T_rate, T_par, T_init>::type;
+    using aug_par_type = typename promote_args<T_rate, T_par, T_init>::type;
+    using init_type   = T_init;
+    using time_type   = T_time;
+    using par_type    = T_par;
+    using rate_type   = T_rate;
 
     // constructors
     PKTwoCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
