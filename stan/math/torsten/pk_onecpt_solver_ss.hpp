@@ -12,7 +12,8 @@ namespace refactor {
     template<typename T_amt, typename T_rate, 
              typename T_ii,
              template <class, class... > class T_model, class... Ts_par>
-    Eigen::Matrix<typename T_model<Ts_par...>::scalar_type, Eigen::Dynamic, 1> 
+    PKRecord<typename promote_args<
+               T_amt, T_rate, T_ii, typename T_model<Ts_par...>::par_type>::type>
     solve(const T_model<Ts_par...> &pkmodel,
           const T_amt& amt,
           const T_rate& rate,
@@ -21,7 +22,8 @@ namespace refactor {
       using Eigen::Matrix;
       using Eigen::Dynamic;
       using std::vector;
-      using scalar_type = typename T_model<Ts_par...>::scalar_type;
+      using scalar_type = typename promote_args<
+        T_amt, T_rate, T_ii, typename T_model<Ts_par...>::par_type>::type;
 
       const double inf = std::numeric_limits<double>::max();  // "infinity"
 
