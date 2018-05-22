@@ -9,6 +9,8 @@
 #include <boost/math/tools/promotion.hpp>
 #include <vector>
 
+#include <stan/math/torsten/pk_coupled_cpt_ode_model.hpp>
+
 namespace torsten {
 
 /**
@@ -102,7 +104,7 @@ mixOde2CptModel2_bdf(const F& f,
   refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "bdf");
   refactor::PKCoupledModelSolver<refactor::PKTwoCptModelSolver,
                                  refactor::PKODEModelSolver> sol(sol1, sol2);
-  PredWrapper<refactor::TwoCptODEmodel> pr;
+  PredWrapper<refactor::TwoCptODEModel> pr;
 
   // return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
   //             theta, biovar, tlag, nPK + nOde, dummy_systems,

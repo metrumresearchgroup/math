@@ -6,7 +6,7 @@
 #include <stan/math/torsten/PKModel/functors/mix1_functor.hpp>
 #include <stan/math/torsten/PKModel/Pred/Pred1_mix1.hpp>
 #include <stan/math/torsten/PKModel/Pred/PredSS_mix1.hpp>
-#include <stan/math/torsten/pk_onecpt_ode_model.hpp>
+#include <stan/math/torsten/pk_coupled_cpt_ode_model.hpp>
 #include <stan/math/torsten/pk_coupled_model.hpp>
 #include <stan/math/torsten/pk_coupled_solver.hpp>
 #include <boost/math/tools/promotion.hpp>
@@ -105,7 +105,7 @@ mixOde1CptModel2_bdf(const F& f,
   refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "bdf");
   refactor::PKCoupledModelSolver<refactor::PKOneCptModelSolver,
                                  refactor::PKODEModelSolver> sol(sol1, sol2);
-  PredWrapper<refactor::OneCptODEmodel> pr;
+  PredWrapper<refactor::OneCptODEModel> pr;
 
   // return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
   //             theta, biovar, tlag, nPK + nOde, dummy_systems,

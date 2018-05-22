@@ -1,17 +1,17 @@
-#ifndef PK_ONECPT_ODE_MODEL_HPP
-#define PK_ONECPT_ODE_MODEL_HPP
+#ifndef PK_COUPLED_CPT_ODE_MODEL_HPP
+#define PK_COUPLED_CPT_ODE_MODEL_HPP
 
 #include <stan/math/torsten/pk_coupled_model.hpp>
 
 namespace refactor {
 
   template <typename F0, typename T_pksolver, template<typename...> class T_pkmodel>
-  struct mix1_functor2 {
+  struct CptODEAugment {
     F0 f0_;
 
-    mix1_functor2() { }
+    CptODEAugment() { }
 
-    explicit mix1_functor2(const F0& f0) : f0_(f0) { }
+    explicit CptODEAugment(const F0& f0) : f0_(f0) { }
 
     /**
      *  Returns the derivative of the base ODE system. The base 1 PK
@@ -59,7 +59,7 @@ namespace refactor {
 
       T0 t0 = x_r[x_r.size() - 1];
       refactor::PKRecord<T2> y0_pk(nPK);
-      for (size_t i = 0; i < nPK; ++i) {
+      for (int i = 0; i < nPK; ++i) {
         y0_pk(i) = theta[nTheta - nPK + i];
       }
 
@@ -100,7 +100,7 @@ namespace refactor {
         T_pk;  // return object of fTwoCpt  doesn't depend on T1
 
       size_t nTheta = theta.size();
-      size_t nPK = T_pkmodel<T0, T2, T2, T2>::Ncmt;
+      int nPK = T_pkmodel<T0, T2, T2, T2>::Ncmt;
       size_t nPD = y.size();
       size_t nODEparms = nTheta - 2 * nPK - nPD;  // number of ODE parameters
       nODEparms -= 1;
@@ -113,7 +113,7 @@ namespace refactor {
 
       // Next theta contains the rates for the base PK compartments.
       vector<T2> ratePK(nPK);
-      for (size_t i = 0; i < nPK; i++)
+      for (int i = 0; i < nPK; i++)
         ratePK[i] = theta[nODEparms + nPK + 1 + i];
 
       // followed by the rates in the other compartments.
@@ -129,7 +129,7 @@ namespace refactor {
 
       T0 t0 = stan::math::value_of(theta[nODEparms + nPK]);
       refactor::PKRecord<T2> y0_pk(nPK);
-      for (size_t i = 0; i < nPK; ++i) {
+      for (int i = 0; i < nPK; ++i) {
         y0_pk(i) = theta[nODEparms + nPK - nPK + i];
       }
       T_pkmodel<T0, T2, T2, T2> pkmodel(t0,
@@ -157,7 +157,7 @@ namespace refactor {
                const std::vector<T3>& x_r,
                const std::vector<int>& x_i,
                std::ostream* pstream_) const {
-      std::cout << "mix1_functor2: REPORT A BUG IF YOU SEE THIS." << std::endl;
+      std::cout << "CptODEAugment: REPORT A BUG IF YOU SEE THIS." << std::endl;
       std::vector<T2> y_pk;
       return f0_(t, y, y_pk, theta, x_r, x_i, pstream_);
     }
@@ -165,20 +165,20 @@ namespace refactor {
 
   // wrapper: one cpt model coupled with ode model
   template<typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
-  struct OneCptODEmodel {
+  struct OneCptODEModel {
     using model_type = PKCoupledModel2<PKOneCptModel<T_time, T_init, T_rate, T_par>,
                                        PKODEModel<T_time,
                                                   T_init,
                                                   T_rate,
                                                   T_par,
-                                                  mix1_functor2<F,refactor::PKOneCptModelSolver,refactor::PKOneCptModel>,
+                                                  CptODEAugment<F,refactor::PKOneCptModelSolver,refactor::PKOneCptModel>,
                                                   Ti> >;
     using scalar_type = typename model_type::scalar_type;
     using rate_type = T_rate;
-    const mix1_functor2<F,refactor::PKOneCptModelSolver,refactor::PKOneCptModel> f_;
+    const CptODEAugment<F,refactor::PKOneCptModelSolver,refactor::PKOneCptModel> f_;
     const model_type model;
 
-    OneCptODEmodel(const T_time& t0,
+    OneCptODEModel(const T_time& t0,
                    const PKRecord<T_init>& y0,
                    const std::vector<T_rate>& rate,
                    const std::vector<T_par> & par,
@@ -191,7 +191,7 @@ namespace refactor {
     {}
 
     template<template<typename...> class T_mp, typename... Ts>
-    OneCptODEmodel(const T_time& t0,
+    OneCptODEModel(const T_time& t0,
                    const PKRecord<T_init>& y0,
                    const std::vector<T_rate>& rate,
                    const std::vector<T_par> & par,
@@ -207,20 +207,20 @@ namespace refactor {
 
   // wrapper: one cpt model coupled with ode model
   template<typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
-  struct TwoCptODEmodel {
+  struct TwoCptODEModel {
     using model_type = PKCoupledModel2<PKTwoCptModel<T_time, T_init, T_rate, T_par>,
                                        PKODEModel<T_time,
                                                   T_init,
                                                   T_rate,
                                                   T_par,
-                                                  mix1_functor2<F,refactor::PKTwoCptModelSolver,refactor::PKTwoCptModel>,
+                                                  CptODEAugment<F,refactor::PKTwoCptModelSolver,refactor::PKTwoCptModel>,
                                                   Ti> >;
     using scalar_type = typename model_type::scalar_type;
     using rate_type = T_rate;
-    const mix1_functor2<F,refactor::PKTwoCptModelSolver,refactor::PKTwoCptModel> f_;
+    const CptODEAugment<F,refactor::PKTwoCptModelSolver,refactor::PKTwoCptModel> f_;
     const model_type model;
 
-    TwoCptODEmodel(const T_time& t0,
+    TwoCptODEModel(const T_time& t0,
                    const PKRecord<T_init>& y0,
                    const std::vector<T_rate>& rate,
                    const std::vector<T_par> & par,
@@ -233,7 +233,7 @@ namespace refactor {
     {}
 
     template<template<typename...> class T_mp, typename... Ts>
-    TwoCptODEmodel(const T_time& t0,
+    TwoCptODEModel(const T_time& t0,
                    const PKRecord<T_init>& y0,
                    const std::vector<T_rate>& rate,
                    const std::vector<T_par> & par,

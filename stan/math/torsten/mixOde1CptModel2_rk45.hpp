@@ -11,7 +11,7 @@
 #include <vector>
 #include <string>
 
-#include <stan/math/torsten/pk_onecpt_ode_model.hpp>
+#include <stan/math/torsten/pk_coupled_cpt_ode_model.hpp>
 #include <stan/math/torsten/Pred2.hpp>
 #include <stan/math/torsten/pk_ode_model.hpp>
 #include <stan/math/torsten/pk_ode_solver.hpp>
@@ -26,9 +26,9 @@
 namespace torsten {
 
   // template <typename...>
-  // class OneCptODEmodel;
+  // class OneCptODEModel;
   // template <typename...U, typename...V>
-  // struct OneCptODEmodel<
+  // struct OneCptODEModel<
   //   refactor::PKOneCptModel<U...>, refactor::PKODEModel<V...> >
   // {
   //   refactor::PKCoupledModel2<
@@ -132,7 +132,7 @@ mixOde1CptModel2_rk45(const F& f,
   refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "rk45");
   refactor::PKCoupledModelSolver<refactor::PKOneCptModelSolver,
                                  refactor::PKODEModelSolver> sol(sol1, sol2);
-  PredWrapper<refactor::OneCptODEmodel> pr;
+  PredWrapper<refactor::OneCptODEModel> pr;
 
   // return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
   //             theta, biovar, tlag, nPK + nOde, dummy_systems,

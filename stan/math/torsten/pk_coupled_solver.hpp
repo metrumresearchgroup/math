@@ -120,13 +120,13 @@ namespace refactor {
     }
     
     template<typename T0, typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
-    Matrix<typename OneCptODEmodel<T_time,
+    Matrix<typename OneCptODEModel<T_time,
                                    T_init,
                                    T_rate,
                                    T_par,
                                    F,
                                    Ti>::scalar_type, Dynamic, 1>
-    solve(const OneCptODEmodel<T_time,
+    solve(const OneCptODEModel<T_time,
           T_init,
           T_rate,
           T_par,
@@ -136,13 +136,13 @@ namespace refactor {
     }
 
     template<typename T0, typename T_time, typename T_init, typename T_par, typename F, typename Ti>
-    Matrix<typename OneCptODEmodel<T_time,
+    Matrix<typename OneCptODEModel<T_time,
                                    T_init,
                                    double,
                                    T_par,
                                    F,
                                    Ti>::scalar_type, Dynamic, 1>
-    solve(const OneCptODEmodel<T_time,
+    solve(const OneCptODEModel<T_time,
           T_init,
           double,
           T_par,
@@ -152,13 +152,13 @@ namespace refactor {
     }
 
     template<typename T0, typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
-    Matrix<typename TwoCptODEmodel<T_time,
+    Matrix<typename TwoCptODEModel<T_time,
                                    T_init,
                                    T_rate,
                                    T_par,
                                    F,
                                    Ti>::scalar_type, Dynamic, 1>
-    solve(const TwoCptODEmodel<T_time,
+    solve(const TwoCptODEModel<T_time,
           T_init,
           T_rate,
           T_par,
@@ -168,13 +168,13 @@ namespace refactor {
     }
 
     template<typename T0, typename T_time, typename T_init, typename T_par, typename F, typename Ti>
-    Matrix<typename TwoCptODEmodel<T_time,
+    Matrix<typename TwoCptODEModel<T_time,
                                    T_init,
                                    double,
                                    T_par,
                                    F,
                                    Ti>::scalar_type, Dynamic, 1>
-    solve(const TwoCptODEmodel<T_time,
+    solve(const TwoCptODEModel<T_time,
           T_init,
           double,
           T_par,
