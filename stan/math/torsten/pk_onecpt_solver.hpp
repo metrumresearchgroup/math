@@ -7,6 +7,9 @@ namespace refactor {
 
   class PKOneCptModelSolver {
   public:
+    static constexpr int Ncmt = PKOneCptModel<double, double, double, double>::Ncmt;
+    static constexpr int Npar = PKOneCptModel<double, double, double, double>::Npar;
+
     PKOneCptModelSolver() {}
 
     template<typename T_time, template <class, class... > class T_model, class... Ts_par>    

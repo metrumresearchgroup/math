@@ -25,23 +25,6 @@
 
 namespace torsten {
 
-  // template <typename...>
-  // class OneCptODEModel;
-  // template <typename...U, typename...V>
-  // struct OneCptODEModel<
-  //   refactor::PKOneCptModel<U...>, refactor::PKODEModel<V...> >
-  // {
-  //   refactor::PKCoupledModel2<
-  //   refactor::PKOneCptModel<U...>, refactor::PKODEModel<V...> >;
-  // };
-
-  // template <
-  //           typename...Ts1,
-  //           typename...Ts2>
-  // class PKCoupledModel2<
-  //   refactor::PKOneCptModel<Ts1...>, 
-  //   refactor::PKOneCptModel<Ts2...> >
-
 /**
  * Compute the predicted amounts in each compartment at each event
  * of an ODEs model. The model contains a base 1 Compartment PK
@@ -115,8 +98,6 @@ mixOde1CptModel2_rk45(const F& f,
   using Eigen::Matrix;
   using boost::math::tools::promote_args;
 
-  int nPK = 2;
-
   // check arguments
   static const char* function("mixOde1CptModel2_rk45");
   torsten::pmetricsCheck(time, amt, rate, ii, evid, cmt, addl, ss,
@@ -128,6 +109,7 @@ mixOde1CptModel2_rk45(const F& f,
 
   typedef mix1_functor<F> F0;
 
+  const int &nPK = refactor::PKOneCptModelSolver::Ncmt;
   refactor::PKOneCptModelSolver sol1;
   refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "rk45");
   refactor::PKCoupledModelSolver<refactor::PKOneCptModelSolver,

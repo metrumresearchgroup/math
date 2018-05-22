@@ -87,8 +87,6 @@ mixOde1CptModel2_bdf(const F& f,
   using Eigen::Matrix;
   using boost::math::tools::promote_args;
 
-  int nPK = 2;
-
   // check arguments
   static const char* function("mixOde1CptModel2_bdf");
   torsten::pmetricsCheck(time, amt, rate, ii, evid, cmt, addl, ss,
@@ -101,6 +99,7 @@ mixOde1CptModel2_bdf(const F& f,
 
   typedef mix1_functor<F> F0;
 
+  const int &nPK = refactor::PKOneCptModelSolver::Ncmt;
   refactor::PKOneCptModelSolver sol1;
   refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "bdf");
   refactor::PKCoupledModelSolver<refactor::PKOneCptModelSolver,

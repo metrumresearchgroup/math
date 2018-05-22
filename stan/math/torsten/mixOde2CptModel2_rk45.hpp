@@ -96,8 +96,6 @@ mixOde2CptModel2_rk45(const F& f,
   using Eigen::Matrix;
   using boost::math::tools::promote_args;
 
-  int nPK = 3;
-
   // check arguments
   static const char* function("mixOde2CptModel2_rk45");
   torsten::pmetricsCheck(time, amt, rate, ii, evid, cmt, addl, ss,
@@ -110,6 +108,7 @@ mixOde2CptModel2_rk45(const F& f,
 
   typedef mix2_functor<F> F0;
 
+  const int &nPK = refactor::PKTwoCptModelSolver::Ncmt;
   refactor::PKTwoCptModelSolver sol1;
   refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "rk45");
   refactor::PKCoupledModelSolver<refactor::PKTwoCptModelSolver,
