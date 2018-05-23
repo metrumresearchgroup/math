@@ -96,6 +96,7 @@ namespace refactor {
     const T_par               & ka()      const { return ka_;    }
     const T_par               & k10()     const { return k10_;   }
     const std::vector<T_par>  & alpha()   const { return alpha_; }
+    const std::vector<T_par>    par()     const { return {CL_, ka_, k10_}; }
     const PKOneCptODE         & rhs_fun() const { return f_;     }
     const int                 & ncmt ()   const { return Ncmt;   }
 
@@ -110,6 +111,39 @@ namespace refactor {
   template<typename T_time, typename T_init, typename T_rate, typename T_par>
   constexpr PKOneCptODE PKOneCptModel<T_time, T_init, T_rate, T_par>::f_;
 
+
+
+  // sometimes we only need parameters, such as in SS solvers
+  template<typename T_par>
+  class PKOneCptModelParameters {
+    const T_par &CL_;
+    const T_par &V2_;
+    const T_par &ka_;
+    const T_par k10_;
+    const std::vector<T_par> alpha_;    
+  public:
+    static constexpr int Ncmt = 2;
+    static constexpr int Npar = 3;
+    using scalar_type = T_par;
+    using par_type    = T_par;
+    PKOneCptModelParameters(const std::vector<T_par> & par) :
+      CL_(par[0]),
+      V2_(par[1]),
+      ka_(par[2]),
+      k10_(CL_ / V2_),
+      alpha_{k10_, ka_}
+    {}
+    const T_par               & CL()      const { return CL_;    }
+    const T_par               & V2()      const { return V2_;    }
+    const T_par               & ka()      const { return ka_;    }
+    const T_par               & k10()     const { return k10_;   }
+    const std::vector<T_par>  & alpha()   const { return alpha_; }
+    const int                 & ncmt ()   const { return Ncmt;   }
+  }; 
+  template<typename T_par>
+  constexpr int PKOneCptModelParameters<T_par>::Ncmt;
+  template<typename T_par>
+  constexpr int PKOneCptModelParameters<T_par>::Npar;
 
 }
 

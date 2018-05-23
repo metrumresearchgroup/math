@@ -136,6 +136,7 @@ namespace refactor {
     const T_par               & k10()     const { return k10_;   }
     const T_par               & k12()     const { return k12_;   }
     const T_par               & k21()     const { return k21_;   }
+    const std::vector<T_par>    par()     const { return {CL_, Q_, V2_, V3_, ka_}; }
     const std::vector<T_par>  & alpha()   const { return alpha_; }
     const PKTwoCptODE         & rhs_fun() const { return f_;     }
     const int                 & ncmt ()   const { return Ncmt;   }

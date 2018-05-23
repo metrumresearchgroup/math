@@ -1,6 +1,8 @@
 #ifndef PK_ONECPT_SOLVER_HPP
 #define PK_ONECPT_SOLVER_HPP
 
+#include <stan/math/torsten/pk_onecpt_model.hpp>
+
 namespace refactor {
 
   using boost::math::tools::promote_args;

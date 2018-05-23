@@ -121,7 +121,7 @@ namespace refactor {
     template<// typename F,
            typename T_amt,
            typename T_ii,
-           template <class, class... > class T_model, class... Ts_par>           
+           template <class, class... > class T_model, class... Ts_par>
   Eigen::Matrix<typename
   boost::math::tools::promote_args<T_ii,
                                    T_amt,

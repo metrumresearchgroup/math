@@ -17,6 +17,7 @@
 #include <stan/math/torsten/pk_ode_solver_ss.hpp>
 #include <stan/math/torsten/pk_coupled_model.hpp>
 #include <stan/math/torsten/pk_coupled_solver.hpp>
+#include <stan/math/torsten/pk_coupled_solver_ss.hpp>
 #include <stan/math/torsten/pk_twocpt_model.hpp>
 #include <stan/math/torsten/pk_twocpt_solver.hpp>
 #include <stan/math/torsten/pk_twocpt_solver_ss.hpp>
@@ -113,6 +114,8 @@ mixOde2CptModel2_rk45(const F& f,
   refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "rk45");
   refactor::PKCoupledModelSolver<refactor::PKTwoCptModelSolver,
                                  refactor::PKODEModelSolver> sol(sol1, sol2);
+  refactor::PKCoupledModelSolverSS<Pred1_twoCpt, refactor::PKTwoCptModelSolverSS> 
+    ssol(rel_tol, abs_tol, max_num_steps, msgs, "rk45", nOde);
   PredWrapper<refactor::TwoCptODEModel> pr;
 
  // return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
@@ -128,7 +131,7 @@ mixOde2CptModel2_rk45(const F& f,
                                  "rk45"),
                   PredSS_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
                                   "rk45", nOde),
-                  sol, sol,
+                  sol, ssol,
                   f, nOde);
 
              // PredSS_err(function));

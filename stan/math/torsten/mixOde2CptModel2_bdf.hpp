@@ -103,6 +103,8 @@ mixOde2CptModel2_bdf(const F& f,
   refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "bdf");
   refactor::PKCoupledModelSolver<refactor::PKTwoCptModelSolver,
                                  refactor::PKODEModelSolver> sol(sol1, sol2);
+  refactor::PKCoupledModelSolverSS<Pred1_twoCpt, refactor::PKTwoCptModelSolverSS> 
+    ssol(rel_tol, abs_tol, max_num_steps, msgs, "rk45", nOde);
   PredWrapper<refactor::TwoCptODEModel> pr;
 
   // return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
@@ -118,7 +120,7 @@ mixOde2CptModel2_bdf(const F& f,
                                  "bdf"),
                   PredSS_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
                                   "bdf", nOde),
-                  sol, sol,
+                  sol, ssol,
                   f, nOde);
 }
 

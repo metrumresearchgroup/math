@@ -173,8 +173,12 @@ namespace refactor {
                                                   T_par,
                                                   CptODEAugment<F,refactor::PKOneCptModelSolver,refactor::PKOneCptModel>,
                                                   Ti> >;
+    using model_type1 = typename model_type::model_type1;
+    using model_type2 = typename model_type::model_type2;
     using scalar_type = typename model_type::scalar_type;
     using rate_type = T_rate;
+    using par_type = T_par;
+    using f_type = CptODEAugment<F,refactor::PKOneCptModelSolver,refactor::PKOneCptModel>;
     const CptODEAugment<F,refactor::PKOneCptModelSolver,refactor::PKOneCptModel> f_;
     const model_type model;
 
@@ -215,8 +219,12 @@ namespace refactor {
                                                   T_par,
                                                   CptODEAugment<F,refactor::PKTwoCptModelSolver,refactor::PKTwoCptModel>,
                                                   Ti> >;
+    using model_type1 = typename model_type::model_type1;
+    using model_type2 = typename model_type::model_type2;
     using scalar_type = typename model_type::scalar_type;
     using rate_type = T_rate;
+    using par_type = T_par;
+    using f_type = CptODEAugment<F,refactor::PKTwoCptModelSolver,refactor::PKTwoCptModel>;
     const CptODEAugment<F,refactor::PKTwoCptModelSolver,refactor::PKTwoCptModel> f_;
     const model_type model;
 

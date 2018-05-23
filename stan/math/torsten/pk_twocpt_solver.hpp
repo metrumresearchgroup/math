@@ -1,6 +1,8 @@
 #ifndef PK_TWOCPT_SOLVER_HPP
 #define PK_TWOCPT_SOLVER_HPP
 
+#include <stan/math/torsten/pk_twocpt_model.hpp>
+
 namespace refactor {
 
   using boost::math::tools::promote_args;

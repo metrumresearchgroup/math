@@ -31,7 +31,8 @@ namespace refactor {
 
     // constructors
     template<template<typename...> class T_mp, typename... Ts>
-    PKODEModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
+    PKODEModel(const T_time& t0,
+               const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
                const std::vector<T_rate> &rate,
                const std::vector<T_par> &par,
                const T_mp<Ts...> &parameter,
