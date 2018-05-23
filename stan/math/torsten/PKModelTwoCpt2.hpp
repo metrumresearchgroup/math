@@ -111,11 +111,19 @@ PKModelTwoCpt2(const std::vector<T0>& time,
     dummy_systems(1, dummy_system);
 
   PredWrapper<refactor::PKTwoCptModel> pr;
+
+#ifdef OLD_TORSTEN
+  return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
+              pMatrix, biovar, tlag,
+              nCmt, dummy_systems,
+              Pred1_twoCpt(), PredSS_twoCpt());
+#else
   return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
                   pMatrix, biovar, tlag,
                   nCmt, dummy_systems,
                   Pred1_twoCpt(), PredSS_twoCpt(),
                   refactor::PKTwoCptModelSolver(), refactor::PKTwoCptModelSolverSS());
+#endif
 }
 
 /**

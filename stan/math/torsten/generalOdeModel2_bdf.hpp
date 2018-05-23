@@ -97,32 +97,25 @@ generalOdeModel2_bdf(const F& f,
   refactor::PKODEModelSolver sol(rel_tol, abs_tol, max_num_steps, msgs, "bdf");
   refactor::PKODEModelSolverSS ssol(rel_tol, abs_tol, max_num_steps, msgs, "bdf");
   PredWrapper<refactor::PKODEModel> pr;
-  return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
+
+#ifdef OLD_TORSTEN
+  return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
               pMatrix, biovar, tlag, nCmt, dummy_systems,
               Pred1_general<F0>(F0(f), rel_tol, abs_tol,
                                 max_num_steps, msgs, "bdf"),
               PredSS_general<F0>(F0(f), rel_tol, abs_tol,
-                                 max_num_steps, msgs, "bdf", nCmt),
+                                 max_num_steps, msgs, "bdf",
+                                 nCmt));
+#else
+  return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
+                  pMatrix, biovar, tlag, nCmt, dummy_systems,
+                  Pred1_general<F0>(F0(f), rel_tol, abs_tol,
+                                    max_num_steps, msgs, "bdf"),
+                  PredSS_general<F0>(F0(f), rel_tol, abs_tol,
+                                     max_num_steps, msgs, "bdf", nCmt),
                   sol, ssol, F0(f), nCmt);
+#endif
 
-  // // check arguments
-  // static const char* function("generalOdeModel2_bdf");
-  // pmetricsCheck(time, amt, rate, ii, evid, cmt, addl, ss,
-  //               pMatrix, biovar, tlag, function);
-  //
-  // // Construct dummy matrix for last argument of pred
-  // Matrix<T4, Dynamic, Dynamic> dummy_system;
-  // vector<Matrix<T4, Dynamic, Dynamic> >
-  //   dummy_systems(1, dummy_system);
-  //
-  // typedef general_functor<F> F0;
-  //
-  // return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
-  //             pMatrix, biovar, tlag, nCmt, dummy_systems,
-  //             Pred1_general<F0>(F0(f), rel_tol, abs_tol,
-  //                               max_num_steps, msgs, "rk45"),
-  //             PredSS_general<F0>(F0(f), rel_tol, abs_tol,
-  //                                max_num_steps, msgs, "bdf", nCmt));
 }
 
 /**

@@ -81,10 +81,18 @@ linOdeModel2(const std::vector<T0>& time,
                 pMatrix_dummy, biovar, tlag, function);
 
   PredWrapper<refactor::PKLinODEModel> pr;
+
+#ifdef OLD_TORSTEN
+  return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
+              pMatrix_dummy, biovar, tlag, nCmt, system,
+              Pred1_linOde(), PredSS_linOde());
+#else
   return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
                   pMatrix_dummy, biovar, tlag, nCmt, system,
                   Pred1_linOde(), PredSS_linOde(),
-                  refactor::PKLinODEModelSolver(), refactor::PKLinODEModelSolverSS());
+                  refactor::PKLinODEModelSolver(),
+                  refactor::PKLinODEModelSolverSS());
+#endif
 }
 
 /**

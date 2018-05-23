@@ -118,13 +118,14 @@ mixOde2CptModel2_rk45(const F& f,
     ssol(rel_tol, abs_tol, max_num_steps, msgs, "rk45", nOde);
   PredWrapper<refactor::TwoCptODEModel> pr;
 
- // return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
- //             theta, biovar, tlag, nPK + nOde, dummy_systems,
- //             Pred1_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
- //                            "rk45"),
- //             PredSS_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
- //                             "rk45", nOde));
-
+#ifdef OLD_TORSTEN
+ return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
+             theta, biovar, tlag, nPK + nOde, dummy_systems,
+             Pred1_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
+                            "rk45"),
+             PredSS_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
+                             "rk45", nOde));
+#else
   return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
                   theta, biovar, tlag, nPK + nOde, dummy_systems,
                   Pred1_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
@@ -133,8 +134,8 @@ mixOde2CptModel2_rk45(const F& f,
                                   "rk45", nOde),
                   sol, ssol,
                   f, nOde);
+#endif
 
-             // PredSS_err(function));
 }
 
 /**

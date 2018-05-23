@@ -107,13 +107,14 @@ mixOde2CptModel2_bdf(const F& f,
     ssol(rel_tol, abs_tol, max_num_steps, msgs, "rk45", nOde);
   PredWrapper<refactor::TwoCptODEModel> pr;
 
-  // return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
-  //             theta, biovar, tlag, nPK + nOde, dummy_systems,
-  //             Pred1_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
-  //                            "bdf"),
-  //             PredSS_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
-  //                              "bdf", nOde));
-
+#ifdef OLD_TORSTEN
+  return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
+              theta, biovar, tlag, nPK + nOde, dummy_systems,
+              Pred1_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
+                             "bdf"),
+              PredSS_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
+                               "bdf", nOde));
+#else
   return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
                   theta, biovar, tlag, nPK + nOde, dummy_systems,
                   Pred1_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
@@ -122,6 +123,7 @@ mixOde2CptModel2_bdf(const F& f,
                                   "bdf", nOde),
                   sol, ssol,
                   f, nOde);
+#endif
 }
 
 /**
