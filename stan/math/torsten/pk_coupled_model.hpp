@@ -1,5 +1,5 @@
-#ifndef PK_COUPLED_MODEL_HPP
-#define PK_COUPLED_MODEL_HPP
+#ifndef STAN_MATH_TORSTEN_COUPLED_MODEL_HPP
+#define STAN_MATH_TORSTEN_COUPLED_MODEL_HPP
 
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_onecpt_solver.hpp>

@@ -1,5 +1,5 @@
-#ifndef PK_COUPLED_CPT_ODE_MODEL_HPP
-#define PK_COUPLED_CPT_ODE_MODEL_HPP
+#ifndef STAN_MATH_TORSTEN_COUPLED_CPT_ODE_MODEL_HPP
+#define STAN_MATH_TORSTEN_COUPLED_CPT_ODE_MODEL_HPP
 
 #include <stan/math/torsten/pk_coupled_model.hpp>
 
