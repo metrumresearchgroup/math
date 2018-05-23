@@ -62,7 +62,7 @@ namespace torsten{
  * at each event.
  */
 template<typename T_time,
-        typename T_amt,
+         typename T_amt,
         typename T_rate,
         typename T_ii,
         typename T_parameters,
@@ -100,6 +100,7 @@ Pred2(const std::vector<T_time>& time,
   using boost::math::tools::promote_args;
   using std::vector;
   using::stan::math::multiply;
+  using refactor::PKRecord;
 
   typedef typename promote_args<T_time, T_amt, T_rate, T_ii,
     typename promote_args<T_parameters, T_biovar, T_tlag>::type >::type scalar;
@@ -125,8 +126,8 @@ Pred2(const std::vector<T_time>& time,
   rates.MakeRates(events, nCmt);
   parameters.CompleteParameterHistory(events);
 
-  Matrix<scalar, 1, Dynamic> zeros = Matrix<scalar, 1, Dynamic>::Zero(nCmt);
-  Matrix<scalar, 1, Dynamic> init = zeros;
+  PKRecord<scalar> zeros = PKRecord<scalar>::Zero(nCmt);
+  PKRecord<scalar> init = zeros;
 
   // COMPUTE PREDICTIONS
   Matrix<scalar, Dynamic, Dynamic>
