@@ -15,7 +15,16 @@ namespace refactor {
 
   template<typename...>
   class PKAdaptODESolver;
-  // solver for an ODE with augmented functor
+
+  /**
+   * The ODE solver that applies an adaptor to the
+   * user-supplied ODE to fit the Stan ODE solvers.
+   *
+   * @tparam T_adaptor type of adaptor for the base ode system.
+   * @tparam T_model type of ODE-based models to be solved
+   * @tparam Ts model parameters
+   * @tparam Ts_adapt_extra extra adaptor parameters
+   */
   template<template<typename...> class T_adaptor,
            template<typename...> class T_model,
            typename... Ts,
@@ -23,11 +32,25 @@ namespace refactor {
   class PKAdaptODESolver<T_adaptor<T_model<Ts...>, Ts_adapt_extra...> >{
     const torsten::integrator_structure& integrator_;
   public:
-    // constructor
+    /**
+     * Constructor
+     * @param[in] integrator integrator that contains parameters
+     */
     PKAdaptODESolver(const torsten::integrator_structure& integrator) :
       integrator_(integrator)
     {}
 
+    /**
+     * Solve function solves a model for time span dt, by
+     * first applying the adaptor to the model, so that the
+     * actual solved model is the adapted one.
+     * 
+     * @tparam T_time delta t type
+     * @param[in] pkmodel ODE-based model to be solved.
+     * @param[in] dt time span of the solution
+     * @return a column vector of the same size of the
+     * adapted ODE.
+     */
     template<typename T_time>
     Eigen::Matrix<typename T_model<Ts...>::scalar_type, Eigen::Dynamic, 1>
     solve(const T_model<Ts...> &pkmodel, const T_time& dt) const {
@@ -72,10 +95,5 @@ namespace refactor {
       return pred;
     }
   };
-
 }
-
-
-
-
 #endif
