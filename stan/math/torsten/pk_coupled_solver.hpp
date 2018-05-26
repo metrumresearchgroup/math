@@ -49,100 +49,19 @@ namespace refactor {
       return pred;
     }
     
-    template<typename T_time,
-             template <typename...> class T_model1,
-             template <typename...> class T_model2,
-             typename... Ts1,
-             typename... Ts2>
-    Eigen::Matrix<typename PKCoupledModel2<T_model1<Ts1...>, T_model2<Ts2...> >::scalar_type, 1,Eigen::Dynamic> 
-    solve_rate_var(const PKCoupledModel2<T_model1<Ts1...>, T_model2<Ts2...> > &coupled_model, 
-           const T_time& dt) const
-    {
-      using model_type = PKCoupledModel2<T_model1<Ts1...>, T_model2<Ts2...> >;
-      using scalar = typename model_type::scalar_type;
-      const T_model1<Ts1...> & model1 = coupled_model.model1();
-      const T_model2<Ts2...> & model2 = coupled_model.model2();
-
-      Eigen::Matrix<scalar, 1, Eigen::Dynamic> pred;
-
-      if (stan::math::value_of(dt) < 1.e-9) {
-        pred.resize(model1.y0().size() + model2.y0().size());
-        pred << model1.y0(), model2.y0();
-      } else {
-        auto x1 = sol1_.solve(model1, dt);
-
-        auto par = model2.par();
-        std::vector<typename T_model2<Ts2...>::aug_par_type> new_par(par.size());
-        for(size_t i = 0; i < par.size(); ++i) new_par[i] = par[i];
-        for (int i = 0; i < model1.y0().size(); i++) new_par.push_back(model1.y0()(i));
-        new_par.push_back(stan::math::value_of(model1.t0()));
-        auto aug_model2 = model2.make_with_new_par(new_par);
-        auto x2 = sol2_.solve(aug_model2, dt);
-
-        pred.resize(x1.size() + x2.size());
-        pred << x1.transpose(), x2.transpose();
-      }
-      return pred;
-    }
-
-    template<typename T_time,
-             template <typename...> class T_model1,
-             template <typename...> class T_model2,
-             typename... Ts1,
-             typename... Ts2>
-    Eigen::Matrix<typename PKCoupledModel2<T_model1<Ts1...>, T_model2<Ts2...> >::scalar_type, 1,Eigen::Dynamic> 
-    solve_rate_dbl(const PKCoupledModel2<T_model1<Ts1...>, T_model2<Ts2...> > &coupled_model, 
-           const T_time& dt) const {
-      using model_type = PKCoupledModel2<T_model1<Ts1...>, T_model2<Ts2...> >;
-      using scalar = typename model_type::scalar_type;
-
-      const T_model1<Ts1...> & model1 = coupled_model.model1();
-      const T_model2<Ts2...> & model2 = coupled_model.model2();
-
-      Eigen::Matrix<scalar, 1, Eigen::Dynamic> pred;
-
-      if (stan::math::value_of(dt) < 1.e-9) {
-        pred.resize(model1.y0().size() + model2.y0().size());
-        pred << model1.y0(), model2.y0();
-      } else {
-        auto x1 = sol1_.solve(model1, dt);
-
-        auto par = model2.par();
-        std::vector<typename T_model2<Ts2...>::aug_par_type> new_par(par.size());
-        for(size_t i = 0; i < par.size(); ++i) new_par[i] = par[i];
-        std::vector<typename T_model2<Ts2...>::rate_type> new_rate{model2.rate()};
-        for (int i = 0; i < model1.y0().size(); i++) new_par.push_back(model1.y0()(i));
-        new_rate.push_back(stan::math::value_of(model1.t0()));
-        auto aug_model2 = model2.make_with_new_par_rate(new_par, new_rate);
-        auto x2 = sol2_.solve(aug_model2, dt);
-
-        pred.resize(x1.size() + x2.size());
-        pred << x1.transpose(), x2.transpose();
-      }
-      return pred;
-    }
-    
-    template<typename T0, typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
-    Matrix<typename OneCptODEModel<T_time,
-                                   T_init,
-                                   T_rate,
-                                   T_par,
-                                   F,
-                                   Ti>::scalar_type, Dynamic, 1>
-    solve(const OneCptODEModel<T_time,
-          T_init,
-          T_rate,
-          T_par,
-          F,
-          Ti> &model, const T0& dt) const {
+    // for PK-ODE coupled models
+    template<typename T0,
+             template<typename...> class T_model,
+             typename... Ts>
+    Matrix<typename T_model<Ts...>::scalar_type, Dynamic, 1>
+    solve(const T_model<Ts...> &model, const T0& dt) const {
       torsten::integrator_structure integrator(sol2_.integrator());
-      PKAdaptODESolver<PKCptODEAdaptor<OneCptODEModel<T_time, T_init, T_rate, T_par, F, Ti>,
-                                                         PKOneCptModelSolver>>
-        adapted_sol(integrator);
+      using Adaptor = PKCptODEAdaptor<T_model<Ts...>, T_s1>;
+      PKAdaptODESolver<Adaptor> adapted_sol(integrator);
       auto model1 = model.model.model1();
       auto model2 = model.model.model2();
 
-      using scalar = typename OneCptODEModel<T_time, T_init, T_rate, T_par, F, Ti>::scalar_type;
+      using scalar = typename T_model<Ts...>::scalar_type;
       Eigen::Matrix<scalar, 1, Eigen::Dynamic> pred;
       if (stan::math::value_of(dt) < 1.e-9) {
         pred.resize(model1.y0().size() + model2.y0().size());
@@ -155,104 +74,6 @@ namespace refactor {
       }
       return pred;      
     }
-
-    template<typename T0, typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
-    Matrix<typename TwoCptODEModel<T_time,
-                                   T_init,
-                                   T_rate,
-                                   T_par,
-                                   F,
-                                   Ti>::scalar_type, Dynamic, 1>
-    solve(const TwoCptODEModel<T_time,
-          T_init,
-          T_rate,
-          T_par,
-          F,
-          Ti> &model, const T0& dt) const {
-      torsten::integrator_structure integrator(sol2_.integrator());
-      PKAdaptODESolver<PKCptODEAdaptor<TwoCptODEModel<T_time, T_init, T_rate, T_par, F, Ti>,
-                                                         PKTwoCptModelSolver>>
-        adapted_sol(integrator);
-      auto model1 = model.model.model1();
-      auto model2 = model.model.model2();
-
-      using scalar = typename TwoCptODEModel<T_time, T_init, T_rate, T_par, F, Ti>::scalar_type;
-      Eigen::Matrix<scalar, 1, Eigen::Dynamic> pred;
-      if (stan::math::value_of(dt) < 1.e-9) {
-        pred.resize(model1.y0().size() + model2.y0().size());
-        pred << model1.y0(), model2.y0();
-      } else {
-        auto x1 = sol1_.solve(model1, dt);
-        auto x2 = adapted_sol.solve(model, dt);
-        pred.resize(x1.size() + x2.size());
-        pred << x1.transpose(), x2.transpose();
-      }
-      return pred;      
-    }
-
-    // template<typename T0, typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
-    // Matrix<typename OneCptODEModel<T_time,
-    //                                T_init,
-    //                                T_rate,
-    //                                T_par,
-    //                                F,
-    //                                Ti>::scalar_type, Dynamic, 1>
-    // solve(const OneCptODEModel<T_time,
-    //       T_init,
-    //       T_rate,
-    //       T_par,
-    //       F,
-    //       Ti> &model, const T0& dt) const {
-    //   return solve_rate_var(model.model, dt);
-    // }
-
-    // template<typename T0, typename T_time, typename T_init, typename T_par, typename F, typename Ti>
-    // Matrix<typename OneCptODEModel<T_time,
-    //                                T_init,
-    //                                double,
-    //                                T_par,
-    //                                F,
-    //                                Ti>::scalar_type, Dynamic, 1>
-    // solve(const OneCptODEModel<T_time,
-    //       T_init,
-    //       double,
-    //       T_par,
-    //       F,
-    //       Ti> &model, const T0& dt) const {
-    //   return solve_rate_dbl(model.model, dt);
-    // }
-
-    // template<typename T0, typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
-    // Matrix<typename TwoCptODEModel<T_time,
-    //                                T_init,
-    //                                T_rate,
-    //                                T_par,
-    //                                F,
-    //                                Ti>::scalar_type, Dynamic, 1>
-    // solve(const TwoCptODEModel<T_time,
-    //       T_init,
-    //       T_rate,
-    //       T_par,
-    //       F,
-    //       Ti> &model, const T0& dt) const {
-    //   return solve_rate_var(model.model, dt);
-    // }
-
-    // template<typename T0, typename T_time, typename T_init, typename T_par, typename F, typename Ti>
-    // Matrix<typename TwoCptODEModel<T_time,
-    //                                T_init,
-    //                                double,
-    //                                T_par,
-    //                                F,
-    //                                Ti>::scalar_type, Dynamic, 1>
-    // solve(const TwoCptODEModel<T_time,
-    //       T_init,
-    //       double,
-    //       T_par,
-    //       F,
-    //       Ti> &model, const T0& dt) const {
-    //   return solve_rate_dbl(model.model, dt);
-    // }
 
   };
 
