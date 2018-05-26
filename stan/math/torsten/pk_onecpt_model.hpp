@@ -1,5 +1,5 @@
-#ifndef PK_ONECPT_MODEL_HPP
-#define PK_ONECPT_MODEL_HPP
+#ifndef STAN_MATH_TORSTEN_ONECPT_MODEL_HPP
+#define STAN_MATH_TORSTEN_ONECPT_MODEL_HPP
 
 #include <stan/math/torsten/torsten_def.hpp>
 
@@ -7,7 +7,22 @@ namespace refactor {
 
   using boost::math::tools::promote_args;
 
+  /**
+   * standard one compartment PK ODE functor
+   */
   struct PKOneCptODE {
+  /**
+   * standard one compartment PK ODE RHS function
+   * @tparam T0 t type
+   * @tparam T1 initial condition type
+   * @tparam T2 parameter type
+   * @tparam T3 real data/rate type
+   * @param t type
+   * @param x initial condition type
+   * @param parms parameters
+   * @param rate dosing rate
+   * @param dummy dummy
+   */
     template <typename T0, typename T1, typename T2, typename T3>
     inline
     std::vector<typename boost::math::tools::promote_args<T0, T1, T2, T3>::type>

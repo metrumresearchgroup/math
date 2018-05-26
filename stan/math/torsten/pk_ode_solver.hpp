@@ -14,7 +14,10 @@ namespace refactor {
   using std::vector;
   using boost::math::tools::promote_args;
 
-
+  /**
+   * ODE-based PKPD model solvers.
+   *
+   */
   class PKODEModelSolver {
     torsten::integrator_structure integrator_;
     
@@ -112,8 +115,19 @@ namespace refactor {
       return integrator_;
     }
 
-
-    template<typename T_time, template <class, class... > class T_model, class... Ts_par>    
+  /**
+   * ODE-based PKPD model solvers.
+   *
+   * @tparam T_time dt type
+   * @tparam T_model ODE model type
+   * @tparam Ts_par type of parameters
+   * @param pkmodel ODE-based model
+   * @param dt time span
+   * @return col vector of ODE solution
+   */
+    template<typename T_time,
+             template <class, class... > class T_model, 
+             class... Ts_par>
     Eigen::Matrix<typename T_model<Ts_par...>::scalar_type, Eigen::Dynamic, 1> 
     solve(const T_model<Ts_par...> &pkmodel, const T_time& dt) const {
       PKAdaptODESolver<PKODERateAdaptor<T_model<Ts_par...>>>

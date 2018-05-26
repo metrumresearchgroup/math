@@ -1,5 +1,5 @@
-#ifndef PK_LINODE_SOLVER_SS_HPP
-#define PK_LINODE_SOLVER_SS_HPP
+#ifndef STAN_MATH_TORSTEN_LINODE_SOLVER_SS_HPP
+#define STAN_MATH_TORSTEN_LINODE_SOLVER_SS_HPP
 
 namespace refactor {
 
@@ -7,12 +7,29 @@ namespace refactor {
   using Eigen::Matrix;
   using Eigen::Dynamic;
 
-
+  /**
+   * Steady state linear ODE solver based on matrix exponentials
+   */
   class PKLinODEModelSolverSS {
   public:
     PKLinODEModelSolverSS() {}
 
-    template<typename T_amt, typename T_rate, 
+  /**
+   * Steady state linear ODE solver.
+   *
+   * @tparam T_amt type of dosing amount
+   * @tparam T_rate type of dosing rate
+   * @tparam T_ii type of dosing interval
+   * @tparam T_model type of model
+   * @tparam Ts_par type of model parameters
+   * @param pkmodel Linear ODE model
+   * @param amt dosing amount
+   * @param rate dosing rate
+   * @param ii dosing interval
+   * @param cmt compartment where the dosing occurs
+   * @return col vector of the steady state ODE solution
+   */
+    template<typename T_amt, typename T_rate,
              typename T_ii,
              template <class, class... > class T_model, class... Ts_par>
     Eigen::Matrix<typename T_model<Ts_par...>::scalar_type, Eigen::Dynamic, 1> 
@@ -27,7 +44,6 @@ namespace refactor {
       using stan::math::mdivide_left;
       using stan::math::multiply;
       using std::vector;
-      // using scalar_type = typename T_model<Ts_par...>::scalar_type;
       using par_type = typename T_model<Ts_par...>::par_type;
 
       typedef typename promote_args<T_ii, par_type>::type T0;

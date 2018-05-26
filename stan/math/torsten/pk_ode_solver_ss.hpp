@@ -1,5 +1,5 @@
-#ifndef PK_ODE_SOLVER_SS_HPP
-#define PK_ODE_SOLVER_SS_HPP
+#ifndef STAN_MATH_TORSTEN_REFACTOR_ODE_SOLVER_SS_HPP
+#define STAN_MATH_TORSTEN_REFACTOR_ODE_SOLVER_SS_HPP
 
 #include <stan/math/torsten/PKModel/functors/general_functor.hpp>
 
@@ -8,9 +8,17 @@ namespace refactor {
   using boost::math::tools::promote_args;
   using namespace torsten;
 
+  /**
+   * Steady state ODE solver
+   *
+   */
   class PKODEModelSolverSS {
     torsten::integrator_structure integrator_;
   public:
+  /**
+   * Steady state ODE solver constructor
+   *
+   */
     PKODEModelSolverSS(const double& rel_tol,
                        const double& abs_tol,
                        const long int& max_num_steps,
@@ -19,19 +27,30 @@ namespace refactor {
       integrator_(rel_tol, abs_tol, max_num_steps, msgs, integratorType)
     {}
 
-    template<// typename F,
-             typename T_ii,
+  /**
+   * Solve steady state ODE-based PKPD model.
+   *
+   * @tparam T_ii dosing interval type
+   * @tparam T_model ODE model type
+   * @tparam Ts_par type of parameters
+   * @param pkmodel Linear ODE model
+   * @param amt dosing amount
+   * @param rate dosing rate
+   * @param ii dosing interval
+   * @param cmt compartment where the dosing occurs
+   * @return col vector of the steady state ODE solution
+   */
+    template<typename T_ii,
              template <class, class... > class T_model, class... Ts_par>
-    Eigen::Matrix<typename boost::math::tools::promote_args<T_ii,
-                                                            typename T_model<Ts_par...>::par_type>::type, Eigen::Dynamic, 1>
-    solve(
-          // const int& ncmt,
-          const T_model<Ts_par...> &pkmodel,
+    Eigen::Matrix<typename promote_args<T_ii,
+                                        typename
+                                        T_model<Ts_par...>::par_type>::type, 
+                  Eigen::Dynamic, 1>
+    solve(const T_model<Ts_par...> &pkmodel,
           const double& amt,
           const double& rate,
           const T_ii& ii,
-          const int& cmt) const
-{
+          const int& cmt) const {
     using Eigen::Matrix;
     using Eigen::Dynamic;
     using Eigen::VectorXd;
@@ -39,8 +58,9 @@ namespace refactor {
     using stan::math::algebra_solver;
     using stan::math::to_vector;
 
-    typedef typename boost::math::tools::promote_args<T_ii,
-                                                      typename T_model<Ts_par...>::par_type>::type scalar;
+    typedef typename promote_args<T_ii,
+                                  typename
+                                  T_model<Ts_par...>::par_type>::type scalar;
 
     using F = typename T_model<Ts_par...>::f_type;
     const F& f = pkmodel.rhs_fun();
@@ -143,10 +163,12 @@ namespace refactor {
     using stan::math::to_vector;
     using stan::math::invalid_argument;
 
-    typedef typename boost::math::tools::promote_args<T_ii,
-                                                      T_amt,
-                                                      typename T_model<Ts_par...>::time_type,
-                                                      typename T_model<Ts_par...>::par_type>::type scalar;
+    typedef typename promote_args<T_ii,
+                                  T_amt,
+                                  typename
+                                  T_model<Ts_par...>::time_type,
+                                  typename
+                                  T_model<Ts_par...>::par_type>::type scalar;
 
     using par_type = typename T_model<Ts_par...>::par_type;
     using F = typename T_model<Ts_par...>::f_type;
@@ -218,10 +240,8 @@ namespace refactor {
       pred = algebra_solver(system, y, parms, x_r, x_i,
                             0, rel_tol, f_tol, max_num_steps);
     }
-
     return pred;
   }
-
   };
 
 }

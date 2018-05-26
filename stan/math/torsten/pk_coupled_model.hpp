@@ -11,12 +11,14 @@ namespace refactor {
   using Eigen::Matrix;
   using Eigen::Dynamic;
 
-
+  /**
+   * Wrapper of the coupled model for the OneCpt-ODE models
+   */
   template <typename...>
   class PKCoupledModel2;
 
   /**
-   * Wrapper of the coupled model for the OneCpt-ODE models
+   * Partial specialization.
    *
    * @tparam T_model1 type of 1st model
    * @tparam T_model2 type of 2nd model

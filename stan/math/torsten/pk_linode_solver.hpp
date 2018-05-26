@@ -7,12 +7,27 @@ namespace refactor {
   using Eigen::Matrix;
   using Eigen::Dynamic;
 
-
+  /**
+   * Linear ODE solver based on matrix exponential.
+   *
+   */
   class PKLinODEModelSolver {
   public:
     PKLinODEModelSolver() {}
 
-    template<typename T_time, template <class, class... > class T_model, class... Ts_par>    
+  /**
+   * Solve Linear ODE model, or any model that can provide
+   * RHS matrix (thus can be seen as linear ODE model)
+   *
+   * @tparam T_time  type of time
+   * @tparam T_model type of model
+   * @tparam Ts_par  type of model parameters.
+   * @param pkmodel  linear ODE model
+   * @param dt  time span
+   */
+    template<typename T_time,
+             template <class, class... > class T_model,
+             class... Ts_par>    
     Eigen::Matrix<typename T_model<Ts_par...>::scalar_type, Eigen::Dynamic, 1> 
     solve(const T_model<Ts_par...> &pkmodel, const T_time& dt) {
       using Eigen::Matrix;
@@ -55,7 +70,6 @@ namespace refactor {
       }
     }
   };
-
 }
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef PK_ODE_MODEL_HPP
-#define PK_ODE_MODEL_HPP
+#ifndef STAN_MATH_TORSTEN_REFACTOR_ODE_MODEL_HPP
+#define STAN_MATH_TORSTEN_REFACTOR_ODE_MODEL_HPP
 
 namespace refactor {
 
@@ -7,8 +7,22 @@ namespace refactor {
   using Eigen::Matrix;
   using Eigen::Dynamic;
 
-  // nested class
-  template<typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
+  /**
+   * ODE-based PKPD models.
+   *
+   * @tparam T_time t type
+   * @tparam T_init initial condition type
+   * @tparam T_rate dosing rate type
+   * @tparam T_par PK parameters type
+   * @tparam F ODE functor
+   * @tparam Ti ODE additional parameter type, usually the ODE size
+   */
+  template<typename T_time,
+           typename T_init,
+           typename T_rate,
+           typename T_par,
+           typename F,
+           typename Ti>
   class PKODEModel {
     const T_time &t0_;
     const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0_;
@@ -17,11 +31,8 @@ namespace refactor {
     const F &f_;
     const int ncmt_;
   public:
-    // PKODEModel();
-    // virtual ~PKODEModel();
-
-    // static const int ncmt = ode_; 
-    using scalar_type = typename promote_args<T_time, T_rate, T_par, T_init>::type;
+    using scalar_type = typename promote_args<T_time,
+                                              T_rate, T_par, T_init>::type;
     using aug_par_type = typename promote_args<T_rate, T_par, T_init>::type;
     using init_type   = T_init;
     using time_type   = T_time;
@@ -29,7 +40,20 @@ namespace refactor {
     using rate_type   = T_rate;
     using f_type      = F;
 
-    // constructors
+  /**
+   * Constructor
+   * FIXME need to remove parameter as this is for linode only.
+   *
+   * @tparam T_mp parameters class
+   * @tparam Ts parameter types
+   * @param t0 initial time
+   * @param y0 initial condition
+   * @param rate dosing rate
+   * @param par model parameters
+   * @param parameter ModelParameter type
+   * @param f ODE functor
+   * @param ncmt the ODE size.
+   */
     template<template<typename...> class T_mp, typename... Ts>
     PKODEModel(const T_time& t0,
                const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
@@ -46,6 +70,16 @@ namespace refactor {
       ncmt_(ncmt)
     {}
 
+  /**
+   * Constructor
+   *
+   * @param t0 initial time
+   * @param y0 initial condition
+   * @param rate dosing rate
+   * @param par model parameters
+   * @param f ODE functor
+   * @param ncmt the ODE size.
+   */
     PKODEModel(const T_time& t0,
                const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
                const std::vector<T_rate> &rate,
@@ -60,50 +94,39 @@ namespace refactor {
       ncmt_(ncmt)
     {}
 
-    // copy constructor
-    template<typename F1>
-    PKODEModel<T_time, T_init, T_rate, T_par, F1, Ti>    
-    with_f(const F1& f_new) const {
-      return PKODEModel<T_time, T_init, T_rate, T_par, F1, Ti>
-        (this -> t0_, this -> y0_, this -> rate_,
-         this -> par_, f_new, this -> ncmt_);
-    }
-
+    // // copy constructor
     // template<typename F1>
-    // PKODEModel<T_time, T_init, T_rate, typename promote_args<T_par, T_rate>::type>, F1, Ti>    
-    // adapt(const F1& f_new) const {
-    //   using par_type = typename promote_args<T_par, T_rate>::type;
-    //     size_t nOdeParm = par_.size();
-    //     std::vector<par_type> theta(nOdeParm + rate_.size());
-    //     for (size_t i = 0; i < nOdeParm; i++) theta[i] = par_[i];
-    //     for (size_t i = 0; i < rate_.size(); i++) theta[nOdeParm + i] = rate_[i];      
-    //     return PKODEModel<T_time, T_init, T_rate, par_type, F1, Ti>
-    //       (this -> t0_, this -> y0_, this -> rate_,
-    //        theta, f_new, this -> ncmt_)
+    // PKODEModel<T_time, T_init, T_rate, T_par, F1, Ti>    
+    // with_f(const F1& f_new) const {
+    //   return PKODEModel<T_time, T_init, T_rate, T_par, F1, Ti>
+    //     (this -> t0_, this -> y0_, this -> rate_,
+    //      this -> par_, f_new, this -> ncmt_);
     // }
 
-    template<typename T>
-    const PKODEModel<T_time, T_init, T_rate, T, F, Ti>
-    make_with_new_par(const std::vector<T> &new_par) const {
-      return PKODEModel<T_time, T_init, T_rate, T, F, Ti>(t0_, y0_, rate_, new_par, f_, ncmt_);
-    }
-
-    template<typename T>
-    const PKODEModel<T_time, T_init, T_rate, T, F, Ti>
-    make_with_new_par_rate(const std::vector<T> &new_par,
-                           const std::vector<T_rate> &new_rate) const {
-      return PKODEModel<T_time, T_init, T_rate, T, F, Ti>(t0_, y0_, new_rate, new_par, f_, ncmt_);
-    }
-
-    // get
+    /**
+     * @return initial time
+     */
     const T_time              & t0()       const { return t0_; }
+    /**
+     * @return initial condition
+     */
     const PKRecord<T_init>    & y0()       const { return y0_; }
+    /**
+     * @return dosing rate
+     */
     const std::vector<T_rate> & rate()     const { return rate_; }
+    /**
+     * @return model parameters
+     */
     const std::vector<T_par>  & par()      const { return par_; }
+    /**
+     * @return RHS functor
+     */
     const F                   & rhs_fun () const { return f_; }
+    /**
+     * @return ODE size
+     */
     const int                 & ncmt ()    const { return ncmt_; }
-
-    // can be solved by linear ode solver
   };
 
 }
