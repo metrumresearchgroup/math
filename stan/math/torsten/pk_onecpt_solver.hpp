@@ -14,6 +14,9 @@ namespace refactor {
 
     PKOneCptModelSolver() {}
 
+    template<typename T_time, typename T_init, typename T_rate, typename T_par>
+    using default_model = PKOneCptModel<T_time, T_init, T_rate, T_par>;
+
     template<typename T_time, template <class, class... > class T_model, class... Ts_par>    
     Eigen::Matrix<typename T_model<Ts_par...>::scalar_type, Eigen::Dynamic, 1> 
     solve(const T_model<Ts_par...> &pkmodel, const T_time& dt) const {

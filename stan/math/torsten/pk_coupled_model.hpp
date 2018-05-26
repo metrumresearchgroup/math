@@ -2,11 +2,8 @@
 #define STAN_MATH_TORSTEN_COUPLED_MODEL_HPP
 
 #include <stan/math/torsten/pk_onecpt_model.hpp>
-#include <stan/math/torsten/pk_onecpt_solver.hpp>
 #include <stan/math/torsten/pk_twocpt_model.hpp>
-#include <stan/math/torsten/pk_twocpt_solver.hpp>
 #include <stan/math/torsten/pk_ode_model.hpp>
-#include <stan/math/torsten/pk_ode_solver.hpp>
 
 namespace refactor {
 

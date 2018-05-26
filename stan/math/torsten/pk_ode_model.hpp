@@ -61,14 +61,26 @@ namespace refactor {
     {}
 
     // copy constructor
-    PKODEModel(const PKODEModel& other) :
-      t0_(other.t0_),
-      y0_(other.y0_),
-      rate_(other.rate_),
-      par_(other.par_),
-      f_(other.f_),
-      ncmt_(other.ncmt_)
-    {}
+    template<typename F1>
+    PKODEModel<T_time, T_init, T_rate, T_par, F1, Ti>    
+    with_f(const F1& f_new) const {
+      return PKODEModel<T_time, T_init, T_rate, T_par, F1, Ti>
+        (this -> t0_, this -> y0_, this -> rate_,
+         this -> par_, f_new, this -> ncmt_);
+    }
+
+    // template<typename F1>
+    // PKODEModel<T_time, T_init, T_rate, typename promote_args<T_par, T_rate>::type>, F1, Ti>    
+    // adapt(const F1& f_new) const {
+    //   using par_type = typename promote_args<T_par, T_rate>::type;
+    //     size_t nOdeParm = par_.size();
+    //     std::vector<par_type> theta(nOdeParm + rate_.size());
+    //     for (size_t i = 0; i < nOdeParm; i++) theta[i] = par_[i];
+    //     for (size_t i = 0; i < rate_.size(); i++) theta[nOdeParm + i] = rate_[i];      
+    //     return PKODEModel<T_time, T_init, T_rate, par_type, F1, Ti>
+    //       (this -> t0_, this -> y0_, this -> rate_,
+    //        theta, f_new, this -> ncmt_)
+    // }
 
     template<typename T>
     const PKODEModel<T_time, T_init, T_rate, T, F, Ti>

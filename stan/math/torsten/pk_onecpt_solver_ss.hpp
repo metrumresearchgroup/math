@@ -9,6 +9,9 @@ namespace refactor {
   public:
     PKOneCptModelSolverSS () {}
 
+    template<typename T_time, typename T_init, typename T_rate, typename T_par>
+    using default_model = PKOneCptModel<T_time, T_init, T_rate, T_par>;
+
     template<typename T_amt, typename T_rate, 
              typename T_ii,
              template <class, class... > class T_model, class... Ts_par>

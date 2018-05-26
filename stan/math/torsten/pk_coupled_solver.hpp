@@ -2,6 +2,9 @@
 #define PK_COUPLED_SOLVER_HPP
 
 #include <stan/math/torsten/PKModel/functors/general_functor.hpp>
+#include <stan/math/torsten/pk_cptode_adaptor.hpp>
+#include <stan/math/torsten/pk_onecpt_solver.hpp>
+#include <stan/math/torsten/pk_twocpt_solver.hpp>
 
 namespace refactor {
 
@@ -132,23 +135,25 @@ namespace refactor {
           T_par,
           F,
           Ti> &model, const T0& dt) const {
-      return solve_rate_var(model.model, dt);
-    }
+      torsten::integrator_structure integrator(sol2_.integrator());
+      PKAdaptODESolver<PKCptODEAdaptor<OneCptODEModel<T_time, T_init, T_rate, T_par, F, Ti>,
+                                                         PKOneCptModelSolver>>
+        adapted_sol(integrator);
+      auto model1 = model.model.model1();
+      auto model2 = model.model.model2();
 
-    template<typename T0, typename T_time, typename T_init, typename T_par, typename F, typename Ti>
-    Matrix<typename OneCptODEModel<T_time,
-                                   T_init,
-                                   double,
-                                   T_par,
-                                   F,
-                                   Ti>::scalar_type, Dynamic, 1>
-    solve(const OneCptODEModel<T_time,
-          T_init,
-          double,
-          T_par,
-          F,
-          Ti> &model, const T0& dt) const {
-      return solve_rate_dbl(model.model, dt);
+      using scalar = typename OneCptODEModel<T_time, T_init, T_rate, T_par, F, Ti>::scalar_type;
+      Eigen::Matrix<scalar, 1, Eigen::Dynamic> pred;
+      if (stan::math::value_of(dt) < 1.e-9) {
+        pred.resize(model1.y0().size() + model2.y0().size());
+        pred << model1.y0(), model2.y0();
+      } else {
+        auto x1 = sol1_.solve(model1, dt);
+        auto x2 = adapted_sol.solve(model, dt);
+        pred.resize(x1.size() + x2.size());
+        pred << x1.transpose(), x2.transpose();
+      }
+      return pred;      
     }
 
     template<typename T0, typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
@@ -164,24 +169,90 @@ namespace refactor {
           T_par,
           F,
           Ti> &model, const T0& dt) const {
-      return solve_rate_var(model.model, dt);
+      torsten::integrator_structure integrator(sol2_.integrator());
+      PKAdaptODESolver<PKCptODEAdaptor<TwoCptODEModel<T_time, T_init, T_rate, T_par, F, Ti>,
+                                                         PKTwoCptModelSolver>>
+        adapted_sol(integrator);
+      auto model1 = model.model.model1();
+      auto model2 = model.model.model2();
+
+      using scalar = typename TwoCptODEModel<T_time, T_init, T_rate, T_par, F, Ti>::scalar_type;
+      Eigen::Matrix<scalar, 1, Eigen::Dynamic> pred;
+      if (stan::math::value_of(dt) < 1.e-9) {
+        pred.resize(model1.y0().size() + model2.y0().size());
+        pred << model1.y0(), model2.y0();
+      } else {
+        auto x1 = sol1_.solve(model1, dt);
+        auto x2 = adapted_sol.solve(model, dt);
+        pred.resize(x1.size() + x2.size());
+        pred << x1.transpose(), x2.transpose();
+      }
+      return pred;      
     }
 
-    template<typename T0, typename T_time, typename T_init, typename T_par, typename F, typename Ti>
-    Matrix<typename TwoCptODEModel<T_time,
-                                   T_init,
-                                   double,
-                                   T_par,
-                                   F,
-                                   Ti>::scalar_type, Dynamic, 1>
-    solve(const TwoCptODEModel<T_time,
-          T_init,
-          double,
-          T_par,
-          F,
-          Ti> &model, const T0& dt) const {
-      return solve_rate_dbl(model.model, dt);
-    }
+    // template<typename T0, typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
+    // Matrix<typename OneCptODEModel<T_time,
+    //                                T_init,
+    //                                T_rate,
+    //                                T_par,
+    //                                F,
+    //                                Ti>::scalar_type, Dynamic, 1>
+    // solve(const OneCptODEModel<T_time,
+    //       T_init,
+    //       T_rate,
+    //       T_par,
+    //       F,
+    //       Ti> &model, const T0& dt) const {
+    //   return solve_rate_var(model.model, dt);
+    // }
+
+    // template<typename T0, typename T_time, typename T_init, typename T_par, typename F, typename Ti>
+    // Matrix<typename OneCptODEModel<T_time,
+    //                                T_init,
+    //                                double,
+    //                                T_par,
+    //                                F,
+    //                                Ti>::scalar_type, Dynamic, 1>
+    // solve(const OneCptODEModel<T_time,
+    //       T_init,
+    //       double,
+    //       T_par,
+    //       F,
+    //       Ti> &model, const T0& dt) const {
+    //   return solve_rate_dbl(model.model, dt);
+    // }
+
+    // template<typename T0, typename T_time, typename T_init, typename T_rate, typename T_par, typename F, typename Ti>
+    // Matrix<typename TwoCptODEModel<T_time,
+    //                                T_init,
+    //                                T_rate,
+    //                                T_par,
+    //                                F,
+    //                                Ti>::scalar_type, Dynamic, 1>
+    // solve(const TwoCptODEModel<T_time,
+    //       T_init,
+    //       T_rate,
+    //       T_par,
+    //       F,
+    //       Ti> &model, const T0& dt) const {
+    //   return solve_rate_var(model.model, dt);
+    // }
+
+    // template<typename T0, typename T_time, typename T_init, typename T_par, typename F, typename Ti>
+    // Matrix<typename TwoCptODEModel<T_time,
+    //                                T_init,
+    //                                double,
+    //                                T_par,
+    //                                F,
+    //                                Ti>::scalar_type, Dynamic, 1>
+    // solve(const TwoCptODEModel<T_time,
+    //       T_init,
+    //       double,
+    //       T_par,
+    //       F,
+    //       Ti> &model, const T0& dt) const {
+    //   return solve_rate_dbl(model.model, dt);
+    // }
 
   };
 

@@ -113,7 +113,7 @@ generalOdeModel2_bdf(const F& f,
                                     max_num_steps, msgs, "bdf"),
                   PredSS_general<F0>(F0(f), rel_tol, abs_tol,
                                      max_num_steps, msgs, "bdf", nCmt),
-                  sol, ssol, F0(f), nCmt);
+                  sol, ssol, f, nCmt);
 #endif
 
 }

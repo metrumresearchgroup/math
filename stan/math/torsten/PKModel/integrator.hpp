@@ -43,6 +43,14 @@ public:
       solver_type = p_solver_type;
   }
 
+  integrator_structure(const integrator_structure& other) :
+      rel_tol       (other.rel_tol),
+      abs_tol       (other.abs_tol),
+      max_num_steps (other.max_num_steps),
+      msgs          (other.msgs),
+      solver_type   (other.solver_type)
+  {}
+
   // CONSTRUCTOR FOR OPERATOR
   template<typename F, typename T1, typename T2>
   std::vector<std::vector<typename stan::return_type<T1, T2>::type> >

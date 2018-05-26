@@ -117,7 +117,7 @@ generalOdeModel2_rk45(const F& f,
                                     max_num_steps, msgs, "rk45"),
                   PredSS_general<F0>(F0(f), rel_tol, abs_tol,
                                      max_num_steps, msgs, "rk45", nCmt),
-                  sol, ssol, F0(f), nCmt);
+                  sol, ssol, f, nCmt);
 #endif
 }
 

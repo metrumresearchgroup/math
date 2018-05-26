@@ -2,6 +2,8 @@
 #define PK_ODE_SOLVER_HPP
 
 #include <stan/math/torsten/PKModel/functors/general_functor.hpp>
+#include <stan/math/torsten/pk_rate_adaptor.hpp>
+#include <stan/math/torsten/pk_adapt_ode_solver.hpp>
 
 namespace refactor {
 
@@ -25,10 +27,7 @@ namespace refactor {
                    std::vector<double>& EventTime_d,
                    Eigen::Matrix<T_scalar, Eigen::Dynamic, 1>& pred) const
     {
-        size_t nOdeParm = parameters.size();
-        vector<typename promote_args<T_par, T_rate>::type> theta(nOdeParm + rate.size());
-        for (size_t i = 0; i < nOdeParm; i++) theta[i] = parameters[i];
-        for (size_t i = 0; i < rate.size(); i++) theta[nOdeParm + i] = rate[i];
+      const std::vector<T_par>& theta = parameters;
 
         if (EventTime_d[0] == InitTime_d) {
           pred = init;
@@ -38,7 +37,7 @@ namespace refactor {
 
           vector<int> idummy;
           vector<vector<T_scalar> >
-            pred_V = integrator_(torsten::ode_rate_var_functor<F>(f),
+            pred_V = integrator_(f,
                                  init_vector,
                                  InitTime_d,
                                  EventTime_d,
@@ -74,7 +73,7 @@ namespace refactor {
         vector<T_scalar> init_vector = to_array_1d(init);
           vector<int> idummy;
           vector<vector<T_scalar> >
-            pred_V = integrator_(torsten::ode_rate_dbl_functor<F>(f),
+            pred_V = integrator_(f,
                                  init_vector,
                                  InitTime_d,
                                  EventTime_d,
@@ -105,41 +104,17 @@ namespace refactor {
       integrator_(integrator)
     {}
 
+    const torsten::integrator_structure& integrator() const {
+      return integrator_;
+    }
+
+
     template<typename T_time, template <class, class... > class T_model, class... Ts_par>    
     Eigen::Matrix<typename T_model<Ts_par...>::scalar_type, Eigen::Dynamic, 1> 
     solve(const T_model<Ts_par...> &pkmodel, const T_time& dt) const {
-      using stan::math::to_array_1d;
-      using std::vector;
-      using boost::math::tools::promote_args;
-
-      using scalar = typename T_model<Ts_par...>::scalar_type;
-      // using rate_type = typename T_model<Ts_par...>::rate_type;
-      using par_type = typename T_model<Ts_par...>::par_type;
-      // using f_type = typename T_model<Ts_par...>::f_type;
-
-      auto init = pkmodel.y0()   ;
-      auto rate = pkmodel.rate() ;
-      auto f = pkmodel.rhs_fun() ;
-      std::vector<par_type> pars {pkmodel.par()};
-
-      // assert((size_t) init.cols() == rate.size());
-
-      T_time InitTime = pkmodel.t0();
-      T_time EventTime = InitTime + dt;
-
-      // Convert time parameters to fixed data for ODE integrator
-      // FIX ME - see issue #30
-      vector<double> EventTime_d(1, torsten::unpromote(EventTime));
-      double InitTime_d = torsten::unpromote(InitTime);
-
-      Eigen::Matrix<scalar, Eigen::Dynamic, 1> pred;
-      run_integrator(f,
-                     pars,
-                     rate,
-                     init,
-                     InitTime_d,
-                     EventTime_d, pred);
-      return pred;
+      PKAdaptODESolver<PKODERateAdaptor<T_model<Ts_par...>>>
+                                adapted_sol(integrator_);
+      return adapted_sol.solve(pkmodel,dt);
     }
 
     // WIP, for SS solver
@@ -171,10 +146,7 @@ namespace refactor {
                      pred);
       return pred;
     }
-
-
   };
-
 }
 
 
