@@ -12,13 +12,19 @@ namespace refactor {
   using boost::math::tools::promote_args;
   using refactor::PKODEModel;
 
+  /**
+   * Coupled model solvers are composed of two solvers accordingly.
+   *
+   * @tparam F0 functor type in model 2
+   * @tparam T_pksolver solver type for model 1.
+   */
   template <typename F0, typename T_pksolver>
   struct CptODEFunctor {
     F0 f0_;
 
-    CptODEFunctor() { }
+    CptODEFunctor() {}
 
-    explicit CptODEFunctor(const F0& f0) : f0_(f0) { }
+    explicit CptODEFunctor(const F0& f0) : f0_(f0) {}
 
     /**
      *  Returns the derivative of the base ODE system. The base 1 PK
@@ -174,6 +180,17 @@ namespace refactor {
 
   template<typename...>
   class PKCptODEAdaptor;
+
+  /**
+   * PK- Cpt-and-ODE-integrator model adaptor. The adaptor
+   * generates a new ODE model combnining the information in
+   * the two models. THe new ODE model's functor solves PK
+   * submodel using T_pksolver before performing numerical
+   * integration. 
+   *
+   * @tparam T_model coupled model
+   * @tparam T_pksolver PK model solver
+   */
   template<template<typename...> class T_model,
            typename T_time, typename T_init, typename T_par,
            typename F,  typename T_rate,
@@ -189,8 +206,18 @@ namespace refactor {
     const std::vector<par_type> theta_;
     const PKODEModel<T_time, T_init, double, par_type, FA, int> model_;
     
+    /**
+     * To the parameters of model1/2:
+     * attach init condition of model1,
+     * attach initial time of model1/2,
+     * attach dosing rate.
+     *
+     * @param coupled_model coupled model
+     * @return new parameter vector to be used in the new * ODE model
+     */
     std::vector<par_type>
-    concat_par_rate(const T_model<T_time, T_init, T_rate, T_par, F, int>& coupled_model) {
+    concat_par_rate(const T_model<T_time, T_init, T_rate, T_par, F, int>&
+                    coupled_model) {
       auto par  = coupled_model.model.model2().par();
       auto y0_1 = coupled_model.model.model1().y0();
       auto t0 = stan::math::value_of(coupled_model.model.model1().t0());
@@ -206,7 +233,14 @@ namespace refactor {
     }
 
   public:
-    PKCptODEAdaptor(const T_model<T_time, T_init, T_rate, T_par, F, int> & coupled_model) :
+
+    /**
+     * Constructor the adaptor given a coupled model
+     *
+     * @param coupled_model coupled model
+     */
+    PKCptODEAdaptor(const T_model<T_time, T_init, T_rate, T_par, F, int> &
+                    coupled_model) :
       dummy_{0.0},
       f0_(coupled_model.model.model2().rhs_fun()),
       f_(f0_),
@@ -219,12 +253,26 @@ namespace refactor {
           coupled_model.model.model2().ncmt()}
     {}
 
+    /**
+     * Get the adapted ODE model
+     *
+     * @return the adapted ODE model
+     */
     const PKODEModel<T_time, T_init, double, par_type, FA, int>& model() {
       return model_;
     }
   };
       
-  // partial
+  /**
+   * Partial specialization when rate is data
+   *
+   * @tparam T_model coupled model
+   * @tparam T_time time type
+   * @tparam T_init init condition type
+   * @tparam T_par parameter type
+   * @tparam F functor type
+   * @tparam T_pksolver PK cpt model solver
+   */
   template<template<typename...> class T_model,
            typename T_time, typename T_init, typename T_par,
            typename F,
@@ -240,8 +288,16 @@ namespace refactor {
     const std::vector<double> new_rate_;
     const PKODEModel<T_time, T_init, double, par_type, FA, int> model_;
 
+    /**
+     * Attach model1's initial condition to parameter
+     *
+     * @param coupled_model coupled model
+     * @return new parameter vector that contains original
+     * param and initial condition of model1
+     */
     std::vector<par_type>
-    concat_par_init(const T_model<T_time, T_init, double, T_par, F, int>& coupled_model) {
+    concat_par_init(const T_model<T_time, T_init, double, T_par, F, int>&
+                    coupled_model) {
       auto par  = coupled_model.model.model2().par();
       auto y0_1 = coupled_model.model.model1().y0();
       const size_t n = par.size();
@@ -252,8 +308,16 @@ namespace refactor {
       return theta;
     }
 
+    /**
+     * Attach starting time to dosing rate.
+     *
+     * @param coupled_model coupled model
+     * @return new rate vector that contains original
+     * rate and initial time.
+     */
     std::vector<double>
-    concat_rate_t0(const T_model<T_time, T_init, double, T_par, F, int>& coupled_model) {
+    concat_rate_t0(const T_model<T_time, T_init, double, T_par, F, int>&
+                   coupled_model) {
       auto t0 = stan::math::value_of(coupled_model.model.model1().t0());
       auto rate = coupled_model.model.model2().rate();
       std::vector<double> new_rate(rate);
@@ -261,6 +325,11 @@ namespace refactor {
       return new_rate;
     }
   public:
+    /**
+     * Constructor the adaptor given a coupled model
+     *
+     * @param coupled_model coupled model
+     */
     PKCptODEAdaptor(const T_model<T_time,
                     T_init, double, T_par, F, int> & coupled_model) :
       f_(CptODEFunctor<F, T_pksolver>
@@ -275,6 +344,11 @@ namespace refactor {
              coupled_model.model.model2().ncmt())
     {}
 
+    /**
+     * Get the new, adapted ODE model
+     *
+     * @return new ODE model
+     */
     const PKODEModel<T_time, T_init, double, par_type, FA, int>& model() {
       return model_;
     }

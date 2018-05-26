@@ -21,6 +21,14 @@ namespace refactor {
   using boost::math::tools::promote_args;
   using namespace torsten;
 
+  /**
+   * Coupled model steady state solvers.
+   *
+   * @tparam T_1 compartment model solver for internal PK model
+   * @tparam T_2 type of steady state solver
+   * @tparam T_3 type of analytical solver
+   * FIXME: T_1 & T_3 are repeating!
+   */
   template<typename T_1, typename T_2, typename T_3>
 struct PKCoupledModelSolverSS {
   integrator_structure integrator_;
@@ -65,8 +73,11 @@ struct PKCoupledModelSolverSS {
   template<// typename F,
     typename T_ii,
     template <class, class... > class T_model, class... Ts_par>
-    Eigen::Matrix<typename boost::math::tools::promote_args<T_ii,
-                                                            typename T_model<Ts_par...>::par_type>::type, Eigen::Dynamic, 1>
+    Eigen::Matrix<typename
+                  promote_args<T_ii,
+                               typename
+                               T_model<Ts_par...>::par_type>::type, 
+                  Eigen::Dynamic, 1>
   solve(const T_model<Ts_par...> &coupled_model,
               const double& amt,
               const double& rate,

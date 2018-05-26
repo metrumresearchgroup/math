@@ -14,25 +14,52 @@ namespace refactor {
   using std::vector;
   using boost::math::tools::promote_args;
 
+  /**
+   * Coupled model solvers are composed of two solvers accordingly.
+   *
+   * @tparam T_s1 type of solver 1
+   * @tparam T_s2 type of solver 2
+   */
   template<typename T_s1, typename T_s2>
   class PKCoupledModelSolver {
     const T_s1 &sol1_;
     const T_s2 &sol2_;
     
   public:
-    // constructor
+    /**
+     * Coupled model solvers are composed of two solvers.
+     *
+     * @tparam sol1 solver 1
+     * @tparam sol2 solver 2
+     */
     PKCoupledModelSolver(const T_s1 &sol1, const T_s2 &sol2) :
       sol1_(sol1), sol2_(sol2)
     {}
 
+  /**
+   * Solving a coupled model. This is largely formal because
+   * most of the time we want some interactions between the
+   * models, and the solution process should reflect that
+   * through adaptors.
+   *
+   * @tparam T_time type of dt
+   * @tparam T_model1 type of model 1
+   * @tparam T_model2 type of model 2
+   * @tparam Ts1 type of model 1's parameters
+   * @tparam Ts2 type of model 2's parameters
+   */
     template<typename T_time,
              template <typename...> class T_model1,
              template <typename...> class T_model2,
              typename... Ts1,
              typename... Ts2>
-    Eigen::Matrix<typename PKCoupledModel2<T_model1<Ts1...>, T_model2<Ts2...> >::scalar_type, 1,Eigen::Dynamic> 
-    solve(const PKCoupledModel2<T_model1<Ts1...>, T_model2<Ts2...> > &coupled_model, const T_time& dt) const
-    {
+    Eigen::Matrix<typename
+                  PKCoupledModel2<T_model1<Ts1...>,
+                                  T_model2<Ts2...> >::scalar_type, 
+                  1, Eigen::Dynamic>
+    solve(const PKCoupledModel2
+          <T_model1<Ts1...>, T_model2<Ts2...> > &coupled_model, 
+          const T_time& dt) const {
       using model_type = PKCoupledModel2<T_model1<Ts1...>, T_model2<Ts2...> >;
       using scalar = typename model_type::scalar_type;
 
@@ -49,7 +76,20 @@ namespace refactor {
       return pred;
     }
     
-    // for PK-ODE coupled models
+  /**
+   * Solving a PK comparment-ODE coupled model. The
+   * PKCptODEAdaptor deals with interaction and data
+   * exchange between model1(pk model) and model2(ODE model).
+   * This is used for combining analytical solution of PK
+   * models with numerical integration of ODEs, in order to
+   * increase efficiency.
+   *
+   * @tparam T0 type of dt
+   * @tparam T_model type of coupled model.
+   * @tparam Ts type of model parameters
+   * @param model coupled model.
+   * @param dt time span
+   */
     template<typename T0,
              template<typename...> class T_model,
              typename... Ts>
@@ -74,12 +114,6 @@ namespace refactor {
       }
       return pred;      
     }
-
   };
-
 }
-
-
-
-
 #endif
