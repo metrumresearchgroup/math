@@ -11,8 +11,18 @@ namespace refactor {
   using Eigen::Matrix;
   using Eigen::Dynamic;
 
+
   template <typename...>
   class PKCoupledModel2;
+
+  /**
+   * Wrapper of the coupled model for the OneCpt-ODE models
+   *
+   * @tparam T_model1 type of 1st model
+   * @tparam T_model2 type of 2nd model
+   * @tparam Ts1 parameters of 1st model
+   * @tparam Ts2 parameters of 1st model
+   */
   template <template <typename...> class T_model1,
             template <typename...> class T_model2,
             typename...Ts1,
@@ -45,7 +55,30 @@ namespace refactor {
                    typename model_type2::scalar_type>::type;
     // using time_type   = T_time;
 
-    // constructor
+    /**
+     * Coupled model constructor
+     *
+     * @tparam T1_time model1 time type
+     * @tparam T1_init model1 init condition type
+     * @tparam T1_rate model1 dosing rate type
+     * @tparam T1_par  model1 parameter type
+     * @tparam T2_time model2 time type
+     * @tparam T2_init model2 init condition type
+     * @tparam T2_rate model2 dosing rate type
+     * @tparam T2_par  model2 parameter type
+     * @tparam T1_extra_par model1 extra parameter type
+     * @tparam T2_extra_par model2 extra parameter type
+     * @param t0_1   model1 time
+     * @param y0_1   model1 init condition
+     * @param rate_1 model1 dosing rate
+     * @param par_1  model1 parameter
+     * @param t0_2   model2 time
+     * @param y0_2   model2 init condition
+     * @param rate_2 model2 dosing rate
+     * @param par_2  model2 parameter
+     * @param pars1 model1 extra parameters
+     * @param pars2 model2 extra parameters
+     */
     template<typename T1_time,
              typename T1_init,
              typename T1_rate,
@@ -70,7 +103,22 @@ namespace refactor {
       model2_({t0_2, y0_2, rate_2, par_2, pars2...})
     {}
 
-    // constructor
+    /**
+     * Coupled model constructor
+     *
+     * @tparam T1_time model1 & model2 time type
+     * @tparam T1_init model1 & model2 init condition type
+     * @tparam T1_rate model1 & model2 dosing rate type
+     * @tparam T1_par  model1 & model2 parameter type
+     * @tparam T1_extra_par model1 & model2 extra parameter type
+     * @param t0   model1 & 2 time
+     * @param y0   model1 & 2 init condition
+     * @param rate model1 & 2 dosing rate
+     * @param par  model1 & 2 parameter
+     * @param n1   model1 initial condition size
+     * @param pars1 model1 extra parameters
+     * @param pars2 model2 extra parameters
+     */
     template<typename T1_time,
              typename T1_init,
              typename T1_rate,
@@ -90,10 +138,19 @@ namespace refactor {
       model2_({t0, y0_2_, rate, par, pars2...})
     {}
 
-   // get
+    /**
+     * get const model1 reference
+     *
+     * @return const reference to model1
+     */
     const T_model1<Ts1...>& model1() const { 
       return model1_;
     }
+    /**
+     * get const model2 reference
+     *
+     * @return const reference to model2
+     */
     const T_model2<Ts2...>& model2() const { 
       return model2_;
     }
