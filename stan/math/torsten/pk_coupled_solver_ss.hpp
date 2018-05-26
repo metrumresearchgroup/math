@@ -21,7 +21,7 @@ namespace refactor {
   using boost::math::tools::promote_args;
   using namespace torsten;
 
-  template<typename T_1, typename T_2>
+  template<typename T_1, typename T_2, typename T_3>
 struct PKCoupledModelSolverSS {
   integrator_structure integrator_;
   int nOde_;  // number of states in the reduced system
@@ -81,8 +81,10 @@ struct PKCoupledModelSolverSS {
     using stan::math::to_array_1d;
 
     using T_parameters = typename T_model<Ts_par...>::par_type;
-    using F = typename T_model<Ts_par...>::f_type;
-    const F& f_ = coupled_model.model.model2().rhs_fun();
+    using F0 = typename T_model<Ts_par...>::f_type;
+    const F0& f0 = coupled_model.model.model2().rhs_fun();
+    using F = CptODEFunctor<F0, T_3>;
+    F f_(f0);
     typedef typename boost::math::tools::promote_args<T_ii,
       T_parameters>::type scalar;
 
@@ -215,8 +217,10 @@ struct PKCoupledModelSolverSS {
     using stan::math::invalid_argument;
 
     using T_parameters = typename T_model<Ts_par...>::par_type;
-    using F = typename T_model<Ts_par...>::f_type;
-    const F& f_ = coupled_model.model.model2().rhs_fun();
+    using F0 = typename T_model<Ts_par...>::f_type;
+    const F0& f0 = coupled_model.model.model2().rhs_fun();
+    using F = CptODEFunctor<F0, T_3>;
+    F f_(f0);
     typedef typename boost::math::tools::promote_args<T_ii, T_amt,
       T_parameters>::type scalar;
 

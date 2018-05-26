@@ -27,7 +27,10 @@ namespace refactor {
                    std::vector<double>& EventTime_d,
                    Eigen::Matrix<T_scalar, Eigen::Dynamic, 1>& pred) const
     {
-      const std::vector<T_par>& theta = parameters;
+        size_t nOdeParm = parameters.size();
+        vector<typename promote_args<T_par, T_rate>::type> theta(nOdeParm + rate.size());
+        for (size_t i = 0; i < nOdeParm; i++) theta[i] = parameters[i];
+        for (size_t i = 0; i < rate.size(); i++) theta[nOdeParm + i] = rate[i];
 
         if (EventTime_d[0] == InitTime_d) {
           pred = init;
@@ -37,7 +40,7 @@ namespace refactor {
 
           vector<int> idummy;
           vector<vector<T_scalar> >
-            pred_V = integrator_(f,
+            pred_V = integrator_(torsten::ode_rate_var_functor<F>(f),
                                  init_vector,
                                  InitTime_d,
                                  EventTime_d,
@@ -73,7 +76,7 @@ namespace refactor {
         vector<T_scalar> init_vector = to_array_1d(init);
           vector<int> idummy;
           vector<vector<T_scalar> >
-            pred_V = integrator_(f,
+            pred_V = integrator_(torsten::ode_rate_dbl_functor<F>(f),
                                  init_vector,
                                  InitTime_d,
                                  EventTime_d,
@@ -88,6 +91,7 @@ namespace refactor {
           // for (size_t i = 0; i < pred_V[0].size(); i++) pred(i) = pred_V[0][i];
         }
     }
+
 
   public:
     // constructor

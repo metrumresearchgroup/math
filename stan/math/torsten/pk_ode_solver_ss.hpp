@@ -62,8 +62,10 @@ namespace refactor {
     long int max_num_steps = 1e3;  // default // NOLINT
 
     // construct algebraic function
-    SS_system_dd<ode_rate_dbl_functor<F>, Pred1_void>
-      system(ode_rate_dbl_functor<F>(f), Pred1_void(),
+    general_functor<F> f1(f);
+    using SS_functor = ode_rate_dbl_functor<general_functor<F>>;
+    SS_system_dd<SS_functor, Pred1_void>
+      system(SS_functor(f1), Pred1_void(),
              ii_dbl, cmt, integrator_);
 
     refactor::PKODEModelSolver sol(integrator_);
@@ -71,7 +73,7 @@ namespace refactor {
     if (rate == 0) {  // bolus dose
       // compute initial guess
       init_dbl(cmt - 1) = amt;
-      y = sol.solve(f,
+      y = sol.solve(general_functor<F>(f),
                     stan::math::value_of(pkmodel.t0()),
                     init_dbl,
                     ii_dbl,
@@ -87,7 +89,7 @@ namespace refactor {
     }  else if (ii > 0) {  // multiple truncated infusions
       x_r[cmt - 1] = rate;
       // compute initial guess
-      y = sol.solve(f,
+      y = sol.solve(general_functor<F>(f),
                     stan::math::value_of(pkmodel.t0()),
                     init_dbl,
                     ii_dbl,
@@ -101,7 +103,7 @@ namespace refactor {
                                                                // use ftol
     } else {  // constant infusion
       x_r[cmt - 1] = rate;
-      y = sol.solve(f,
+      y = sol.solve(general_functor<F>(f),
                     stan::math::value_of(pkmodel.t0()),
                     init_dbl,
                     100.0,
@@ -168,8 +170,10 @@ namespace refactor {
     long int max_num_steps = 1e4;  // default  // NOLINT
 
     // construct algebraic function
-    SS_system_vd<ode_rate_dbl_functor<F> >
-      system(ode_rate_dbl_functor<F>(f), ii_dbl, cmt, integrator_);
+    general_functor<F> f1(f);
+    using SS_functor = ode_rate_dbl_functor<general_functor<F>>;
+    SS_system_vd<SS_functor>
+      system(SS_functor(f1), ii_dbl, cmt, integrator_);
 
     refactor::PKODEModelSolver sol(integrator_);
 
@@ -181,7 +185,7 @@ namespace refactor {
     if (rate == 0) {  // bolus dose
       // compute initial guess
       init_dbl(cmt - 1) = unpromote(amt);
-      y = sol.solve(f,
+      y = sol.solve(general_functor<F>(f),
                     stan::math::value_of(pkmodel.t0()),
                     init_dbl,
                     ii_dbl,
@@ -193,7 +197,7 @@ namespace refactor {
     }  else if (ii > 0) {  // multiple truncated infusions
       // compute initial guess
       x_r[cmt - 1] = rate;
-      y = sol.solve(f,
+      y = sol.solve(general_functor<F>(f),
                     stan::math::value_of(pkmodel.t0()),
                     init_dbl,
                     ii_dbl,
@@ -204,7 +208,7 @@ namespace refactor {
                             0, rel_tol, 1e-3, max_num_steps);  // use ftol
     } else {  // constant infusion
       x_r[cmt - 1] = rate;
-      y = sol.solve(f,
+      y = sol.solve(general_functor<F>(f),
                     stan::math::value_of(pkmodel.t0()),
                     init_dbl,
                     100.0,

@@ -24,6 +24,7 @@ namespace refactor {
     using rate_type = T_rate;
     using par_type = T_par;
     using init_type = T_init;
+    using f_type = F;
     const F& f_;
     const model_type model;
 
