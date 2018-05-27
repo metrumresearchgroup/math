@@ -5,18 +5,48 @@ namespace refactor {
 
   using boost::math::tools::promote_args;
 
+  /**
+   * Standard one compartment steady state PK ODE solver based on
+   * analytical solution and matrix exponential.
+   */
   class PKOneCptModelSolverSS {
   public:
+    /**
+     * Constructor
+     */
     PKOneCptModelSolverSS () {}
 
+  /**
+   * standard one compartment PK model attached to this solver.
+   * @tparam T_time t type
+   * @tparam T_init initial condition type
+   * @tparam T_rate rate type
+   * @tparam T_par parameter type
+   */
     template<typename T_time, typename T_init, typename T_rate, typename T_par>
     using default_model = PKOneCptModel<T_time, T_init, T_rate, T_par>;
 
+  /**
+   * Solve one-cpt steady state model.
+   *
+   * @tparam T_amt amt type
+   * @tparam T_rate dosing rate type
+   * @tparam T_ii dosing interval type.
+   * @tparam T_model model type
+   * @tparam Ts_par model parameter type
+   * @param pkmodel PK one-cpt model
+   * @param amt dosing amount
+   * @param rate dosing rate
+   * @param ii dosing interval
+   * @param cmt dosing compartment
+   */
     template<typename T_amt, typename T_rate, 
              typename T_ii,
-             template <class, class... > class T_model, class... Ts_par>
+             template <class, class... > class T_model,
+             class... Ts_par>
     PKRecord<typename promote_args<
-               T_amt, T_rate, T_ii, typename T_model<Ts_par...>::par_type>::type>
+               T_amt, T_rate, T_ii,
+               typename T_model<Ts_par...>::par_type>::type>
     solve(const T_model<Ts_par...> &pkmodel,
           const T_amt& amt,
           const T_rate& rate,

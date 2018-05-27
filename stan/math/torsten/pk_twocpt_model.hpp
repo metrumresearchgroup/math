@@ -1,5 +1,5 @@
-#ifndef PK_TWOCPT_MODEL_HPP
-#define PK_TWOCPT_MODEL_HPP
+#ifndef STAN_MATH_TORSTEN_TWOCPT_MODEL_HPP
+#define STAN_MATH_TORSTEN_TWOCPT_MODEL_HPP
 
 #include <stan/math/torsten/torsten_def.hpp>
 
@@ -7,7 +7,22 @@ namespace refactor {
 
   using boost::math::tools::promote_args;
 
+  /**
+   * standard two compartment PK ODE functor
+   */
   struct PKTwoCptODE {
+  /**
+   * standard two compartment PK ODE RHS function
+   * @tparam T0 t type
+   * @tparam T1 initial condition type
+   * @tparam T2 parameter type
+   * @tparam T3 real data/rate type
+   * @param t type
+   * @param x initial condition type
+   * @param parms parameters
+   * @param rate dosing rate
+   * @param dummy dummy
+   */
     template <typename T0, typename T1, typename T2, typename T3>
     inline
     std::vector<typename boost::math::tools::promote_args<T0, T1, T2, T3>::type>
@@ -37,11 +52,16 @@ namespace refactor {
     }
   };
 
-
-
-  // depend on model, we can have arbitrary number of
-  // parameters, e.g. biovar, k12, k10, ka. Each parameter
-  // can be data or var.
+  /**
+   * two-compartment PK model. The static memebers provide
+   * universal information, i.e. nb. of compartments,
+   * nb. of parameters, and the RHS functor.
+   *
+   * @tparam T_time t type
+   * @tparam T_init initial condition type
+   * @tparam T_rate dosing rate type
+   * @tparam T_par PK parameters type
+   */
   template<typename T_time, typename T_init, typename T_rate, typename T_par>
   class PKTwoCptModel {
     const T_time &t0_;
@@ -70,7 +90,19 @@ namespace refactor {
     using par_type    = T_par;
     using rate_type   = T_rate;
 
-    // constructors
+  /**
+   * Two-compartment PK model constructor
+   *
+   * @param t0 initial time
+   * @param y0 initial condition
+   * @param rate dosing rate
+   * @param par model parameters
+   * @param CL clearance
+   * @param Q distributed amt
+   * @param V2 central cpt vol
+   * @param V3 peri cpt vol
+   * @param ka absorption
+   */
     PKTwoCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
                   const std::vector<T_rate> &rate,
                   const T_par& CL,
@@ -95,36 +127,45 @@ namespace refactor {
         ka_}
     {}
 
+  /**
+   * two-Compartment PK model constructor
+   * FIXME need to remove parameter as this is for linode only.
+   *
+   * @tparam T_mp parameters class
+   * @tparam Ts parameter types
+   * @param t0 initial time
+   * @param y0 initial condition
+   * @param rate dosing rate
+   * @param par model parameters
+   * @param parameter ModelParameter type
+   */
     template<template<typename...> class T_mp, typename... Ts>
-    PKTwoCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
+    PKTwoCptModel(const T_time& t0,
+                  const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
                   const std::vector<T_rate> &rate,
                   const std::vector<T_par> & par,
                   const T_mp<Ts...> &parameter) :
       PKTwoCptModel(t0, y0, rate, par[0], par[1], par[2], par[3], par[4])
     {}
 
-    PKTwoCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
+  /**
+   * two-compartment PK model constructor
+   *
+   * @param t0 initial time
+   * @param y0 initial condition
+   * @param rate dosing rate
+   * @param par model parameters
+   */
+    PKTwoCptModel(const T_time& t0,
+                  const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
                   const std::vector<T_rate> &rate,
                   const std::vector<T_par> & par) :
       PKTwoCptModel(t0, y0, rate, par[0], par[1], par[2], par[3], par[4])
     {}
 
-    // PKTwoCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
-    //               const Eigen::Matrix<T_par, Eigen::Dynamic, Eigen::Dynamic>& m) :
-    //   // TODO
-    //   t0_(t0_),
-    //   y0_(y0)
-    //   // CL_(m.Cl_),
-    //   // V2_(m.V2_),
-    //   // ka_(m.ka_)
-    // {}
-
-    // // copy constructor
-    // PKTwoCptModel(const PKTwoCptModel& m) :
-    //   PKTwoCptModel(m.t0_, m.y0_, m.rate_, m.CL_, m.Q_, m.V2_, m.V3_, m.ka_)
-    // {}
-
-    // get
+  /**
+   * two-compartment PK model get methods
+   */
     const T_time              & t0()      const { return t0_;    }
     const PKRecord<T_init>    & y0()      const { return y0_;    }
     const std::vector<T_rate> & rate()    const { return rate_;  }
@@ -141,7 +182,6 @@ namespace refactor {
     const PKTwoCptODE         & rhs_fun() const { return f_;     }
     const int                 & ncmt ()   const { return Ncmt;   }
 
-    // can be solved by linear ode solver
   };
 
   template<typename T_time, typename T_init, typename T_rate, typename T_par>

@@ -44,9 +44,16 @@ namespace refactor {
     }
   };
 
-  // depend on model, we can have arbitrary number of
-  // parameters, e.g. biovar, k12, k10, ka. Each parameter
-  // can be data or var.
+  /**
+   * One-compartment PK model. The static memebers provide
+   * universal information, i.e. nb. of compartments,
+   * nb. of parameters, and the RHS functor.
+   *
+   * @tparam T_time t type
+   * @tparam T_init initial condition type
+   * @tparam T_rate dosing rate type
+   * @tparam T_par PK parameters type
+   */
   template<typename T_time, typename T_init, typename T_rate, typename T_par>
   class PKOneCptModel {
     const T_time &t0_;
@@ -70,8 +77,19 @@ namespace refactor {
     using par_type    = T_par;
     using rate_type   = T_rate;
 
-    // constructors
-    PKOneCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
+  /**
+   * One-compartment PK model constructor
+   *
+   * @param t0 initial time
+   * @param y0 initial condition
+   * @param rate dosing rate
+   * @param par model parameters
+   * @param CL clearance
+   * @param V2 central cpt vol
+   * @param ka absorption
+   */
+    PKOneCptModel(const T_time& t0,
+                  const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
                   const std::vector<T_rate> &rate,
                   const T_par& CL,
                   const T_par& V2,
@@ -86,23 +104,45 @@ namespace refactor {
       alpha_{k10_, ka_}
     {}
 
-    // constructor
+  /**
+   * One-compartment PK model constructor
+   * FIXME need to remove parameter as this is for linode only.
+   *
+   * @tparam T_mp parameters class
+   * @tparam Ts parameter types
+   * @param t0 initial time
+   * @param y0 initial condition
+   * @param rate dosing rate
+   * @param par model parameters
+   * @param parameter ModelParameter type
+   */
     template<template<typename...> class T_mp, typename... Ts>
-    PKOneCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
+    PKOneCptModel(const T_time& t0,
+                  const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
                   const std::vector<T_rate> &rate,
                   const std::vector<T_par> & par,
                   const T_mp<Ts...> &parameter) :
       PKOneCptModel(t0, y0, rate, par[0], par[1], par[2])
     {}
 
-    // constructor
-    PKOneCptModel(const T_time& t0, const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
+  /**
+   * One-compartment PK model constructor
+   *
+   * @param t0 initial time
+   * @param y0 initial condition
+   * @param rate dosing rate
+   * @param par model parameters
+   */
+    PKOneCptModel(const T_time& t0,
+                  const Eigen::Matrix<T_init, 1, Eigen::Dynamic>& y0,
                   const std::vector<T_rate> &rate,
                   const std::vector<T_par> & par) :
       PKOneCptModel(t0, y0, rate, par[0], par[1], par[2])
     {}
 
-    // get
+  /**
+   * One-compartment PK model get methods
+   */
     const T_time              & t0()      const { return t0_;    }
     const PKRecord<T_init>    & y0()      const { return y0_;    }
     const std::vector<T_rate> & rate()    const { return rate_;  }
@@ -127,8 +167,12 @@ namespace refactor {
   constexpr PKOneCptODE PKOneCptModel<T_time, T_init, T_rate, T_par>::f_;
 
 
-
-  // sometimes we only need parameters, such as in SS solvers
+  /**
+   * Barebone definition of a one-cpt model requires only a
+   * vector of parameters. Sometimes this is enough.
+   *
+   * @tparam T_par parameter type
+   */
   template<typename T_par>
   class PKOneCptModelParameters {
     const T_par &CL_;
@@ -141,6 +185,10 @@ namespace refactor {
     static constexpr int Npar = 3;
     using scalar_type = T_par;
     using par_type    = T_par;
+  /**
+   * Constructor
+   * @tparam par parameter vector of size three.
+   */
     PKOneCptModelParameters(const std::vector<T_par> & par) :
       CL_(par[0]),
       V2_(par[1]),
@@ -148,6 +196,9 @@ namespace refactor {
       k10_(CL_ / V2_),
       alpha_{k10_, ka_}
     {}
+  /**
+   * Get methods
+   */
     const T_par               & CL()      const { return CL_;    }
     const T_par               & V2()      const { return V2_;    }
     const T_par               & ka()      const { return ka_;    }

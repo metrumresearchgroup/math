@@ -1,5 +1,5 @@
-#ifndef PK_ONECPT_SOLVER_HPP
-#define PK_ONECPT_SOLVER_HPP
+#ifndef STAN_MATH_TORSTEN_ONECPT_SOLVER_HPP
+#define STAN_MATH_TORSTEN_ONECPT_SOLVER_HPP
 
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 
@@ -7,17 +7,39 @@ namespace refactor {
 
   using boost::math::tools::promote_args;
 
+  /**
+   * standard one compartment PK ODE solver based on
+   * analytical solution.
+   */
   class PKOneCptModelSolver {
   public:
-    static constexpr int Ncmt = PKOneCptModel<double, double, double, double>::Ncmt;
-    static constexpr int Npar = PKOneCptModel<double, double, double, double>::Npar;
+    static constexpr int Ncmt =
+      PKOneCptModel<double, double, double, double>::Ncmt;
+    static constexpr int Npar =
+      PKOneCptModel<double, double, double, double>::Npar;
 
     PKOneCptModelSolver() {}
 
+  /**
+   * standard one compartment PK model attached to this solver.
+   * @tparam T_time t type
+   * @tparam T_init initial condition type
+   * @tparam T_rate rate type
+   * @tparam T_par parameter type
+   */
     template<typename T_time, typename T_init, typename T_rate, typename T_par>
     using default_model = PKOneCptModel<T_time, T_init, T_rate, T_par>;
 
-    template<typename T_time, template <class, class... > class T_model, class... Ts_par>    
+  /**
+   * Solve one-cpt model.
+   *
+   * @tparam T_time time type
+   * @tparam T_model ODE model type
+   * @tparam Ts_par type of parameters
+   */
+    template<typename T_time,
+             template <class, class... > class T_model,
+             class... Ts_par>
     Eigen::Matrix<typename T_model<Ts_par...>::scalar_type, Eigen::Dynamic, 1> 
     solve(const T_model<Ts_par...> &pkmodel, const T_time& dt) const {
       using Eigen::Matrix;
@@ -29,8 +51,8 @@ namespace refactor {
       auto ka   = pkmodel.ka()   ;
       auto alpha= pkmodel.alpha();
 
-      std::vector<scalar_type> a(2, 0);
-      Matrix<scalar_type, 1, Dynamic> pred = Matrix<scalar_type, 1, Dynamic>::Zero(2);
+      std::vector<scalar_type> a(Ncmt, 0);
+      Matrix<scalar_type, 1, Dynamic> pred = PKRecord<scalar_type>::Zero(Ncmt);
 
       if ((init[0] != 0) || (rate[0] != 0)) {
         pred(0, 0) = init[0] * exp(-ka * dt) + rate[0] * (1 - exp(-ka * dt)) / ka;

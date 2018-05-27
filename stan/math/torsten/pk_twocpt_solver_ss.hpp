@@ -5,15 +5,37 @@ namespace refactor {
 
   using boost::math::tools::promote_args;
 
+  /**
+   * Standard two compartment steady state PK ODE solver based on
+   * analytical solution and matrix exponential.
+   */
   class PKTwoCptModelSolverSS {
   public:
+    /**
+     * Constructor
+     */
     PKTwoCptModelSolverSS() {}
 
+  /**
+   * Solve two-cpt steady state model.
+   *
+   * @tparam T_amt amt type
+   * @tparam T_rate dosing rate type
+   * @tparam T_ii dosing interval type.
+   * @tparam T_model model type
+   * @tparam Ts_par model parameter type
+   * @param pkmodel PK one-cpt model
+   * @param amt dosing amount
+   * @param rate dosing rate
+   * @param ii dosing interval
+   * @param cmt dosing compartment
+   */
     template<typename T_amt, typename T_rate, 
              typename T_ii,
              template <class, class... > class T_model, class... Ts_par>
     PKRecord<typename promote_args<
-               T_amt, T_rate, T_ii, typename T_model<Ts_par...>::par_type>::type>
+               T_amt, T_rate, T_ii,
+               typename T_model<Ts_par...>::par_type>::type>
     solve(const T_model<Ts_par...> &pkmodel,
           const T_amt& amt,
           const T_rate& rate,
