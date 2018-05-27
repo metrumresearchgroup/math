@@ -98,21 +98,19 @@ generalOdeModel2_bdf(const F& f,
   refactor::PKODEModelSolverSS ssol(rel_tol, abs_tol, max_num_steps, msgs, "bdf");
   PredWrapper<refactor::PKODEModel> pr;
 
+  const Pred1_general<F0> pred1(F0(f), rel_tol, abs_tol,
+                                max_num_steps, msgs, "bdf");
+  const PredSS_general<F0> predss (F0(f), rel_tol, abs_tol,
+                                   max_num_steps, msgs, "bdf", nCmt);
+
 #ifdef OLD_TORSTEN
   return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
               pMatrix, biovar, tlag, nCmt, dummy_systems,
-              Pred1_general<F0>(F0(f), rel_tol, abs_tol,
-                                max_num_steps, msgs, "bdf"),
-              PredSS_general<F0>(F0(f), rel_tol, abs_tol,
-                                 max_num_steps, msgs, "bdf",
-                                 nCmt));
+              pred1, predss);
 #else
   return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
                   pMatrix, biovar, tlag, nCmt, dummy_systems,
-                  Pred1_general<F0>(F0(f), rel_tol, abs_tol,
-                                    max_num_steps, msgs, "bdf"),
-                  PredSS_general<F0>(F0(f), rel_tol, abs_tol,
-                                     max_num_steps, msgs, "bdf", nCmt),
+                  pred1, predss,
                   sol, ssol, f, nCmt);
 #endif
 

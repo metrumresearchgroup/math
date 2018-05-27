@@ -75,6 +75,7 @@ struct SteadyStateSys_dd {
                 Eigen::Matrix<Ty, Eigen::Dynamic, 1>& y2)
     {}
   };
+
   /**
    *  dd regime.
    *  dat contains the rates in each compartment followed
@@ -141,25 +142,6 @@ struct SteadyStateSys_dd {
       for (int i = 0; i < nParms; i++) y2(i) = y(i);
 
       AttachPKSol<T1, F2>().attach(delta, *this, dat_ode, y, y2);
-      // if (nPK_ != 0) {
-      //   Matrix<T1, 1, Dynamic> x0_pk(nPK_);
-      //   for (int i = 0; i < nPK_; i++) x0_pk(i) = y(nParms + i);
-
-      //   using T_pkmodel =
-      //     typename F2::template default_model<double, T1, double, T1>;
-      //   const double t00 = 0.0;
-      //   auto y_par = to_array_1d(y);
-      //   T_pkmodel pkmodel {t00, x0_pk, dat_ode, y_par};
-      //   Matrix<T1, 1, Dynamic>
-      //     x_pk = f2_.solve(pkmodel, delta);
-      //     // x_pk = f2_(delta,
-      //     //       ModelParameters<double, T1, double, double>
-      //     //         (0, to_array_1d(y), vector<double>(),
-      //     //          vector<double>()),
-      //     //          x0_pk, dat_ode);
-
-      //   for (int i = 0; i < nPK_; i++) y2(nParms + i) = x_pk(i);
-      // }
 
       ts[0] = ii_ - delta;
       dat_ode[cmt_ - 1] = 0;

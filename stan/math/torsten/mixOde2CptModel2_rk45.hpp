@@ -119,20 +119,18 @@ mixOde2CptModel2_rk45(const F& f,
     ssol(rel_tol, abs_tol, max_num_steps, msgs, "rk45", nOde);
   PredWrapper<refactor::TwoCptODEModel> pr;
 
+  Pred1_mix2<F0> pred1(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
+                       "rk45");
+  PredSS_mix2<F0> predss(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
+                         "rk45", nOde);
 #ifdef OLD_TORSTEN
  return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
              theta, biovar, tlag, nPK + nOde, dummy_systems,
-             Pred1_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
-                            "rk45"),
-             PredSS_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
-                             "rk45", nOde));
+             pred1, predss);
 #else
   return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
                   theta, biovar, tlag, nPK + nOde, dummy_systems,
-                  Pred1_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
-                                 "rk45"),
-                  PredSS_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
-                                  "rk45", nOde),
+                  pred1, predss,
                   sol, ssol,
                   f, nOde);
 #endif

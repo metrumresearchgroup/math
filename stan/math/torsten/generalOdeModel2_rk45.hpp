@@ -103,20 +103,20 @@ generalOdeModel2_rk45(const F& f,
   refactor::PKODEModelSolverSS ssol(rel_tol, abs_tol, max_num_steps, msgs, "rk45");
   PredWrapper<refactor::PKODEModel> pr;
 
+  const Pred1_general<F0> pred1(F0(f), rel_tol, abs_tol,
+                                max_num_steps, msgs, "rk45");
+  const PredSS_general<F0> predss (F0(f), rel_tol, abs_tol,
+                                   max_num_steps, msgs, "rk45", nCmt);
+
 #ifdef OLD_TORSTEN
   return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
               pMatrix, biovar, tlag, nCmt, dummy_systems,
-              Pred1_general<F0>(F0(f), rel_tol, abs_tol,
-                            max_num_steps, msgs, "rk45"),
-              PredSS_general<F0>(F0(f), rel_tol, abs_tol,
-                             max_num_steps, msgs, "rk45", nCmt));
+              pred1, predss);
+
 #else
   return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
                   pMatrix, biovar, tlag, nCmt, dummy_systems,
-                  Pred1_general<F0>(F0(f), rel_tol, abs_tol,
-                                    max_num_steps, msgs, "rk45"),
-                  PredSS_general<F0>(F0(f), rel_tol, abs_tol,
-                                     max_num_steps, msgs, "rk45", nCmt),
+                  pred1, predss,
                   sol, ssol, f, nCmt);
 #endif
 }
