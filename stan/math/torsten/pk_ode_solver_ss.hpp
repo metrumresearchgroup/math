@@ -2,6 +2,7 @@
 #define STAN_MATH_TORSTEN_REFACTOR_ODE_SOLVER_SS_HPP
 
 #include <stan/math/torsten/PKModel/functors/general_functor.hpp>
+#include <stan/math/torsten/pk_ss_system.hpp>
 
 namespace refactor {
 
@@ -84,8 +85,8 @@ namespace refactor {
     // construct algebraic function
     general_functor<F> f1(f);
     using SS_functor = ode_rate_dbl_functor<general_functor<F>>;
-    SS_system_dd<SS_functor, Pred1_void>
-      system(SS_functor(f1), Pred1_void(),
+    SteadyStateSys_dd<SS_functor, void>
+      system(SS_functor(f1), 
              ii_dbl, cmt, integrator_);
 
     refactor::PKODEModelSolver sol(integrator_);
@@ -194,7 +195,7 @@ namespace refactor {
     // construct algebraic function
     general_functor<F> f1(f);
     using SS_functor = ode_rate_dbl_functor<general_functor<F>>;
-    SS_system_vd<SS_functor>
+    SteadyStateSys_vd<SS_functor>
       system(SS_functor(f1), ii_dbl, cmt, integrator_);
 
     refactor::PKODEModelSolver sol(integrator_);

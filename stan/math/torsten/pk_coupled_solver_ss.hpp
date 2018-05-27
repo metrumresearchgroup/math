@@ -1,11 +1,11 @@
-#ifndef PK_COUPLED_SOLVER_SS_HPP
-#define PK_COUPLED_SOLVER_SS_HPP
+#ifndef STAN_MATH_TORSTEN_COUPLED_SOLVER_SS_HPP
+#define STAN_MATH_TORSTEN_COUPLED_SOLVER_SS_HPP
 
 #include <stan/math/torsten/PKModel/integrator.hpp>
 #include <stan/math/torsten/PKModel/functors/functor.hpp>
-#include <stan/math/torsten/PKModel/functors/SS_system.hpp>
 #include <stan/math/torsten/PKModel/Pred/Pred1_oneCpt.hpp>
 #include <stan/math/torsten/PKModel/Pred/PredSS_oneCpt.hpp>
+#include <stan/math/torsten/pk_ss_system.hpp>
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_onecpt_solver.hpp>
 #include <stan/math/torsten/pk_onecpt_solver_ss.hpp>
@@ -24,12 +24,10 @@ namespace refactor {
   /**
    * Coupled model steady state solvers.
    *
-   * @tparam T_1 compartment model solver for internal PK model
-   * @tparam T_2 type of steady state solver
-   * @tparam T_3 type of analytical solver
-   * FIXME: T_1 & T_3 are repeating!
+   * @tparam T_ssol type of steady state solver
+   * @tparam T_sol type of analytical solver
    */
-  template<typename T_1, typename T_2, typename T_3>
+  template<typename T_ssol, typename T_sol>
 struct PKCoupledModelSolverSS {
   integrator_structure integrator_;
   int nOde_;  // number of states in the reduced system
@@ -94,7 +92,7 @@ struct PKCoupledModelSolverSS {
     using T_parameters = typename T_model<Ts_par...>::par_type;
     using F0 = typename T_model<Ts_par...>::f_type;
     const F0& f0 = coupled_model.model.model2().rhs_fun();
-    using F = CptODEFunctor<F0, T_3>;
+    using F = CptODEFunctor<F0, T_sol>;
     F f_(f0);
     typedef typename boost::math::tools::promote_args<T_ii,
       T_parameters>::type scalar;
@@ -107,7 +105,7 @@ struct PKCoupledModelSolverSS {
     // FIXME: model1().par() doesn't work because of cpt model par length
     std::vector<T_parameters> pkpar = coupled_model.model.model2().par();
     if (cmt <= nPK) {  // check dosing occurs in a base state
-      predPK = T_2().solve(coupled_model.model.model1(),
+      predPK = T_ssol().solve(coupled_model.model.model1(),
                            amt, (cmt <= nPK) ? rate : 0, ii_dbl, cmt);
     } else {
       predPK = Matrix<scalar, Dynamic, 1>::Zero(nPK);
@@ -128,8 +126,8 @@ struct PKCoupledModelSolverSS {
     // construct algebraic system functor: note we adjust cmt
     // such that 1 corresponds to the first state we compute
     // numerically.
-    SS_system_dd<ode_rate_dbl_functor<F>, T_1 >
-      system(ode_rate_dbl_functor<F>(f_), T_1(), ii_dbl, cmt,
+    SteadyStateSys_dd<ode_rate_dbl_functor<F>, T_sol>
+      system(ode_rate_dbl_functor<F>(f_), ii_dbl, cmt,
              integrator_, nPK);
 
     Matrix<double, 1, Dynamic> predPD_guess;
@@ -230,7 +228,7 @@ struct PKCoupledModelSolverSS {
     using T_parameters = typename T_model<Ts_par...>::par_type;
     using F0 = typename T_model<Ts_par...>::f_type;
     const F0& f0 = coupled_model.model.model2().rhs_fun();
-    using F = CptODEFunctor<F0, T_3>;
+    using F = CptODEFunctor<F0, T_sol>;
     F f_(f0);
     typedef typename boost::math::tools::promote_args<T_ii, T_amt,
       T_parameters>::type scalar;
@@ -242,7 +240,7 @@ struct PKCoupledModelSolverSS {
     int nPK = coupled_model.model.model1().ncmt();
     std::vector<T_parameters> pkpar = coupled_model.model.model2().par();
     if (cmt <= nPK) {  // check dosing occurs in a base state
-      predPK = T_2().solve(coupled_model.model.model1(),
+      predPK = T_ssol().solve(coupled_model.model.model1(),
                            amt, rate, ii_dbl, cmt);
       predPK(cmt - 1) = predPK(cmt - 1) + amt;
     } else {
@@ -269,7 +267,7 @@ struct PKCoupledModelSolverSS {
     double f_tol = 1e-4;  // empirical
     long int max_num_steps = 1e3;  // default // NOLINT
 
-    SS_system_vd<ode_rate_dbl_functor<F> >
+    SteadyStateSys_vd<ode_rate_dbl_functor<F> >
       system(ode_rate_dbl_functor<F>(f_), ii_dbl, cmt, integrator_, nPK);
 
     Matrix<double, 1, Dynamic> predPD_guess;

@@ -51,7 +51,7 @@ namespace refactor {
       typedef typename boost::math::tools::promote_args<T0, T1, T2, T3>::type
         scalar;
       typedef typename boost::math::tools::promote_args<T0, T2, T3>::type
-        T_pk;  // return object of fOneCpt  doesn't depend on T1
+        T_pk;
 
       using T_pkmodel = typename T_pksolver::template default_model<T0, T2, double, T2>;
       int nPK = T_pkmodel::Ncmt;
@@ -111,7 +111,7 @@ namespace refactor {
       typedef typename boost::math::tools::promote_args<T0, T1, T2, T3>::type
         scalar;
       typedef typename boost::math::tools::promote_args<T0, T2, T3>::type
-        T_pk;  // return object of fTwoCpt  doesn't depend on T1
+        T_pk;
 
       size_t nTheta = theta.size();
       using T_pkmodel = typename T_pksolver::template default_model<T0, T2, T2, T2>;

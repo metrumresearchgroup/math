@@ -105,8 +105,7 @@ mixOde1CptModel2_bdf(const F& f,
   refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "bdf");
   refactor::PKCoupledModelSolver<refactor::PKOneCptModelSolver,
                                  refactor::PKODEModelSolver> sol(sol1, sol2);
-  refactor::PKCoupledModelSolverSS<Pred1_oneCpt,
-                                   refactor::PKOneCptModelSolverSS,
+  refactor::PKCoupledModelSolverSS<refactor::PKOneCptModelSolverSS,
                                    refactor::PKOneCptModelSolver>
     ssol(rel_tol, abs_tol, max_num_steps, msgs, "bdf", nOde);
   PredWrapper<refactor::OneCptODEModel> pr;
