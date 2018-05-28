@@ -4,23 +4,23 @@
 #include <test/unit/math/prim/mat/fun/expect_matrix_eq.hpp>
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
 // #include <stan/math/torsten/event_list.hpp>
-#include <stan/math/torsten/PKModelOneCpt2.hpp>
+#include <stan/math/torsten/PKModelOneCpt.hpp>
 #include <stan/math/torsten/pk_system.hpp>
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_twocpt_model.hpp>
-// #include <stan/math/torsten/PKModelOneCpt2.hpp>
+// #include <stan/math/torsten/PKModelOneCpt.hpp>
 
 #include <gtest/gtest.h>
 #include <stan/math/rev/mat.hpp>  // FIX ME - include should be more specific
 #include <test/unit/math/prim/mat/fun/expect_matrix_eq.hpp>
-#include <test/unit/math/torsten/util_PKModelOneCpt2.hpp>
+#include <test/unit/math/torsten/util_PKModelOneCpt.hpp>
 #include <vector>
 
 using std::vector;
 using Eigen::Matrix;
 using Eigen::Dynamic;
 
-TEST(Torsten, PKModelOneCpt2_MultipleDoses) {
+TEST(Torsten, PKModelOneCpt_MultipleDoses) {
 	vector<vector<double> > pMatrix(1);
 	pMatrix[0].resize(3);
 	pMatrix[0][0] = 10;  // CL
@@ -63,7 +63,7 @@ TEST(Torsten, PKModelOneCpt2_MultipleDoses) {
 	vector<int> ss(10, 0);
 
 	Matrix<double, Dynamic, Dynamic> x;
-	x = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
+	x = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
 
 	Matrix<double, Dynamic, Dynamic> amounts(10, 2);
 	amounts << 1000.0, 0.0,
@@ -80,11 +80,11 @@ TEST(Torsten, PKModelOneCpt2_MultipleDoses) {
 	expect_matrix_eq(amounts, x);
 
   // Test AutoDiff against FiniteDiff
-  test_PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                      pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
-TEST(Torsten, PKModelOneCpt2_MultipleDoses_IV) {
+TEST(Torsten, PKModelOneCpt_MultipleDoses_IV) {
 	vector<vector<double> > pMatrix(1);
 	pMatrix[0].resize(3);
 	pMatrix[0][0] = 10;  // CL
@@ -127,7 +127,7 @@ TEST(Torsten, PKModelOneCpt2_MultipleDoses_IV) {
 	vector<int> ss(10, 0);
 
 	Matrix<double, Dynamic, Dynamic> x;
-	x = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
+	x = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
 
 	Matrix<double, Dynamic, Dynamic> amounts(10, 2);
 	amounts << 0, 1000.0000,
@@ -144,12 +144,12 @@ TEST(Torsten, PKModelOneCpt2_MultipleDoses_IV) {
 	expect_matrix_eq(amounts, x);
 
   // Test AutoDiff against FiniteDiff
-  test_PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                      pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
 
-TEST(Torsten, PKModelOneCpt2_MultipleDoses_lagTime) {
+TEST(Torsten, PKModelOneCpt_MultipleDoses_lagTime) {
   vector<vector<double> > pMatrix(1);
   pMatrix[0].resize(3);
   pMatrix[0][0] = 10;  // CL
@@ -191,7 +191,7 @@ TEST(Torsten, PKModelOneCpt2_MultipleDoses_lagTime) {
   vector<int> ss(10, 0);
   
   Matrix<double, Dynamic, Dynamic> x;
-  x = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
+  x = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
   
   Matrix<double, Dynamic, Dynamic> amounts(10, 2);
   amounts << 0, 0,
@@ -208,11 +208,11 @@ TEST(Torsten, PKModelOneCpt2_MultipleDoses_lagTime) {
   expect_matrix_eq(amounts, x);
 
   // Test AutoDiff against FiniteDiff
-  test_PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                      pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
-TEST(Torsten, PKModelOneCpt2_MultipleDoses_overload) {
+TEST(Torsten, PKModelOneCpt_MultipleDoses_overload) {
 
   vector<vector<double> > pMatrix(1);
   pMatrix[0].resize(3);
@@ -257,19 +257,19 @@ TEST(Torsten, PKModelOneCpt2_MultipleDoses_overload) {
 
 	Matrix<double, Dynamic, Dynamic> x_122, x_112, x_111, x_121, x_212,
 	                                 x_211, x_221;
-	x_122 = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+	x_122 = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix[0], biovar, tlag);
-	x_112 = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+	x_112 = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix[0], biovar[0], tlag);
-	x_111 = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+	x_111 = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix[0], biovar[0], tlag[0]);
-	x_121 = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+	x_121 = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix[0], biovar, tlag[0]);
-	x_212 = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+	x_212 = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix, biovar[0], tlag);
-	x_211 = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+	x_211 = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix, biovar[0], tlag[0]);
-	x_221 = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+	x_221 = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix, biovar, tlag[0]);
 
 	Matrix<double, Dynamic, Dynamic> amounts(10, 2);
@@ -296,7 +296,7 @@ TEST(Torsten, PKModelOneCpt2_MultipleDoses_overload) {
 
 }
 
-TEST(Torsten, PKModelOneCpt2_signature_test) {
+TEST(Torsten, PKModelOneCpt_signature_test) {
   using stan::math::var;
 
   vector<vector<double> > pMatrix(1);
@@ -368,19 +368,19 @@ TEST(Torsten, PKModelOneCpt2_signature_test) {
              8.229747, 667.87079;
 
   vector<Matrix<var, Dynamic, Dynamic> > x_122(7);
-  x_122[0] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_122[0] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar, tlag);
-  x_122[1] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_122[1] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar_v, tlag);
-  x_122[2] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_122[2] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar, tlag_v);
-  x_122[3] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_122[3] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar_v, tlag_v);
-  x_122[4] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_122[4] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar_v, tlag);
-  x_122[5] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_122[5] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar_v, tlag_v);
-  x_122[6] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_122[6] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar, tlag_v);
 
   for (size_t i = 0; i < x_122.size(); i++)
@@ -390,19 +390,19 @@ TEST(Torsten, PKModelOneCpt2_signature_test) {
 
 
   vector<Matrix<var, Dynamic, Dynamic> > x_112(7);
-  x_112[0] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_112[0] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar[0], tlag);
-  x_112[1] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_112[1] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar_v[0], tlag);
-  x_112[2] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_112[2] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar[0], tlag_v);
-  x_112[3] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_112[3] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar_v[0], tlag_v);
-  x_112[4] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_112[4] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar_v[0], tlag);
-  x_112[5] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_112[5] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar_v[0], tlag_v);
-  x_112[6] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_112[6] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar[0], tlag_v);
 
   for (size_t i = 0; i < x_112.size(); i++)
@@ -412,19 +412,19 @@ TEST(Torsten, PKModelOneCpt2_signature_test) {
 
 
   vector<Matrix<var, Dynamic, Dynamic> > x_121(7);
-  x_121[0] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_121[0] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar, tlag[0]);
-  x_121[1] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_121[1] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar_v, tlag[0]);
-  x_121[2] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_121[2] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar, tlag_v[0]);
-  x_121[3] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_121[3] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar_v, tlag_v[0]);
-  x_121[4] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_121[4] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar_v, tlag[0]);
-  x_121[5] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_121[5] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar_v, tlag_v[0]);
-  x_121[6] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_121[6] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar, tlag_v[0]);
 
   for (size_t i = 0; i < x_121.size(); i++)
@@ -434,19 +434,19 @@ TEST(Torsten, PKModelOneCpt2_signature_test) {
 
 
   vector<Matrix<var, Dynamic, Dynamic> > x_111(7);
-  x_111[0] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_111[0] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar[0], tlag[0]);
-  x_111[1] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_111[1] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar_v[0], tlag[0]);
-  x_111[2] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_111[2] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar[0], tlag_v[0]);
-  x_111[3] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_111[3] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v[0], biovar_v[0], tlag_v[0]);
-  x_111[4] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_111[4] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar_v[0], tlag[0]);
-  x_111[5] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_111[5] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar_v[0], tlag_v[0]);
-  x_111[6] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_111[6] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix[0], biovar[0], tlag_v[0]);
 
   for (size_t i = 0; i < x_111.size(); i++)
@@ -456,19 +456,19 @@ TEST(Torsten, PKModelOneCpt2_signature_test) {
 
 
   vector<Matrix<var, Dynamic, Dynamic> > x_212(7);
-  x_212[0] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_212[0] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar[0], tlag);
-  x_212[1] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_212[1] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar_v[0], tlag);
-  x_212[2] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_212[2] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar[0], tlag_v);
-  x_212[3] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_212[3] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar_v[0], tlag_v);
-  x_212[4] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_212[4] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix, biovar_v[0], tlag);
-  x_212[5] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_212[5] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix, biovar_v[0], tlag_v);
-  x_212[6] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_212[6] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix, biovar[0], tlag_v);
 
   for (size_t i = 0; i < x_212.size(); i++)
@@ -478,19 +478,19 @@ TEST(Torsten, PKModelOneCpt2_signature_test) {
 
 
   vector<Matrix<var, Dynamic, Dynamic> > x_211(7);
-  x_211[0] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_211[0] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar[0], tlag[0]);
-  x_211[1] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_211[1] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar_v[0], tlag[0]);
-  x_211[2] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_211[2] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar[0], tlag_v[0]);
-  x_211[3] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_211[3] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar_v[0], tlag_v[0]);
-  x_211[4] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_211[4] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix, biovar_v[0], tlag[0]);
-  x_211[5] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_211[5] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix, biovar_v[0], tlag_v[0]);
-  x_211[6] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_211[6] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix, biovar[0], tlag_v[0]);
 
   for (size_t i = 0; i < x_211.size(); i++)
@@ -500,19 +500,19 @@ TEST(Torsten, PKModelOneCpt2_signature_test) {
 
 
   vector<Matrix<var, Dynamic, Dynamic> > x_221(7);
-  x_221[0] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_221[0] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar, tlag[0]);
-  x_221[1] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_221[1] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar_v, tlag[0]);
-  x_221[2] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_221[2] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar, tlag_v[0]);
-  x_221[3] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_221[3] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix_v, biovar_v, tlag_v[0]);
-  x_221[4] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_221[4] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix, biovar_v, tlag[0]);
-  x_221[5] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_221[5] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix, biovar_v, tlag_v[0]);
-  x_221[6] = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_221[6] = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                            pMatrix, biovar, tlag_v[0]);
 
   for (size_t i = 0; i < x_221.size(); i++)
@@ -523,7 +523,7 @@ TEST(Torsten, PKModelOneCpt2_signature_test) {
   // CHECK - do I need an AD test for every function signature ?
 }
 
-TEST(Torsten, PKModelOneCpt2_SS) {
+TEST(Torsten, PKModelOneCpt_SS) {
 
   vector<vector<double> > pMatrix(1);
   pMatrix[0].resize(3);
@@ -568,7 +568,7 @@ TEST(Torsten, PKModelOneCpt2_SS) {
 	ss[0] = 1;
 
 	Matrix<double, Dynamic, Dynamic> x;
-	x = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+	x = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                    pMatrix, biovar, tlag);
 
 	Matrix<double, Dynamic, Dynamic> amounts(10, 2);
@@ -589,11 +589,11 @@ TEST(Torsten, PKModelOneCpt2_SS) {
 	}
 
     // Test auto-diff
-    test_PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+    test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
-TEST(Torsten, PKModelOneCpt2_SS_rate) {
+TEST(Torsten, PKModelOneCpt_SS_rate) {
 
   vector<vector<double> > pMatrix(1);
   pMatrix[0].resize(3);
@@ -639,7 +639,7 @@ TEST(Torsten, PKModelOneCpt2_SS_rate) {
 	ss[0] = 1;
 
 	Matrix<double, Dynamic, Dynamic> x;
-	x = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+	x = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                    pMatrix, biovar, tlag);
 
 	Matrix<double, Dynamic, Dynamic> amounts(10, 2);
@@ -660,11 +660,11 @@ TEST(Torsten, PKModelOneCpt2_SS_rate) {
 	}
 
 	// Test AutoDiff against FiniteDiff
-    test_PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+    test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
-TEST(Torsten, PKModelOneCpt2_MultipleDoses_timePara) {
+TEST(Torsten, PKModelOneCpt_MultipleDoses_timePara) {
 
   int nEvent = 11;
 	vector<vector<double> > pMatrix(nEvent);
@@ -711,7 +711,7 @@ TEST(Torsten, PKModelOneCpt2_MultipleDoses_timePara) {
 	vector<int> ss(nEvent, 0);
 
 	Matrix<double, Dynamic, Dynamic> x;
-	x = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+	x = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                    pMatrix, biovar, tlag);
 
 	Matrix<double, Dynamic, Dynamic> amounts(nEvent, 2);
@@ -730,11 +730,11 @@ TEST(Torsten, PKModelOneCpt2_MultipleDoses_timePara) {
 	expect_matrix_eq(amounts, x);
 
 	// Test AutoDiff against FiniteDiff
-    test_PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+    test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                        pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
-TEST(Torsten, PKModelOneCpt2Model_Rate) {
+TEST(Torsten, PKModelOneCptModel_Rate) {
   using std::vector;
 
   vector<vector<double> > pMatrix(1);
@@ -780,7 +780,7 @@ TEST(Torsten, PKModelOneCpt2Model_Rate) {
   vector<int> ss(10, 0);
 
   Matrix<double, Dynamic, Dynamic> x;
-  x = torsten::PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                     pMatrix, biovar, tlag);
 
   Matrix<double, Dynamic, Dynamic> amounts(10, 2);
@@ -798,13 +798,13 @@ TEST(Torsten, PKModelOneCpt2Model_Rate) {
   expect_matrix_eq(amounts, x);
 
   // Test AutoDiff against FiniteDiff
-  test_PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                      pMatrix, biovar, tlag, 1e-8, 5e-4);
 }
 
 
 /*
-TEST(Torsten, PKModelOneCpt2Model_SS_rate_2) {
+TEST(Torsten, PKModelOneCptModel_SS_rate_2) {
   // Test the special case where the infusion rate is longer than
   // the interdose interval.
   // THIS TEST FAILS.
@@ -853,7 +853,7 @@ TEST(Torsten, PKModelOneCpt2Model_SS_rate_2) {
   vector<int> ss(10, 0);
 
   Matrix<double, Dynamic, Dynamic> x;
-  x = PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                     pMatrix, biovar, tlag);
 
   std::cout << x << std::endl;
@@ -873,7 +873,7 @@ TEST(Torsten, PKModelOneCpt2Model_SS_rate_2) {
   // expect_matrix_eq(amounts, x);
 
   // Test AutoDiff against FiniteDiff
-  // test_PKModelOneCpt2(time, amt, rate, ii, evid, cmt, addl, ss,
+  // test_PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
   //                   pMatrix, biovar, tlag, 1e-8, 5e-4);
 } */
 

@@ -1,6 +1,6 @@
 #include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
 #include <gtest/gtest.h>
-#include <test/unit/math/torsten/util_mixOdeCptModel2.hpp>
+#include <test/unit/math/torsten/util_mixOdeCptModel.hpp>
 #include <test/unit/math/prim/mat/fun/expect_near_matrix_eq.hpp>
 #include <test/unit/math/prim/mat/fun/expect_matrix_eq.hpp>
 
@@ -98,7 +98,7 @@ TEST(Torsten, mixOde2Cpt_singleDose) {
   double rel_tol = 1e-6, abs_tol = 1e-6;
   long int max_num_steps = 1e6;
   Matrix<double, Dynamic, Dynamic>
-    x_rk45 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+    x_rk45 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                   time, amt, rate, ii, evid, cmt, addl, ss,
                                   parameters, biovar, tlag,
                                   0,
@@ -107,7 +107,7 @@ TEST(Torsten, mixOde2Cpt_singleDose) {
   rel_tol = 1e-10, abs_tol = 1e-10;
   max_num_steps = 1e8;
   Matrix<double, Dynamic, Dynamic>
-    x_bdf = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+    x_bdf = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters, biovar, tlag,
                                 0,
@@ -194,43 +194,43 @@ TEST(Torsten, mixOde2Cpt_singleDose_overload) {
   Matrix<double, Eigen::Dynamic, Eigen::Dynamic> x_rk45_122, x_rk45_112,
     x_rk45_111, x_rk45_121, x_rk45_212, x_rk45_211, x_rk45_221;
 
-  x_rk45_122 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+  x_rk45_122 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters[0], biovar, tlag,
                                 0,
                                 rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_112 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+  x_rk45_112 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar[0], tlag,
                                     0,
                                     rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_111 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+  x_rk45_111 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar[0], tlag[0],
                                     0,
                                     rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_121 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+  x_rk45_121 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar, tlag[0],
                                     0,
                                     rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_212 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+  x_rk45_212 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar[0], tlag,
                                     0,
                                     rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_211 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+  x_rk45_211 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar[0], tlag[0],
                                     0,
                                     rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_221 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+  x_rk45_221 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar, tlag[0],
                                     0,
@@ -241,43 +241,43 @@ TEST(Torsten, mixOde2Cpt_singleDose_overload) {
   Matrix<double, Eigen::Dynamic, Eigen::Dynamic> x_bdf_122, x_bdf_112,
     x_bdf_111, x_bdf_121, x_bdf_212, x_bdf_211, x_bdf_221;
 
-  x_bdf_122 = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+  x_bdf_122 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters[0], biovar, tlag,
                                 0,
                                 rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_112 = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+  x_bdf_112 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar[0], tlag,
                                     0,
                                     rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_111 = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+  x_bdf_111 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar[0], tlag[0],
                                     0,
                                     rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_121 = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+  x_bdf_121 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar, tlag[0],
                                     0,
                                     rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_212 = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+  x_bdf_212 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar[0], tlag,
                                     0,
                                     rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_211 = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+  x_bdf_211 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar[0], tlag[0],
                                     0,
                                     rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_221 = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+  x_bdf_221 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar, tlag[0],
                                     0,
@@ -367,7 +367,7 @@ TEST(Torsten, mixOde2Cpt_rate) {
   double rel_tol = 1e-6, abs_tol = 1e-6;
   long int max_num_steps = 1e6;
   Matrix<double, Dynamic, Dynamic>
-    x_rk45 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+    x_rk45 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                   time, amt, rate, ii, evid, cmt, addl, ss,
                                   parameters, biovar, tlag,
                                   0,
@@ -376,7 +376,7 @@ TEST(Torsten, mixOde2Cpt_rate) {
   rel_tol = 1e-10, abs_tol = 1e-10;
   max_num_steps = 1e8;
   Matrix<double, Dynamic, Dynamic>
-    x_bdf = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+    x_bdf = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters, biovar, tlag,
                                 0,
@@ -508,7 +508,7 @@ TEST(Torsten, mixOde2Cpt_SS_bolus) {
   double rel_tol_rk = 1e-6, abs_tol_rk = 1e-6;
   long int max_num_steps_rk = 1e6;
   Matrix<double, Dynamic, Dynamic>
-    x_rk45 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+    x_rk45 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                   time, amt, rate, ii, evid, cmt, addl, ss,
                                   parameters, biovar, tlag,
                                   0,
@@ -517,7 +517,7 @@ TEST(Torsten, mixOde2Cpt_SS_bolus) {
   double rel_tol_bdf = 1e-10, abs_tol_bdf = 1e-10;
   long int max_num_steps_bdf = 1e8;
   Matrix<double, Dynamic, Dynamic>
-    x_bdf = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+    x_bdf = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters, biovar, tlag,
                                 0,
@@ -611,7 +611,7 @@ TEST(Torsten, mixOde2Cpt_SS_infusion) {
   double rel_tol_rk = 1e-6, abs_tol_rk = 1e-6;
   long int max_num_steps_rk = 1e6;
   Matrix<double, Dynamic, Dynamic>
-    x_rk45 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+    x_rk45 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                   time, amt, rate, ii, evid, cmt, addl, ss,
                                   parameters, biovar, tlag,
                                   0,
@@ -622,7 +622,7 @@ TEST(Torsten, mixOde2Cpt_SS_infusion) {
   double rel_tol_bdf = 1e-10, abs_tol_bdf = 1e-10;
   double max_num_steps_bdf = 1e8;
   Matrix<double, Dynamic, Dynamic>
-    x_bdf = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+    x_bdf = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters, biovar, tlag,
                                 0,
@@ -711,7 +711,7 @@ TEST(Torsten, mixOdeCpt2_SS_constant_rate) {
   double rel_tol_rk = 1e-6, abs_tol_rk = 1e-6;
   long int max_num_steps_rk = 1e6;
   Matrix<double, Dynamic, Dynamic>
-    x_rk45 = torsten::mixOde2CptModel2_rk45(feedbackODE(), nPD,
+    x_rk45 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
                                   time, amt, rate, ii, evid, cmt, addl, ss,
                                   parameters, biovar, tlag,
                                   0,
@@ -720,7 +720,7 @@ TEST(Torsten, mixOdeCpt2_SS_constant_rate) {
   double rel_tol_bdf = 1e-10, abs_tol_bdf = 1e-10;
   double max_num_steps_bdf = 1e8;
   Matrix<double, Dynamic, Dynamic>
-    x_bdf = torsten::mixOde2CptModel2_bdf(feedbackODE(), nPD,
+    x_bdf = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters, biovar, tlag,
                                 0,

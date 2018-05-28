@@ -1,11 +1,16 @@
-#ifndef STAN_MATH_TORSTEN_MIXODEONECPTMODEL_BDF_HPP
-#define STAN_MATH_TORSTEN_MIXODEONECPTMODEL_BDF_HPP
+#ifndef STAN_MATH_TORSTEN_REFACTOR_MIXODEONECPTMODEL_BDF_HPP
+#define STAN_MATH_TORSTEN_REFACTOR_MIXODEONECPTMODEL_BDF_HPP
 
 #include <Eigen/Dense>
 #include <stan/math/torsten/PKModel/PKModel.hpp>
 #include <stan/math/torsten/PKModel/functors/mix1_functor.hpp>
 #include <stan/math/torsten/PKModel/Pred/Pred1_mix1.hpp>
 #include <stan/math/torsten/PKModel/Pred/PredSS_mix1.hpp>
+#include <stan/math/torsten/Pred2.hpp>
+#include <stan/math/torsten/pk_coupled_cpt_ode_model.hpp>
+#include <stan/math/torsten/pk_coupled_model.hpp>
+#include <stan/math/torsten/pk_coupled_solver.hpp>
+#include <stan/math/torsten/pk_coupled_solver_ss.hpp>
 #include <boost/math/tools/promotion.hpp>
 #include <vector>
 
@@ -84,8 +89,6 @@ mixOde1CptModel_bdf(const F& f,
   using Eigen::Matrix;
   using boost::math::tools::promote_args;
 
-  int nPK = 2;
-
   // check arguments
   static const char* function("mixOde1CptModel_bdf");
   torsten::pmetricsCheck(time, amt, rate, ii, evid, cmt, addl, ss,
@@ -98,12 +101,34 @@ mixOde1CptModel_bdf(const F& f,
 
   typedef mix1_functor<F> F0;
 
+  const int &nPK = refactor::PKOneCptModelSolver::Ncmt;
+  refactor::PKOneCptModelSolver sol1;
+  refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs,
+                                  TorstenIntegrator::BDF);
+  refactor::PKCoupledModelSolver<refactor::PKOneCptModelSolver,
+                                 refactor::PKODEModelSolver> sol(sol1, sol2);
+  refactor::PKCoupledModelSolverSS<refactor::PKOneCptModelSolverSS,
+                                   refactor::PKOneCptModelSolver>
+    ssol(rel_tol, abs_tol, max_num_steps, msgs, TorstenIntegrator::BDF, nOde);
+  PredWrapper<refactor::OneCptODEModel> pr;
+
+  Pred1_mix1<F0> pred1(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
+                       "bdf");
+  PredSS_mix1<F0> predss(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
+                         "bdf", nOde);
+
+#ifdef OLD_TORSTEN
   return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
               theta, biovar, tlag, nPK + nOde, dummy_systems,
-              Pred1_mix1<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
-                             "bdf"),
-              PredSS_mix1<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
-                              "bdf", nOde));
+              pred1, predss);
+
+#else
+  return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
+                  theta, biovar, tlag, nPK + nOde, dummy_systems,
+                  pred1, predss,
+                  sol, ssol,
+                  f, nOde);
+#endif
 }
 
 /**

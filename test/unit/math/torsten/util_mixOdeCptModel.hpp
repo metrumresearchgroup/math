@@ -1,13 +1,17 @@
-#ifndef TEST_UNIT_MATH_TORSTEN_UTIL_MIXODE1CPTMODEL_HPP
-#define TEST_UNIT_MATH_TORSTEN_UTIL_MIXODE1CPTMODEL_HPP
+#ifndef TEST_UNIT_MATH_TORSTEN_UTIL_MIXODE1CPTMODEL2_HPP
+#define TEST_UNIT_MATH_TORSTEN_UTIL_MIXODE1CPTMODEL2_HPP
 
 #include <stan/math/rev/mat.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/math/rev/arr/util.hpp>
 #include <test/unit/util.hpp>
+#include <stan/math/torsten/mixOde2CptModel_rk45.hpp>
+#include <stan/math/torsten/mixOde2CptModel_bdf.hpp>
+#include <stan/math/torsten/mixOde1CptModel_rk45.hpp>
+#include <stan/math/torsten/mixOde1CptModel_bdf.hpp>
 
 /**
- * Calculates finite difference for mixOde1CptModel with
+ * Calculates finite difference for mixOde1CptModel2 with
  * varying parameters.  Parameters are stored in pMatrix,
  * biovar, and tlag.
  */
@@ -138,7 +142,7 @@ finite_diff_params(const F& f,
 }
 
 /**
- * Test mixOde1CptModel with only pMatrix as vars and all other continuous
+ * Test mixOde1CptModel2 with only pMatrix as vars and all other continuous
  * arguments as double.
  */
 template <typename F>
@@ -242,7 +246,7 @@ void test_mixOdeCptModel_finite_diff_vdd(
 
         EXPECT_NEAR(grads_eff[k * parmCols + l],
           finite_diff_res[k][l](i, j), diff2)
-          << "Gradient of mixOde1CptModel failed with known"
+          << "Gradient of mixOde1CptModel2 failed with known"
           << " event data, biovar, and tlag, "
           << " and unknown parameters at event " << i
           << ", in compartment " << j
@@ -357,7 +361,7 @@ void test_mixOdeCptModel_finite_diff_dvd(
 
           EXPECT_NEAR(grads_eff[k * parmCols + l],
                       finite_diff_res[k][l](i, j), diff2)
-          << "Gradient of mixOde1CptModel failed with known"
+          << "Gradient of mixOde1CptModel2 failed with known"
           << " event data, parameters, and tlag, "
           << " and unknown biovar at event " << i
           << ", in compartment " << j
@@ -368,7 +372,7 @@ void test_mixOdeCptModel_finite_diff_dvd(
 }
 
 /**
- * Test mixOde1CptModel with only tlag as vars and all other continuous
+ * Test mixOde1CptModel2 with only tlag as vars and all other continuous
  * arguments as double.
  * Note: There is known issue when computing the derivative w.r.t the
  * lag time of a dosing compartment. The issue is reported on GitHub,
@@ -504,7 +508,7 @@ void test_mixOdeCptModel_finite_diff_ddv(
           if (skip == false) {
             EXPECT_NEAR(grads_eff[k * parmCols + l],
                         finite_diff_res[k][l](i, j), diff2)
-            << "Gradient of mixOde1CptModel failed with known"
+            << "Gradient of mixOde1CptModel2 failed with known"
             << " event data, parameters, and biovar, "
             << " and unknown lag times at event " << i
             << ", in compartment " << j

@@ -1,6 +1,8 @@
 #ifndef STAN_MATH_TORSTEN_REFACTOR_ODE_MODEL_HPP
 #define STAN_MATH_TORSTEN_REFACTOR_ODE_MODEL_HPP
 
+#include <stan/math/torsten/torsten_def.hpp>
+
 namespace refactor {
 
   using boost::math::tools::promote_args;

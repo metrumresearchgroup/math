@@ -1,5 +1,5 @@
-#ifndef STAN_MATH_TORSTEN_MIXODE2CPTMODEL_RK45_HPP
-#define STAN_MATH_TORSTEN_MIXODE2CPTMODEL_RK45_HPP
+#ifndef STAN_MATH_TORSTEN_REFACTOR_MIXODE2CPTMODEL_RK45_HPP
+#define STAN_MATH_TORSTEN_REFACTOR_MIXODE2CPTMODEL_RK45_HPP
 
 #include <Eigen/Dense>
 #include <stan/math/torsten/PKModel/PKModel.hpp>
@@ -9,6 +9,18 @@
 #include <stan/math/torsten/PKModel/Pred/PredSS_err.hpp>
 #include <boost/math/tools/promotion.hpp>
 #include <vector>
+
+#include <stan/math/torsten/pk_coupled_cpt_ode_model.hpp>
+#include <stan/math/torsten/Pred2.hpp>
+#include <stan/math/torsten/pk_ode_model.hpp>
+#include <stan/math/torsten/pk_ode_solver.hpp>
+#include <stan/math/torsten/pk_ode_solver_ss.hpp>
+#include <stan/math/torsten/pk_coupled_model.hpp>
+#include <stan/math/torsten/pk_coupled_solver.hpp>
+#include <stan/math/torsten/pk_coupled_solver_ss.hpp>
+#include <stan/math/torsten/pk_twocpt_model.hpp>
+#include <stan/math/torsten/pk_twocpt_solver.hpp>
+#include <stan/math/torsten/pk_twocpt_solver_ss.hpp>
 
 namespace torsten {
 
@@ -85,8 +97,6 @@ mixOde2CptModel_rk45(const F& f,
   using Eigen::Matrix;
   using boost::math::tools::promote_args;
 
-  int nPK = 3;
-
   // check arguments
   static const char* function("mixOde2CptModel_rk45");
   torsten::pmetricsCheck(time, amt, rate, ii, evid, cmt, addl, ss,
@@ -99,13 +109,33 @@ mixOde2CptModel_rk45(const F& f,
 
   typedef mix2_functor<F> F0;
 
+  const int &nPK = refactor::PKTwoCptModelSolver::Ncmt;
+  refactor::PKTwoCptModelSolver sol1;
+  refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs,
+                                  TorstenIntegrator::RK45);
+  refactor::PKCoupledModelSolver<refactor::PKTwoCptModelSolver,
+                                 refactor::PKODEModelSolver> sol(sol1, sol2);
+  refactor::PKCoupledModelSolverSS<refactor::PKTwoCptModelSolverSS,
+                                   refactor::PKTwoCptModelSolver>
+    ssol(rel_tol, abs_tol, max_num_steps, msgs, TorstenIntegrator::RK45, nOde);
+  PredWrapper<refactor::TwoCptODEModel> pr;
+
+  Pred1_mix2<F0> pred1(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
+                       "rk45");
+  PredSS_mix2<F0> predss(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
+                         "rk45", nOde);
+#ifdef OLD_TORSTEN
  return Pred(time, amt, rate, ii, evid, cmt, addl, ss,
              theta, biovar, tlag, nPK + nOde, dummy_systems,
-             Pred1_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
-                            "rk45"),
-             PredSS_mix2<F0>(F0(f), rel_tol, abs_tol, max_num_steps, msgs,
-                             "rk45", nOde));
-             // PredSS_err(function));
+             pred1, predss);
+#else
+  return pr.Pred2(time, amt, rate, ii, evid, cmt, addl, ss,
+                  theta, biovar, tlag, nPK + nOde, dummy_systems,
+                  pred1, predss,
+                  sol, ssol,
+                  f, nOde);
+#endif
+
 }
 
 /**
