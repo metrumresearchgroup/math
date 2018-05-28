@@ -111,12 +111,13 @@ mixOde2CptModel2_rk45(const F& f,
 
   const int &nPK = refactor::PKTwoCptModelSolver::Ncmt;
   refactor::PKTwoCptModelSolver sol1;
-  refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "rk45");
+  refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs,
+                                  TorstenIntegrator::RK45);
   refactor::PKCoupledModelSolver<refactor::PKTwoCptModelSolver,
                                  refactor::PKODEModelSolver> sol(sol1, sol2);
   refactor::PKCoupledModelSolverSS<refactor::PKTwoCptModelSolverSS,
                                    refactor::PKTwoCptModelSolver>
-    ssol(rel_tol, abs_tol, max_num_steps, msgs, "rk45", nOde);
+    ssol(rel_tol, abs_tol, max_num_steps, msgs, TorstenIntegrator::RK45, nOde);
   PredWrapper<refactor::TwoCptODEModel> pr;
 
   Pred1_mix2<F0> pred1(F0(f), rel_tol, abs_tol, max_num_steps, msgs,

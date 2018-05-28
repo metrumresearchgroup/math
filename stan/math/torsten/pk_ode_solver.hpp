@@ -19,7 +19,7 @@ namespace refactor {
    *
    */
   class PKODEModelSolver {
-    torsten::integrator_structure integrator_;
+    torsten::TorstenIntegrator integrator_;
     
     template<typename T_scalar, typename F, typename T_par, typename T_rate, typename T_init>
     void run_integrator(const F& f,
@@ -102,16 +102,16 @@ namespace refactor {
                      const double& abs_tol,
                      const long int& max_num_steps,
                      std::ostream* msgs,
-                     const std::string& integratorType) :
+                     const int& integratorType) :
       integrator_(rel_tol, abs_tol, max_num_steps, msgs, integratorType)
     {}
 
     // constructor
-    PKODEModelSolver(const torsten::integrator_structure integrator) :
+    PKODEModelSolver(const torsten::TorstenIntegrator& integrator) :
       integrator_(integrator)
     {}
 
-    const torsten::integrator_structure& integrator() const {
+    const torsten::TorstenIntegrator& integrator() const {
       return integrator_;
     }
 

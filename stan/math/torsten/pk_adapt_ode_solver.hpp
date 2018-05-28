@@ -3,6 +3,7 @@
 
 #include <stan/math/torsten/pk_coupled_cpt_ode_model.hpp>
 #include <stan/math/torsten/pk_cptode_adaptor.hpp>
+#include <stan/math/torsten/pk_integrator.hpp>
 
 namespace refactor {
 
@@ -30,13 +31,13 @@ namespace refactor {
            typename... Ts,
            typename... Ts_adapt_extra>
   class PKAdaptODESolver<T_adaptor<T_model<Ts...>, Ts_adapt_extra...> >{
-    const torsten::integrator_structure& integrator_;
+    const torsten::TorstenIntegrator& integrator_;
   public:
     /**
      * Constructor
      * @param[in] integrator integrator that contains parameters
      */
-    PKAdaptODESolver(const torsten::integrator_structure& integrator) :
+    PKAdaptODESolver(const torsten::TorstenIntegrator& integrator) :
       integrator_(integrator)
     {}
 

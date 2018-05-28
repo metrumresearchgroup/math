@@ -23,7 +23,7 @@ struct SteadyStateSys_dd {
   F f_;
   double ii_;
   int cmt_;  // dosing compartment
-  integrator_structure integrator_;
+  TorstenIntegrator integrator_;
   int nPK_;
 
   SteadyStateSys_dd() { }
@@ -31,14 +31,14 @@ struct SteadyStateSys_dd {
   SteadyStateSys_dd(const F& f,
                double ii,
                int cmt,
-               const integrator_structure& integrator)
+               const TorstenIntegrator& integrator)
     : f_(f), ii_(ii), cmt_(cmt), integrator_(integrator),
       nPK_(0) { }
 
   SteadyStateSys_dd(const F& f,
                double ii,
                int cmt,
-               const integrator_structure& integrator,
+               const TorstenIntegrator& integrator,
                int nPK)
     : f_(f), ii_(ii), cmt_(cmt), integrator_(integrator),
       nPK_(nPK) { }
@@ -172,7 +172,7 @@ struct SteadyStateSys_vd {
   F f_;
   double ii_;
   int cmt_;  // dosing compartment
-  integrator_structure integrator_;
+  TorstenIntegrator integrator_;
   int nPK_;
 
   SteadyStateSys_vd() { }
@@ -180,14 +180,14 @@ struct SteadyStateSys_vd {
   SteadyStateSys_vd(const F& f,
                double ii,
                int cmt,
-               const integrator_structure& integrator)
+               const TorstenIntegrator& integrator)
     : f_(f), ii_(ii), cmt_(cmt), integrator_(integrator),
       nPK_(0) { }
 
   SteadyStateSys_vd(const F& f,
                double ii,
                int cmt,
-               const integrator_structure& integrator,
+               const TorstenIntegrator& integrator,
                int nPK)
     : f_(f), ii_(ii), cmt_(cmt), integrator_(integrator),
       nPK_(nPK) { }

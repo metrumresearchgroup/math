@@ -102,12 +102,13 @@ mixOde1CptModel2_bdf(const F& f,
 
   const int &nPK = refactor::PKOneCptModelSolver::Ncmt;
   refactor::PKOneCptModelSolver sol1;
-  refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs, "bdf");
+  refactor::PKODEModelSolver sol2(rel_tol, abs_tol, max_num_steps, msgs,
+                                  TorstenIntegrator::BDF);
   refactor::PKCoupledModelSolver<refactor::PKOneCptModelSolver,
                                  refactor::PKODEModelSolver> sol(sol1, sol2);
   refactor::PKCoupledModelSolverSS<refactor::PKOneCptModelSolverSS,
                                    refactor::PKOneCptModelSolver>
-    ssol(rel_tol, abs_tol, max_num_steps, msgs, "bdf", nOde);
+    ssol(rel_tol, abs_tol, max_num_steps, msgs, TorstenIntegrator::BDF, nOde);
   PredWrapper<refactor::OneCptODEModel> pr;
 
   Pred1_mix1<F0> pred1(F0(f), rel_tol, abs_tol, max_num_steps, msgs,

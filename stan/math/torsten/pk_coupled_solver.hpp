@@ -95,7 +95,7 @@ namespace refactor {
              typename... Ts>
     Matrix<typename T_model<Ts...>::scalar_type, Dynamic, 1>
     solve(const T_model<Ts...> &model, const T0& dt) const {
-      torsten::integrator_structure integrator(sol2_.integrator());
+      torsten::TorstenIntegrator integrator(sol2_.integrator());
       using Adaptor = PKCptODEAdaptor<T_model<Ts...>, T_s1>;
       PKAdaptODESolver<Adaptor> adapted_sol(integrator);
       auto model1 = model.model.model1();

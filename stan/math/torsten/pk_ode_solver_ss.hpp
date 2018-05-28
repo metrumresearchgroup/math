@@ -14,7 +14,7 @@ namespace refactor {
    *
    */
   class PKODEModelSolverSS {
-    torsten::integrator_structure integrator_;
+    torsten::TorstenIntegrator integrator_;
   public:
   /**
    * Steady state ODE solver constructor
@@ -24,7 +24,7 @@ namespace refactor {
                        const double& abs_tol,
                        const long int& max_num_steps,
                        std::ostream* msgs,
-                       const std::string& integratorType) :
+                       const int& integratorType) :
       integrator_(rel_tol, abs_tol, max_num_steps, msgs, integratorType)
     {}
 

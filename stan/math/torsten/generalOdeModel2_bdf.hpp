@@ -94,8 +94,10 @@ generalOdeModel2_bdf(const F& f,
 
   typedef general_functor<F> F0;
 
-  refactor::PKODEModelSolver sol(rel_tol, abs_tol, max_num_steps, msgs, "bdf");
-  refactor::PKODEModelSolverSS ssol(rel_tol, abs_tol, max_num_steps, msgs, "bdf");
+  refactor::PKODEModelSolver sol(rel_tol, abs_tol, max_num_steps, msgs,
+                                 TorstenIntegrator::BDF);
+  refactor::PKODEModelSolverSS ssol(rel_tol, abs_tol, max_num_steps, msgs,
+                                    TorstenIntegrator::BDF);
   PredWrapper<refactor::PKODEModel> pr;
 
   const Pred1_general<F0> pred1(F0(f), rel_tol, abs_tol,

@@ -29,7 +29,7 @@ namespace refactor {
    */
   template<typename T_ssol, typename T_sol>
 struct PKCoupledModelSolverSS {
-  integrator_structure integrator_;
+  TorstenIntegrator integrator_;
   int nOde_;  // number of states in the reduced system
 
   PKCoupledModelSolverSS(
@@ -37,7 +37,7 @@ struct PKCoupledModelSolverSS {
               const double& abs_tol,
               const long int& max_num_steps,  // NOLINT
               std::ostream* msgs,
-              const std::string& integratorType,
+              const int& integratorType,
               const int& nOde) : 
       integrator_(rel_tol, abs_tol, max_num_steps, msgs, integratorType),
       nOde_(nOde)

@@ -99,8 +99,10 @@ generalOdeModel2_rk45(const F& f,
   typedef general_functor<F> F0;
 
   // using PKODEModel
-  refactor::PKODEModelSolver sol(rel_tol, abs_tol, max_num_steps, msgs, "rk45");
-  refactor::PKODEModelSolverSS ssol(rel_tol, abs_tol, max_num_steps, msgs, "rk45");
+  refactor::PKODEModelSolver sol(rel_tol, abs_tol, max_num_steps, msgs,
+                                 TorstenIntegrator::RK45);
+  refactor::PKODEModelSolverSS ssol(rel_tol, abs_tol, max_num_steps, msgs,
+                                    TorstenIntegrator::RK45);
   PredWrapper<refactor::PKODEModel> pr;
 
   const Pred1_general<F0> pred1(F0(f), rel_tol, abs_tol,
