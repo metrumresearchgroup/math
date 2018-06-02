@@ -65,6 +65,7 @@ public:
     for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
     cmt[0] = 1;
     evid[0] = 1;
+    SetUp();
   }
   std::vector<std::vector<double> > pMatrix;  // CL, VC, Ka
   const int nCmt;  // F1, F2
