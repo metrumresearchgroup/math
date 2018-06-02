@@ -12,4 +12,6 @@
 #include <stan/math/torsten/PKModelTwoCpt.hpp>
 #include <stan/math/torsten/univariate_integral.hpp>
 
+#include <stan/math/torsten/debug.hpp>
+
 #endif
