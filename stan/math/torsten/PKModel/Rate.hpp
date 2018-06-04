@@ -91,7 +91,6 @@ template <typename T_time, typename T_rate>
 class RateHistory {
 private:
   std::vector<Rate<T_time, T_rate> > Rates;
-  static const double deltaTimeTolerance = 1.e-16;
 
 public:
   RateHistory() {
@@ -185,17 +184,13 @@ public:
     for (int j = 0; j < events.get_size(); j++)
       EventTimes[j] = events.get_time(j);
 
-    int i = 0, k, l, ii;
-    double test_amt, test_rate;
+    int i = 0, k, l;
     T_time endTime;
-    double deltaTime;
     torsten::Event<T_time, T_amt, T_rate, T_ii> newEvent;
     while (i < events.get_size()) {
       if ((events.get_evid(i) == 1 || events.get_evid(i) == 4)
         && (events.get_rate(i) > 0 && events.get_amt(i) > 0)) {
-        endTime = events.get_time(i) + events.get_amt(i)/stan::math::value_of(events.get_rate(i));
-        deltaTime = endTime - events.get_time(i);
-        if (deltaTime > deltaTimeTolerance) {
+          endTime = events.get_time(i) + events.get_amt(i)/events.get_rate(i);
           newEvent = newEvent(endTime, 0, 0, 0, 2, events.get_cmt(i), 0, 0,
             false, true);
           events.InsertEvent(newEvent);
@@ -220,7 +215,6 @@ public:
           // Compute Rates for each element between the two times
           for (int iRate = l ; iRate < k; iRate++)
             Rates[iRate].rate[events.get_cmt(i) - 1] += events.get_rate(i);
-        }
         }
         i++;
     }
