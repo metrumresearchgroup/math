@@ -763,22 +763,22 @@ TEST_F(TorstenLinODETwoCptTest, rate_var) {
                            system_array, biovar, tlag);
 
 
-#ifndef LINODE_ONECPT_RATE_VAR_TEST
-#define LINODE_ONECPT_RATE_VAR_TEST(SYS, BIOVAR, TLAG)                  \
+#ifndef LINODE_TWOCPT_RATE_VAR_TEST
+#define LINODE_TWOCPT_RATE_VAR_TEST(SYS, BIOVAR, TLAG)                  \
   x = torsten::linOdeModel(time, amt, rate_v, ii, evid, cmt, addl, ss,  \
                            SYS, BIOVAR, TLAG);                          \
   test_it(x);
 
-  LINODE_ONECPT_RATE_VAR_TEST(system_array   , biovar   , tlag);
-  LINODE_ONECPT_RATE_VAR_TEST(system_array_v , biovar   , tlag);
-  LINODE_ONECPT_RATE_VAR_TEST(system_array_v , biovar_v , tlag);
-  LINODE_ONECPT_RATE_VAR_TEST(system_array_v , biovar_v , tlag_v);
-  LINODE_ONECPT_RATE_VAR_TEST(system_array   , biovar_v , tlag);
-  LINODE_ONECPT_RATE_VAR_TEST(system_array   , biovar_v , tlag_v);
-  LINODE_ONECPT_RATE_VAR_TEST(system_array   , biovar   , tlag_v);
-  LINODE_ONECPT_RATE_VAR_TEST(system_array_v , biovar_v , tlag_v);
+  LINODE_TWOCPT_RATE_VAR_TEST(system_array   , biovar   , tlag);
+  LINODE_TWOCPT_RATE_VAR_TEST(system_array_v , biovar   , tlag);
+  LINODE_TWOCPT_RATE_VAR_TEST(system_array_v , biovar_v , tlag);
+  LINODE_TWOCPT_RATE_VAR_TEST(system_array_v , biovar_v , tlag_v);
+  LINODE_TWOCPT_RATE_VAR_TEST(system_array   , biovar_v , tlag);
+  LINODE_TWOCPT_RATE_VAR_TEST(system_array   , biovar_v , tlag_v);
+  LINODE_TWOCPT_RATE_VAR_TEST(system_array   , biovar   , tlag_v);
+  LINODE_TWOCPT_RATE_VAR_TEST(system_array_v , biovar_v , tlag_v);
 
-#undef LINODE_ONECPT_RATE_VAR_TEST
+#undef LINODE_TWOCPT_RATE_VAR_TEST
 #endif
 
 }
