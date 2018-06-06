@@ -357,115 +357,43 @@ TEST_F(TorstenPKOneCptODETest, MultipleDose_overload) {
   const double rel_err = 1e-4;
   Matrix<double, Dynamic, Dynamic> amounts(10, 2);
   amounts << 1000.0, 0.0,
-             740.8182, 254.97490,
-             548.8116, 436.02020,
-             406.5697, 562.53846,
-             301.1942, 648.89603,
-             223.1302, 705.72856,
-             165.2989, 740.90816,
-             122.4564, 760.25988,
-             90.71795, 768.09246,
-             8.229747, 667.87079;
+    740.8182, 254.97490,
+    548.8116, 436.02020,
+    406.5697, 562.53846,
+    301.1942, 648.89603,
+    223.1302, 705.72856,
+    165.2989, 740.90816,
+    122.4564, 760.25988,
+    90.71795, 768.09246,
+    8.229747, 667.87079;
 
   Matrix<double, Eigen::Dynamic, Eigen::Dynamic> x;
-  x = generalOdeModel_rk45(F(), nCmt,
-                           time, amt, rate, ii, evid, cmt, addl, ss,
-                           pMatrix[0], biovar, tlag,
-                           0,
-                           rel_tol, abs_tol, max_num_steps);
+
+#ifndef PK_ONECPT_SIGNATURE_TEST
+#define PK_ONECPT_SIGNATURE_TEST(SYS, BIOVAR, TLAG)                     \
+  x = generalOdeModel_rk45(F(), nCmt,                                   \
+                           time, amt, rate, ii, evid, cmt, addl, ss,    \
+                           SYS, BIOVAR, TLAG,                           \
+                           0,                                           \
+                           rel_tol, abs_tol, max_num_steps);            \
+  expect_near_matrix_eq(amounts, x, rel_err);                           \
+  x = generalOdeModel_bdf(F(), nCmt,                                    \
+                          time, amt, rate, ii, evid, cmt, addl, ss,     \
+                          SYS, BIOVAR, TLAG,                            \
+                          0,                                            \
+                          rel_tol, abs_tol, max_num_steps);             \
   expect_near_matrix_eq(amounts, x, rel_err);
 
+  PK_ONECPT_SIGNATURE_TEST(pMatrix[0], biovar, tlag);
+  PK_ONECPT_SIGNATURE_TEST(pMatrix[0], biovar[0], tlag);
+  PK_ONECPT_SIGNATURE_TEST(pMatrix[0], biovar[0], tlag[0]);
+  PK_ONECPT_SIGNATURE_TEST(pMatrix[0], biovar, tlag[0]);
+  PK_ONECPT_SIGNATURE_TEST(pMatrix, biovar[0], tlag);
+  PK_ONECPT_SIGNATURE_TEST(pMatrix, biovar[0], tlag[0]);
+  PK_ONECPT_SIGNATURE_TEST(pMatrix, biovar, tlag[0]);
 
-  x = generalOdeModel_rk45(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix[0], biovar[0], tlag,
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_rk45(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix[0], biovar[0], tlag[0],
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_rk45(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix[0], biovar, tlag[0],
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_rk45(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix, biovar[0], tlag,
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_rk45(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix, biovar[0], tlag[0],
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_rk45(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix, biovar, tlag[0],
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_bdf(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix[0], biovar, tlag,
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_bdf(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix[0], biovar[0], tlag,
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_bdf(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix[0], biovar[0], tlag[0],
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_bdf(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix[0], biovar, tlag[0],
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_bdf(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix, biovar[0], tlag,
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_bdf(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix, biovar[0], tlag[0],
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
-
-  x = generalOdeModel_bdf(F(), nCmt,
-                                    time, amt, rate, ii, evid, cmt, addl, ss,
-                                    pMatrix, biovar, tlag[0],
-                                    0,
-                                    rel_tol, abs_tol, max_num_steps);
-  expect_near_matrix_eq(amounts, x, rel_err);
+#undef PK_ONECPT_SIGNATURE_TEST
+#endif
 }
 
 TEST_F(TorstenPKOneCptODETest, signature) {
