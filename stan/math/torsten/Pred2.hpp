@@ -104,7 +104,7 @@ Pred2(const std::vector<T_time>& time,
 
   typedef typename promote_args<T_time, T_amt, T_rate, T_ii,
     typename promote_args<T_parameters, T_biovar, T_tlag>::type >::type scalar;
-  typedef typename promote_args<T_time, T_tlag>::type T_tau;
+  typedef typename promote_args<T_time, T_amt, T_tlag, T_rate>::type T_tau;
   typedef typename promote_args<T_rate, T_biovar>::type T_rate2;
 
   // BOOK-KEEPING: UPDATE DATA SETS
