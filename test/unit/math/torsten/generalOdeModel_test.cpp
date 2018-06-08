@@ -902,15 +902,14 @@ TEST_F(TorstenPKOneCptODETest, rate_var) {
                                     rel_tol, abs_tol, max_num_steps);   \
   test_it(x);
 
-  // FIXME: rate var with steady state (PredSS_general.hpp)
   ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar   , tlag);
   ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar   , tlag);
-  // ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag);
-  // ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
-  // ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag);
-  // ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag_v);
+  ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag);
+  ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
+  ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag);
+  ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag_v);
   ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar   , tlag_v);
-  // ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
+  ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
 
 #undef ODE_ONECPT_RATE_VAR_TEST
 #endif
@@ -930,15 +929,14 @@ TEST_F(TorstenPKOneCptODETest, rate_var) {
                                     rel_tol, abs_tol, max_num_steps);   \
   test_it(x);
 
-  // FIXME: rate var with steady state (PredSS_general.hpp)
   ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar   , tlag);
   ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar   , tlag);
-  // ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag);
-  // ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
-  // ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag);
-  // ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag_v);
+  ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag);
+  ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
+  ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag);
+  ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag_v);
   ODE_ONECPT_RATE_VAR_TEST(pMatrix   , biovar   , tlag_v);
-  // ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
+  ODE_ONECPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
 
 #undef ODE_ONECPT_RATE_VAR_TEST
 #endif
@@ -1146,15 +1144,14 @@ TEST_F(TorstenPKTwoCptODETest, rate_var) {
                                     rel_tol, abs_tol, max_num_steps);   \
   test_it(x);
 
-  // FIXME: rate var with steady state (PredSS_general.hpp)
   ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar   , tlag);
   ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar   , tlag);
-  // ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag);
-  // ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
-  // ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag);
-  // ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag_v);
+  ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag);
+  ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
+  ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag);
+  ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag_v);
   ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar   , tlag_v);
-  // ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
+  ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
 
 #undef ODE_TWOCPT_RATE_VAR_TEST
 #endif
@@ -1170,15 +1167,14 @@ TEST_F(TorstenPKTwoCptODETest, rate_var) {
                                     rel_tol, abs_tol, max_num_steps);   \
   test_it(x);
 
-  // FIXME: rate var with steady state (PredSS_general.hpp)
   ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar   , tlag);
   ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar   , tlag);
-  // ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag);
-  // ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
-  // ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag);
-  // ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag_v);
+  ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag);
+  ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
+  ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag);
+  ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar_v , tlag_v);
   ODE_TWOCPT_RATE_VAR_TEST(pMatrix   , biovar   , tlag_v);
-  // ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
+  ODE_TWOCPT_RATE_VAR_TEST(pMatrix_v , biovar_v , tlag_v);
 
 #undef ODE_TWOCPT_RATE_VAR_TEST
 #endif

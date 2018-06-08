@@ -228,6 +228,7 @@ struct PredSS_general {
    * Case 3 (dv): rate is random, amt is fixed.
    */
   template<typename T_time,
+           typename T_amt,
            typename T_rate,
            typename T_ii,
            typename T_parameters,
@@ -239,7 +240,7 @@ struct PredSS_general {
                 T_parameters,
                 T_biovar,
                 T_tlag>& parameter,
-              const double& amt,
+              const T_amt& amt,
               const T_rate& rate,
               const T_ii& ii,
               const int& cmt) const {
