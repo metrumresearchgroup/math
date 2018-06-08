@@ -26,6 +26,7 @@ namespace refactor {
 
   public:
     using scalar_type = typename promote_args<T_time, T_rate, T_par, T_init>::type;
+    using rate_type = T_rate;
     using par_type = T_par;
 
   /**

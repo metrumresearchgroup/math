@@ -36,38 +36,58 @@ namespace refactor {
       using stan::math::mdivide_left;
       using stan::math::multiply;
       using scalar_type = typename T_model<Ts_par...>::scalar_type;
+      using T_rate = typename T_model<Ts_par...>::rate_type;
 
       auto init = pkmodel.y0()   ;
       auto rate = pkmodel.rate() ;
+      auto system = pkmodel.rhs_matrix();
 
-      if (dt == 0) { return init;
+      if (std::any_of(rate.begin(), rate.end(), [](T_rate r){return r != 0;})) {
+        int nCmt = system.cols();
+        Matrix<scalar_type, Dynamic, 1> rate_vec(rate.size()), x(nCmt), x2(nCmt);
+        for (size_t i = 0; i < rate.size(); i++) rate_vec(i) = rate[i];
+        x = mdivide_left(system, rate_vec);
+        x2 = x + init.transpose();
+        Matrix<scalar_type, Dynamic, Dynamic> dt_system = multiply(dt, system);
+        Matrix<scalar_type, Dynamic, 1> pred = matrix_exp(dt_system) * x2;
+        pred -= x;
+        return pred.transpose();
       } else {
-        auto system = pkmodel.rhs_matrix();
-
-        bool rate_zeros = true;
-        for (size_t i = 0; i < rate.size(); i++)
-          if (rate[i] != 0) rate_zeros = false;
-
-        // trick to promote dt, and dt_system
-        scalar_type dt_s = dt;
-
-        if (rate_zeros) {
-          Matrix<scalar_type, Dynamic, Dynamic> dt_system = multiply(dt_s, system);
-          Matrix<scalar_type, Dynamic, 1> pred = matrix_exp(dt_system)
-            * init.transpose();
-          return pred.transpose();
-        } else {
-          int nCmt = system.cols();
-          Matrix<scalar_type, Dynamic, 1> rate_vec(rate.size()), x(nCmt), x2(nCmt);
-          for (size_t i = 0; i < rate.size(); i++) rate_vec(i) = rate[i];
-          x = mdivide_left(system, rate_vec);
-          x2 = x + init.transpose();
-          Matrix<scalar_type, Dynamic, Dynamic> dt_system = multiply(dt_s, system);
-          Matrix<scalar_type, Dynamic, 1> pred = matrix_exp(dt_system) * x2;
-          pred -= x;
-          return pred.transpose();
-        }
+        // if (rate_zeros) {
+        Matrix<scalar_type, Dynamic, Dynamic> dt_system = multiply(dt, system);
+        Matrix<scalar_type, Dynamic, 1> pred = matrix_exp(dt_system)
+          * init.transpose();
+        return pred.transpose();
       }
+
+      // if (dt == 0) { return init;
+      // } else {
+
+
+      //   bool rate_zeros = true;
+      //   for (size_t i = 0; i < rate.size(); i++)
+      //     if (rate[i] != 0) rate_zeros = false;
+
+      //   // trick to promote dt, and dt_system
+      //   scalar_type dt_s = dt;
+
+      //   if (rate_zeros) {
+      //     Matrix<scalar_type, Dynamic, Dynamic> dt_system = multiply(dt_s, system);
+      //     Matrix<scalar_type, Dynamic, 1> pred = matrix_exp(dt_system)
+      //       * init.transpose();
+      //     return pred.transpose();
+      //   } else {
+      //     int nCmt = system.cols();
+      //     Matrix<scalar_type, Dynamic, 1> rate_vec(rate.size()), x(nCmt), x2(nCmt);
+      //     for (size_t i = 0; i < rate.size(); i++) rate_vec(i) = rate[i];
+      //     x = mdivide_left(system, rate_vec);
+      //     x2 = x + init.transpose();
+      //     Matrix<scalar_type, Dynamic, Dynamic> dt_system = multiply(dt_s, system);
+      //     Matrix<scalar_type, Dynamic, 1> pred = matrix_exp(dt_system) * x2;
+      //     pred -= x;
+      //     return pred.transpose();
+      //   }
+      // }
     }
   };
 }
