@@ -4,6 +4,9 @@
 #include <Eigen/Dense>
 #include <vector>
 
+#include <stan/math/torsten/debug.hpp>
+
+
 namespace torsten{
 
 /**
@@ -145,7 +148,8 @@ Pred(const std::vector<T_time>& time,
       dt = 0;
       init = zeros;
     } else {
-      dt = event.get_time() - tprev;
+      T_tau t_new = event.get_time();
+      dt = t_new - tprev;
       pred1 = Pred1(dt, parameter, init, rate2.get_rate());
       init = pred1;
     }
