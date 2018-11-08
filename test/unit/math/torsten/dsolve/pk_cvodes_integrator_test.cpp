@@ -25,10 +25,11 @@ TEST_F(TorstenOdeTest_sho, cvodes_ivp_system) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
 
   PKCvodesIntegrator solver(rtol, atol, 1000);
 
-  using Ode1 = PKCvodesFwdSystem<F, double, double, double, CV_BDF>;
+  using Ode1 = PKCvodesFwdSystem<F, double, double, double, CV_BDF, CSDA>;
   
   PKCvodesService<typename Ode1::Ode> s1(2, 1);
   Ode1 ode{s1, f, t0, ts, y0, theta, x_r, x_i, msgs};
@@ -41,7 +42,7 @@ TEST_F(TorstenOdeTest_sho, cvodes_ivp_system) {
     }
   }
 
-  using Ode2 = PKCvodesFwdSystem<F, double, double, double, CV_ADAMS>;
+  using Ode2 = PKCvodesFwdSystem<F, double, double, double, CV_ADAMS, CSDA>;
   
   PKCvodesService<typename Ode2::Ode> s2(2, 1);
   Ode2 ode2{s2, f, t0, ts, y0, theta, x_r, x_i, msgs};
@@ -58,10 +59,11 @@ TEST_F(TorstenOdeTest_lorenz, cvodes_ivp_system) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
 
   PKCvodesIntegrator solver(rtol, atol, max_num_steps);
 
-  using Ode1 = PKCvodesFwdSystem<F, double, double, double, CV_BDF>;
+  using Ode1 = PKCvodesFwdSystem<F, double, double, double, CV_BDF, CSDA>;
   
   PKCvodesService<typename Ode1::Ode> s1(3, 3);
   Ode1 ode{s1, f, t0, ts, y0, theta, x_r, x_i, msgs};
@@ -74,7 +76,7 @@ TEST_F(TorstenOdeTest_lorenz, cvodes_ivp_system) {
     }
   }
 
-  using Ode2 = PKCvodesFwdSystem<F, double, double, double, CV_ADAMS>;
+  using Ode2 = PKCvodesFwdSystem<F, double, double, double, CV_ADAMS, CSDA>;
   
   PKCvodesService<typename Ode2::Ode> s2(3, 3);
   Ode2 ode2{s2, f, t0, ts, y0, theta, x_r, x_i, msgs};
@@ -87,11 +89,12 @@ TEST_F(TorstenOdeTest_lorenz, cvodes_ivp_system) {
   }
 }
 
-TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta) {
+TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_CSDA) {
   using torsten::dsolve::PKCvodesSystem;
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
 
   using stan::math::var;
 
@@ -99,8 +102,8 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta) {
   std::vector<var> theta_var = stan::math::to_var(theta);
 
   std::vector<std::vector<var> > y_a, y_b, y1, y2;
-  using Ode1 = PKCvodesFwdSystem<F, double, double, var, CV_ADAMS>;
-  using Ode2 = PKCvodesFwdSystem<F, double, double, var, CV_BDF>;
+  using Ode1 = PKCvodesFwdSystem<F, double, double, var, CV_ADAMS, CSDA>;
+  using Ode2 = PKCvodesFwdSystem<F, double, double, var, CV_BDF, CSDA>;
   
   
   PKCvodesService<typename Ode1::Ode> s1(3, 3);
@@ -118,11 +121,44 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta) {
   test_cvodes_fwd_sens(theta_var, y_b, y2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0) {
+TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_AD) {
   using torsten::dsolve::PKCvodesSystem;
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
+
+  using stan::math::var;
+
+  PKCvodesIntegrator solver(rtol, atol, 1e8);
+  std::vector<var> theta_var = stan::math::to_var(theta);
+
+  std::vector<std::vector<var> > y_a, y_b, y1, y2;
+  using Ode1 = PKCvodesFwdSystem<F, double, double, var, CV_ADAMS, AD>;
+  using Ode2 = PKCvodesFwdSystem<F, double, double, var, CV_BDF, AD>;
+  
+  
+  PKCvodesService<typename Ode1::Ode> s1(3, 3);
+  PKCvodesService<typename Ode2::Ode> s2(3, 3);
+  Ode1 ode1(s1, f, t0, ts, y0, theta_var, x_r, x_i, msgs);
+  Ode2 ode2(s2, f, t0, ts, y0, theta_var, x_r, x_i, msgs);
+
+  y_a = solver.integrate(ode1);
+  y_b = solver.integrate(ode2);
+
+  y1 = stan::math::integrate_ode_adams(f, y0, t0, ts, theta_var, x_r, x_i);
+  y2 = stan::math::integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
+
+  test_cvodes_fwd_sens(theta_var, y_a, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(theta_var, y_b, y2, 1.E-8, 1.E-5);
+}
+
+TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0_CSDA) {
+  using torsten::dsolve::PKCvodesSystem;
+  using torsten::dsolve::PKCvodesFwdSystem;
+  using torsten::dsolve::PKCvodesIntegrator;
+  using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
 
   using stan::math::var;
 
@@ -130,8 +166,40 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0) {
   std::vector<var> y0_var = stan::math::to_var(y0);
 
   std::vector<std::vector<var> > y_a, y_b, y1, y2;
-  using Ode1 = PKCvodesFwdSystem<F, double, var, double, CV_ADAMS>;
-  using Ode2 = PKCvodesFwdSystem<F, double, var, double, CV_BDF>;
+  using Ode1 = PKCvodesFwdSystem<F, double, var, double, CV_ADAMS, CSDA>;
+  using Ode2 = PKCvodesFwdSystem<F, double, var, double, CV_BDF, CSDA>;
+  
+  
+  PKCvodesService<typename Ode1::Ode> s1(3, 3);
+  PKCvodesService<typename Ode2::Ode> s2(3, 3);
+  Ode1 ode1(s1, f, t0, ts, y0_var, theta, x_r, x_i, msgs);
+  Ode2 ode2(s2, f, t0, ts, y0_var, theta, x_r, x_i, msgs);
+
+  y_a = solver.integrate(ode1);
+  y_b = solver.integrate(ode2);
+
+  y1 = stan::math::integrate_ode_adams(f, y0_var, t0, ts, theta, x_r, x_i);
+  y2 = stan::math::integrate_ode_bdf(f, y0_var, t0, ts, theta, x_r, x_i);
+
+  test_cvodes_fwd_sens(y0_var, y_a, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(y0_var, y_b, y2, 1.E-8, 1.E-5);
+}
+
+TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0_AD) {
+  using torsten::dsolve::PKCvodesSystem;
+  using torsten::dsolve::PKCvodesFwdSystem;
+  using torsten::dsolve::PKCvodesIntegrator;
+  using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
+
+  using stan::math::var;
+
+  PKCvodesIntegrator solver(rtol, atol, 1e8);
+  std::vector<var> y0_var = stan::math::to_var(y0);
+
+  std::vector<std::vector<var> > y_a, y_b, y1, y2;
+  using Ode1 = PKCvodesFwdSystem<F, double, var, double, CV_ADAMS, AD>;
+  using Ode2 = PKCvodesFwdSystem<F, double, var, double, CV_BDF, AD>;
   
   
   PKCvodesService<typename Ode1::Ode> s1(3, 3);
@@ -154,6 +222,7 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_y0) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
 
   using stan::math::var;
 
@@ -162,8 +231,8 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_y0) {
   std::vector<var> y0_var = stan::math::to_var(y0);
 
   std::vector<std::vector<var> > y_a, y_b, y1, y2;
-  using Ode1 = PKCvodesFwdSystem<F, double, var, var, CV_ADAMS>;
-  using Ode2 = PKCvodesFwdSystem<F, double, var, var, CV_BDF>;
+  using Ode1 = PKCvodesFwdSystem<F, double, var, var, CV_ADAMS, CSDA>;
+  using Ode2 = PKCvodesFwdSystem<F, double, var, var, CV_BDF, CSDA>;
   
   
   PKCvodesService<typename Ode1::Ode> s1(3, 3);
@@ -188,6 +257,7 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
 
   using stan::math::var;
 
@@ -195,8 +265,8 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta) {
   std::vector<var> theta_var = stan::math::to_var(theta);
 
   std::vector<std::vector<var> > y_a, y_b, y1, y2;
-  using Ode1 = PKCvodesFwdSystem<F, double, double, var, CV_ADAMS>;
-  using Ode2 = PKCvodesFwdSystem<F, double, double, var, CV_BDF>;
+  using Ode1 = PKCvodesFwdSystem<F, double, double, var, CV_ADAMS, CSDA>;
+  using Ode2 = PKCvodesFwdSystem<F, double, double, var, CV_BDF, CSDA>;
   
   
   PKCvodesService<typename Ode1::Ode> s1(2, 1);
@@ -219,6 +289,7 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_y0) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
 
   using stan::math::var;
 
@@ -226,8 +297,8 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_y0) {
   std::vector<var> y0_var = stan::math::to_var(y0);
 
   std::vector<std::vector<var> > y_a, y_b, y1, y2;
-  using Ode1 = PKCvodesFwdSystem<F, double, var, double, CV_ADAMS>;
-  using Ode2 = PKCvodesFwdSystem<F, double, var, double, CV_BDF>;
+  using Ode1 = PKCvodesFwdSystem<F, double, var, double, CV_ADAMS, CSDA>;
+  using Ode2 = PKCvodesFwdSystem<F, double, var, double, CV_BDF, CSDA>;
   
   
   PKCvodesService<typename Ode1::Ode> s1(2, 1);
@@ -250,6 +321,7 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_ts) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
   using stan::math::value_of;
 
   using stan::math::var;
@@ -258,7 +330,7 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_ts) {
   std::vector<var> ts_var = stan::math::to_var(ts);
 
   std::vector<std::vector<var> > y, y1, y2;
-  using Ode = PKCvodesFwdSystem<F, var, double, double, CV_ADAMS>;
+  using Ode = PKCvodesFwdSystem<F, var, double, double, CV_ADAMS, CSDA>;
   PKCvodesService<typename Ode::Ode> s(2, 1);
   Ode ode(s, f, t0, ts_var, y0, theta, x_r, x_i, msgs);
   y = solver.integrate(ode);
@@ -285,6 +357,7 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_ts) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
   using stan::math::value_of;
 
   using stan::math::var;
@@ -293,7 +366,7 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_ts) {
   std::vector<var> ts_var = stan::math::to_var(ts);
 
   std::vector<std::vector<var> > y, y1, y2;
-  using Ode = PKCvodesFwdSystem<F, var, double, double, CV_BDF>;
+  using Ode = PKCvodesFwdSystem<F, var, double, double, CV_BDF, CSDA>;
   PKCvodesService<typename Ode::Ode> s(3, 3);
   Ode ode(s, f, t0, ts_var, y0, theta, x_r, x_i, msgs);
   y = solver.integrate(ode);
@@ -320,6 +393,7 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta_y0) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
 
   using stan::math::var;
 
@@ -328,8 +402,8 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta_y0) {
   std::vector<var> y0_var = stan::math::to_var(y0);
 
   std::vector<std::vector<var> > y_a, y_b, y1, y2;
-  using Ode1 = PKCvodesFwdSystem<F, double, var, var, CV_ADAMS>;
-  using Ode2 = PKCvodesFwdSystem<F, double, var, var, CV_BDF>;
+  using Ode1 = PKCvodesFwdSystem<F, double, var, var, CV_ADAMS, CSDA>;
+  using Ode2 = PKCvodesFwdSystem<F, double, var, var, CV_BDF, CSDA>;
   
   PKCvodesService<typename Ode1::Ode> s1(2, 1);
   PKCvodesService<typename Ode2::Ode> s2(2, 1);
@@ -353,6 +427,7 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_y0_ts) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
   using stan::math::value_of;
   using stan::math::var;
 
@@ -362,7 +437,7 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_y0_ts) {
   std::vector<var> ts_var = stan::math::to_var(ts);
 
   std::vector<std::vector<var> > y, y1, y2;
-  using Ode = PKCvodesFwdSystem<F, var, var, var, CV_ADAMS>;
+  using Ode = PKCvodesFwdSystem<F, var, var, var, CV_ADAMS, CSDA>;
   PKCvodesService<typename Ode::Ode> s(3, 3);
   Ode ode(s, f, t0, ts_var, y0_var, theta_var, x_r, x_i, msgs);
   y = solver.integrate(ode);
@@ -395,6 +470,7 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_y0_ts) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
   using stan::math::value_of;
   using stan::math::var;
 
@@ -404,7 +480,7 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_y0_ts) {
   std::vector<var> ts_var = stan::math::to_var(ts);
 
   std::vector<std::vector<var> > y, y1, y2;
-  using Ode = PKCvodesFwdSystem<F, var, var, var, CV_BDF>;
+  using Ode = PKCvodesFwdSystem<F, var, var, var, CV_BDF, CSDA>;
   PKCvodesService<typename Ode::Ode> s(3, 3);
   Ode ode(s, f, t0, ts_var, y0_var, theta_var, x_r, x_i, msgs);
   y = solver.integrate(ode);
@@ -436,6 +512,7 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0_ts) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
   using stan::math::value_of;
   using stan::math::var;
 
@@ -444,7 +521,7 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0_ts) {
   std::vector<var> ts_var = stan::math::to_var(ts);
 
   std::vector<std::vector<var> > y, y1, y2;
-  using Ode = PKCvodesFwdSystem<F, var, var, double, CV_BDF>;
+  using Ode = PKCvodesFwdSystem<F, var, var, double, CV_BDF, CSDA>;
   PKCvodesService<typename Ode::Ode> s(3, 3);
   Ode ode(s, f, t0, ts_var, y0_var, theta, x_r, x_i, msgs);
   y = solver.integrate(ode);
@@ -475,6 +552,7 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_ts) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
   using stan::math::value_of;
   using stan::math::var;
 
@@ -483,7 +561,7 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_ts) {
   std::vector<var> ts_var = stan::math::to_var(ts);
 
   std::vector<std::vector<var> > y, y1, y2;
-  using Ode = PKCvodesFwdSystem<F, var, double, var, CV_BDF>;
+  using Ode = PKCvodesFwdSystem<F, var, double, var, CV_BDF, CSDA>;
   PKCvodesService<typename Ode::Ode> s(3, 3);
   Ode ode(s, f, t0, ts_var, y0, theta_var, x_r, x_i, msgs);
   y = solver.integrate(ode);
@@ -514,6 +592,7 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta_ts) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
   using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
   using stan::math::value_of;
   using stan::math::var;
 
@@ -522,7 +601,7 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta_ts) {
   std::vector<var> ts_var = stan::math::to_var(ts);
 
   std::vector<std::vector<var> > y, y1, y2;
-  using Ode = PKCvodesFwdSystem<F, var, double, var, CV_BDF>;
+  using Ode = PKCvodesFwdSystem<F, var, double, var, CV_BDF, CSDA>;
   PKCvodesService<typename Ode::Ode> s(2, 1);
   Ode ode(s, f, t0, ts_var, y0, theta_var, x_r, x_i, msgs);
   y = solver.integrate(ode);
@@ -551,6 +630,7 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta_ts) {
 TEST_F(TorstenOdeTest_lorenz, fwd_sens_theta_performance_adams) {
   using torsten::dsolve::pk_integrate_ode_adams;
   using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::PkCvodesSensMethod;
   using stan::math::var;
 
   std::vector<var> theta_var = stan::math::to_var(theta);
