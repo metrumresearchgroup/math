@@ -63,6 +63,8 @@ include make/libstanmath_mpi # bin/libstanmath_mpi.a
 include make/tests    # tests
 include make/cpplint  # cpplint
 
+-include make/setup_torsten.mk 	# torsten
+
 ##
 # Dependencies
 ##
