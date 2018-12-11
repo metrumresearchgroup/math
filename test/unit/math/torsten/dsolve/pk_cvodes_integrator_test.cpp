@@ -55,6 +55,40 @@ TEST_F(TorstenOdeTest_sho, cvodes_ivp_system) {
   }
 }
 
+TEST_F(TorstenOdeTest_sho, cvodes_ivp_system_return_matrix) {
+  using torsten::dsolve::PKCvodesFwdSystem;
+  using torsten::dsolve::PKCvodesIntegrator;
+  using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
+
+  PKCvodesIntegrator solver(rtol, atol, 1000);
+
+  using Ode1 = PKCvodesFwdSystem<F, double, double, double, CV_BDF, CSDA>;
+  
+  PKCvodesService<typename Ode1::Ode> s1(2, 1);
+  Ode1 ode{s1, f, t0, ts, y0, theta, x_r, x_i, msgs};
+  std::vector<std::vector<double> > y = solver.integrate(ode);
+  std::vector<std::vector<double> > y1 =
+    stan::math::integrate_ode_bdf(f, y0, t0, ts, theta , x_r, x_i);
+  for (size_t i = 0; i < y1.size(); ++i) {
+    for (size_t j = 0; j < y1[0].size(); ++j) {
+      EXPECT_FLOAT_EQ(y[i][j], y1[i][j]);
+    }
+  }
+
+  using Ode2 = PKCvodesFwdSystem<F, double, double, double, CV_ADAMS, CSDA>;
+  
+  PKCvodesService<typename Ode2::Ode> s2(2, 1);
+  Ode2 ode2{s2, f, t0, ts, y0, theta, x_r, x_i, msgs};
+  y = solver.integrate(ode2);
+  y1 = stan::math::integrate_ode_adams(f, y0, t0, ts, theta , x_r, x_i);
+  for (size_t i = 0; i < y1.size(); ++i) {
+    for (size_t j = 0; j < y1[0].size(); ++j) {
+      EXPECT_FLOAT_EQ(y[i][j], y1[i][j]);
+    }
+  }
+}
+
 TEST_F(TorstenOdeTest_lorenz, cvodes_ivp_system) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
