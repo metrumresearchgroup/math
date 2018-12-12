@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <stan/math/torsten/mpi/is_mine.hpp>
+#include <stan/math/torsten/mpi/my_worker.hpp>
 #include <iostream>
 #include <vector>
 #include <memory>

@@ -34,8 +34,16 @@ TEST_F(TorstenOdeTest_sho, cvodes_ivp_system) {
   PKCvodesService<typename Ode1::Ode> s1(2, 1);
   Ode1 ode{s1, f, t0, ts, y0, theta, x_r, x_i, msgs};
   std::vector<std::vector<double> > y = solver.integrate(ode);
+  Eigen::MatrixXd y_mat = solver.integrate<Ode1, false>(ode);
   std::vector<std::vector<double> > y1 =
     stan::math::integrate_ode_bdf(f, y0, t0, ts, theta , x_r, x_i);
+  for (size_t i = 0; i < y1.size(); ++i) {
+    for (size_t j = 0; j < y1[0].size(); ++j) {
+      EXPECT_FLOAT_EQ(y_mat(i, j), y1[i][j]);
+      EXPECT_FLOAT_EQ(y[i][j], y1[i][j]);
+    }
+  }
+  y = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts, theta , x_r, x_i);
   for (size_t i = 0; i < y1.size(); ++i) {
     for (size_t j = 0; j < y1[0].size(); ++j) {
       EXPECT_FLOAT_EQ(y[i][j], y1[i][j]);
@@ -47,41 +55,15 @@ TEST_F(TorstenOdeTest_sho, cvodes_ivp_system) {
   PKCvodesService<typename Ode2::Ode> s2(2, 1);
   Ode2 ode2{s2, f, t0, ts, y0, theta, x_r, x_i, msgs};
   y = solver.integrate(ode2);
+  y_mat = solver.integrate<Ode2, false>(ode2);
   y1 = stan::math::integrate_ode_adams(f, y0, t0, ts, theta , x_r, x_i);
   for (size_t i = 0; i < y1.size(); ++i) {
     for (size_t j = 0; j < y1[0].size(); ++j) {
+      EXPECT_FLOAT_EQ(y_mat(i, j), y1[i][j]);
       EXPECT_FLOAT_EQ(y[i][j], y1[i][j]);
     }
   }
-}
-
-TEST_F(TorstenOdeTest_sho, cvodes_ivp_system_return_matrix) {
-  using torsten::dsolve::PKCvodesFwdSystem;
-  using torsten::dsolve::PKCvodesIntegrator;
-  using torsten::dsolve::PKCvodesService;
-  using torsten::PkCvodesSensMethod;
-
-  PKCvodesIntegrator solver(rtol, atol, 1000);
-
-  using Ode1 = PKCvodesFwdSystem<F, double, double, double, CV_BDF, CSDA>;
-  
-  PKCvodesService<typename Ode1::Ode> s1(2, 1);
-  Ode1 ode{s1, f, t0, ts, y0, theta, x_r, x_i, msgs};
-  std::vector<std::vector<double> > y = solver.integrate(ode);
-  std::vector<std::vector<double> > y1 =
-    stan::math::integrate_ode_bdf(f, y0, t0, ts, theta , x_r, x_i);
-  for (size_t i = 0; i < y1.size(); ++i) {
-    for (size_t j = 0; j < y1[0].size(); ++j) {
-      EXPECT_FLOAT_EQ(y[i][j], y1[i][j]);
-    }
-  }
-
-  using Ode2 = PKCvodesFwdSystem<F, double, double, double, CV_ADAMS, CSDA>;
-  
-  PKCvodesService<typename Ode2::Ode> s2(2, 1);
-  Ode2 ode2{s2, f, t0, ts, y0, theta, x_r, x_i, msgs};
-  y = solver.integrate(ode2);
-  y1 = stan::math::integrate_ode_adams(f, y0, t0, ts, theta , x_r, x_i);
+  y = torsten::dsolve::pk_integrate_ode_adams(f, y0, t0, ts, theta , x_r, x_i);
   for (size_t i = 0; i < y1.size(); ++i) {
     for (size_t j = 0; j < y1[0].size(); ++j) {
       EXPECT_FLOAT_EQ(y[i][j], y1[i][j]);
@@ -102,8 +84,16 @@ TEST_F(TorstenOdeTest_lorenz, cvodes_ivp_system) {
   PKCvodesService<typename Ode1::Ode> s1(3, 3);
   Ode1 ode{s1, f, t0, ts, y0, theta, x_r, x_i, msgs};
   std::vector<std::vector<double> > y = solver.integrate(ode);
+  Eigen::MatrixXd y_mat = solver.integrate<Ode1, false>(ode);
   std::vector<std::vector<double> > y1 =
     stan::math::integrate_ode_bdf(f, y0, t0, ts, theta , x_r, x_i);
+  for (size_t i = 0; i < y1.size(); ++i) {
+    for (size_t j = 0; j < y1[0].size(); ++j) {
+      EXPECT_FLOAT_EQ(y_mat(i, j), y1[i][j]);
+      EXPECT_FLOAT_EQ(y[i][j], y1[i][j]);
+    }
+  }
+  y = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts, theta , x_r, x_i);
   for (size_t i = 0; i < y1.size(); ++i) {
     for (size_t j = 0; j < y1[0].size(); ++j) {
       EXPECT_FLOAT_EQ(y[i][j], y1[i][j]);
@@ -115,7 +105,15 @@ TEST_F(TorstenOdeTest_lorenz, cvodes_ivp_system) {
   PKCvodesService<typename Ode2::Ode> s2(3, 3);
   Ode2 ode2{s2, f, t0, ts, y0, theta, x_r, x_i, msgs};
   y = solver.integrate(ode2);
+  y_mat = solver.integrate<Ode2, false>(ode2);
   y1 = stan::math::integrate_ode_adams(f, y0, t0, ts, theta , x_r, x_i);
+  for (size_t i = 0; i < y1.size(); ++i) {
+    for (size_t j = 0; j < y1[0].size(); ++j) {
+      EXPECT_FLOAT_EQ(y_mat(i, j), y1[i][j]);
+      EXPECT_FLOAT_EQ(y[i][j], y1[i][j]);
+    }
+  }
+  y = torsten::dsolve::pk_integrate_ode_adams(f, y0, t0, ts, theta , x_r, x_i);
   for (size_t i = 0; i < y1.size(); ++i) {
     for (size_t j = 0; j < y1[0].size(); ++j) {
       EXPECT_FLOAT_EQ(y[i][j], y1[i][j]);
@@ -153,6 +151,12 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_CSDA) {
 
   test_cvodes_fwd_sens(theta_var, y_a, y1, 1.E-8, 1.E-5);
   test_cvodes_fwd_sens(theta_var, y_b, y2, 1.E-8, 1.E-5);
+
+  Eigen::MatrixXd y_a_mat = solver.integrate<Ode1, false>(ode1);
+  Eigen::MatrixXd y_b_mat = solver.integrate<Ode2, false>(ode2);
+
+  test_cvodes_fwd_sens(theta_var, y_a_mat, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(theta_var, y_b_mat, y2, 1.E-8, 1.E-5);
 }
 
 TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_AD) {
@@ -185,6 +189,18 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_AD) {
 
   test_cvodes_fwd_sens(theta_var, y_a, y1, 1.E-8, 1.E-5);
   test_cvodes_fwd_sens(theta_var, y_b, y2, 1.E-8, 1.E-5);
+
+  y_a = torsten::dsolve::pk_integrate_ode_adams(f, y0, t0, ts, theta_var, x_r, x_i);
+  y_b = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
+
+  test_cvodes_fwd_sens(theta_var, y_a, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(theta_var, y_b, y2, 1.E-8, 1.E-5);
+
+  Eigen::MatrixXd y_a_mat = solver.integrate<Ode1, false>(ode1);
+  Eigen::MatrixXd y_b_mat = solver.integrate<Ode2, false>(ode2);
+
+  test_cvodes_fwd_sens(theta_var, y_a_mat, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(theta_var, y_b_mat, y2, 1.E-8, 1.E-5);
 }
 
 TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0_CSDA) {
@@ -217,6 +233,12 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0_CSDA) {
 
   test_cvodes_fwd_sens(y0_var, y_a, y1, 1.E-8, 1.E-5);
   test_cvodes_fwd_sens(y0_var, y_b, y2, 1.E-8, 1.E-5);
+
+  Eigen::MatrixXd y_a_mat = solver.integrate<Ode1, false>(ode1);
+  Eigen::MatrixXd y_b_mat = solver.integrate<Ode2, false>(ode2);
+
+  test_cvodes_fwd_sens(y0_var, y_a_mat, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(y0_var, y_b_mat, y2, 1.E-8, 1.E-5);
 }
 
 TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0_AD) {
@@ -249,6 +271,18 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0_AD) {
 
   test_cvodes_fwd_sens(y0_var, y_a, y1, 1.E-8, 1.E-5);
   test_cvodes_fwd_sens(y0_var, y_b, y2, 1.E-8, 1.E-5);
+
+  y_a = torsten::dsolve::pk_integrate_ode_adams(f, y0_var, t0, ts, theta, x_r, x_i);
+  y_b = torsten::dsolve::pk_integrate_ode_bdf(f, y0_var, t0, ts, theta, x_r, x_i);
+
+  test_cvodes_fwd_sens(y0_var, y_a, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(y0_var, y_b, y2, 1.E-8, 1.E-5);
+
+  Eigen::MatrixXd y_a_mat = solver.integrate<Ode1, false>(ode1);
+  Eigen::MatrixXd y_b_mat = solver.integrate<Ode2, false>(ode2);
+
+  test_cvodes_fwd_sens(y0_var, y_a_mat, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(y0_var, y_b_mat, y2, 1.E-8, 1.E-5);
 }
 
 TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_y0) {
@@ -284,6 +318,22 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_y0) {
   test_cvodes_fwd_sens(y0_var, y_b, y2, 1.E-8, 1.E-5);
   test_cvodes_fwd_sens(theta_var, y_a, y1, 1.E-8, 1.E-5);
   test_cvodes_fwd_sens(theta_var, y_b, y2, 1.E-8, 1.E-5);
+
+  y_a = torsten::dsolve::pk_integrate_ode_adams(f, y0_var, t0, ts, theta_var, x_r, x_i);
+  y_b = torsten::dsolve::pk_integrate_ode_bdf(f, y0_var, t0, ts, theta_var, x_r, x_i);
+
+  test_cvodes_fwd_sens(y0_var, y_a, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(y0_var, y_b, y2, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(theta_var, y_a, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(theta_var, y_b, y2, 1.E-8, 1.E-5);
+
+  Eigen::MatrixXd y_a_mat = solver.integrate<Ode1, false>(ode1);
+  Eigen::MatrixXd y_b_mat = solver.integrate<Ode2, false>(ode2);
+  std::vector<stan::math::var> vars(y0_var);
+  vars.insert(vars.end(), theta_var.begin(), theta_var.end());
+
+  test_cvodes_fwd_sens(vars, y_a_mat, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(vars, y_b_mat, y2, 1.E-8, 1.E-5);
 }
 
 TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta) {
@@ -316,6 +366,18 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta) {
 
   test_cvodes_fwd_sens(theta_var, y_a, y1, 1.E-8, 1.E-5);
   test_cvodes_fwd_sens(theta_var, y_b, y2, 1.E-8, 1.E-5);
+
+  y_a = torsten::dsolve::pk_integrate_ode_adams(f, y0, t0, ts, theta_var, x_r, x_i);
+  y_b = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
+
+  test_cvodes_fwd_sens(theta_var, y_a, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(theta_var, y_b, y2, 1.E-8, 1.E-5);
+
+  Eigen::MatrixXd y_a_mat = solver.integrate<Ode1, false>(ode1);
+  Eigen::MatrixXd y_b_mat = solver.integrate<Ode2, false>(ode2);
+
+  test_cvodes_fwd_sens(theta_var, y_a_mat, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(theta_var, y_b_mat, y2, 1.E-8, 1.E-5);
 }
 
 TEST_F(TorstenOdeTest_sho, fwd_sensitivity_y0) {
@@ -348,6 +410,18 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_y0) {
 
   test_cvodes_fwd_sens(y0_var, y_a, y1, 1.E-8, 1.E-5);
   test_cvodes_fwd_sens(y0_var, y_b, y2, 1.E-8, 1.E-5);
+
+  y_a = torsten::dsolve::pk_integrate_ode_adams(f, y0_var, t0, ts, theta, x_r, x_i);
+  y_b = torsten::dsolve::pk_integrate_ode_bdf(f, y0_var, t0, ts, theta, x_r, x_i);
+
+  test_cvodes_fwd_sens(y0_var, y_a, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(y0_var, y_b, y2, 1.E-8, 1.E-5);
+
+  Eigen::MatrixXd y_a_mat = solver.integrate<Ode1, false>(ode1);
+  Eigen::MatrixXd y_b_mat = solver.integrate<Ode2, false>(ode2);
+
+  test_cvodes_fwd_sens(y0_var, y_a_mat, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(y0_var, y_b_mat, y2, 1.E-8, 1.E-5);
 }
 
 TEST_F(TorstenOdeTest_sho, fwd_sensitivity_ts) {
@@ -454,6 +528,22 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta_y0) {
   test_cvodes_fwd_sens(y0_var, y_b, y2, 1.E-8, 1.E-5);
   test_cvodes_fwd_sens(theta_var, y_a, y1, 1.E-8, 1.E-5);
   test_cvodes_fwd_sens(theta_var, y_b, y2, 1.E-8, 1.E-5);
+
+  y_a = torsten::dsolve::pk_integrate_ode_adams(f, y0_var, t0, ts, theta_var, x_r, x_i);
+  y_b = torsten::dsolve::pk_integrate_ode_bdf(f, y0_var, t0, ts, theta_var, x_r, x_i);
+
+  test_cvodes_fwd_sens(y0_var, y_a, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(y0_var, y_b, y2, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(theta_var, y_a, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(theta_var, y_b, y2, 1.E-8, 1.E-5);
+
+  Eigen::MatrixXd y_a_mat = solver.integrate<Ode1, false>(ode1);
+  Eigen::MatrixXd y_b_mat = solver.integrate<Ode2, false>(ode2);
+  std::vector<stan::math::var> vars(y0_var);
+  vars.insert(vars.end(), theta_var.begin(), theta_var.end());
+
+  test_cvodes_fwd_sens(vars, y_a_mat, y1, 1.E-8, 1.E-5);
+  test_cvodes_fwd_sens(vars, y_b_mat, y2, 1.E-8, 1.E-5);
 }
 
 TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_y0_ts) {
