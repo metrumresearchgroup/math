@@ -1,3 +1,5 @@
+#ifdef TORSTEN_MPI
+
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
 #include <test/unit/math/rev/mat/fun/util.hpp>
@@ -26,11 +28,7 @@
 
 
 TEST_F(TorstenOdeTest_sho, cvodes_ivp_system_mpi) {
-
   using torsten::dsolve::PKCvodesFwdSystem;
-  using torsten::dsolve::PKCvodesIntegrator;
-  using torsten::dsolve::PKCvodesService;
-  using torsten::PkCvodesSensMethod;
   using stan::math::integrate_ode_bdf;
   using torsten::dsolve::pk_integrate_ode_bdf;
   using std::vector;
@@ -40,6 +38,8 @@ TEST_F(TorstenOdeTest_sho, cvodes_ivp_system_mpi) {
   vector<vector<double> > theta_m {theta, theta};
   vector<vector<double> > x_r_m {x_r, x_r};
   vector<vector<int> > x_i_m {x_i, x_i};
+
+  torsten::mpi::init();
 
   vector<vector<double> > y = integrate_ode_bdf(f, y0, t0, ts, theta , x_r, x_i); // NOLINT
   vector<vector<vector<double> > > y_m = pk_integrate_ode_bdf(f, y0_m, t0, ts_m, theta_m , x_r_m, x_i_m);
@@ -54,3 +54,99 @@ TEST_F(TorstenOdeTest_sho, cvodes_ivp_system_mpi) {
     }
   }
 }
+
+TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_AD_mpi) {
+  using torsten::dsolve::PKCvodesFwdSystem;
+  using torsten::dsolve::pk_integrate_ode_bdf;
+  using stan::math::var;
+  using std::vector;
+
+  torsten::mpi::init();
+
+  std::vector<var> theta_var1 = stan::math::to_var(theta);
+  std::vector<var> theta_var2 = stan::math::to_var(theta);
+  theta_var2[0] = 1.2 * theta_var2[0];
+
+  vector<vector<double> > ts_m {ts, ts};
+  vector<vector<double> > y0_m {y0, y0};
+  vector<vector<var> > theta_var_m {theta_var1, theta_var2};
+  vector<vector<double> > x_r_m {x_r, x_r};
+  vector<vector<int> > x_i_m {x_i, x_i};
+
+  vector<vector<var> > y1 = stan::math::integrate_ode_bdf(f, y0, t0, ts, theta_var1, x_r, x_i);
+  vector<vector<var> > y2 = stan::math::integrate_ode_bdf(f, y0, t0, ts, theta_var2, x_r, x_i);
+  vector<vector<vector<var> > > y_m = pk_integrate_ode_bdf(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
+
+  // y_m[0]
+  for (int j = 0; j < ts.size(); ++j) {
+    for (int k = 0; k < y0.size(); ++k) {
+      EXPECT_FLOAT_EQ(y_m[0][j][k].val(), y1[j][k].val());
+      std::vector<double> g, g1;
+      stan::math::set_zero_all_adjoints();
+      y_m[0][j][k].grad(theta_var1, g);
+      stan::math::set_zero_all_adjoints();
+      y1[j][k].grad(theta_var1, g1);
+      for (int l = 0 ; l < theta.size(); ++l) {
+        EXPECT_NEAR(g[l], g1[l], 1e-7);
+      }
+    }
+  }
+
+  // y_m[1]
+  for (int j = 0; j < ts.size(); ++j) {
+    for (int k = 0; k < y0.size(); ++k) {
+      EXPECT_FLOAT_EQ(y_m[1][j][k].val(), y2[j][k].val());
+      std::vector<double> g, g1;
+      stan::math::set_zero_all_adjoints();
+      y_m[1][j][k].grad(theta_var2, g);
+      stan::math::set_zero_all_adjoints();
+      y2[j][k].grad(theta_var2, g1);
+      for (int l = 0 ; l < theta.size(); ++l) {
+        EXPECT_NEAR(g[l], g1[l], 1e-7);
+      }
+    }
+  }
+}
+
+TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_AD_mpi_performance) {
+  using torsten::dsolve::PKCvodesFwdSystem;
+  using torsten::dsolve::pk_integrate_ode_bdf;
+  using stan::math::var;
+  using std::vector;
+
+  torsten::mpi::init();
+
+  // size of population
+  const int np = 100;
+  std::vector<double> ts0 {ts};
+  ts0.push_back(400);
+
+  vector<var> theta_var = stan::math::to_var(theta);
+
+  vector<vector<double> > ts_m (np, ts0);
+  vector<vector<double> > y0_m (np, y0);
+  vector<vector<var> > theta_var_m (np, theta_var);
+  vector<vector<double> > x_r_m (np, x_r);
+  vector<vector<int> > x_i_m (np, x_i);
+
+  vector<vector<var> > y = stan::math::integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
+  vector<vector<vector<var> > > y_m = pk_integrate_ode_bdf(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
+
+  for (int i = 0; i < np; ++i) {
+    for (int j = 0; j < ts.size(); ++j) {
+      for (int k = 0; k < y0.size(); ++k) {
+        EXPECT_FLOAT_EQ(y_m[i][j][k].val(), y[j][k].val());
+        std::vector<double> g, g1;
+        stan::math::set_zero_all_adjoints();
+        y_m[i][j][k].grad(theta_var, g);
+        stan::math::set_zero_all_adjoints();
+        y[j][k].grad(theta_var, g1);
+        for (int l = 0 ; l < theta.size(); ++l) {
+          EXPECT_NEAR(g[l], g1[l], 1e-7);
+        }
+      }
+    }
+  }
+}
+
+#endif
