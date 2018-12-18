@@ -190,4 +190,43 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_AD_mpi_performance) {
   }
 }
 
+TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_theta_AD_mpi) {
+  using torsten::dsolve::PKCvodesFwdSystem;
+  using torsten::dsolve::pk_integrate_ode_bdf;
+  using stan::math::var;
+  using std::vector;
+
+  torsten::mpi::init();
+
+  // size of population
+  const int np = 100;
+
+  vector<var> theta_var = stan::math::to_var(theta);
+
+  vector<vector<double> > ts_m (np, ts);
+  vector<vector<double> > y0_m (np, y0);
+  vector<vector<var> > theta_var_m (np, theta_var);
+  vector<vector<double> > x_r_m (np, x_r);
+  vector<vector<int> > x_i_m (np, x_i);
+
+  vector<vector<var> > y = stan::math::integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
+  vector<Eigen::Matrix<var, -1, -1> > y_m = pk_integrate_ode_bdf(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
+
+  for (int i = 0; i < np; ++i) {
+    for (int j = 0; j < ts.size(); ++j) {
+      for (int k = 0; k < y0.size(); ++k) {
+        EXPECT_NEAR(y_m[i](j, k).val(), y[j][k].val(), 1.0e-7);
+        std::vector<double> g, g1;
+        stan::math::set_zero_all_adjoints();
+        y_m[i](j, k).grad(theta_var, g);
+        stan::math::set_zero_all_adjoints();
+        y[j][k].grad(theta_var, g1);
+        for (int l = 0 ; l < theta.size(); ++l) {
+          EXPECT_NEAR(g[l], g1[l], 1e-6);
+        }
+      }
+    }
+  }
+}
+
 #endif
