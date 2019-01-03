@@ -37,5 +37,5 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_AD) {
 
   // y1 = stan::math::integrate_ode_adams(f, y0, t0, ts, theta_var, x_r, x_i);
 
-  auto y_a = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts0, theta, x_r, x_i);
+  auto y_a = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts0, theta_var, x_r, x_i);
 }
