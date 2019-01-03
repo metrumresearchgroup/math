@@ -21,7 +21,7 @@
 #include <chrono>
 #include <ctime>
 
-TEST_F(TorstenOdeTest_chem, fwd_sens_theta_performance_bdf) {
+TEST_F(TorstenOdeTest_neutropenia, fwd_sens_theta_performance_bdf) {
   using torsten::dsolve::pk_integrate_ode_adams;
   using torsten::dsolve::pk_integrate_ode_bdf;
   using stan::math::var;

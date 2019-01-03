@@ -21,7 +21,7 @@
 #include <chrono>
 #include <ctime>
 
-TEST_F(TorstenOdeTest_chem, fwd_sens_theta_performance_bdf) {
+TEST_F(TorstenOdeTest_neutropenia, fwd_sens_theta_performance_bdf) {
   using stan::math::var;
 
   std::vector<var> theta_var = stan::math::to_var(theta);
