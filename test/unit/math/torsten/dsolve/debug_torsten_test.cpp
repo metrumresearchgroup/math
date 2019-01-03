@@ -21,21 +21,20 @@
 #include <chrono>
 #include <ctime>
 
-TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_AD) {
-  using torsten::dsolve::PKCvodesSystem;
-  using torsten::dsolve::PKCvodesFwdSystem;
-  using torsten::dsolve::PKCvodesIntegrator;
-  using torsten::dsolve::PKCvodesService;
-  using torsten::PkCvodesSensMethod;
-
+TEST_F(TorstenOdeTest_chem, fwd_sens_theta_performance_bdf) {
+  using torsten::dsolve::pk_integrate_ode_adams;
+  using torsten::dsolve::pk_integrate_ode_bdf;
   using stan::math::var;
 
-  PKCvodesIntegrator solver(rtol, atol, 1e8);
   std::vector<var> theta_var = stan::math::to_var(theta);
-  std::vector<double> ts0(ts);
-  ts0.push_back(400);
+  std::vector<std::vector<var> > y1, y2;
 
-  // y1 = stan::math::integrate_ode_adams(f, y0, t0, ts, theta_var, x_r, x_i);
-
-  auto y_a = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts0, theta_var, x_r, x_i);
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+  std::chrono::duration<double> y1_elapsed, y2_elapsed;
+ 
+  start = std::chrono::system_clock::now();
+  y1 = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
+  end = std::chrono::system_clock::now();
+  y1_elapsed = end - start;
+  std::cout << "torsten solver elapsed time: " << y1_elapsed.count() << "s\n";
 }
