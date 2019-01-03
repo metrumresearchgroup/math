@@ -30,8 +30,11 @@ TEST_F(TorstenOdeTest_chem, fwd_sens_theta_performance_bdf) {
   std::chrono::time_point<std::chrono::system_clock> start, end;
   std::chrono::duration<double> y1_elapsed, y2_elapsed;
  
+  std::vector<double> ts0(ts);
+  ts0.push_back(400);
+
   start = std::chrono::system_clock::now();
-  y2 = stan::math::integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
+  y2 = stan::math::integrate_ode_bdf(f, y0, t0, ts0, theta_var, x_r, x_i);
   end = std::chrono::system_clock::now();
   y2_elapsed = end - start;
   std::cout << "stan    solver elapsed time: " << y2_elapsed.count() << "s\n";

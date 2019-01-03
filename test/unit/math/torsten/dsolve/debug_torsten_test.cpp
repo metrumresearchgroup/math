@@ -29,11 +29,14 @@ TEST_F(TorstenOdeTest_chem, fwd_sens_theta_performance_bdf) {
   std::vector<var> theta_var = stan::math::to_var(theta);
   std::vector<std::vector<var> > y1, y2;
 
+  std::vector<double> ts0(ts);
+  ts0.push_back(400);
+
   std::chrono::time_point<std::chrono::system_clock> start, end;
   std::chrono::duration<double> y1_elapsed, y2_elapsed;
  
   start = std::chrono::system_clock::now();
-  y1 = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
+  y1 = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts0, theta_var, x_r, x_i);
   end = std::chrono::system_clock::now();
   y1_elapsed = end - start;
   std::cout << "torsten solver elapsed time: " << y1_elapsed.count() << "s\n";
