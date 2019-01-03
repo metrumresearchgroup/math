@@ -35,9 +35,7 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_AD) {
   std::vector<double> ts0(ts);
   ts0.push_back(400);
 
-  std::vector<std::vector<var> > y_a, y_b, y1, y2;
-
   // y1 = stan::math::integrate_ode_adams(f, y0, t0, ts, theta_var, x_r, x_i);
 
-  y_a = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts0, theta_var, x_r, x_i);
+  auto y_a = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts0, theta, x_r, x_i);
 }
