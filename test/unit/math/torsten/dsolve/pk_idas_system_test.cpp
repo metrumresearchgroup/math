@@ -23,7 +23,6 @@ void idas_system_test(chemical_kinetics& f, std::vector<int> eq_id,
                       std::vector<TPAR>& theta, N_Vector& res) {
   std::vector<double> x_r(3, 1);
   std::vector<int> x_i(2, 0);
-  double t0 = 0.0;
   std::vector<double> ts{0.1, 0.2, 0.3};
   std::ostream* msgs = 0;
 
