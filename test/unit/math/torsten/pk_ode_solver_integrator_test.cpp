@@ -21,8 +21,8 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver) {
   PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
   PKOdeFunctorRateAdaptor<PKTwoCptODE, double> f1(model0.f());
-  using model_t = PKODEModel<double, double, double, double, PKTwoCptODE, int>;
-  model_t model(t0, y0, rate, model0.par(), model0.f(), model0.ncmt());
+  using model_t = PKODEModel<double, double, double, double, PKTwoCptODE>;
+  model_t model(t0, y0, rate, model0.par(), model0.f());
 
   Eigen::Matrix<torsten::scalar_t<model_t>, Eigen::Dynamic, 1> y;
   std::vector<std::vector<double> > y1;
@@ -82,8 +82,8 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_y0) {
   PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
   PKOdeFunctorRateAdaptor<PKTwoCptODE, double> f1(model0.f());
-  using model_t = PKODEModel<double, double, double, double, PKTwoCptODE, int>;
-  model_t model(t0, y0, rate, model0.par(), model0.f(), model0.ncmt());
+  using model_t = PKODEModel<double, double, double, double, PKTwoCptODE>;
+  model_t model(t0, y0, rate, model0.par(), model0.f());
 
   Eigen::Matrix<torsten::scalar_t<model_t>, Eigen::Dynamic, 1> y;
   std::vector<std::vector<double> > y1;
@@ -145,8 +145,8 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_sens) {
   PKTwoCptModel<double, double, double, var> model0(t0, y0, rate, theta);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
   PKOdeFunctorRateAdaptor<PKTwoCptODE, double> f1(model0.f());
-  using model_t = PKODEModel<double, double, double, var, PKTwoCptODE, int>;
-  model_t model(t0, y0, rate, model0.par(), model0.f(), model0.ncmt());
+  using model_t = PKODEModel<double, double, double, var, PKTwoCptODE>;
+  model_t model(t0, y0, rate, model0.par(), model0.f());
 
   Eigen::Matrix<torsten::scalar_t<model_t>, Eigen::Dynamic, 1> y;
   std::vector<std::vector<torsten::scalar_t<model_t>> > y1;
@@ -221,8 +221,8 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_rate_sens) {
   PKTwoCptModel<double, double, var, var> model0(t0, y0, rate_var, theta);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
   PKOdeFunctorRateAdaptor<PKTwoCptODE, var> f1(model0.f(), theta.size());
-  using model_t = PKODEModel<double, double, var, var, PKTwoCptODE, int>;
-  model_t model(t0, y0, model0.rate(), model0.par(), model0.f(), model0.ncmt()); // NOLINT
+  using model_t = PKODEModel<double, double, var, var, PKTwoCptODE>;
+  model_t model(t0, y0, model0.rate(), model0.par(), model0.f()); // NOLINT
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
 
   Eigen::Matrix<torsten::scalar_t<model_t>, Eigen::Dynamic, 1> y;
