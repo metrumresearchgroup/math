@@ -78,10 +78,9 @@ TEST_F(TorstenPKTwoCptTest, MultipleDoses) {
 
   expect_matrix_eq(amounts, x);
 
-	// Test AutoDiff against FiniteDiff
-  // test_PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
-  //                  pMatrix, biovar, tlag, 1e-8, 1e-4);
-
+  // Test AutoDiff against FiniteDiff
+  test_PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+                   pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
 TEST_F(TorstenPKTwoCptTest, MultipleDoses_population) {
@@ -183,6 +182,26 @@ TEST_F(TorstenPKTwoCptTest, signature) {
   tlag_v[0][1] = 0;  // tlag 2
   tlag_v[0][2] = 0;  // tlag 3
   
+  vector<vector<double> > pMatrix_d(1);
+  pMatrix_d[0].resize(5);
+  pMatrix_d[0][0] = 5;  // CL
+  pMatrix_d[0][1] = 8;  // Q
+  pMatrix_d[0][2] = 20;  // Vc
+  pMatrix_d[0][3] = 70;  // Vp
+  pMatrix_d[0][4] = 1.2;  // ka
+  
+  vector<vector<double> > biovar_d(1);
+  biovar_d[0].resize(3);
+  biovar_d[0][0] = 1;  // F1
+  biovar_d[0][1] = 1;  // F2
+  biovar_d[0][2] = 1;  // F3
+  
+  vector<vector<double> > tlag_d(1);
+  tlag_d[0].resize(3);
+  tlag_d[0][0] = 0;  // tlag 1
+  tlag_d[0][1] = 0;  // tlag 2
+  tlag_d[0][2] = 0;  // tlag 3
+
   Matrix<double, Dynamic, Dynamic> amounts(10, 3);
   amounts << 1000.0, 0.0, 0.0,
              740.818221, 238.3713, 12.75775,
@@ -194,6 +213,9 @@ TEST_F(TorstenPKTwoCptTest, signature) {
              122.456428, 448.8192, 255.23842,
              90.717953, 417.9001, 290.79297,
              8.229747, 200.8720, 441.38985;
+
+  test_PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+                     pMatrix_d, biovar_d, tlag_d, 1e-8, 1e-4);
 
   vector<Matrix<var, Dynamic, Dynamic> > x_122(7);
   x_122[0] = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
@@ -347,12 +369,9 @@ TEST_F(TorstenPKTwoCptTest, signature) {
     for (int j = 0; j < x_221[i].rows(); j++)
       for (int k = 0; k < x_221[i].cols(); k++)
         EXPECT_FLOAT_EQ(amounts(j, k), x_221[i](j, k).val());  
-
-  // CHECK - do I need an AD test for every function signature ?
 }
 
 TEST_F(TorstenPKTwoCptTest, steady_state) {
-// TEST(Torsten, PKModelTwoCpt_SS) {
 
   time[0] = 0.0;
   time[1] = 0.0;
@@ -390,7 +409,6 @@ TEST_F(TorstenPKTwoCptTest, steady_state) {
 
 
 TEST_F(TorstenPKTwoCptTest, steady_state_rate) {
-// TEST(Torsten, PKModelTwoCpt_SS_rate) {
   time[0] = 0.0;
   time[1] = 0.0;
   for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
@@ -428,74 +446,74 @@ TEST_F(TorstenPKTwoCptTest, steady_state_rate) {
 TEST(TorstenPKTwoCpt, events_specific_data) {
 
   int nEvent = 11;
-	vector<vector<double> > pMatrix(nEvent);
-	for (int i = 0; i < nEvent; i++) {
-	  pMatrix[i].resize(5);
-	  if (i < 6) pMatrix[i][0] = 5; // CL
-	  else pMatrix[i][0] = 50;  // CL is piece-wise constant
-	  pMatrix[i][1] = 8;  // Q
-	  pMatrix[i][2] = 20;  // Vc
-	  pMatrix[i][3] = 70;  // Vp
-	  pMatrix[i][4] = 1.2;  // ka
-	}
+  vector<vector<double> > pMatrix(nEvent);
+  for (int i = 0; i < nEvent; i++) {
+    pMatrix[i].resize(5);
+    if (i < 6) pMatrix[i][0] = 5; // CL
+    else pMatrix[i][0] = 50;  // CL is piece-wise constant
+    pMatrix[i][1] = 8;  // Q
+    pMatrix[i][2] = 20;  // Vc
+    pMatrix[i][3] = 70;  // Vp
+    pMatrix[i][4] = 1.2;  // ka
+  }
 	
-	vector<vector<double> > biovar(1);
-	biovar[0].resize(3);
-	biovar[0][0] = 1;  // F1
-	biovar[0][1] = 1;  // F2
-	biovar[0][2] = 1;  // F3
+  vector<vector<double> > biovar(1);
+  biovar[0].resize(3);
+  biovar[0][0] = 1;  // F1
+  biovar[0][1] = 1;  // F2
+  biovar[0][2] = 1;  // F3
 	
-	vector<vector<double> > tlag(1);
-	tlag[0].resize(3);
-	tlag[0][0] = 0;  // tlag1
-	tlag[0][1] = 0;  // tlag2
-	tlag[0][2] = 0;  // tlag3
+  vector<vector<double> > tlag(1);
+  tlag[0].resize(3);
+  tlag[0][0] = 0;  // tlag1
+  tlag[0][1] = 0;  // tlag2
+  tlag[0][2] = 0;  // tlag3
 
-	vector<double> time(nEvent);
-	time[0] = 0.0;
-	for(int i = 1; i < nEvent; i++) time[i] = time[i - 1] + 2.5;
+  vector<double> time(nEvent);
+  time[0] = 0.0;
+  for(int i = 1; i < nEvent; i++) time[i] = time[i - 1] + 2.5;
 
-	vector<double> amt(nEvent, 0);
-	amt[0] = 1000;
+  vector<double> amt(nEvent, 0);
+  amt[0] = 1000;
 
-	vector<double> rate(nEvent, 0);
+  vector<double> rate(nEvent, 0);
 
-	vector<int> cmt(nEvent, 2);
-	cmt[0] = 1;
+  vector<int> cmt(nEvent, 2);
+  cmt[0] = 1;
 
-	vector<int> evid(nEvent, 0);
-	evid[0] = 1;
+  vector<int> evid(nEvent, 0);
+  evid[0] = 1;
 
-	vector<double> ii(nEvent, 0);
-	ii[0] = 12;
+  vector<double> ii(nEvent, 0);
+  ii[0] = 12;
 
-	vector<int> addl(nEvent, 0);
-	addl[0] = 1;
+  vector<int> addl(nEvent, 0);
+  addl[0] = 1;
 
-	vector<int> ss(nEvent, 0);
+  vector<int> ss(nEvent, 0);
 
-	Matrix<double, Dynamic, Dynamic> x;
-	x = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
-                   pMatrix, biovar, tlag);
+  Matrix<double, Dynamic, Dynamic> x;
+  x = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+                             pMatrix, biovar, tlag);
 
-	Matrix<double, Dynamic, Dynamic> amounts(nEvent, 3);
-	amounts << 1.000000e+03,   0.000000,   0.0000,
-			   4.978707e+01, 352.089056, 349.4148,
-			   2.478752e+00, 146.871246, 458.3010,
-			   1.234098e-01,  93.537648, 442.6420,
-			   6.144212e-03,  77.732083, 405.7800,
-			   5.488119e+02, 449.105589, 412.0337,
-			   2.732374e+01,  36.675537, 430.0023,
-			   1.360369e+00,  14.886990, 341.6754,
-			   6.772877e-02,  10.966107, 267.7033,
-			   3.372017e-03,   8.549649, 209.5604,
-			   1.678828e-04,   6.690631, 164.0364;
+  Matrix<double, Dynamic, Dynamic> amounts(nEvent, 3);
+  amounts << 1.000000e+03,   0.000000,   0.0000,
+    4.978707e+01, 352.089056, 349.4148,
+    2.478752e+00, 146.871246, 458.3010,
+    1.234098e-01,  93.537648, 442.6420,
+    6.144212e-03,  77.732083, 405.7800,
+    5.488119e+02, 449.105589, 412.0337,
+    2.732374e+01,  36.675537, 430.0023,
+    1.360369e+00,  14.886990, 341.6754,
+    6.772877e-02,  10.966107, 267.7033,
+    3.372017e-03,   8.549649, 209.5604,
+    1.678828e-04,   6.690631, 164.0364;
 
-	expect_matrix_eq(amounts, x);
+  expect_matrix_eq(amounts, x);
 
-	// Test AutoDiff against FiniteDiff
+  // Test AutoDiff against FiniteDiff
   test_PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
-                    pMatrix, biovar, tlag, 1e-8, 1e-4);
+                     pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
 TEST_F(TorstenPKTwoCptTest, Rate) {
