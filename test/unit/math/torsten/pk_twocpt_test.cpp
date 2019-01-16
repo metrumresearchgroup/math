@@ -3,7 +3,10 @@
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
 #include <test/unit/math/torsten/pk_twocpt_test_fixture.hpp>
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
+#include <test/unit/math/torsten/test_util.hpp>
 #include <stan/math/torsten/PKModelTwoCpt.hpp>
+#include <stan/math/torsten/generalOdeModel_bdf.hpp>
+#include <stan/math/torsten/generalOdeModel_rk45.hpp>
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_twocpt_model.hpp>
 #include <gtest/gtest.h>
@@ -15,7 +18,7 @@ using std::vector;
 using Eigen::Matrix;
 using Eigen::Dynamic;
 
-TEST_F(TorstenPKTwoCptTest, MultipleDoses) {
+TEST_F(TorstenPKTwoCptTest, multiple_bolus_doses) {
   Matrix<double, Dynamic, Dynamic> x;
   x = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                              pMatrix, biovar, tlag);
@@ -37,9 +40,53 @@ TEST_F(TorstenPKTwoCptTest, MultipleDoses) {
   // Test AutoDiff against FiniteDiff
   test_PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                    pMatrix, biovar, tlag, 1e-8, 1e-4);
+
+  
+  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
+  Matrix<double, Dynamic, Dynamic> x1 =
+    torsten::generalOdeModel_bdf(model_t::f_,
+                                 model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
+  torsten::test::test_val(x, x1);
+
+  {
+    auto pMatrix_v = torsten::test::to_var(pMatrix);
+    Matrix<stan::math::var, Dynamic, Dynamic> x = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+                                                                         pMatrix_v, biovar, tlag);
+    Matrix<stan::math::var, Dynamic, Dynamic> y = torsten::generalOdeModel_bdf(model_t::f_,
+                                                                               model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+    for (size_t i = 0; i < pMatrix.size(); ++i) {
+      torsten::test::test_grad(pMatrix_v[i], x, y, 1.E-5, 1.E-4);
+    }
+  }
+
 }
 
-TEST_F(TorstenPKTwoCptTest, MultipleDoses_population) {
+TEST_F(TorstenPKTwoCptTest, multiple_addl_IV_doses) {
+  rate[0] = 300.0;
+  for (int i = 0; i < np; ++i) {
+    rate_m[i] = rate;
+  }
+
+  // Test AutoDiff against FiniteDiff
+  test_PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+                   pMatrix, biovar, tlag, 1e-8, 2e-4);
+}
+
+TEST_F(TorstenPKTwoCptTest, multiple_IV_doses) {
+  rate[0] = 300.0;
+  rate[2] = 300.0;
+  addl[0] = 0;
+  for (int i = 0; i < np; ++i) {
+    rate_m[i] = rate;
+    addl_m[i] = addl;
+  }
+
+  // Test AutoDiff against FiniteDiff
+  test_PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+                   pMatrix, biovar, tlag, 1e-8, 2e-4);
+}
+
+TEST_F(TorstenPKTwoCptTest, multiple_bolus_doses_population) {
   std::vector<Matrix<double, Dynamic, Dynamic> > x;
   x = torsten::PKModelTwoCpt(time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m,
                              pMatrix_m, biovar_m, tlag_m);
@@ -58,10 +105,10 @@ TEST_F(TorstenPKTwoCptTest, MultipleDoses_population) {
 
   for (int i = 0; i < np; ++i) {
     expect_matrix_eq(amounts, x[i]);    
- }
+  }
 }
 
-TEST_F(TorstenPKTwoCptTest, MultipleDoses_overload) {
+TEST_F(TorstenPKTwoCptTest, multiple_bolus_doses_overload) {
   Matrix<double, Dynamic, Dynamic> x_122, x_112, x_111, x_121, x_212,
     x_211, x_221;
   x_122 = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,

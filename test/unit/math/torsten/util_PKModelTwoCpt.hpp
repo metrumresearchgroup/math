@@ -135,7 +135,7 @@ void test_PKModelTwoCpt_finite_diff_vdd(
   ode_res = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                           pMatrix_v, biovar, tlag);
 
-  int nCmt = 2;
+  int nCmt = 3;
   size_t nEvent = time.size();
 
   vector<double> grads_eff(nEvent * nCmt);

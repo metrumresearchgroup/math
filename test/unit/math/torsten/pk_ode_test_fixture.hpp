@@ -4,6 +4,7 @@
 #include <stan/math/rev/mat.hpp>
 #include <gtest/gtest.h>
 #include <boost/numeric/odeint.hpp>
+#include <test/unit/math/torsten/test_util.hpp>
 #include <stan/math/torsten/dsolve/pk_cvodes_fwd_system.hpp>
 #include <stan/math/torsten/dsolve/pk_cvodes_integrator.hpp>
 #include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
@@ -84,33 +85,11 @@ struct TorstenOdeTest : public testing::Test {
   }
 
   void test_cvodes_fwd_sens(std::vector<stan::math::var>& theta,
-                            std::vector<
-                            std::vector<stan::math::var>>& pk_y,
-                            std::vector<
-                            std::vector<stan::math::var>>& stan_y,
+                            std::vector<std::vector<stan::math::var>>& pk_y,
+                            std::vector<std::vector<stan::math::var>>& stan_y,
                             double fval_eps,
                             double sens_eps) {
-    EXPECT_EQ(pk_y.size(), stan_y.size());
-    EXPECT_EQ(pk_y[0].size(), stan_y[0].size());
-
-    for (size_t i = 0; i < pk_y.size(); ++i) {
-      for (size_t j = 0; j < pk_y[0].size(); ++j) {
-        EXPECT_NEAR(pk_y[i][j].val(), stan_y[i][j].val(), fval_eps);
-      }
-    }
-
-    std::vector<double> g, g1;
-    for (size_t i = 0; i < pk_y.size(); ++i) {
-      for (size_t j = 0; j < pk_y[0].size(); ++j) {
-        stan::math::set_zero_all_adjoints();
-        pk_y[i][j].grad(theta, g);
-        stan::math::set_zero_all_adjoints();
-        stan_y[i][j].grad(theta, g1);
-        for (size_t m = 0; m < g.size(); ++m) {
-          EXPECT_NEAR(g[m], g1[m], sens_eps);
-        }
-      }
-    }
+    torsten::test::test_grad(theta, pk_y, stan_y, fval_eps, sens_eps);
   }
 
   void test_cvodes_fwd_sens(std::vector<stan::math::var>& theta,
