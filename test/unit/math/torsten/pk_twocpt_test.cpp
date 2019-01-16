@@ -1,6 +1,7 @@
 #include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
+#include <test/unit/math/torsten/pk_twocpt_test_fixture.hpp>
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
 #include <stan/math/torsten/PKModelTwoCpt.hpp>
 #include <stan/math/torsten/pk_onecpt_model.hpp>
@@ -13,51 +14,6 @@
 using std::vector;
 using Eigen::Matrix;
 using Eigen::Dynamic;
-
-class TorstenPKTwoCptTest : public testing::Test {
-  void SetUp() {
-    // make sure memory's clean before starting each test
-    stan::math::recover_memory();
-  }
-public:
-  TorstenPKTwoCptTest() :
-    pMatrix{ {5, 8, 20, 70, 1.2 } },
-    nCmt(2),
-    biovar{ { 1, 1, 1 } },
-    tlag{ { 0, 0, 0 } },
-    time(10, 0.0),
-    amt(10, 0),
-    rate(10, 0),
-    cmt(10, 3),
-    evid(10, 0),
-    ii(10, 0),
-    addl(10, 0),
-    ss(10, 0)
-  {
-    time[0] = 0;
-    for(int i = 1; i < 9; i++) time[i] = time[i - 1] + 0.25;
-    time[9] = 4.0;
-    amt[0] = 1000;
-    cmt[0] = 1;    
-    evid[0] = 1;
-    ii[0] = 12;
-    addl[0] = 14;
-    SetUp();
-  }
-
-  vector<vector<double> > pMatrix;  // CL, VC, Ka
-  const int nCmt;  // F1, F2
-  vector<vector<double> > biovar;
-  vector<vector<double> > tlag;
-  vector<double> time;
-  vector<double> amt;
-  vector<double> rate;
-  vector<int> cmt;
-  vector<int> evid;
-  vector<double> ii;
-  vector<int> addl;
-  vector<int> ss;
-};
 
 TEST_F(TorstenPKTwoCptTest, MultipleDoses) {
   Matrix<double, Dynamic, Dynamic> x;
@@ -84,20 +40,7 @@ TEST_F(TorstenPKTwoCptTest, MultipleDoses) {
 }
 
 TEST_F(TorstenPKTwoCptTest, MultipleDoses_population) {
-  const int np = 10;
   std::vector<Matrix<double, Dynamic, Dynamic> > x;
-  std::vector<std::vector<vector<double > > > pMatrix_m(np, pMatrix );
-  std::vector<std::vector<vector<double > > > biovar_m (np, biovar  );
-  std::vector<std::vector<vector<double > > > tlag_m   (np, tlag    );
-  std::vector<std::vector<double        > >   time_m   (np, time    );
-  std::vector<std::vector<double        > >   amt_m    (np, amt     );
-  std::vector<std::vector<double        > >   rate_m   (np, rate    );
-  std::vector<std::vector<int           > >   cmt_m    (np, cmt     );
-  std::vector<std::vector<int           > >   evid_m   (np, evid    );
-  std::vector<std::vector<double        > >   ii_m     (np, ii      );
-  std::vector<std::vector<int           > >   addl_m   (np, addl    );
-  std::vector<std::vector<int           > >   ss_m     (np, ss      );
-
   x = torsten::PKModelTwoCpt(time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m,
                              pMatrix_m, biovar_m, tlag_m);
 
