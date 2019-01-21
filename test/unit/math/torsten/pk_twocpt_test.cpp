@@ -193,6 +193,21 @@ TEST_F(TorstenPKTwoCptTest, multiple_bolus_doses_population) {
   for (int i = 0; i < np; ++i) {
     expect_matrix_eq(amounts, x[i]);    
   }
+
+  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
+
+  {
+    vector<vector<vector<var> > > pMatrix_m_v(pMatrix_m.size());
+    vector<vector<var> > pMatrix_v = torsten::test::to_var(pMatrix);
+    for (size_t i = 0; i < pMatrix_m.size(); ++i) {
+      pMatrix_m_v[i] = torsten::test::to_var(pMatrix_m[i]);
+    }
+    vector<Matrix<var, Dynamic, Dynamic> > x_m = torsten::PKModelTwoCpt(time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, pMatrix_m_v, biovar_m, tlag_m); // NOLINT
+    Matrix<var, Dynamic, Dynamic> x = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+    for (size_t i = 0; i < time_m.size(); ++i) {
+      torsten::test::test_grad(pMatrix_m_v[i][0], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
+    }
+  }
 }
 
 TEST_F(TorstenPKTwoCptTest, multiple_bolus_doses_overload) {

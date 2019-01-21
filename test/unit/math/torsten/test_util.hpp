@@ -12,18 +12,29 @@
 
 namespace torsten {
   namespace test {
-    std::vector<std::vector<stan::math::var> > to_var(const std::vector<std::vector<double> >& d)
+    template<typename T>
+    std::vector<std::vector<stan::math::var> > to_var(const std::vector<std::vector<T> >& d)
     {
       std::vector<std::vector<stan::math::var> > res(d.size());
       for (size_t i = 0; i < d.size(); ++i) {
         res[i].resize(d[i].size());
         for (size_t j = 0; j < d[i].size(); ++j) {
-          res[i][j] = d[i][j];
+          res[i][j] = stan::math::value_of(d[i][j]);
         }
       }
       return res;
     }
     
+    template<typename T>
+    std::vector<stan::math::var> to_var(const std::vector<T>& d)
+    {
+      std::vector<stan::math::var> res(d.size());
+      for (size_t i = 0; i < d.size(); ++i) {
+        res[i] = stan::math::value_of(d[i]);
+      }
+      return res;
+    }
+
     /*
      * Test @c std::vector<var> results between two results. 
      * An example use would be to have the results coming from torsten
@@ -108,6 +119,54 @@ namespace torsten {
     }
 
     /*
+     * Test @c std::vector<var> results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param theta1 parameters regarding which the gradient
+     *              would be taken by @c y1 and checked.
+     * @param theta2 parameters regarding which the gradient
+     *              would be taken by @c y2 and checked.
+     * @param pk_y one result
+     * @param stan_y the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     * @param fval_esp tolerance of values
+     * @param sens_esp tolerance of gradients
+     */
+    void test_grad(std::vector<stan::math::var>& theta1,
+                   std::vector<stan::math::var>& theta2,
+                   std::vector<std::vector<stan::math::var>>& y1,
+                   std::vector<std::vector<stan::math::var>>& y2,
+                   double fval_eps,
+                   double sens_eps) {
+      EXPECT_EQ(theta1.size(), theta2.size());
+      EXPECT_EQ(y1.size(), y2.size());
+      for (size_t i = 0; i < y1.size(); ++i) {
+        EXPECT_EQ(y1[i].size(), y2[i].size());
+      }
+
+      for (size_t i = 0; i < y1.size(); ++i) {
+        for (size_t j = 0; j < y1[i].size(); ++j) {
+          EXPECT_NEAR(y1[i][j].val(), y2[i][j].val(), fval_eps);
+        }
+      }
+
+      std::vector<double> g, g1;
+      for (size_t i = 0; i < y1.size(); ++i) {
+        for (size_t j = 0; j < y1[i].size(); ++j) {
+          stan::math::set_zero_all_adjoints();
+          y1[i][j].grad(theta1, g);
+          stan::math::set_zero_all_adjoints();
+          y2[i][j].grad(theta2, g1);
+          for (size_t m = 0; m < theta1.size(); ++m) {
+            EXPECT_NEAR(g[m], g1[m], sens_eps);
+          }
+        }
+      }
+    }
+
+    /*
      * Test @c std::vector<var> results between two results. 
      * An example use would be to have the results coming from torsten
      * and stan, respectively, so ensure the soundness of
@@ -140,6 +199,46 @@ namespace torsten {
         stan::math::set_zero_all_adjoints();
         stan_y(i).grad(theta, g1);
         for (size_t m = 0; m < theta.size(); ++m) {
+          EXPECT_NEAR(g[m], g1[m], sens_eps);
+        }
+      }
+    }
+
+    /*
+     * Test @c std::vector<var> results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param theta parameters regarding which the gradient
+     *              would be taken and checked.
+     * @param pk_y one result
+     * @param stan_y the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     * @param fval_esp tolerance of values
+     * @param sens_esp tolerance of gradients
+     */
+    void test_grad(std::vector<stan::math::var>& theta1,
+                   std::vector<stan::math::var>& theta2,
+                   Eigen::Matrix<stan::math::var, -1, -1>& y1,
+                   Eigen::Matrix<stan::math::var, -1, -1>& y2,
+                   double fval_eps,
+                   double sens_eps) {
+      EXPECT_EQ(theta1.size(), theta2.size());
+      EXPECT_EQ(y1.rows(), y2.rows());
+      EXPECT_EQ(y1.cols(), y2.cols());
+
+      for (int i = 0; i < y1.size(); ++i) {
+        EXPECT_NEAR(y1(i).val(), y2(i).val(), fval_eps);
+      }
+
+      std::vector<double> g, g1;
+      for (int i = 0; i < y1.size(); ++i) {
+        stan::math::set_zero_all_adjoints();
+        y1(i).grad(theta1, g);
+        stan::math::set_zero_all_adjoints();
+        y2(i).grad(theta2, g1);
+        for (size_t m = 0; m < theta1.size(); ++m) {
           EXPECT_NEAR(g[m], g1[m], sens_eps);
         }
       }

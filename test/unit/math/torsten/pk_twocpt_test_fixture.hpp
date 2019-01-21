@@ -27,7 +27,7 @@ public:
     pMatrix{ {5, 8, 20, 70, 1.2 } },
     biovar{ { 1, 1, 1 } },
     tlag{ { 0, 0, 0 } },
-    np(10),
+    np(200),
     time_m   (np),
     amt_m    (np),
     rate_m   (np),
