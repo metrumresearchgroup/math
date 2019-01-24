@@ -45,19 +45,21 @@ namespace torsten {
      * @param y2 the other result to be compared against
      *              with, must of same shape and size as to @c pk_y
      */
-    void test_val(std::vector<std::vector<double>>& y1,
-                  std::vector<std::vector<double>>& y2) {
+    template<typename T1, typename T2>
+    void test_val(std::vector<std::vector<T1>>& y1,
+                  std::vector<std::vector<T2>>& y2) {
+      using stan::math::value_of;
       EXPECT_EQ(y1.size(), y2.size());
       for (size_t i = 0; i < y1.size(); ++i) {
         EXPECT_EQ(y1[i].size(), y2[i].size());
         for (size_t j = 0; j < y1[i].size(); ++j) {
-          EXPECT_FLOAT_EQ(y1[i][j], y2[i][j]);
+          EXPECT_FLOAT_EQ(value_of(y1[i][j]), value_of(y2[i][j]));
         }
       }
     }
 
     /*
-     * Test @c std::vector<var> results between two results. 
+     * Test @c MatrixXd results between two results.
      * An example use would be to have the results coming from torsten
      * and stan, respectively, so ensure the soundness of
      * torsten results.
@@ -66,9 +68,49 @@ namespace torsten {
      * @param y2 the other result to be compared against
      *              with, must of same shape and size as to @c pk_y
      */
-    void test_val(Eigen::MatrixXd& y1, Eigen::MatrixXd& y2) {
+    template<typename T1, typename T2>
+    void test_val(Eigen::Matrix<T1, -1, -1>& y1,
+                  Eigen::Matrix<T2, -1, -1>& y2) {
+      using stan::math::value_of;
       EXPECT_EQ(y1.rows(), y2.rows());
       EXPECT_EQ(y1.cols(), y2.cols());
+      for (int i = 0; i < y1.size(); ++i) {
+        EXPECT_FLOAT_EQ(value_of(y1(i)), value_of(y2(i)));
+      }
+    }
+
+    /*
+     * Test @c MatrixXd results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     */
+    template<typename T1, typename T2>
+    void test_val(Eigen::Matrix<T1, -1, 1>& y1,
+                  Eigen::Matrix<T2, -1, 1>& y2) {
+      using stan::math::value_of;
+      EXPECT_EQ(y1.size(), y2.size());
+      for (int i = 0; i < y1.size(); ++i) {
+        EXPECT_FLOAT_EQ(value_of(y1(i)), value_of(y2(i)));
+      }
+    }
+
+    /*
+     * Test @c VectorXd results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     */
+    void test_val(Eigen::VectorXd& y1, Eigen::VectorXd& y2) {
+      EXPECT_EQ(y1.size(), y2.size());
       for (int i = 0; i < y1.size(); ++i) {
         EXPECT_FLOAT_EQ(y1(i), y2(i));
       }
@@ -187,6 +229,43 @@ namespace torsten {
                    double sens_eps) {
       EXPECT_EQ(pk_y.rows(), stan_y.rows());
       EXPECT_EQ(pk_y.cols(), stan_y.cols());
+
+      for (int i = 0; i < pk_y.size(); ++i) {
+        EXPECT_NEAR(pk_y(i).val(), stan_y(i).val(), fval_eps);
+      }
+
+      std::vector<double> g, g1;
+      for (int i = 0; i < pk_y.size(); ++i) {
+        stan::math::set_zero_all_adjoints();
+        pk_y(i).grad(theta, g);
+        stan::math::set_zero_all_adjoints();
+        stan_y(i).grad(theta, g1);
+        for (size_t m = 0; m < theta.size(); ++m) {
+          EXPECT_NEAR(g[m], g1[m], sens_eps);
+        }
+      }
+    }
+
+    /*
+     * Test @c std::vector<var> results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param theta parameters regarding which the gradient
+     *              would be taken and checked.
+     * @param pk_y one result
+     * @param stan_y the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     * @param fval_esp tolerance of values
+     * @param sens_esp tolerance of gradients
+     */
+    void test_grad(std::vector<stan::math::var>& theta,
+                   stan::math::vector_v& pk_y,
+                   stan::math::vector_v& stan_y,
+                   double fval_eps,
+                   double sens_eps) {
+      EXPECT_EQ(pk_y.size(), stan_y.size());
 
       for (int i = 0; i < pk_y.size(); ++i) {
         EXPECT_NEAR(pk_y(i).val(), stan_y(i).val(), fval_eps);
