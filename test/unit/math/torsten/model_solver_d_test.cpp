@@ -305,284 +305,233 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_amt_ii_var_ss) {
   torsten::test::test_grad(vars, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-// TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_data_only) {
-//   using torsten::EventsManager;
+TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_data_only) {
+  using torsten::EventsManager;
 
-//   using refactor::PKTwoCptModel;
-//   using refactor::PKTwoCptODE;
-//   using refactor::PkOdeIntegrator;
+  using refactor::PKTwoCptModel;
+  using refactor::PKTwoCptODE;
+  using refactor::PkOdeIntegrator;
 
-//   const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-//   PKTwoCptODE f;
+  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
+  PKTwoCptODE f;
 
-//   using model_t = refactor::PKODEModel<double, double, double, double, PKTwoCptODE>;
-//   PkOdeIntegrator<torsten::StanRk45> integrator;
+  using model_t = refactor::PKODEModel<double, double, double, double, PKTwoCptODE>;
+  PkOdeIntegrator<torsten::StanRk45> integrator;
 
-//   refactor::PKRec<double> init(ncmt);
-//   init << 0, 100, 0;
+  refactor::PKRec<double> init(ncmt);
+  init << 0, 100, 0;
 
-//   double t = time[1], dt = 0.1;
-//   std::vector<double> rate{1000., 0., 0.};
+  double t = time[1], dt = 0.1;
+  std::vector<double> rate{1000., 0., 0.};
 
-//   model_t model(t, init, rate, pMatrix[0], f);
+  model_t model(t, init, rate, pMatrix[0], f);
   
-//   Eigen::VectorXd sol1 = model.solve(dt, integrator);
-//   Eigen::VectorXd sol2 = ModelSolverDispatcher<true, false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
-//   Eigen::VectorXd sol3 = ModelSolverDispatcher<false, false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
+  Eigen::VectorXd sol1 = model.solve(dt, integrator);
+  Eigen::VectorXd sol2 = model.solve_d(dt, integrator);
+
+  torsten::test::test_val(sol1, sol2);
+}
+
+TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_init_var) {
+  using torsten::EventsManager;
+  using refactor::PKTwoCptModel;
+  using refactor::PKTwoCptODE;
+  using refactor::PkOdeIntegrator;
+  using stan::math::var;
+  using stan::math::vector_v;
+
+  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
+  PKTwoCptODE f;
+
+  using model_t = refactor::PKODEModel<double, var, double, double, PKTwoCptODE>;
+  PkOdeIntegrator<torsten::StanRk45> integrator;
+
+  refactor::PKRec<var> init(ncmt);
+  init << 0, 100, 0;
+
+  double t = time[1], dt = 0.1;
+  std::vector<double> rate{1000., 0., 0.};
+
+  model_t model(t, init, rate, pMatrix[0], f);
+  std::vector<var> vars(model.vars(dt));
+  EXPECT_EQ(vars.size(), init.size());
   
-//   torsten::test::test_val(sol1, sol2);
-//   torsten::test::test_val(sol1, sol3);
-// }
-
-// TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_init_var) {
-//   using torsten::EventsManager;
-
-//   using refactor::PKTwoCptModel;
-//   using refactor::PKTwoCptODE;
-//   using refactor::PkOdeIntegrator;
-//   using stan::math::var;
-//   using stan::math::vector_v;
-
-//   const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-//   PKTwoCptODE f;
-
-//   using model_t = refactor::PKODEModel<double, var, double, double, PKTwoCptODE>;
-//   PkOdeIntegrator<torsten::StanRk45> integrator;
-
-//   refactor::PKRec<var> init(ncmt);
-//   init << 0, 100, 0;
-
-//   double t = time[1], dt = 0.1;
-//   std::vector<double> rate{1000., 0., 0.};
-
-//   model_t model(t, init, rate, pMatrix[0], f);
-//   std::vector<var> vars(model.vars(dt));
-//   EXPECT_EQ(vars.size(), init.size());
+  vector_v sol1 = model.solve(dt, integrator);
+  Eigen::VectorXd sol2_d = model.solve_d(dt, integrator);
+  vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   
-//   vector_v sol1 = model.solve(dt, integrator);
-//   vector_v sol2 = ModelSolverDispatcher<true, false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
-//   Eigen::VectorXd sol3_d = ModelSolverDispatcher<false, false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
-//   vector_v sol3 = torsten::mpi::precomputed_gradients(sol3_d, vars);
+  // vars and init should be pointing to the same @c vari
+  torsten::test::test_grad(vars, init, sol1, sol2, 1.E-8, 1.E-5);
+}
+
+TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_rate_var) {
+  using torsten::EventsManager;
+  using refactor::PKTwoCptModel;
+  using refactor::PKTwoCptODE;
+  using refactor::PkOdeIntegrator;
+  using stan::math::var;
+  using stan::math::vector_v;
+
+  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
+  PKTwoCptODE f;
+
+  using model_t = refactor::PKODEModel<double, double, var, double, PKTwoCptODE>;
+  PkOdeIntegrator<torsten::StanRk45> integrator;
+
+  refactor::PKRec<double> init(ncmt);
+  init << 0, 100, 0;
+
+  double t = time[1], dt = 0.1;
+  std::vector<var> rate{1000., 0., 0.};
+
+  std::vector<double>& par = pMatrix[0];
+  model_t model(t, init, rate, par, f);
+  std::vector<var> vars(model.vars(dt));
+  std::vector<var> par_rate;
+  par_rate.insert(par_rate.end(), par.begin(), par.end());
+  par_rate.insert(par_rate.end(), rate.begin(), rate.end());
+  EXPECT_EQ(vars.size(), par_rate.size());
   
-//   // vars and init should be pointing to the same @c vari
-//   torsten::test::test_grad(vars, init, sol1, sol2, 1.E-8, 1.E-5);
-//   torsten::test::test_grad(vars, init, sol1, sol3, 1.E-8, 1.E-5);
-// }
-
-// TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_rate_var) {
-//   using torsten::EventsManager;
-
-//   using refactor::PKTwoCptModel;
-//   using refactor::PKTwoCptODE;
-//   using refactor::PkOdeIntegrator;
-//   using stan::math::var;
-//   using stan::math::vector_v;
-
-//   const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-//   PKTwoCptODE f;
-
-//   using model_t = refactor::PKODEModel<double, double, var, double, PKTwoCptODE>;
-//   PkOdeIntegrator<torsten::StanRk45> integrator;
-
-//   refactor::PKRec<double> init(ncmt);
-//   init << 0, 100, 0;
-
-//   double t = time[1], dt = 0.1;
-//   std::vector<var> rate{1000., 0., 0.};
-
-//   std::vector<double>& par = pMatrix[0];
-//   model_t model(t, init, rate, par, f);
-//   std::vector<var> vars(model.vars(dt));
-//   std::vector<var> par_rate;
-//   par_rate.insert(par_rate.end(), par.begin(), par.end());
-//   par_rate.insert(par_rate.end(), rate.begin(), rate.end());
-//   EXPECT_EQ(vars.size(), par_rate.size());
+  vector_v sol1 = model.solve(dt, integrator);
+  Eigen::VectorXd sol2_d = model.solve_d(dt, integrator);
+  vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   
-//   vector_v sol1 = model.solve(dt, integrator);
-//   vector_v sol2 = ModelSolverDispatcher<true, false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
-//   Eigen::VectorXd sol3_d = ModelSolverDispatcher<false, false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
-//   vector_v sol3 = torsten::mpi::precomputed_gradients(sol3_d, vars);
+  // vars and init should be pointing to the same @c vari
+  torsten::test::test_grad(vars, par_rate, sol1, sol2, 1.E-8, 1.E-5);
+}
+
+TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_par_var) {
+  using torsten::EventsManager;
+  using refactor::PKTwoCptModel;
+  using refactor::PKTwoCptODE;
+  using refactor::PkOdeIntegrator;
+  using stan::math::var;
+  using stan::math::vector_v;
+
+  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
+  PKTwoCptODE f;
+
+  using model_t = refactor::PKODEModel<double, double, double, var, PKTwoCptODE>;
+  PkOdeIntegrator<torsten::StanRk45> integrator;
+
+  refactor::PKRec<double> init(ncmt);
+  init << 0, 100, 0;
+
+  double t = time[1], dt = 0.1;
+  std::vector<double> rate{1000., 0., 0.};
+
+  std::vector<var> par(stan::math::to_var(pMatrix[0]));
+  model_t model(t, init, rate, par, f);
+  std::vector<var> vars(model.vars(dt));
+  EXPECT_EQ(vars.size(), par.size());
   
-//   // vars and init should be pointing to the same @c vari
-//   torsten::test::test_grad(vars, par_rate, sol1, sol2, 1.E-8, 1.E-5);
-//   torsten::test::test_grad(vars, par_rate, sol1, sol3, 1.E-8, 1.E-5);
-// }
-
-// TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_par_var) {
-//   using torsten::EventsManager;
-
-//   using refactor::PKTwoCptModel;
-//   using refactor::PKTwoCptODE;
-//   using refactor::PkOdeIntegrator;
-//   using stan::math::var;
-//   using stan::math::vector_v;
-
-//   const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-//   PKTwoCptODE f;
-
-//   using model_t = refactor::PKODEModel<double, double, double, var, PKTwoCptODE>;
-//   PkOdeIntegrator<torsten::StanRk45> integrator;
-
-//   refactor::PKRec<double> init(ncmt);
-//   init << 0, 100, 0;
-
-//   double t = time[1], dt = 0.1;
-//   std::vector<double> rate{1000., 0., 0.};
-
-//   std::vector<var> par(stan::math::to_var(pMatrix[0]));
-//   model_t model(t, init, rate, par, f);
-//   std::vector<var> vars(model.vars(dt));
-//   EXPECT_EQ(vars.size(), par.size());
+  vector_v sol1 = model.solve(dt, integrator);
+  Eigen::VectorXd sol2_d = model.solve_d(dt, integrator);
+  vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   
-//   vector_v sol1 = model.solve(dt, integrator);
-//   vector_v sol2 = ModelSolverDispatcher<true, false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
-//   Eigen::VectorXd sol3_d = ModelSolverDispatcher<false, false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
-//   vector_v sol3 = torsten::mpi::precomputed_gradients(sol3_d, vars);
+  // vars and init should be pointing to the same @c vari
+  torsten::test::test_grad(vars, par, sol1, sol2, 1.E-8, 1.E-5);
+}
+
+TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_data_only_ss) {
+  using torsten::EventsManager;
+  using refactor::PKTwoCptModel;
+  using refactor::PKTwoCptODE;
+  using refactor::PkOdeIntegrator;
+
+  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
+  PKTwoCptODE f;
+
+  using model_t = refactor::PKODEModel<double, double, double, double, PKTwoCptODE>;
+  PkOdeIntegrator<torsten::StanRk45> integrator;
+
+  refactor::PKRec<double> init(ncmt);
+  init << 0, 100, 0;
+
+  double t = time[1];
+  std::vector<double> rate{1000., 0., 0.};
+
+  double a = 1500, r = 100, ii = 18.0;
+  int cmt = 1;
+
+  model_t model(t, init, rate, pMatrix[0], f);
   
-//   // vars and init should be pointing to the same @c vari
-//   torsten::test::test_grad(vars, par, sol1, sol2, 1.E-8, 1.E-5);
-//   torsten::test::test_grad(vars, par, sol1, sol3, 1.E-8, 1.E-5);
-// }
-
-// TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_data_only_ss) {
-//   using torsten::EventsManager;
-
-//   using refactor::PKTwoCptModel;
-//   using refactor::PKTwoCptODE;
-//   using refactor::PkOdeIntegrator;
-
-//   const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-//   PKTwoCptODE f;
-
-//   using model_t = refactor::PKODEModel<double, double, double, double, PKTwoCptODE>;
-//   PkOdeIntegrator<torsten::StanRk45> integrator;
-
-//   refactor::PKRec<double> init(ncmt);
-//   init << 0, 100, 0;
-
-//   double t = time[1];
-//   std::vector<double> rate{1000., 0., 0.};
-
-//   double a = 1500, r = 100, ii = 18.0;
-//   int cmt = 1;
-
-//   model_t model(t, init, rate, pMatrix[0], f);
+  Eigen::VectorXd sol1 = model.solve(a, r, ii, cmt, integrator);
+  Eigen::VectorXd sol2 = model.solve_d(a, r, ii, cmt, integrator);
   
-//   Eigen::VectorXd sol1 = model.solve(a, r, ii, cmt, integrator);
-//   Eigen::VectorXd sol2 = ModelSolverDispatcher<true, false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, a, r, ii, cmt, integrator);
-//   Eigen::VectorXd sol3 = ModelSolverDispatcher<false, false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, a, r, ii, cmt, integrator);
+  torsten::test::test_val(sol1, sol2);
+}
+
+TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_init_var_ss) {
+  using torsten::EventsManager;
+
+  using refactor::PKTwoCptModel;
+  using refactor::PKTwoCptODE;
+  using refactor::PkOdeIntegrator;
+  using stan::math::var;
+  using stan::math::vector_v;
+
+  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
+  PKTwoCptODE f;
+
+  using model_t = refactor::PKODEModel<double, var, double, double, PKTwoCptODE>;
+  PkOdeIntegrator<torsten::StanRk45> integrator;
+
+  refactor::PKRec<var> init(ncmt);
+  init << 0, 100, 0;
+
+  double t = time[1];
+  std::vector<double> rate{1000., 0., 0.};
+
+  double a = 1500, r = 100, ii = 18.0;
+  int cmt = 1;
+
+  model_t model(t, init, rate, pMatrix[0], f);
+  std::vector<var> vars(model.vars(a, r, ii));
+
+  // type of @c init should not affect steady state solution type.
+  EXPECT_EQ(vars.size(), 0);
   
-//   torsten::test::test_val(sol1, sol2);
-//   torsten::test::test_val(sol1, sol3);
-// }
-
-// TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_init_var_ss) {
-//   using torsten::EventsManager;
-
-//   using refactor::PKTwoCptModel;
-//   using refactor::PKTwoCptODE;
-//   using refactor::PkOdeIntegrator;
-//   using stan::math::var;
-//   using stan::math::vector_v;
-
-//   const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-//   PKTwoCptODE f;
-
-//   using model_t = refactor::PKODEModel<double, var, double, double, PKTwoCptODE>;
-//   PkOdeIntegrator<torsten::StanRk45> integrator;
-
-//   refactor::PKRec<var> init(ncmt);
-//   init << 0, 100, 0;
-
-//   double t = time[1];
-//   std::vector<double> rate{1000., 0., 0.};
-
-//   double a = 1500, r = 100, ii = 18.0;
-//   int cmt = 1;
-
-//   model_t model(t, init, rate, pMatrix[0], f);
-//   std::vector<var> vars(model.vars(a, r, ii));
-//   EXPECT_EQ(vars.size(), 0);
+  Eigen::VectorXd sol1 = model.solve(a, r, ii, cmt, integrator);
+  Eigen::VectorXd sol2 = model.solve_d(a, r, ii, cmt, integrator);
   
-//   Eigen::VectorXd sol1 = model.solve(a, r, ii, cmt, integrator);
-//   Eigen::VectorXd sol2 = ModelSolverDispatcher<true, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, a, r, ii, cmt, integrator);
-//   Eigen::VectorXd sol3 = ModelSolverDispatcher<false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, a, r, ii, cmt, integrator);
+  torsten::test::test_val(sol1, sol2);
+}
+
+TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_par_var_ss) {
+  using torsten::EventsManager;
+
+  using refactor::PKTwoCptModel;
+  using refactor::PKTwoCptODE;
+  using refactor::PkOdeIntegrator;
+  using stan::math::var;
+  using stan::math::vector_v;
+
+  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
+  PKTwoCptODE f;
+
+  using model_t = refactor::PKODEModel<double, double, double, var, PKTwoCptODE>;
+  PkOdeIntegrator<torsten::StanRk45> integrator;
+
+  refactor::PKRec<double> init(ncmt);
+  init << 0, 100, 0;
+
+  double t = time[1];
+  std::vector<double> rate{1000., 3000., 0.};
+
+  double a = 1500, r = 100, ii = 18.0;
+  int cmt = 1;
+
+  std::vector<var> par(stan::math::to_var(pMatrix[0]));
+  model_t model(t, init, rate, par, f);
+  std::vector<var> vars(model.vars(a, r, ii));
+
+  EXPECT_EQ(vars.size(), par.size());
   
-//   torsten::test::test_val(sol1, sol2);
-//   torsten::test::test_val(sol1, sol3);
-// }
-
-// TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_rate_var) {
-//   using torsten::EventsManager;
-
-//   using refactor::PKTwoCptModel;
-//   using refactor::PKTwoCptODE;
-//   using refactor::PkOdeIntegrator;
-//   using stan::math::var;
-//   using stan::math::vector_v;
-
-//   const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-//   PKTwoCptODE f;
-
-//   using model_t = refactor::PKODEModel<double, double, var, double, PKTwoCptODE>;
-//   PkOdeIntegrator<torsten::StanRk45> integrator;
-
-//   refactor::PKRec<double> init(ncmt);
-//   init << 0, 100, 0;
-
-//   double t = time[1], dt = 0.1;
-//   std::vector<var> rate{1000., 0., 0.};
-
-//   std::vector<double>& par = pMatrix[0];
-//   model_t model(t, init, rate, par, f);
-//   std::vector<var> vars(model.vars(dt));
-//   std::vector<var> par_rate;
-//   par_rate.insert(par_rate.end(), par.begin(), par.end());
-//   par_rate.insert(par_rate.end(), rate.begin(), rate.end());
-//   EXPECT_EQ(vars.size(), par_rate.size());
+  vector_v sol1 = model.solve(a, r, ii, cmt, integrator);
+  Eigen::VectorXd sol2_d = model.solve_d(a, r, ii, cmt, integrator);
+  vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   
-//   vector_v sol1 = model.solve(dt, integrator);
-//   vector_v sol2 = ModelSolverDispatcher<true, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
-//   Eigen::VectorXd sol3_d = ModelSolverDispatcher<false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
-//   vector_v sol3 = torsten::mpi::precomputed_gradients(sol3_d, vars);
-  
-//   // vars and init should be pointing to the same @c vari
-//   torsten::test::test_grad(vars, par_rate, sol1, sol2, 1.E-8, 1.E-5);
-//   torsten::test::test_grad(vars, par_rate, sol1, sol3, 1.E-8, 1.E-5);
-// }
-
-// TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_par_var) {
-//   using torsten::EventsManager;
-
-//   using refactor::PKTwoCptModel;
-//   using refactor::PKTwoCptODE;
-//   using refactor::PkOdeIntegrator;
-//   using stan::math::var;
-//   using stan::math::vector_v;
-
-//   const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-//   PKTwoCptODE f;
-
-//   using model_t = refactor::PKODEModel<double, double, double, var, PKTwoCptODE>;
-//   PkOdeIntegrator<torsten::StanRk45> integrator;
-
-//   refactor::PKRec<double> init(ncmt);
-//   init << 0, 100, 0;
-
-//   double t = time[1], dt = 0.1;
-//   std::vector<double> rate{1000., 0., 0.};
-
-//   std::vector<var> par(stan::math::to_var(pMatrix[0]));
-//   model_t model(t, init, rate, par, f);
-//   std::vector<var> vars(model.vars(dt));
-//   EXPECT_EQ(vars.size(), par.size());
-  
-//   vector_v sol1 = model.solve(dt, integrator);
-//   vector_v sol2 = ModelSolverDispatcher<true, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
-//   Eigen::VectorXd sol3_d = ModelSolverDispatcher<false, model_t, PkOdeIntegrator<torsten::StanRk45>>::solve(model, dt, integrator);
-//   vector_v sol3 = torsten::mpi::precomputed_gradients(sol3_d, vars);
-  
-//   // vars and init should be pointing to the same @c vari
-//   torsten::test::test_grad(vars, par, sol1, sol2, 1.E-8, 1.E-5);
-//   torsten::test::test_grad(vars, par, sol1, sol3, 1.E-8, 1.E-5);
-// }
+  // vars and init should be pointing to the same @c vari
+  torsten::test::test_grad(vars, par, sol1, sol2, 1.E-8, 1.E-5);
+}
