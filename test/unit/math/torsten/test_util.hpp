@@ -254,33 +254,103 @@ namespace torsten {
      *
      * @param theta parameters regarding which the gradient
      *              would be taken and checked.
-     * @param pk_y one result
-     * @param stan_y the other result to be compared against
-     *              with, must of same shape and size as to @c pk_y
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c y1
      * @param fval_esp tolerance of values
      * @param sens_esp tolerance of gradients
      */
     void test_grad(std::vector<stan::math::var>& theta,
-                   stan::math::vector_v& pk_y,
-                   stan::math::vector_v& stan_y,
+                   stan::math::vector_v& y1,
+                   stan::math::vector_v& y2,
                    double fval_eps,
                    double sens_eps) {
-      EXPECT_EQ(pk_y.size(), stan_y.size());
+      EXPECT_EQ(y1.size(), y2.size());
 
-      for (int i = 0; i < pk_y.size(); ++i) {
-        EXPECT_NEAR(pk_y(i).val(), stan_y(i).val(), fval_eps);
+      for (int i = 0; i < y1.size(); ++i) {
+        EXPECT_NEAR(y1(i).val(), y2(i).val(), fval_eps);
       }
 
       std::vector<double> g, g1;
-      for (int i = 0; i < pk_y.size(); ++i) {
+      for (int i = 0; i < y1.size(); ++i) {
         stan::math::set_zero_all_adjoints();
-        pk_y(i).grad(theta, g);
+        y1(i).grad(theta, g);
         stan::math::set_zero_all_adjoints();
-        stan_y(i).grad(theta, g1);
+        y2(i).grad(theta, g1);
         for (size_t m = 0; m < theta.size(); ++m) {
           EXPECT_NEAR(g[m], g1[m], sens_eps);
         }
       }
+    }
+
+    /*
+     * Test @c std::vector<var> results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param theta1 parameters regarding which the gradient
+     *               would be taken by @c y1 and checked.
+     * @param theta2 parameters regarding which the gradient
+     *               would be taken by @c y2 and checked.
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     * @param fval_esp tolerance of values
+     * @param sens_esp tolerance of gradients
+     */
+    void test_grad(std::vector<stan::math::var>& theta1,
+                   std::vector<stan::math::var>& theta2,
+                   stan::math::vector_v& y1,
+                   stan::math::vector_v& y2,
+                   double fval_eps,
+                   double sens_eps) {
+      EXPECT_EQ(y1.size(), y2.size());
+      EXPECT_EQ(theta1.size(), theta2.size());
+
+      for (int i = 0; i < y1.size(); ++i) {
+        EXPECT_NEAR(y1(i).val(), y2(i).val(), fval_eps);
+      }
+
+      std::vector<double> g, g1;
+      for (int i = 0; i < y1.size(); ++i) {
+        stan::math::set_zero_all_adjoints();
+        y1(i).grad(theta1, g);
+        stan::math::set_zero_all_adjoints();
+        y2(i).grad(theta2, g1);
+        for (size_t m = 0; m < theta1.size(); ++m) {
+          EXPECT_NEAR(g[m], g1[m], sens_eps);
+        }
+      }
+    }
+
+    /*
+     * Test @c std::vector<var> results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param theta1 parameters regarding which the gradient
+     *               would be taken by @c y1 and checked.
+     * @param theta2 parameters regarding which the gradient
+     *               would be taken by @c y2 and checked.
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     * @param fval_esp tolerance of values
+     * @param sens_esp tolerance of gradients
+     */
+    void test_grad(std::vector<stan::math::var>& theta1,
+                   Eigen::Matrix<stan::math::var, 1, -1>& theta2,
+                   stan::math::vector_v& y1,
+                   stan::math::vector_v& y2,
+                   double fval_eps,
+                   double sens_eps) {
+      // grad() only accepts std::vector
+      std::vector<stan::math::var> theta(theta2.size());
+      Eigen::Matrix<stan::math::var, 1, -1>::Map(theta.data(), theta2.size()) = theta2;
+
+      test_grad(theta1, theta, y1, y2, fval_eps, sens_eps);
     }
 
     /*
