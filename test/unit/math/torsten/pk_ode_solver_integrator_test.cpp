@@ -65,30 +65,6 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver) {
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 }
 
-TEST_F(TorstenCptOdeModelTest, pk_bdf_solver_return_data) {
-  using stan::math::var;
-  using stan::math::to_var;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PKODEModel;
-  using refactor::PKOdeFunctorRateAdaptor;
-
-  rate[0] = 1200;
-  rate[1] = 2000;
-  rate[2] = 3000;
-  PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
-  std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKTwoCptODE, double> f1(model0.f());
-  using model_t = PKODEModel<double, double, double, double, PKTwoCptODE>;
-  model_t model(t0, y0, rate, model0.par(), model0.f());
-
-  ts[0] = 20.0;
-  ts.resize(1);
-
-  PkOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
-  Eigen::MatrixXd y = integ.solve(f1, yvec, t0, ts, model.par(), model.rate(), x_i); // NOLINT
-}
-
 TEST_F(TorstenCptOdeModelTest, general_ode_solver_y0) {
   using stan::math::var;
   using stan::math::to_var;
