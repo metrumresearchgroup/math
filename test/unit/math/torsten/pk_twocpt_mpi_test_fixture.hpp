@@ -62,7 +62,6 @@ public:
       addl_m[i] = addl;
       ss_m  [i] = ss;  
     }
-
     SetUp();
   }
 
