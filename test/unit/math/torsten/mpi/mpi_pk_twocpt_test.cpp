@@ -47,43 +47,43 @@ TEST_F(TorstenPKTwoCptMPITest, multiple_IV_doses_data_only) {
   }
 }
 
-TEST_F(TorstenPKTwoCptMPITest, multiple_bolus_doses_par_var) {
-    vector<vector<vector<var> > > pMatrix_m_v(pMatrix_m.size());
-    vector<vector<var> > pMatrix_v(torsten::test::to_var(pMatrix));
-    for (int i = 0; i < np; ++i) {
-      pMatrix_m_v[i] = torsten::test::to_var(pMatrix_m[i]);
-    }
+// TEST_F(TorstenPKTwoCptMPITest, multiple_bolus_doses_par_var) {
+//     vector<vector<vector<var> > > pMatrix_m_v(pMatrix_m.size());
+//     vector<vector<var> > pMatrix_v(torsten::test::to_var(pMatrix));
+//     for (int i = 0; i < np; ++i) {
+//       pMatrix_m_v[i] = torsten::test::to_var(pMatrix_m[i]);
+//     }
 
-    Matrix<var, Dynamic, Dynamic> x =
-      torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+//     Matrix<var, Dynamic, Dynamic> x =
+//       torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
-    vector<Matrix<var, Dynamic, Dynamic> > x_m =
-      torsten::PKModelTwoCpt(time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, pMatrix_m_v, biovar_m, tlag_m); // NOLINT
+//     vector<Matrix<var, Dynamic, Dynamic> > x_m =
+//       torsten::PKModelTwoCpt(time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, pMatrix_m_v, biovar_m, tlag_m); // NOLINT
 
-    for (int i = 0; i < np; ++i) {
-      torsten::test::test_grad(pMatrix_m_v[i][0], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
-    }
-}
+//     for (int i = 0; i < np; ++i) {
+//       torsten::test::test_grad(pMatrix_m_v[i][0], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
+//     }
+// }
 
-TEST_F(TorstenPKTwoCptMPITest, multiple_IV_doses_par_var) {
-  rate[0] = 300;
-  for (int i = 0; i < np; ++i) {
-    rate_m[i] = rate;
-  }
+// TEST_F(TorstenPKTwoCptMPITest, multiple_IV_doses_par_var) {
+//   rate[0] = 300;
+//   for (int i = 0; i < np; ++i) {
+//     rate_m[i] = rate;
+//   }
 
-  vector<vector<vector<var> > > pMatrix_m_v(pMatrix_m.size());
-  vector<vector<var> > pMatrix_v(torsten::test::to_var(pMatrix));
-  for (int i = 0; i < np; ++i) {
-    pMatrix_m_v[i] = torsten::test::to_var(pMatrix_m[i]);
-  }
+//   vector<vector<vector<var> > > pMatrix_m_v(pMatrix_m.size());
+//   vector<vector<var> > pMatrix_v(torsten::test::to_var(pMatrix));
+//   for (int i = 0; i < np; ++i) {
+//     pMatrix_m_v[i] = torsten::test::to_var(pMatrix_m[i]);
+//   }
 
-  Matrix<var, Dynamic, Dynamic> x =
-    torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+//   Matrix<var, Dynamic, Dynamic> x =
+//     torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
-  vector<Matrix<var, Dynamic, Dynamic> > x_m =
-    torsten::PKModelTwoCpt(time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, pMatrix_m_v, biovar_m, tlag_m); // NOLINT
+//   vector<Matrix<var, Dynamic, Dynamic> > x_m =
+//     torsten::PKModelTwoCpt(time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, pMatrix_m_v, biovar_m, tlag_m); // NOLINT
 
-  for (int i = 0; i < np; ++i) {
-    torsten::test::test_grad(pMatrix_m_v[i][0], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
-  }
-}
+//   for (int i = 0; i < np; ++i) {
+//     torsten::test::test_grad(pMatrix_m_v[i][0], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
+//   }
+// }
