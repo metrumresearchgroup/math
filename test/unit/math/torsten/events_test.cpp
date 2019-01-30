@@ -27,6 +27,7 @@ TEST_F(TorstenPKTwoCptTest, events_addl) {
     EM em(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
     auto ev = em.events();
     EXPECT_EQ(ev.size(), evid.size() + addl[0]);
+    EXPECT_EQ(ev.size(), EM::nevents(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag) );
   }
 
   {
@@ -34,6 +35,7 @@ TEST_F(TorstenPKTwoCptTest, events_addl) {
     EM em(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
     auto ev = em.events();
     EXPECT_EQ(ev.size(), evid.size() + addl[0]);
+    EXPECT_EQ(ev.size(), EM::nevents(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag) );
   }
 
   amt[3] = 400.0;
@@ -41,6 +43,7 @@ TEST_F(TorstenPKTwoCptTest, events_addl) {
   EM em(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
   auto ev = em.events();
   EXPECT_EQ(ev.size(), evid.size() + addl[0] + addl[3]);
+  EXPECT_EQ(ev.size(), EM::nevents(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag) );
 
   EXPECT_EQ(ev.time(0 ), 0    );  EXPECT_EQ(ev.amt(0 ), 1000);  EXPECT_EQ(ev.evid(0 ), 1);
   EXPECT_EQ(ev.time(1 ), 0.25 );  EXPECT_EQ(ev.amt(1 ), 0   );  EXPECT_EQ(ev.evid(1 ), 0);
@@ -79,6 +82,7 @@ TEST_F(TorstenPKTwoCptTest, events_addl_rate) {
 
   /* each IV dose has an end event.*/
   EXPECT_EQ(ev.size(), evid.size() + addl[0] + addl[3] * 2 + 1);
+  EXPECT_EQ(ev.size(), EM::nevents(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag) );
 
   EXPECT_FLOAT_EQ(ev.time(0 ), 0    );   EXPECT_EQ(ev.evid(0 ), 1);
   EXPECT_FLOAT_EQ(ev.time(1 ), 0.25 );   EXPECT_EQ(ev.evid(1 ), 0);
@@ -295,7 +299,9 @@ TEST_F(TorstenPKTwoCptTest, events_addl_rate_tlag) {
   EM em(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
   auto ev = em.events();
 
-  // time-depdent tlag has not effect on new events
+  // Last Observation Carried Forward for the parameters for
+  // the addl events. Since the last param has no lags, the
+  // addl events have no lags.
   EXPECT_EQ(ev.size(), time.size() + addl[3] * 2 + 2);
 
   EXPECT_FLOAT_EQ(ev.time(0 ), 0    ); EXPECT_FLOAT_EQ(em.rates()[0 ][1],    0.0);
@@ -314,4 +320,69 @@ TEST_F(TorstenPKTwoCptTest, events_addl_rate_tlag) {
   EXPECT_FLOAT_EQ(ev.time(13), 8.75 ); EXPECT_FLOAT_EQ(em.rates()[13][1],  400.0);
   EXPECT_FLOAT_EQ(ev.time(14), 10.75); EXPECT_FLOAT_EQ(em.rates()[14][1],    0.0);
   EXPECT_FLOAT_EQ(ev.time(15), 13.75); EXPECT_FLOAT_EQ(em.rates()[15][1],  400.0);
+}
+
+TEST_F(TorstenPKTwoCptTest, events_addl_rate_tlag_LOCF) {
+  using EM = EventsManager<double, double, double, double, double, double, double>;
+
+  int nCmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
+  addl[0] = 0;
+  addl[3] = 2;
+  amt[3] = 1200.0;
+  ii[3] = 2.1;
+  cmt[3] = 2;
+  rate[3] = 400;
+  evid[3] = 1;
+  time[time.size() - 2] = 3.0;
+
+  tlag.resize(time.size());
+  for (auto& l : tlag) l.resize(nCmt);
+  tlag[time.size() - 1][1] = 0.25;
+
+  EM em(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
+  auto ev = em.events();
+
+  // Last Observation Carried Forward for the parameters for
+  // the addl events. Since the last param has a lag, the
+  // addl events that are after it have a lag. Since the
+  // first of the two addl dosing event is at t = 2.85, and
+  // it's a time that are not in original time points, the
+  // parameter for this event is the one of the subsequent
+  // event, which has no lag. Therefore the 1st addl event
+  // has no lag, but the 2nd has.
+  EXPECT_EQ(ev.size(), time.size() + 6);
+
+  EXPECT_FLOAT_EQ(ev.time(0 ), 0   ); EXPECT_FLOAT_EQ(em.rates()[0 ][1], 0  );
+  EXPECT_FLOAT_EQ(ev.time(1 ), 0.25); EXPECT_FLOAT_EQ(em.rates()[1 ][1], 0  );
+  EXPECT_FLOAT_EQ(ev.time(2 ), 0.5 ); EXPECT_FLOAT_EQ(em.rates()[2 ][1], 0  );
+  EXPECT_FLOAT_EQ(ev.time(3 ), 0.75); EXPECT_FLOAT_EQ(em.rates()[3 ][1], 0  );
+  EXPECT_FLOAT_EQ(ev.time(4 ), 1   ); EXPECT_FLOAT_EQ(em.rates()[4 ][1], 400);
+  EXPECT_FLOAT_EQ(ev.time(5 ), 1.25); EXPECT_FLOAT_EQ(em.rates()[5 ][1], 400);
+  EXPECT_FLOAT_EQ(ev.time(6 ), 1.5 ); EXPECT_FLOAT_EQ(em.rates()[6 ][1], 400);
+  EXPECT_FLOAT_EQ(ev.time(7 ), 1.75); EXPECT_FLOAT_EQ(em.rates()[7 ][1], 400);
+  EXPECT_FLOAT_EQ(ev.time(8 ), 2.85); EXPECT_FLOAT_EQ(em.rates()[8 ][1], 400);
+  EXPECT_FLOAT_EQ(ev.time(9 ), 3   ); EXPECT_FLOAT_EQ(em.rates()[9 ][1], 800);
+  EXPECT_FLOAT_EQ(ev.time(10), 3.75); EXPECT_FLOAT_EQ(em.rates()[10][1], 800);
+  EXPECT_FLOAT_EQ(ev.time(11), 4   ); EXPECT_FLOAT_EQ(em.rates()[11][1], 400);
+  EXPECT_FLOAT_EQ(ev.time(12), 4.95); EXPECT_FLOAT_EQ(em.rates()[12][1], 400);
+  EXPECT_FLOAT_EQ(ev.time(13), 5.2 ); EXPECT_FLOAT_EQ(em.rates()[13][1], 400);
+  EXPECT_FLOAT_EQ(ev.time(14), 5.85); EXPECT_FLOAT_EQ(em.rates()[14][1], 800);
+  EXPECT_FLOAT_EQ(ev.time(15), 8.2 ); EXPECT_FLOAT_EQ(em.rates()[15][1], 400);
+
+  EXPECT_EQ(ev.evid(0 ), 1);
+  EXPECT_EQ(ev.evid(1 ), 0);
+  EXPECT_EQ(ev.evid(2 ), 0);
+  EXPECT_EQ(ev.evid(3 ), 1);
+  EXPECT_EQ(ev.evid(4 ), 0);
+  EXPECT_EQ(ev.evid(5 ), 0);
+  EXPECT_EQ(ev.evid(6 ), 0);
+  EXPECT_EQ(ev.evid(7 ), 0);
+  EXPECT_EQ(ev.evid(8 ), 1);
+  EXPECT_EQ(ev.evid(9 ), 0);
+  EXPECT_EQ(ev.evid(10), 2);
+  EXPECT_EQ(ev.evid(11), 0);
+  EXPECT_EQ(ev.evid(12), 2);
+  EXPECT_EQ(ev.evid(13), 1);
+  EXPECT_EQ(ev.evid(14), 2);
+  EXPECT_EQ(ev.evid(15), 2);
 }
