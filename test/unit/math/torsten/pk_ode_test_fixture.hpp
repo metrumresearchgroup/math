@@ -41,6 +41,21 @@ struct chemical_kinetics {
 };
 
 struct TorstenOdeTest : public testing::Test {
+  // for events generation
+  const int nt;
+  std::vector<double> time;
+  std::vector<double> amt;
+  std::vector<double> rate;
+  std::vector<int> cmt;
+  std::vector<int> evid;
+  std::vector<double> ii;
+  std::vector<int> addl;
+  std::vector<int> ss;
+  std::vector<std::vector<double> > pMatrix;
+  std::vector<std::vector<double> > biovar;
+  std::vector<std::vector<double> > tlag;
+
+  // for ODE integrator
   const double t0;
   const std::vector<double> x_r;
   const std::vector<int> x_i;
@@ -54,11 +69,31 @@ struct TorstenOdeTest : public testing::Test {
     stan::math::recover_memory();
   }
   TorstenOdeTest() :
+    nt(54),
+    time{0, 0.083, 0.167, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 6, 8, 12,
+      12.083, 12.167, 12.25, 12.5, 12.75, 13, 13.5, 14, 15, 16, 18, 20, 24, 36,
+      48, 60, 72, 84, 96, 108, 120, 132, 144, 156, 168, 168.083, 168.167, 168.25,
+      168.5, 168.75, 169, 169.5, 170, 171, 172, 174, 176, 180, 186, 192},
+    amt(nt, 0),
+    rate(nt, 0),
+    cmt(nt, 2),
+    evid(nt, 0),
+    ii(nt, 0),
+    addl(nt, 0),
+    ss(nt, 0),
+    pMatrix{ {7.4, 1.1, 28, 78, 68 } },
+    biovar{ { 1, 1, 1 } },
+    tlag{ { 0, 0, 0 } },
     t0(0.0),
     rtol             {1.E-10},
     atol             {1.E-10},
     max_num_steps    {100000},
     msgs             {nullptr} {
+      amt[0]  = 80000;
+      cmt[0]  = 1;
+      evid[0] = 1;
+      ii[0]   = 12;
+      addl[0] = 14;
       SetUp();
   }
 

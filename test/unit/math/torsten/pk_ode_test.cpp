@@ -1,9 +1,11 @@
 #include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
 #include <gtest/gtest.h>
+#include <test/unit/math/torsten/pk_ode_test_fixture.hpp>
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
 #include <stan/math/torsten/generalOdeModel_rk45.hpp>
 #include <stan/math/torsten/generalOdeModel_bdf.hpp>
+#include <stan/math/torsten/pk_twocpt_model.hpp>
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_ode_model.hpp>
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
@@ -1760,4 +1762,19 @@ TEST(Torsten, genCpt_FK_SS) {
   //                      time, amt, rate, ii, evid, cmt, addl, ss,
   //                      theta_v, biovar_v, tlag_v,
   //                      rel_tol, abs_tol, max_num_steps, diff, diff2, "bdf");
+}
+
+TEST_F(TorstenOdeTest, exception) {
+  pMatrix[0][0] = 1.0E-10;
+  pMatrix[0][1] = 1.0E-10;
+  pMatrix[0][2] = 1.0E-20;
+  pMatrix[0][3] = 1.0E+80;
+  pMatrix[0][4] = 1.0E+70;
+
+  auto& f = refactor::PKTwoCptModel<double, double, double, double>::f_;
+  int ncmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
+
+  EXPECT_THROW(torsten::generalOdeModel_bdf(f, ncmt, time, amt, rate, ii,
+                                                   evid, cmt, addl, ss, pMatrix,
+                                                   biovar, tlag), std::runtime_error);
 }
