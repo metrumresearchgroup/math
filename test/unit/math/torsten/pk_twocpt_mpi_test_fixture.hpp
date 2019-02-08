@@ -12,6 +12,7 @@ class TorstenPKTwoCptMPITest : public testing::Test {
   void SetUp() {
     // make sure memory's clean before starting each test
     stan::math::recover_memory();
+    torsten::mpi::init();
   }
 public:
   TorstenPKTwoCptMPITest() :
@@ -40,7 +41,7 @@ public:
     biovar_m (np, biovar),
     tlag_m   (np, tlag)
   {
-    torsten::mpi::init();
+    SetUp();
 
     time[0] = 0;
     for(int i = 1; i < 9; i++) time[i] = time[i - 1] + 0.25;
@@ -62,7 +63,6 @@ public:
       addl_m[i] = addl;
       ss_m  [i] = ss;  
     }
-    SetUp();
   }
 
   const int nt;

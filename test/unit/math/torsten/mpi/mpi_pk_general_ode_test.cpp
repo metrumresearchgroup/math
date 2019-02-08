@@ -174,6 +174,23 @@ TEST_F(TorstenPKTwoCptMPITest, rk45_solver_multiple_IV_doses_par_var) {
   }
 }
 
+TEST_F(TorstenPKTwoCptMPITest, exception_data_only) {
+  // the first individual has parameters that will cause cvode fail
+  pMatrix_m[0][0][0] = 1.0E-10;
+  pMatrix_m[0][0][1] = 1.0E-10;
+  pMatrix_m[0][0][2] = 1.0E-20;
+  pMatrix_m[0][0][3] = 1.0E+80;
+  pMatrix_m[0][0][4] = 1.0E+70;
+  amt_m[0][0] = 1.0E+20;
+
+  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
+
+  EXPECT_THROW(torsten::pop_pk_generalOdeModel_bdf(model_t::f_,
+                                                   model_t::Ncmt, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m,
+                                                   addl_m, ss_m, pMatrix_m, biovar_m, tlag_m),
+               std::runtime_error);
+}
+
 TEST_F(TorstenPKTwoCptMPITest, exception_par_var) {
   // the first individual has parameters that will cause cvode fail
   pMatrix_m[0][0][0] = 1.0E-10;
@@ -189,10 +206,8 @@ TEST_F(TorstenPKTwoCptMPITest, exception_par_var) {
 
   using model_t = refactor::PKTwoCptModel<double, double, double, double>;
 
-  MPI_Comm comm = MPI_COMM_WORLD;
   EXPECT_THROW(torsten::pop_pk_generalOdeModel_bdf(model_t::f_,
                                                    model_t::Ncmt, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m,
                                                    addl_m, ss_m, pMatrix_m_v, biovar_m, tlag_m),
                std::runtime_error);
-  MPI_Barrier(comm);
 }
