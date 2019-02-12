@@ -53,7 +53,7 @@ TEST(Torsten, predSS_general_OneCpt_bolus) {
 
   // initialize Model Parameters object
   torsten::ModelParameters<double, double, double, double>
-    parms(dt, parameters, biovar, tlag, K);
+    parms(dt, parameters, biovar, tlag);
 
   // bolus dose
   double amt = 1200;
@@ -95,13 +95,8 @@ TEST(Torsten, predSS_general_OneCpt_truncated_infusion) {
   int nCmt = 2;
   std::vector<double> biovar(nCmt, 0);
   std::vector<double> tlag(nCmt, 0);
-  // Matrix<double, Dynamic, Dynamic> K(0, 0);
-  Matrix<double, Dynamic, Dynamic> K(2, 2);
-  K << -parameters[2], 0,
-       parameters[2], - parameters[0] / parameters[1];
-
   torsten::ModelParameters<double, double, double, double>
-    parms(dt, parameters, biovar, tlag, K);
+    parms(dt, parameters, biovar, tlag);
 
   // multiple truncated infusion
   double amt = 1200;
@@ -145,12 +140,9 @@ TEST(Torsten, predSS_general_OneCpt_constant_infusion) {
   int nCmt = 2;
   std::vector<double> biovar(nCmt, 0);
   std::vector<double> tlag(nCmt, 0);
-  Matrix<double, Dynamic, Dynamic> K(2, 2);
-  K << -parameters[2], 0,
-       parameters[2], - parameters[0] / parameters[1];
   
   torsten::ModelParameters<double, double, double, double>
-    parms(dt, parameters, biovar, tlag, K);
+    parms(dt, parameters, biovar, tlag);
   
   // constant infusion
   double amt = 1200;
@@ -192,13 +184,9 @@ TEST(Torsten, predSS_general_exception) {
   int nCmt = 2;
   std::vector<double> biovar(nCmt, 0);
   std::vector<double> tlag(nCmt, 0);
-  // Matrix<double, Dynamic, Dynamic> K(0, 0);
-  Matrix<double, Dynamic, Dynamic> K(2, 2);
-  K << -parameters[2], 0,
-       parameters[2], - parameters[0] / parameters[1];
 
   torsten::ModelParameters<double, double, double, double>
-    parms(dt, parameters, biovar, tlag, K);
+    parms(dt, parameters, biovar, tlag);
 
   // multiple truncated infusion
   double amt = 1200;
