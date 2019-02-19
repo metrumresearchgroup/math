@@ -12,29 +12,6 @@
 
 namespace torsten {
   namespace test {
-    template<typename T>
-    std::vector<std::vector<stan::math::var> > to_var(const std::vector<std::vector<T> >& d)
-    {
-      std::vector<std::vector<stan::math::var> > res(d.size());
-      for (size_t i = 0; i < d.size(); ++i) {
-        res[i].resize(d[i].size());
-        for (size_t j = 0; j < d[i].size(); ++j) {
-          res[i][j] = stan::math::value_of(d[i][j]);
-        }
-      }
-      return res;
-    }
-    
-    template<typename T>
-    std::vector<stan::math::var> to_var(const std::vector<T>& d)
-    {
-      std::vector<stan::math::var> res(d.size());
-      for (size_t i = 0; i < d.size(); ++i) {
-        res[i] = stan::math::value_of(d[i]);
-      }
-      return res;
-    }
-
     /*
      * Test @c std::vector<var> results between two results. 
      * An example use would be to have the results coming from torsten
