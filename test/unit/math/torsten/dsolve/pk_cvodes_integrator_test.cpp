@@ -969,6 +969,24 @@ TEST_F(TorstenOdeTest_lorenz, integrate_ode_bdf_theta_ts) {
   }
 }
 
+TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_AD_stan_bdf) {
+  using torsten::dsolve::PKCvodesFwdSystem;
+  using torsten::dsolve::pk_integrate_ode_bdf;
+  using stan::math::var;
+  using std::vector;
+
+  // Lorenz system is chaotic in long term.
+  std::vector<double> ts0 {ts};
+
+  vector<var> theta_var1 = stan::math::to_var(theta);
+  vector<var> theta_var2 = stan::math::to_var(theta);
+
+  vector<vector<var> > y1 = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts0, theta_var1, x_r, x_i);
+  vector<vector<var> > y2 = stan::math::integrate_ode_bdf(f, y0, t0, ts0, theta_var2, x_r, x_i);
+
+  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1e-7, 1e-6);
+}
+
 // TEST_F(CVODESIntegratorTest, error_handling) {
 //   using torsten::dsolve::PKCvodesFwdSystem;
 //   using torsten::dsolve::PKCvodesIntegrator;

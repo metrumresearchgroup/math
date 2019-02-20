@@ -1,5 +1,5 @@
-#ifndef TEST_UNIT_TORSTEN_TEST_UTIL
-#define TEST_UNIT_TORSTEN_TEST_UTIL
+#ifndef STAN_MATH_TORSTEN_TEST_UTIL
+#define STAN_MATH_TORSTEN_TEST_UTIL
 
 #include <stan/math/rev/mat.hpp>
 #include <gtest/gtest.h>
@@ -73,6 +73,23 @@ namespace torsten {
       EXPECT_EQ(y1.size(), y2.size());
       for (int i = 0; i < y1.size(); ++i) {
         EXPECT_FLOAT_EQ(value_of(y1(i)), value_of(y2(i)));
+      }
+    }
+
+    /*
+     * Test vector of vectors results against @c MatrixXd.
+     *
+     * @param y1 results in the form of vector of vectors
+     * @param y2 @c MatrixXd results.
+     */
+    void test_val(std::vector<std::vector<double> > & y1,
+                  Eigen::MatrixXd& y2) {
+      EXPECT_EQ(y1.size(), y2.rows());
+      for (int i = 0; i < y1.size(); ++i) {
+        EXPECT_EQ(y1[i].size(), y2.cols());
+        for (int j = 0; j < y2.cols(); ++j) {
+          EXPECT_FLOAT_EQ(y1[i][j], y2(i, j));
+        }
       }
     }
 
@@ -178,6 +195,50 @@ namespace torsten {
           y1[i][j].grad(theta1, g);
           stan::math::set_zero_all_adjoints();
           y2[i][j].grad(theta2, g1);
+          for (size_t m = 0; m < theta1.size(); ++m) {
+            EXPECT_NEAR(g[m], g1[m], sens_eps);
+          }
+        }
+      }
+    }
+
+    /*
+     * Test @c vector of @c var vectors against @c var matrix
+     *
+     * @param theta1 parameters regarding which the gradient
+     *              would be taken by @c y1 and checked.
+     * @param theta2 parameters regarding which the gradient
+     *              would be taken by @c y2 and checked.
+     * @param y1 result in form of vector of vectors
+     * @param y2 result in form of matrix.
+     * @param fval_esp tolerance of values
+     * @param sens_esp tolerance of gradients
+     */
+    void test_grad(std::vector<stan::math::var>& theta1,
+                   std::vector<stan::math::var>& theta2,
+                   std::vector<std::vector<stan::math::var>>& y1,
+                   Eigen::Matrix<stan::math::var, -1, -1>& y2,
+                   double fval_eps,
+                   double sens_eps) {
+      EXPECT_EQ(theta1.size(), theta2.size());
+      EXPECT_EQ(y1.size(), y2.rows());
+      for (size_t i = 0; i < y1.size(); ++i) {
+        EXPECT_EQ(y1[i].size(), y2.cols());
+      }
+
+      for (size_t i = 0; i < y1.size(); ++i) {
+        for (size_t j = 0; j < y1[i].size(); ++j) {
+          EXPECT_NEAR(y1[i][j].val(), y2(i, j).val(), fval_eps);
+        }
+      }
+
+      std::vector<double> g, g1;
+      for (size_t i = 0; i < y1.size(); ++i) {
+        for (size_t j = 0; j < y1[i].size(); ++j) {
+          stan::math::set_zero_all_adjoints();
+          y1[i][j].grad(theta1, g);
+          stan::math::set_zero_all_adjoints();
+          y2(i, j).grad(theta2, g1);
           for (size_t m = 0; m < theta1.size(); ++m) {
             EXPECT_NEAR(g[m], g1[m], sens_eps);
           }
