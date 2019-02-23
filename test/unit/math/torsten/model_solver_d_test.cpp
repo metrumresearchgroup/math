@@ -18,7 +18,7 @@ using Eigen::Dynamic;
 using stan::math::var;
 using refactor::PKRec;
 
-TEST_F(TorstenPKTwoCptTest, model_solve_d_data_only) {
+TEST_F(TorstenTwoCptTest, model_solve_d_data_only) {
   using torsten::EventsManager;
   using model_t = refactor::PKTwoCptModel<double, double, double, double>;
 
@@ -37,7 +37,7 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_data_only) {
   torsten::test::test_val(sol1, sol2);
 }
 
-TEST_F(TorstenPKTwoCptTest, model_solve_d_init_var) {
+TEST_F(TorstenTwoCptTest, model_solve_d_init_var) {
   using torsten::EventsManager;
   using stan::math::vector_v;
   using stan::math::var;
@@ -61,7 +61,7 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_init_var) {
   torsten::test::test_grad(vars, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, model_solve_d_rate_var) {
+TEST_F(TorstenTwoCptTest, model_solve_d_rate_var) {
   using torsten::EventsManager;
   using stan::math::vector_v;
   using stan::math::var;
@@ -85,7 +85,7 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_rate_var) {
   torsten::test::test_grad(vars, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, model_solve_d_par_var) {
+TEST_F(TorstenTwoCptTest, model_solve_d_par_var) {
   using torsten::EventsManager;
   using stan::math::vector_v;
   using stan::math::var;
@@ -110,7 +110,7 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_par_var) {
   torsten::test::test_grad(vars, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, model_solve_d_rate_par_var) {
+TEST_F(TorstenTwoCptTest, model_solve_d_rate_par_var) {
   using torsten::EventsManager;
   using stan::math::vector_v;
   using stan::math::var;
@@ -136,7 +136,7 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_rate_par_var) {
 }
 
 
-TEST_F(TorstenPKTwoCptTest, model_solve_d_data_only_ss) {
+TEST_F(TorstenTwoCptTest, model_solve_d_data_only_ss) {
   using torsten::EventsManager;
   using model_t = refactor::PKTwoCptModel<double, double, double, double>;
 
@@ -156,7 +156,7 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_data_only_ss) {
   torsten::test::test_val(sol1, sol2);
 }
 
-TEST_F(TorstenPKTwoCptTest, model_solve_d_init_var_ss) {
+TEST_F(TorstenTwoCptTest, model_solve_d_init_var_ss) {
   using torsten::EventsManager;
   using stan::math::var;
   using stan::math::vector_v;
@@ -184,7 +184,7 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_init_var_ss) {
   torsten::test::test_val(sol1, sol2);
 }
 
-TEST_F(TorstenPKTwoCptTest, model_solve_d_rate_var_ss) {
+TEST_F(TorstenTwoCptTest, model_solve_d_rate_var_ss) {
   using torsten::EventsManager;
   using stan::math::var;
   using stan::math::vector_v;
@@ -212,7 +212,7 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_rate_var_ss) {
   torsten::test::test_val(sol1, sol2);
 }
 
-TEST_F(TorstenPKTwoCptTest, model_solve_d_par_var_ss) {
+TEST_F(TorstenTwoCptTest, model_solve_d_par_var_ss) {
   using torsten::EventsManager;
   using stan::math::var;
   using stan::math::vector_v;
@@ -243,7 +243,7 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_par_var_ss) {
   torsten::test::test_grad(vars, pars, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, model_solve_d_amt_par_var_ss) {
+TEST_F(TorstenTwoCptTest, model_solve_d_amt_par_var_ss) {
   using torsten::EventsManager;
   using stan::math::var;
   using stan::math::vector_v;
@@ -275,7 +275,7 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_amt_par_var_ss) {
   torsten::test::test_grad(vars, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, model_solve_d_amt_ii_var_ss) {
+TEST_F(TorstenTwoCptTest, model_solve_d_amt_ii_var_ss) {
   using torsten::EventsManager;
   using stan::math::var;
   using stan::math::vector_v;
@@ -305,7 +305,7 @@ TEST_F(TorstenPKTwoCptTest, model_solve_d_amt_ii_var_ss) {
   torsten::test::test_grad(vars, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_data_only) {
+TEST_F(TorstenTwoCptTest, rk45_model_solve_d_data_only) {
   using torsten::EventsManager;
 
   using refactor::PKTwoCptModel;
@@ -332,7 +332,7 @@ TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_data_only) {
   torsten::test::test_val(sol1, sol2);
 }
 
-TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_init_var) {
+TEST_F(TorstenTwoCptTest, rk45_model_solve_d_init_var) {
   using torsten::EventsManager;
   using refactor::PKTwoCptModel;
   using refactor::PKTwoCptODE;
@@ -364,7 +364,7 @@ TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_init_var) {
   torsten::test::test_grad(vars, init, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_rate_var) {
+TEST_F(TorstenTwoCptTest, rk45_model_solve_d_rate_var) {
   using torsten::EventsManager;
   using refactor::PKTwoCptModel;
   using refactor::PKTwoCptODE;
@@ -400,7 +400,7 @@ TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_rate_var) {
   torsten::test::test_grad(vars, par_rate, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_par_var) {
+TEST_F(TorstenTwoCptTest, rk45_model_solve_d_par_var) {
   using torsten::EventsManager;
   using refactor::PKTwoCptModel;
   using refactor::PKTwoCptODE;
@@ -433,7 +433,7 @@ TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_par_var) {
   torsten::test::test_grad(vars, par, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_data_only_ss) {
+TEST_F(TorstenTwoCptTest, rk45_model_solve_d_data_only_ss) {
   using torsten::EventsManager;
   using refactor::PKTwoCptModel;
   using refactor::PKTwoCptODE;
@@ -462,7 +462,7 @@ TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_data_only_ss) {
   torsten::test::test_val(sol1, sol2);
 }
 
-TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_init_var_ss) {
+TEST_F(TorstenTwoCptTest, rk45_model_solve_d_init_var_ss) {
   using torsten::EventsManager;
 
   using refactor::PKTwoCptModel;
@@ -498,7 +498,7 @@ TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_init_var_ss) {
   torsten::test::test_val(sol1, sol2);
 }
 
-TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_par_var_ss) {
+TEST_F(TorstenTwoCptTest, rk45_model_solve_d_par_var_ss) {
   using torsten::EventsManager;
 
   using refactor::PKTwoCptModel;
@@ -537,7 +537,7 @@ TEST_F(TorstenPKTwoCptTest, rk45_model_solve_d_par_var_ss) {
 }
 
 // PkBdf
-TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_data_only) {
+TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_data_only) {
   using torsten::EventsManager;
 
   using refactor::PKTwoCptModel;
@@ -564,7 +564,7 @@ TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_data_only) {
   torsten::test::test_val(sol1, sol2);
 }
 
-TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_init_var) {
+TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_init_var) {
   using torsten::EventsManager;
   using refactor::PKTwoCptModel;
   using refactor::PKTwoCptODE;
@@ -596,7 +596,7 @@ TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_init_var) {
   torsten::test::test_grad(vars, init, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_rate_var) {
+TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_rate_var) {
   using torsten::EventsManager;
   using refactor::PKTwoCptModel;
   using refactor::PKTwoCptODE;
@@ -632,7 +632,7 @@ TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_rate_var) {
   torsten::test::test_grad(vars, par_rate, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_par_var) {
+TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_par_var) {
   using torsten::EventsManager;
   using refactor::PKTwoCptModel;
   using refactor::PKTwoCptODE;
@@ -665,7 +665,7 @@ TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_par_var) {
   torsten::test::test_grad(vars, par, sol1, sol2, 1.E-8, 1.E-5);
 }
 
-TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_data_only_ss) {
+TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_data_only_ss) {
   using torsten::EventsManager;
   using refactor::PKTwoCptModel;
   using refactor::PKTwoCptODE;
@@ -694,7 +694,7 @@ TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_data_only_ss) {
   torsten::test::test_val(sol1, sol2);
 }
 
-TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_init_var_ss) {
+TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_init_var_ss) {
   using torsten::EventsManager;
 
   using refactor::PKTwoCptModel;
@@ -730,7 +730,7 @@ TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_init_var_ss) {
   torsten::test::test_val(sol1, sol2);
 }
 
-TEST_F(TorstenPKTwoCptTest, PkBdf_model_solve_d_par_var_ss) {
+TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_par_var_ss) {
   using torsten::EventsManager;
 
   using refactor::PKTwoCptModel;

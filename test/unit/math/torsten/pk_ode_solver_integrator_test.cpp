@@ -6,6 +6,92 @@
 #include <test/unit/util.hpp>
 #include <gtest/gtest.h>
 
+// TEST_F(TorstenCptOdeModelTest, pk_bdf_integrator_t0_var) {
+//   using stan::math::var;
+//   using stan::math::to_var;
+//   using refactor::PKTwoCptModel;
+//   using refactor::PKTwoCptODE;
+//   using refactor::PKODEModel;
+
+//   y0(0) = 100.0;
+//   y0(1) = 1000.0;
+//   y0(2) = 0.0;
+
+//   PkOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
+//   PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
+
+//   using model1_t = PKODEModel<double, double, double, double, PKTwoCptODE>;
+//   using model2_t = PKODEModel<var, double, double, double, PKTwoCptODE>;
+
+//   std::vector<double> dtv{t0};
+
+//   {
+//     auto f1 = [&] (std::vector<double>& x) {
+//       model1_t model(x[0], y0, rate, model0.par(), model0.f());
+//       return model.solve(ts[0], integ);
+//     };
+//     auto f2 = [&] (std::vector<stan::math::var>& x) {
+//       model2_t model(x[0], y0, rate, model0.par(), model0.f());
+//       var dt_ = ts[0];
+//       return model.solve(dt_, integ);
+//     };
+//     torsten::test::test_grad(f1, f2, dtv, 2e-5, 1e-6, 1e-3, 1e-3);
+//   }
+// }
+
+TEST_F(TorstenCptOdeModelTest, pk_bdf_integrator_dt_var) {
+  using stan::math::var;
+  using stan::math::to_var;
+  using refactor::PKTwoCptModel;
+  using refactor::PKTwoCptODE;
+  using refactor::PKODEModel;
+
+  y0(0) = 100.0;
+  y0(1) = 1000.0;
+  y0(2) = 0.0;
+
+  PkOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
+  PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
+
+  PKODEModel<double, double, double, double, PKTwoCptODE> model1(t0, y0, rate, model0.par(), model0.f());
+  using model_t = PKODEModel<var, double, double, double, PKTwoCptODE>;
+  var t0_v = t0;
+  model_t model2(t0_v, y0, rate, model0.par(), model0.f());
+
+  std::vector<double> dtv{ts[0]};
+  {
+    auto f1 = [&] (std::vector<double>& x) { return model1.solve(x[0], integ); };
+    auto f2 = [&] (std::vector<var>& x) { return model2.solve(x[0], integ); };
+    torsten::test::test_grad(f1, f2, dtv, 2e-5, 1e-6, 1e-3, 1e-3);
+  }
+}
+
+TEST_F(TorstenCptOdeModelTest, pk_adams_integrator_dt_var) {
+  using stan::math::var;
+  using stan::math::to_var;
+  using refactor::PKTwoCptModel;
+  using refactor::PKTwoCptODE;
+  using refactor::PKODEModel;
+
+  y0(0) = 100.0;
+  y0(1) = 1000.0;
+  y0(2) = 0.0;
+
+  PkOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
+  PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
+
+  PKODEModel<double, double, double, double, PKTwoCptODE> model1(t0, y0, rate, model0.par(), model0.f());
+  using model_t = PKODEModel<var, double, double, double, PKTwoCptODE>;
+  var t0_v = t0;
+  model_t model2(t0_v, y0, rate, model0.par(), model0.f());
+
+  std::vector<double> dtv{ts[0]};
+  {
+    auto f1 = [&] (std::vector<double>& x) { return model1.solve(x[0], integ); };
+    auto f2 = [&] (std::vector<var>& x) { return model2.solve(x[0], integ); };
+    torsten::test::test_grad(f1, f2, dtv, 2e-5, 1e-6, 1e-3, 1e-4);
+  }
+}
 
 TEST_F(TorstenCptOdeModelTest, general_ode_solver) {
   using stan::math::var;

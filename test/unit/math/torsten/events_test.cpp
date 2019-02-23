@@ -1,6 +1,8 @@
-#include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
+#include <Eigen/Dense>
+#include <Eigen/src/Core/NumTraits.h>
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
+#include <test/unit/math/torsten/pk_onecpt_test_fixture.hpp>
 #include <test/unit/math/torsten/pk_twocpt_test_fixture.hpp>
 #include <test/unit/math/torsten/pk_twocpt_mpi_test_fixture.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
@@ -17,7 +19,52 @@ using stan::math::var;
 using refactor::PKRec;
 using torsten::EventsManager;
 
-TEST_F(TorstenPKTwoCptTest, events_addl) {
+TEST_F(TorstenOneCptTest, lag_time) {
+  using stan::math::var;
+
+  nt = 2;
+  time.resize(nt);
+  amt.resize(nt);
+  rate.resize(nt);
+  cmt.resize(nt);
+  evid.resize(nt);
+  ii.resize(nt);
+  addl.resize(nt);
+  ss.resize(nt);
+  evid[0] = 1;
+  cmt[0] = 1;
+  ii[0] = 0;
+  addl[0] = 0;
+  time[0] = 0.0;
+  tlag[0][0] = 1.5;
+
+  time[1] = 2.5;
+
+  EventsManager<double, double, double, double, double, double, double>
+    em(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
+  auto ev = em.events();
+
+  EXPECT_EQ(ev.size(), nt + 1);  
+
+  EXPECT_FLOAT_EQ(ev.time(0), 0.0);
+  EXPECT_FLOAT_EQ(ev.time(1), 1.5);
+  EXPECT_FLOAT_EQ(ev.time(2), 2.5);
+  EXPECT_EQ(ev.evid(0), 2);
+  EXPECT_EQ(ev.evid(1), 1);
+  EXPECT_EQ(ev.evid(2), 0);
+
+  std::vector<std::vector<var> > tlag_v(1, stan::math::to_var(tlag[0]));
+  EventsManager<double, double, double, double, double, double, var>
+    em1(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag_v);
+  auto ev1 = em1.events();
+  stan::math::set_zero_all_adjoints();
+  std::vector<double> g;
+  ev1.time(1).grad(tlag_v[0], g);
+  EXPECT_FLOAT_EQ(g[0], 1.0);
+  EXPECT_FLOAT_EQ(g[1], 0.0);
+}
+
+TEST_F(TorstenTwoCptTest, events_addl) {
   using EM = EventsManager<double, double, double, double, double, double, double>;
 
   int nCmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
@@ -66,7 +113,7 @@ TEST_F(TorstenPKTwoCptTest, events_addl) {
   EXPECT_EQ(ev.time(17), 60   );  EXPECT_EQ(ev.amt(17), 1000);  EXPECT_EQ(ev.evid(17), 1);
 }
 
-TEST_F(TorstenPKTwoCptTest, events_addl_singled_ragged_array) {
+TEST_F(TorstenTwoCptTest, events_addl_singled_ragged_array) {
   using EM = EventsManager<double, double, double, double, double, double, double>;
 
   int nCmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
@@ -115,7 +162,7 @@ TEST_F(TorstenPKTwoCptTest, events_addl_singled_ragged_array) {
   EXPECT_EQ(ev.time(17), 60   );  EXPECT_EQ(ev.amt(17), 1000);  EXPECT_EQ(ev.evid(17), 1);
 }
 
-TEST_F(TorstenPKTwoCptTest, events_addl_multiple_identical_ragged_array) {
+TEST_F(TorstenTwoCptTest, events_addl_multiple_identical_ragged_array) {
   using EM = EventsManager<double, double, double, double, double, double, double>;
 
   int nCmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
@@ -197,7 +244,7 @@ TEST_F(TorstenPKTwoCptTest, events_addl_multiple_identical_ragged_array) {
   }
 }
 
-TEST_F(TorstenPKTwoCptTest, events_addl_rate) {
+TEST_F(TorstenTwoCptTest, events_addl_rate) {
   using EM = EventsManager<double, double, double, double, double, double, double>;
 
   int nCmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
@@ -259,7 +306,7 @@ TEST_F(TorstenPKTwoCptTest, events_addl_rate) {
   EXPECT_FLOAT_EQ(em.rates()[19][1], 0  );
 }
 
-TEST_F(TorstenPKTwoCptTest, events_addl_rate_multiple_identical_ragged_array) {
+TEST_F(TorstenTwoCptTest, events_addl_rate_multiple_identical_ragged_array) {
   using EM = EventsManager<double, double, double, double, double, double, double>;
 
   int nCmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
@@ -389,7 +436,7 @@ TEST_F(TorstenPKTwoCptTest, events_addl_rate_multiple_identical_ragged_array) {
   }
 }
 
-TEST_F(TorstenPKTwoCptTest, events_addl_const_tlag) {
+TEST_F(TorstenTwoCptTest, events_addl_const_tlag) {
   using EM = EventsManager<double, double, double, double, double, double, double>;
 
   int nCmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
@@ -486,7 +533,7 @@ TEST_F(TorstenPKTwoCptTest, events_addl_const_tlag) {
   }
 }
 
-TEST_F(TorstenPKTwoCptTest, events_addl_rate_const_tlag) {
+TEST_F(TorstenTwoCptTest, events_addl_rate_const_tlag) {
   using EM = EventsManager<double, double, double, double, double, double, double>;
 
   int nCmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
@@ -611,7 +658,7 @@ TEST_F(TorstenPopulationPKTwoCptTest, events_addl_rate_const_tlag) {
   }
 }
 
-TEST_F(TorstenPKTwoCptTest, events_addl_rate_tlag) {
+TEST_F(TorstenTwoCptTest, events_addl_rate_tlag) {
   using EM = EventsManager<double, double, double, double, double, double, double>;
 
   int nCmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
@@ -653,7 +700,7 @@ TEST_F(TorstenPKTwoCptTest, events_addl_rate_tlag) {
   EXPECT_FLOAT_EQ(ev.time(15), 13.75); EXPECT_FLOAT_EQ(em.rates()[15][1],  400.0);
 }
 
-TEST_F(TorstenPKTwoCptTest, events_addl_rate_tlag_LOCF) {
+TEST_F(TorstenTwoCptTest, events_addl_rate_tlag_LOCF) {
   using EM = EventsManager<double, double, double, double, double, double, double>;
 
   int nCmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;

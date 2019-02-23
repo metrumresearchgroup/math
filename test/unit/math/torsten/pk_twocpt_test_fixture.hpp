@@ -8,13 +8,14 @@
 #include <vector>
 #include <string>
 
-class TorstenPKTwoCptTest : public testing::Test {
+class TorstenTwoCptTest : public testing::Test {
   void SetUp() {
     // make sure memory's clean before starting each test
     stan::math::recover_memory();
   }
 public:
-  TorstenPKTwoCptTest() :
+  TorstenTwoCptTest() :
+    nCmt(3),
     nt(10),
     time(nt, 0.0),
     amt(nt, 0),
@@ -40,6 +41,7 @@ public:
     addl[0] = 14;
   }
 
+  const int nCmt;
   const int nt;
   std::vector<double> time;
   std::vector<double> amt;

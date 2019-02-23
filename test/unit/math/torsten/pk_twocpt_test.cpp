@@ -21,7 +21,7 @@ using Eigen::Matrix;
 using Eigen::Dynamic;
 using stan::math::var;
 
-TEST_F(TorstenPKTwoCptTest, multiple_bolus_doses) {
+TEST_F(TorstenTwoCptTest, multiple_bolus_doses) {
   Matrix<double, Dynamic, Dynamic> amounts(10, 3);
   amounts << 1000.0, 0.0, 0.0,
     740.818221, 238.3713, 12.75775,
@@ -85,7 +85,7 @@ TEST_F(TorstenPKTwoCptTest, multiple_bolus_doses) {
   }
 }
 
-TEST_F(TorstenPKTwoCptTest, multiple_addl_IV_doses) {
+TEST_F(TorstenTwoCptTest, multiple_addl_IV_doses) {
   using model_t = refactor::PKTwoCptModel<double, double, double, double>;
 
   rate[0] = 300.0;
@@ -125,7 +125,7 @@ TEST_F(TorstenPKTwoCptTest, multiple_addl_IV_doses) {
   }
 }
 
-TEST_F(TorstenPKTwoCptTest, multiple_IV_doses) {
+TEST_F(TorstenTwoCptTest, multiple_IV_doses) {
   using model_t = refactor::PKTwoCptModel<double, double, double, double>;
 
   rate[0] = 300.0;
@@ -202,13 +202,13 @@ TEST_F(TorstenPopulationPKTwoCptTest, multiple_bolus_doses) {
                                                                            len_biovar, biovar_m,
                                                                            len_tlag, tlag_m);
     Matrix<var, Dynamic, Dynamic> x = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
-    for (size_t i = 0; i < np; ++i) {
+    for (int i = 0; i < np; ++i) {
       torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
     }
   }
 }
 
-TEST_F(TorstenPKTwoCptTest, multiple_bolus_doses_overload) {
+TEST_F(TorstenTwoCptTest, multiple_bolus_doses_overload) {
   Matrix<double, Dynamic, Dynamic> x_122, x_112, x_111, x_121, x_212,
     x_211, x_221;
   x_122 = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
@@ -249,7 +249,7 @@ TEST_F(TorstenPKTwoCptTest, multiple_bolus_doses_overload) {
   // CHECK - do I need an AD test for every function signature ?
 }
 
-TEST_F(TorstenPKTwoCptTest, signature) {
+TEST_F(TorstenTwoCptTest, signature) {
   using stan::math::var;
   
   vector<vector<var> > pMatrix_v(1);
@@ -461,7 +461,7 @@ TEST_F(TorstenPKTwoCptTest, signature) {
         EXPECT_FLOAT_EQ(amounts(j, k), x_221[i](j, k).val());  
 }
 
-TEST_F(TorstenPKTwoCptTest, steady_state) {
+TEST_F(TorstenTwoCptTest, steady_state) {
 
   time[0] = 0.0;
   time[1] = 0.0;
@@ -498,7 +498,7 @@ TEST_F(TorstenPKTwoCptTest, steady_state) {
 }
 
 
-TEST_F(TorstenPKTwoCptTest, steady_state_rate) {
+TEST_F(TorstenTwoCptTest, steady_state_rate) {
   time[0] = 0.0;
   time[1] = 0.0;
   for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
@@ -606,7 +606,7 @@ TEST(TorstenPKTwoCpt, events_specific_data) {
                      pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
-TEST_F(TorstenPKTwoCptTest, Rate) {
+TEST_F(TorstenTwoCptTest, Rate) {
   using std::vector;
 
   pMatrix[0][0] = 5;  // CL
@@ -642,7 +642,7 @@ TEST_F(TorstenPKTwoCptTest, Rate) {
                      pMatrix, biovar, tlag, 1e-8, 5e-4);
 }
 
-TEST_F(TorstenPKTwoCptTest, multiple_trunc_rate_var) {
+TEST_F(TorstenTwoCptTest, multiple_trunc_rate_var) {
   using std::vector;
   using stan::math::var;
 
@@ -727,7 +727,7 @@ TEST_F(TorstenPKTwoCptTest, multiple_trunc_rate_var) {
 #endif
 }
 
-TEST_F(TorstenPKTwoCptTest, multiple_iv_rate_var) {
+TEST_F(TorstenTwoCptTest, multiple_iv_rate_var) {
   using std::vector;
   using stan::math::var;
 

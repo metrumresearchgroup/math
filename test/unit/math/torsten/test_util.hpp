@@ -65,6 +65,37 @@ namespace torsten {
      * @param y1 one result
      * @param y2 the other result to be compared against
      *              with, must of same shape and size as to @c pk_y
+     * @param rtol relative tolerance
+     * @param rtol absolute tolerance
+     */
+    template<typename T1, typename T2>
+    void test_val(Eigen::Matrix<T1, -1, -1>& y1,
+                  Eigen::Matrix<T2, -1, -1>& y2,
+                  double rtol, double atol) {
+      using stan::math::value_of;
+      EXPECT_EQ(y1.rows(), y2.rows());
+      EXPECT_EQ(y1.cols(), y2.cols());
+      for (int i = 0; i < y1.size(); ++i) {
+        double y1_i = value_of(y1(i));
+        double y2_i = value_of(y2(i));
+        if (abs(y1_i) < 1e-5 && abs(y2_i) < 1e-5) {
+          EXPECT_NEAR(y1_i, y2_i, atol);
+        } else {
+          double err = std::max(y1_i, y2_i) * rtol;          
+          EXPECT_NEAR(y1_i, y2_i, err);
+        }
+      }
+    }
+
+    /*
+     * Test @c MatrixXd results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
      */
     template<typename T1, typename T2>
     void test_val(Eigen::Matrix<T1, -1, 1>& y1,
@@ -85,7 +116,7 @@ namespace torsten {
     void test_val(std::vector<std::vector<double> > & y1,
                   Eigen::MatrixXd& y2) {
       EXPECT_EQ(y1.size(), y2.rows());
-      for (int i = 0; i < y1.size(); ++i) {
+      for (size_t i = 0; i < y1.size(); ++i) {
         EXPECT_EQ(y1[i].size(), y2.cols());
         for (int j = 0; j < y2.cols(); ++j) {
           EXPECT_FLOAT_EQ(y1[i][j], y2(i, j));
@@ -430,6 +461,56 @@ namespace torsten {
         }
       }
     }
+
+    /*
+     * test gradients against finite difference
+     *
+     * Given a functor that takes a single parameter vector,
+     * compare the gradients of the functor w.r.t. the
+     * vector parameter.
+     *
+     * @tparam F1 functor type that return data, must takes a single vector
+     * @tparam F2 functor type that return @c var, must takes a single vector
+     * argument and returns a matrix.
+     * @param f functor
+     * @param theta parameter of the functor's function
+     * @param h step size when eval finite difference
+     * @param fval_esp tolerance of values
+     * @param sens_esp tolerance of gradients
+     */
+    template<typename F1, typename F2>
+    void test_grad(F1& f1, F2& f2,
+                   std::vector<double>& theta,
+                   double h,
+                   double fval_eps,
+                   double r_sens_eps,  double a_sens_eps) {
+      std::vector<stan::math::var> theta_v(stan::math::to_var(theta));
+      Eigen::MatrixXd fd = f1(theta);
+      Eigen::Matrix<stan::math::var,
+                    Eigen::Dynamic,
+                    Eigen::Dynamic> fv = f2(theta_v);
+
+      std::vector<double> g;
+      for (size_t i = 0; i < theta.size(); ++i) {
+        std::vector<stan::math::var> p{theta_v[i]};
+        std::vector<double> theta_h(theta);
+        theta_h[i] += h;
+        Eigen::MatrixXd fd_h = f1(theta_h);
+        EXPECT_EQ(fv.size(), fd.size());
+        for (int j = 0; j < fv.size(); ++j) {
+          EXPECT_NEAR(fv(j).val(), fd(j), fval_eps);
+          stan::math::set_zero_all_adjoints();
+          fv(j).grad(p, g);
+          double g_fd = (fd_h(j) - fd(j))/h;
+          if (abs(g[0]) < 1e-5 && abs(g_fd) < 1e-5) {
+            EXPECT_NEAR(g[0], g_fd, a_sens_eps);
+          } else {
+            EXPECT_NEAR(g[0], g_fd, r_sens_eps * std::max(abs(g[0]), abs(g_fd)));
+          }
+        }
+      }
+    }
+
 
   }
 }
