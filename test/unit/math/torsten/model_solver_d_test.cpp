@@ -26,13 +26,13 @@ TEST_F(TorstenTwoCptTest, model_solve_d_data_only) {
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<double> rate{1000., 0., 0.};
 
   model_t model(t, init, rate, pMatrix[0]);
   
-  Eigen::VectorXd sol1 = model.solve(dt);
-  Eigen::VectorXd sol2 = model.solve_d(dt);
+  Eigen::VectorXd sol1 = model.solve(t1);
+  Eigen::VectorXd sol2 = model.solve_d(t1);
   
   torsten::test::test_val(sol1, sol2);
 }
@@ -47,16 +47,16 @@ TEST_F(TorstenTwoCptTest, model_solve_d_init_var) {
   refactor::PKRec<var> init(ncmt);
   init << 200, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<double> rate{400., 1000., 0.};
 
   model_t model(t, init, rate, pMatrix[0]);
 
-  std::vector<var> vars(model.vars(dt));
+  std::vector<var> vars(model.vars(t1));
   EXPECT_EQ(vars.size(), init.size());
 
-  vector_v sol1 = model.solve(dt);
-  Eigen::VectorXd sol2_d = model.solve_d(dt);
+  vector_v sol1 = model.solve(t1);
+  Eigen::VectorXd sol2_d = model.solve_d(t1);
   vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   torsten::test::test_grad(vars, sol1, sol2, 1.E-8, 1.E-5);
 }
@@ -71,16 +71,16 @@ TEST_F(TorstenTwoCptTest, model_solve_d_rate_var) {
   refactor::PKRec<double> init(ncmt);
   init << 200, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<var> rate{400., 1000., 0.};
 
   model_t model(t, init, rate, pMatrix[0]);
 
-  std::vector<var> vars(model.vars(dt));
+  std::vector<var> vars(model.vars(t1));
   EXPECT_EQ(vars.size(), rate.size());
 
-  vector_v sol1 = model.solve(dt);
-  Eigen::VectorXd sol2_d = model.solve_d(dt);
+  vector_v sol1 = model.solve(t1);
+  Eigen::VectorXd sol2_d = model.solve_d(t1);
   vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   torsten::test::test_grad(vars, sol1, sol2, 1.E-8, 1.E-5);
 }
@@ -95,17 +95,17 @@ TEST_F(TorstenTwoCptTest, model_solve_d_par_var) {
   refactor::PKRec<double> init(ncmt);
   init << 200, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<double> rate{400., 1000., 0.};
 
   std::vector<var> pars(stan::math::to_var(pMatrix[0]));
   model_t model(t, init, rate, pars);
   
-  std::vector<var> vars(model.vars(dt));
+  std::vector<var> vars(model.vars(t1));
   EXPECT_EQ(vars.size(), pars.size());
 
-  vector_v sol1 = model.solve(dt);
-  Eigen::VectorXd sol2_d = model.solve_d(dt);
+  vector_v sol1 = model.solve(t1);
+  Eigen::VectorXd sol2_d = model.solve_d(t1);
   vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   torsten::test::test_grad(vars, sol1, sol2, 1.E-8, 1.E-5);
 }
@@ -120,21 +120,20 @@ TEST_F(TorstenTwoCptTest, model_solve_d_rate_par_var) {
   refactor::PKRec<double> init(ncmt);
   init << 200, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<var> rate{400., 1000., 0.};
 
   std::vector<var> pars(stan::math::to_var(pMatrix[0]));
   model_t model(t, init, rate, pars);
 
-  std::vector<var> vars(model.vars(dt));
+  std::vector<var> vars(model.vars(t1));
   EXPECT_EQ(vars.size(), pars.size() + rate.size());
 
-  vector_v sol1 = model.solve(dt);
-  Eigen::VectorXd sol2_d = model.solve_d(dt);
+  vector_v sol1 = model.solve(t1);
+  Eigen::VectorXd sol2_d = model.solve_d(t1);
   vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   torsten::test::test_grad(vars, sol1, sol2, 1.E-8, 1.E-5);
 }
-
 
 TEST_F(TorstenTwoCptTest, model_solve_d_data_only_ss) {
   using torsten::EventsManager;
@@ -321,13 +320,13 @@ TEST_F(TorstenTwoCptTest, rk45_model_solve_d_data_only) {
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<double> rate{1000., 0., 0.};
 
   model_t model(t, init, rate, pMatrix[0], f);
   
-  Eigen::VectorXd sol1 = model.solve(dt, integrator);
-  Eigen::VectorXd sol2 = model.solve_d(dt, integrator);
+  Eigen::VectorXd sol1 = model.solve(t1, integrator);
+  Eigen::VectorXd sol2 = model.solve_d(t1, integrator);
 
   torsten::test::test_val(sol1, sol2);
 }
@@ -349,15 +348,15 @@ TEST_F(TorstenTwoCptTest, rk45_model_solve_d_init_var) {
   refactor::PKRec<var> init(ncmt);
   init << 0, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<double> rate{1000., 0., 0.};
 
   model_t model(t, init, rate, pMatrix[0], f);
-  std::vector<var> vars(model.vars(dt));
+  std::vector<var> vars(model.vars(t1));
   EXPECT_EQ(vars.size(), init.size());
   
-  vector_v sol1 = model.solve(dt, integrator);
-  Eigen::VectorXd sol2_d = model.solve_d(dt, integrator);
+  vector_v sol1 = model.solve(t1, integrator);
+  Eigen::VectorXd sol2_d = model.solve_d(t1, integrator);
   vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   
   // vars and init should be pointing to the same @c vari
@@ -381,19 +380,19 @@ TEST_F(TorstenTwoCptTest, rk45_model_solve_d_rate_var) {
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<var> rate{1000., 0., 0.};
 
   std::vector<double>& par = pMatrix[0];
   model_t model(t, init, rate, par, f);
-  std::vector<var> vars(model.vars(dt));
+  std::vector<var> vars(model.vars(t1));
   std::vector<var> par_rate;
   par_rate.insert(par_rate.end(), par.begin(), par.end());
   par_rate.insert(par_rate.end(), rate.begin(), rate.end());
   EXPECT_EQ(vars.size(), par_rate.size());
   
-  vector_v sol1 = model.solve(dt, integrator);
-  Eigen::VectorXd sol2_d = model.solve_d(dt, integrator);
+  vector_v sol1 = model.solve(t1, integrator);
+  Eigen::VectorXd sol2_d = model.solve_d(t1, integrator);
   vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   
   // vars and init should be pointing to the same @c vari
@@ -417,16 +416,16 @@ TEST_F(TorstenTwoCptTest, rk45_model_solve_d_par_var) {
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<double> rate{1000., 0., 0.};
 
   std::vector<var> par(stan::math::to_var(pMatrix[0]));
   model_t model(t, init, rate, par, f);
-  std::vector<var> vars(model.vars(dt));
+  std::vector<var> vars(model.vars(t1));
   EXPECT_EQ(vars.size(), par.size());
   
-  vector_v sol1 = model.solve(dt, integrator);
-  Eigen::VectorXd sol2_d = model.solve_d(dt, integrator);
+  vector_v sol1 = model.solve(t1, integrator);
+  Eigen::VectorXd sol2_d = model.solve_d(t1, integrator);
   vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   
   // vars and init should be pointing to the same @c vari
@@ -553,13 +552,13 @@ TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_data_only) {
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<double> rate{1000., 0., 0.};
 
   model_t model(t, init, rate, pMatrix[0], f);
   
-  Eigen::VectorXd sol1 = model.solve(dt, integrator);
-  Eigen::VectorXd sol2 = model.solve_d(dt, integrator);
+  Eigen::VectorXd sol1 = model.solve(t1, integrator);
+  Eigen::VectorXd sol2 = model.solve_d(t1, integrator);
 
   torsten::test::test_val(sol1, sol2);
 }
@@ -581,15 +580,15 @@ TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_init_var) {
   refactor::PKRec<var> init(ncmt);
   init << 0, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<double> rate{1000., 0., 0.};
 
   model_t model(t, init, rate, pMatrix[0], f);
-  std::vector<var> vars(model.vars(dt));
+  std::vector<var> vars(model.vars(t1));
   EXPECT_EQ(vars.size(), init.size());
   
-  vector_v sol1 = model.solve(dt, integrator);
-  Eigen::VectorXd sol2_d = model.solve_d(dt, integrator);
+  vector_v sol1 = model.solve(t1, integrator);
+  Eigen::VectorXd sol2_d = model.solve_d(t1, integrator);
   vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   
   // vars and init should be pointing to the same @c vari
@@ -613,19 +612,19 @@ TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_rate_var) {
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<var> rate{1000., 0., 0.};
 
   std::vector<double>& par = pMatrix[0];
   model_t model(t, init, rate, par, f);
-  std::vector<var> vars(model.vars(dt));
+  std::vector<var> vars(model.vars(t1));
   std::vector<var> par_rate;
   par_rate.insert(par_rate.end(), par.begin(), par.end());
   par_rate.insert(par_rate.end(), rate.begin(), rate.end());
   EXPECT_EQ(vars.size(), par_rate.size());
   
-  vector_v sol1 = model.solve(dt, integrator);
-  Eigen::VectorXd sol2_d = model.solve_d(dt, integrator);
+  vector_v sol1 = model.solve(t1, integrator);
+  Eigen::VectorXd sol2_d = model.solve_d(t1, integrator);
   vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   
   // vars and init should be pointing to the same @c vari
@@ -649,16 +648,16 @@ TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_par_var) {
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
 
-  double t = time[1], dt = 0.1;
+  double t = time[1], t1 = t + 0.1;
   std::vector<double> rate{1000., 0., 0.};
 
   std::vector<var> par(stan::math::to_var(pMatrix[0]));
   model_t model(t, init, rate, par, f);
-  std::vector<var> vars(model.vars(dt));
+  std::vector<var> vars(model.vars(t1));
   EXPECT_EQ(vars.size(), par.size());
   
-  vector_v sol1 = model.solve(dt, integrator);
-  Eigen::VectorXd sol2_d = model.solve_d(dt, integrator);
+  vector_v sol1 = model.solve(t1, integrator);
+  Eigen::VectorXd sol2_d = model.solve_d(t1, integrator);
   vector_v sol2 = torsten::mpi::precomputed_gradients(sol2_d, vars);
   
   // vars and init should be pointing to the same @c vari

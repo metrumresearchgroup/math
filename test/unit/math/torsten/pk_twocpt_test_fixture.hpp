@@ -42,7 +42,7 @@ public:
   }
 
   const int nCmt;
-  const int nt;
+  int nt;
   std::vector<double> time;
   std::vector<double> amt;
   std::vector<double> rate;

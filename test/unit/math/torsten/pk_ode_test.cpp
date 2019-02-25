@@ -249,14 +249,14 @@ TEST_F(TorstenOneCptTest, ode_with_single_bolus_tlag) {
   std::vector<std::vector<stan::math::var> > tlag_v(1, stan::math::to_var(tlag[0]));
   auto x = torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag_v,
                                          0, rel_tol, abs_tol, max_num_steps);
-  std::vector<double> g;
-  stan::math::set_zero_all_adjoints();
-  x(1, 0).grad(tlag_v[0], g);
-  stan::math::set_zero_all_adjoints();
-  std::cout << "taki test: " << g[0] << " " << g[1] << "\n";
-  x(1, 1).grad(tlag_v[0], g);
-  std::cout << "taki test: " << g[0] << " " << g[1] << "\n";
-  stan::math::set_zero_all_adjoints();
+  // std::vector<double> g;
+  // stan::math::set_zero_all_adjoints();
+  // x(1, 0).grad(tlag_v[0], g);
+  // stan::math::set_zero_all_adjoints();
+  // std::cout << "taki test: " << g[0] << " " << g[1] << "\n";
+  // x(1, 1).grad(tlag_v[0], g);
+  // std::cout << "taki test: " << g[0] << " " << g[1] << "\n";
+  // stan::math::set_zero_all_adjoints();
 
   // {
   //   auto f1 = [&] (std::vector<double>& x) {

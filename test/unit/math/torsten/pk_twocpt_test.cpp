@@ -21,6 +21,38 @@ using Eigen::Matrix;
 using Eigen::Dynamic;
 using stan::math::var;
 
+TEST_F(TorstenTwoCptTest, single_bolus_tlag) {
+  nt = 2;
+  time.resize(nt);
+  amt.resize(nt);
+  rate.resize(nt);
+  cmt.resize(nt);
+  evid.resize(nt);
+  ii.resize(nt);
+  addl.resize(nt);
+  ss.resize(nt);
+  evid[0] = 1;
+  cmt[0] = 1;
+  ii[0] = 0;
+  addl[0] = 0;
+  time[0] = 0.0;
+  tlag[0][0] = 1.5;
+
+  time[1] = 2.5;
+
+  {
+    auto f1 = [&] (std::vector<double>& x) {
+      std::vector<std::vector<double> > tlag1(1, {x[0], x[1], x[2]});
+      return torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
+    };
+    auto f2 = [&] (std::vector<stan::math::var>& x) {
+      std::vector<std::vector<stan::math::var> > tlag1(1, {x[0], x[1], x[2]});
+      return torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
+    };
+    torsten::test::test_grad(f1, f2, tlag[0], 2e-5, 1e-6, 1e-4, 1e-3);
+  }
+}
+
 TEST_F(TorstenTwoCptTest, multiple_bolus_doses) {
   Matrix<double, Dynamic, Dynamic> amounts(10, 3);
   amounts << 1000.0, 0.0, 0.0,

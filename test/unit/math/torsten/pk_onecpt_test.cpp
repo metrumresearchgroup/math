@@ -3,6 +3,8 @@
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
+#include <test/unit/math/torsten/pk_onecpt_test_fixture.hpp>
+#include <test/unit/math/torsten/test_util.hpp>
 #include <stan/math/torsten/PKModelOneCpt.hpp>
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_twocpt_model.hpp>
@@ -16,52 +18,39 @@ using std::vector;
 using Eigen::Matrix;
 using Eigen::Dynamic;
 
-class TorstenPKOneCptTest : public testing::Test {
-  void SetUp() {
-    // make sure memory's clean before starting each test
-    stan::math::recover_memory();
-  }
-public:
-  TorstenPKOneCptTest() :
-    pMatrix{ {10, 80, 1.2 } },
-    nCmt(2),
-    biovar{ { 1, 1 } },
-    tlag{ { 0, 0 } },
-    time(10, 0.0),
-    amt(10, 0),
-    rate(10, 0),
-    cmt(10, 2),
-    evid(10, 0),
-    ii(10, 0),
-    addl(10, 0),
-    ss(10, 0)
+TEST_F(TorstenOneCptTest, single_bolus_tlag) {
+  nt = 2;
+  time.resize(nt);
+  amt.resize(nt);
+  rate.resize(nt);
+  cmt.resize(nt);
+  evid.resize(nt);
+  ii.resize(nt);
+  addl.resize(nt);
+  ss.resize(nt);
+  evid[0] = 1;
+  cmt[0] = 1;
+  ii[0] = 0;
+  addl[0] = 0;
+  time[0] = 0.0;
+  tlag[0][0] = 1.5;
+
+  time[1] = 2.5;
+
   {
-    time[0] = 0;
-    for(int i = 1; i < 9; i++) time[i] = time[i - 1] + 0.25;
-    time[9] = 4.0;
-    amt[0] = 1000;
-    cmt[0] = 1;    
-    evid[0] = 1;
-    ii[0] = 12;
-    addl[0] = 14;
-    SetUp();
+    auto f1 = [&] (std::vector<double>& x) {
+      std::vector<std::vector<double> > tlag1(1, {x[0], x[1]});
+      return torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
+    };
+    auto f2 = [&] (std::vector<stan::math::var>& x) {
+      std::vector<std::vector<stan::math::var> > tlag1(1, {x[0], x[1]});
+      return torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
+    };
+    torsten::test::test_grad(f1, f2, tlag[0], 2e-5, 1e-6, 1e-3, 1e-3);
   }
+}
 
-  vector<vector<double> > pMatrix;  // CL, VC, Ka
-  const int nCmt;  // F1, F2
-  vector<vector<double> > biovar;
-  vector<vector<double> > tlag;
-  vector<double> time;
-  vector<double> amt;
-  vector<double> rate;
-  vector<int> cmt;
-  vector<int> evid;
-  vector<double> ii;
-  vector<int> addl;
-  vector<int> ss;
-};
-
-TEST_F(TorstenPKOneCptTest, MultipleDoses) {
+TEST_F(TorstenOneCptTest, MultipleDoses) {
   Matrix<double, Dynamic, Dynamic> x;
   x = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
 
@@ -84,7 +73,7 @@ TEST_F(TorstenPKOneCptTest, MultipleDoses) {
                      pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
-TEST_F(TorstenPKOneCptTest, MultipleDoses_IV) {
+TEST_F(TorstenOneCptTest, MultipleDoses_IV) {
   cmt[0] = 2;  // IV infusion, not absorption from the gut
   Matrix<double, Dynamic, Dynamic> x;
   x = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
@@ -108,7 +97,7 @@ TEST_F(TorstenPKOneCptTest, MultipleDoses_IV) {
                      pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
-TEST_F(TorstenPKOneCptTest, MultipleDoses_lagTime) {
+TEST_F(TorstenOneCptTest, MultipleDoses_lagTime) {
   tlag[0].resize(nCmt);
   tlag[0][0] = 5;  // tlag1
   tlag[0][1] = 0;  // tlag2
@@ -140,7 +129,7 @@ TEST_F(TorstenPKOneCptTest, MultipleDoses_lagTime) {
                      pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
-TEST_F(TorstenPKOneCptTest, MultipleDoses_function_overload) {
+TEST_F(TorstenOneCptTest, MultipleDoses_function_overload) {
 	Matrix<double, Dynamic, Dynamic> x_122, x_112, x_111, x_121, x_212,
 	                                 x_211, x_221;
 	x_122 = torsten::PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
@@ -181,7 +170,7 @@ TEST_F(TorstenPKOneCptTest, MultipleDoses_function_overload) {
 // CHECK - do I need an AD test for every function signature ?
 }
 
-TEST_F(TorstenPKOneCptTest, signature) {
+TEST_F(TorstenOneCptTest, signature) {
   using stan::math::var;
   vector<vector<var> > pMatrix_v{ {10, 80, 1.2 } };
   vector<vector<var> > biovar_v { { 1, 1 } };
@@ -355,7 +344,7 @@ TEST_F(TorstenPKOneCptTest, signature) {
   // CHECK - do I need an AD test for every function signature ?
 }
 
-TEST_F(TorstenPKOneCptTest, Steady_State) {
+TEST_F(TorstenOneCptTest, Steady_State) {
   time[0] = 0.0;
   time[1] = 0.0;
   for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
@@ -389,7 +378,7 @@ TEST_F(TorstenPKOneCptTest, Steady_State) {
                      pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
-TEST_F(TorstenPKOneCptTest, Steady_State_rate) {
+TEST_F(TorstenOneCptTest, Steady_State_rate) {
   time[0] = 0.0;
   time[1] = 0.0;
   for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
@@ -493,7 +482,7 @@ TEST(TorstenPKOneCpt, events_specific_data) {
                        pMatrix, biovar, tlag, 1e-8, 1e-4);
 }
 
-TEST_F(TorstenPKOneCptTest, rate) {
+TEST_F(TorstenOneCptTest, rate) {
   using std::vector;
   amt[0] = 1200;
   rate[0] = 1200;
@@ -521,7 +510,7 @@ TEST_F(TorstenPKOneCptTest, rate) {
                      pMatrix, biovar, tlag, 1e-8, 5e-4);
 }
 
-TEST_F(TorstenPKOneCptTest, multiple_trunc_rate_var) {
+TEST_F(TorstenOneCptTest, multiple_trunc_rate_var) {
   using std::vector;
   using stan::math::var;
 
@@ -598,7 +587,7 @@ TEST_F(TorstenPKOneCptTest, multiple_trunc_rate_var) {
 
 }
 
-TEST_F(TorstenPKOneCptTest, MultipleDoses_IV_rate_var) {
+TEST_F(TorstenOneCptTest, MultipleDoses_IV_rate_var) {
   using stan::math::var;
   cmt[0] = 2;  // IV infusion, not absorption from the gut
 
