@@ -153,9 +153,9 @@ struct TorstenOdeTest : public testing::Test {
 
 struct TorstenOdeTest_sho : public TorstenOdeTest {
   const harm_osc_ode_fun f;
-  const std::vector<double> ts;
-  const std::vector<double> theta;
-  const std::vector<double> y0;
+  std::vector<double> ts;
+  std::vector<double> theta;
+  std::vector<double> y0;
 
   using F = harm_osc_ode_fun;
 
@@ -169,9 +169,9 @@ struct TorstenOdeTest_sho : public TorstenOdeTest {
 
 struct TorstenOdeTest_chem : public TorstenOdeTest {
   const chemical_kinetics f;
-  const std::vector<double> ts;
-  const std::vector<double> theta;
-  const std::vector<double> y0;
+  std::vector<double> ts;
+  std::vector<double> theta;
+  std::vector<double> y0;
 
   using F = chemical_kinetics;
 
@@ -185,9 +185,9 @@ struct TorstenOdeTest_chem : public TorstenOdeTest {
 
 struct TorstenOdeTest_lorenz : public TorstenOdeTest {
   const lorenz_ode_fun f;
-  const std::vector<double> ts;
-  const std::vector<double> theta;
-  const std::vector<double> y0;
+  std::vector<double> ts;
+  std::vector<double> theta;
+  std::vector<double> y0;
 
   using F = lorenz_ode_fun;
 

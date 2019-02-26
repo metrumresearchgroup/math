@@ -502,7 +502,7 @@ namespace torsten {
           stan::math::set_zero_all_adjoints();
           fv(j).grad(p, g);
           double g_fd = (fd_h(j) - fd(j))/h;
-          if (abs(g[0]) < 1e-5 && abs(g_fd) < 1e-5) {
+          if (abs(g[0]) < 1e-4 || abs(g_fd) < 1e-4) {
             EXPECT_NEAR(g[0], g_fd, a_sens_eps);
           } else {
             EXPECT_NEAR(g[0], g_fd, r_sens_eps * std::max(abs(g[0]), abs(g_fd)));
@@ -510,8 +510,6 @@ namespace torsten {
         }
       }
     }
-
-
   }
 }
 

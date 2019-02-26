@@ -73,6 +73,304 @@ TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate) {
                        rel_tol, abs_tol, max_num_steps, diff, diff2, "bdf");
 }
 
+TEST_F(TorstenOneCptTest, single_bolus_tlag_var) {
+  nt = 2;
+  time.resize(nt);
+  amt.resize(nt);
+  rate.resize(nt);
+  cmt.resize(nt);
+  evid.resize(nt);
+  ii.resize(nt);
+  addl.resize(nt);
+  ss.resize(nt);
+  evid[0] = 1;
+  cmt[0] = 1;
+  ii[0] = 0;
+  addl[0] = 0;
+  time[0] = 0.0;
+  tlag[0][0] = 1.5;
+
+  time[1] = 2.5;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+  std::vector<double> g;
+  refactor::PKOneCptODE f;
+
+  {
+    auto f1 = [&] (std::vector<double>& x) {
+      std::vector<std::vector<double> > tlag1(1, {x[0], x[1]});
+      return torsten::generalOdeModel_bdf(f, 2, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                          0, rel_tol, abs_tol, max_num_steps);
+    };
+    auto f2 = [&] (std::vector<stan::math::var>& x) {
+      std::vector<std::vector<stan::math::var> > tlag1(1, {x[0], x[1]});
+      return torsten::generalOdeModel_bdf(f, 2, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                          0, rel_tol, abs_tol, max_num_steps);
+    };
+    torsten::test::test_grad(f1, f2, tlag[0], 2e-5, 1e-6, 1e-4, 1e-5);
+  }
+
+  {
+    auto f1 = [&] (std::vector<double>& x) {
+      std::vector<std::vector<double> > tlag1(1, {x[0], x[1]});
+      return torsten::generalOdeModel_adams(f, 2, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                            0, rel_tol, abs_tol, max_num_steps);
+    };
+    auto f2 = [&] (std::vector<stan::math::var>& x) {
+      std::vector<std::vector<stan::math::var> > tlag1(1, {x[0], x[1]});
+      return torsten::generalOdeModel_adams(f, 2, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                            0, rel_tol, abs_tol, max_num_steps);
+    };
+    torsten::test::test_grad(f1, f2, tlag[0], 2e-5, 1e-6, 1e-4, 1e-5);
+  }
+}
+
+TEST_F(TorstenOneCptTest, multiple_bolus_tlag_var) {
+  using std::vector;
+  using Eigen::Matrix;
+  using Eigen::MatrixXd;
+  using Eigen::Dynamic;
+  using stan::math::var;
+
+  time[0] = 0.0;
+  time[1] = 0.0;
+  for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
+  time[3] = 7.0;
+
+  amt[0] = 0.0;
+  evid[0] = 0;
+  evid[1] = 1;
+  evid[3] = 1;
+  amt[1] = 1200;
+  amt[3] = 1000;
+  cmt[1] = 1;
+  cmt[3] = 1;
+  ss[1] = 0;
+  tlag.resize(nt);
+  for (int i = 0; i < nt; ++i) {
+    tlag[i].resize(nCmt);
+    tlag[i][0] = 0.0;
+    tlag[i][1] = 0.0;
+  }
+  tlag[1][0] = 1.0;
+  tlag[3][0] = 2.5;
+  ii[0] = 0.0;
+  addl[0] = 0;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  {
+    auto f1 = [&] (std::vector<double>& x) {
+      std::vector<std::vector<double> > tlag1(nt);
+      for (int i = 0; i < nt; ++i) tlag1[i] = tlag[i];
+      tlag1[1] = std::vector<double>(x.begin(), x.begin() + 2);
+      tlag1[3] = std::vector<double>(x.end() - 2, x.end());
+      return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                            0, rel_tol, abs_tol, max_num_steps);
+    };
+    auto f2 = [&] (std::vector<stan::math::var>& x) {
+      std::vector<std::vector<var> > tlag1(nt);
+      for (int i = 0; i < nt; ++i) tlag1[i] = stan::math::to_var(tlag[i]);
+      tlag1[1] = std::vector<var>(x.begin(), x.begin() + 2);
+      tlag1[3] = std::vector<var>(x.end() - 2, x.end());
+      return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                            0, rel_tol, abs_tol, max_num_steps);
+    };
+    std::vector<double> tlag_test{tlag[1][0], tlag[1][1], tlag[3][0], tlag[3][1]};
+    torsten::test::test_grad(f1, f2, tlag_test, 2e-5, 1e-6, 1e-3, 1e-5);
+  }
+
+  {
+    auto f1 = [&] (std::vector<double>& x) {
+      std::vector<std::vector<double> > tlag1(nt);
+      for (int i = 0; i < nt; ++i) tlag1[i] = tlag[i];
+      tlag1[1] = std::vector<double>(x.begin(), x.begin() + 2);
+      tlag1[3] = std::vector<double>(x.end() - 2, x.end());
+      return torsten::generalOdeModel_adams(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                            0, rel_tol, abs_tol, max_num_steps);
+    };
+    auto f2 = [&] (std::vector<stan::math::var>& x) {
+      std::vector<std::vector<var> > tlag1(nt);
+      for (int i = 0; i < nt; ++i) tlag1[i] = stan::math::to_var(tlag[i]);
+      tlag1[1] = std::vector<var>(x.begin(), x.begin() + 2);
+      tlag1[3] = std::vector<var>(x.end() - 2, x.end());
+      return torsten::generalOdeModel_adams(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                            0, rel_tol, abs_tol, max_num_steps);
+    };
+    std::vector<double> tlag_test{tlag[1][0], tlag[1][1], tlag[3][0], tlag[3][1]};
+    torsten::test::test_grad(f1, f2, tlag_test, 2e-5, 1e-6, 1e-3, 1e-5);
+  }
+}
+
+TEST_F(TorstenOneCptTest, single_bolus_iv_tlag_var) {
+  using std::vector;
+  using Eigen::Matrix;
+  using Eigen::MatrixXd;
+  using Eigen::Dynamic;
+  using stan::math::var;
+
+  time[0] = 0.0;
+  time[1] = 0.0;
+  for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
+
+  amt[0] = 800.0;
+  evid[0] = 1;
+  evid[1] = 1;
+  amt[1] = 1200;
+  rate[1] = 250;
+  cmt[1] = 1;
+  ss[1] = 0;
+  tlag.resize(nt);
+  for (int i = 0; i < nt; ++i) {
+    tlag[i].resize(nCmt);
+    tlag[i][0] = 0.0;
+    tlag[i][1] = 0.0;
+  }
+  tlag[1][0] = 1.0;
+  ii[0] = 0.0;
+  addl[0] = 0;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  {
+    auto f1 = [&] (std::vector<double>& x) {
+      std::vector<std::vector<double> > tlag1(nt);
+      for (int i = 0; i < nt; ++i) tlag1[i] = tlag[i];
+      tlag1[1] = x;
+      return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                          0, rel_tol, abs_tol, max_num_steps);
+    };
+    auto f2 = [&] (std::vector<stan::math::var>& x) {
+      std::vector<std::vector<var> > tlag1(nt);
+      for (int i = 0; i < nt; ++i) tlag1[i] = stan::math::to_var(tlag[i]);
+      tlag1[1] = x;
+      return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                          0, rel_tol, abs_tol, max_num_steps);
+    };
+    std::vector<double> tlag_test(tlag[1]);
+    torsten::test::test_grad(f1, f2, tlag_test, 2e-5, 1e-6, 1e-3, 1e-5);
+  }
+}
+
+TEST_F(TorstenOneCptTest, multiple_iv_tlag_var) {
+  using std::vector;
+  using Eigen::Matrix;
+  using Eigen::MatrixXd;
+  using Eigen::Dynamic;
+  using stan::math::var;
+
+  time[0] = 0.0;
+  time[1] = 0.0;
+  for(int i = 2; i < nt; i++) time[i] = time[i - 1] + 5;
+  time[3] = 6.0;
+
+  amt[0] = 0.0;
+  evid[0] = 0;
+  evid[1] = 1;
+  evid[3] = 1;
+  amt[1] = 1200;
+  amt[3] = 1000;
+  rate[1] = 200;
+  rate[3] = 200;
+  cmt[1] = 1;
+  cmt[3] = 1;
+  ss[1] = 0;
+  tlag.resize(nt);
+  for (int i = 0; i < nt; ++i) {
+    tlag[i].resize(nCmt);
+    tlag[i][0] = 0.0;
+    tlag[i][1] = 0.0;
+  }
+  tlag[1][0] = 1.0;
+  tlag[3][0] = 0.5;
+  ii[0] = 0.0;
+  addl[0] = 0;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  {
+    auto f1 = [&] (std::vector<double>& x) {
+      std::vector<std::vector<double> > tlag1(nt);
+      for (int i = 0; i < nt; ++i) tlag1[i] = tlag[i];
+      tlag1[3] = x;
+      return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                          0, rel_tol, abs_tol, max_num_steps);
+    };
+    auto f2 = [&] (std::vector<stan::math::var>& x) {
+      std::vector<std::vector<var> > tlag1(nt);
+      for (int i = 0; i < nt; ++i) tlag1[i] = stan::math::to_var(tlag[i]);
+      tlag1[3] = x;
+      return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                          0, rel_tol, abs_tol, max_num_steps);
+    };
+    std::vector<double> tlag_test(tlag[3]);
+    torsten::test::test_grad(f1, f2, tlag_test, 2e-5, 1e-6, 1e-3, 1e-5);
+  }
+}
+
+TEST_F(TorstenOneCptTest, multiple_iv_steady_state_tlag_var) {
+  using std::vector;
+  using Eigen::Matrix;
+  using Eigen::MatrixXd;
+  using Eigen::Dynamic;
+  using stan::math::var;
+
+  time[0] = 0.0;
+  time[1] = 0.0;
+  for(int i = 2; i < nt; i++) time[i] = time[i - 1] + 5;
+  time[3] = 6.0;
+
+  amt[0] = 0.0;
+  evid[0] = 0;
+  evid[1] = 1;
+  evid[3] = 1;
+  amt[1] = 1200;
+  amt[3] = 1000;
+  rate[1] = 200;
+  rate[3] = 200;
+  cmt[1] = 1;
+  cmt[3] = 1;
+  ss[1] = 1;
+  tlag.resize(nt);
+  for (int i = 0; i < nt; ++i) {
+    tlag[i].resize(nCmt);
+    tlag[i][0] = 0.0;
+    tlag[i][1] = 0.0;
+  }
+  tlag[1][0] = 1.0;
+  tlag[3][0] = 0.5;
+  ii[1] = 6.5;
+  addl[0] = 0;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  {
+    auto f1 = [&] (std::vector<double>& x) {
+      std::vector<std::vector<double> > tlag1(nt);
+      for (int i = 0; i < nt; ++i) tlag1[i] = tlag[i];
+      tlag1[3] = x;
+      torsten::EventsManager<double, double, double, double, double, double, double> em(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
+      return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                          0, rel_tol, abs_tol, max_num_steps);
+    };
+    auto f2 = [&] (std::vector<stan::math::var>& x) {
+      std::vector<std::vector<var> > tlag1(nt);
+      for (int i = 0; i < nt; ++i) tlag1[i] = stan::math::to_var(tlag[i]);
+      tlag1[3] = x;
+      torsten::EventsManager<double, double, double, double, double, double, var> em(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
+      return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+                                          0, rel_tol, abs_tol, max_num_steps);
+    };
+    std::vector<double> tlag_test(tlag[3]);
+    torsten::test::test_grad(f1, f2, tlag_test, 2e-5, 1e-6, 1e-3, 1e-5);
+  }
+}
+
 TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate_par_var) {
   // Steady state induced by multiple bolus doses (SS = 1, rate = 0)
   using std::vector;
@@ -97,13 +395,11 @@ TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate_par_var) {
       return torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, theta1, biovar, tlag,
                                            0, rel_tol, abs_tol, max_num_steps);
     };
-
     auto f2 = [&] (std::vector<stan::math::var>& theta) {
       std::vector<std::vector<stan::math::var> > theta1{theta};
       return torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, theta1, biovar, tlag,
                                            0, rel_tol, abs_tol, max_num_steps);
     };
-    
     torsten::test::test_grad(f1, f2, pMatrix[0], 2e-5, 1e-6, 1e-3, 1e-3);
   }
 
@@ -113,13 +409,11 @@ TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate_par_var) {
       return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, theta1, biovar, tlag,
                                            0, rel_tol, abs_tol, max_num_steps);
     };
-
     auto f2 = [&] (std::vector<stan::math::var>& theta) {
       std::vector<std::vector<stan::math::var> > theta1{theta};
       return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, theta1, biovar, tlag,
                                            0, rel_tol, abs_tol, max_num_steps);
     };
-    
     torsten::test::test_grad(f1, f2, pMatrix[0], 2e-5, 1e-6, 1e-3, 1e-3);
   }
 }
@@ -148,13 +442,11 @@ TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate_biovar_var) {
       return torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar1, tlag,
                                            0, rel_tol, abs_tol, max_num_steps);
     };
-
     auto f2 = [&] (std::vector<stan::math::var>& x) {
       std::vector<std::vector<stan::math::var> > biovar1{x};
       return torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar1, tlag,
                                            0, rel_tol, abs_tol, max_num_steps);
     };
-    
     torsten::test::test_grad(f1, f2, biovar[0], 2e-5, 1e-6, 1e-3, 1e-3);
   }
 
@@ -164,219 +456,16 @@ TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate_biovar_var) {
       return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar1, tlag,
                                           0, rel_tol, abs_tol, max_num_steps);
     };
-
     auto f2 = [&] (std::vector<stan::math::var>& x) {
       std::vector<std::vector<stan::math::var> > biovar1{x};
       return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar1, tlag,
                                           0, rel_tol, abs_tol, max_num_steps);
     };
-    
     torsten::test::test_grad(f1, f2, biovar[0], 2e-5, 1e-6, 1e-3, 1e-3);
   }
 }
 
-TEST_F(TorstenOneCptTest, single_tlag_event) {
-  // Steady state induced by multiple bolus doses (SS = 1, rate = 0)
-  using std::vector;
-  using Eigen::Matrix;
-  using Eigen::MatrixXd;
-  using Eigen::Dynamic;
 
-  nt = 1;
-  time.resize(nt);
-  amt.resize(nt);
-  rate.resize(nt);
-  cmt.resize(nt);
-  evid.resize(nt);
-  ii.resize(nt);
-  addl.resize(nt);
-  ss.resize(nt);
-  evid[0] = 1;
-  cmt[0] = 1;
-  ii[0] = 0;
-  addl[0] = 0;
-  time[0] = 0.0;
-  tlag[0][0] = 1.5;
-
-  // double rel_tol = 1e-8, abs_tol = 1e-8;
-  // long int max_num_steps = 1e8;
-
-  // auto x = torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
-  //                                        0, rel_tol, abs_tol, max_num_steps);
-
-  // {
-  //   auto f1 = [&] (std::vector<double>& x) {
-  //     std::vector<std::vector<double> > tlag1(nt, {0, 0});
-  //     tlag1[1][0] = x[0];
-  //     tlag1[1][1] = x[1];
-  //     return torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
-  //                                          0, rel_tol, abs_tol, max_num_steps);
-  //   };
-
-  //   auto f2 = [&] (std::vector<stan::math::var>& x) {
-  //     std::vector<std::vector<stan::math::var> > tlag1(nt, {0, 0});
-  //     tlag1[1][0] = x[0];
-  //     tlag1[1][1] = x[1];
-  //     return torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
-  //                                          0, rel_tol, abs_tol, max_num_steps);
-  //   };
-    
-  //   torsten::test::test_grad(f1, f2, tlag[1], 2e-5, 1e-6, 1e-3, 1e-3);
-  // }
-}
-
-TEST_F(TorstenOneCptTest, ode_with_single_bolus_tlag) {
-  nt = 2;
-  time.resize(nt);
-  amt.resize(nt);
-  rate.resize(nt);
-  cmt.resize(nt);
-  evid.resize(nt);
-  ii.resize(nt);
-  addl.resize(nt);
-  ss.resize(nt);
-  evid[0] = 1;
-  cmt[0] = 1;
-  ii[0] = 0;
-  addl[0] = 0;
-  time[0] = 0.0;
-  tlag[0][0] = 1.5;
-
-  time[1] = 2.5;
-
-  double rel_tol = 1e-8, abs_tol = 1e-8;
-  long int max_num_steps = 1e8;
-  std::vector<std::vector<stan::math::var> > tlag_v(1, stan::math::to_var(tlag[0]));
-  auto x = torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag_v,
-                                         0, rel_tol, abs_tol, max_num_steps);
-  // std::vector<double> g;
-  // stan::math::set_zero_all_adjoints();
-  // x(1, 0).grad(tlag_v[0], g);
-  // stan::math::set_zero_all_adjoints();
-  // std::cout << "taki test: " << g[0] << " " << g[1] << "\n";
-  // x(1, 1).grad(tlag_v[0], g);
-  // std::cout << "taki test: " << g[0] << " " << g[1] << "\n";
-  // stan::math::set_zero_all_adjoints();
-
-  // {
-  //   auto f1 = [&] (std::vector<double>& x) {
-  //     std::vector<std::vector<double> > tlag1(1, {x[0], x[1]});
-  //     return torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
-  //                                          0, rel_tol, abs_tol, max_num_steps);
-  //   };
-  //   auto f2 = [&] (std::vector<stan::math::var>& x) {
-  //     std::vector<std::vector<stan::math::var> > tlag1(1, {x[0], x[1]});
-  //     return torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
-  //                                          0, rel_tol, abs_tol, max_num_steps);
-  //   };
-  //   torsten::test::test_grad(f1, f2, tlag[0], 2e-5, 1e-6, 1e-3, 1e-3);
-  // }
-
-  // compare with manually generated events history
-  nt = 3;
-  time.resize(nt);
-  amt.resize(nt);
-  rate.resize(nt);
-  cmt.resize(nt);
-  evid.resize(nt);
-  ii.resize(nt);
-  addl.resize(nt);
-  ss.resize(nt);
-  
-  time[0] = 0.0;
-  time[1] = 1.5;
-  time[2] = 2.5;
-
-  amt[0] = 1000.0;
-  amt[1] = 1000.0;
-  amt[2] = 0.0;
-
-  evid[0] = 2;
-  evid[1] = 1;
-  evid[2] = 0;
-
-  cmt[0] = 1;
-  cmt[1] = 1;
-  cmt[2] = 2;
-
-  tlag[0][0] = 0.0;
-
-  auto x0 = torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
-                                          0, rel_tol, abs_tol, max_num_steps);
-
-  // the last time step's solution should be identical
-  // for (int i = 0; i < nCmt; ++i) {
-  //   EXPECT_FLOAT_EQ(x(x.rows() - 1, i), x0(x0.rows() - 1, i));
-  // }
-}
-
-TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate_tlag_var) {
-  // Steady state induced by multiple bolus doses (SS = 1, rate = 0)
-  using std::vector;
-  using Eigen::Matrix;
-  using Eigen::MatrixXd;
-  using Eigen::Dynamic;
-
-  time[0] = 0.0;
-  time[1] = 0.0;
-  for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
-
-  amt[0] = 0.0;
-  evid[0] = 0;
-  evid[1] = 1;
-  amt[1] = 1200;
-  cmt[1] = 1;
-  ss[1] = 1;
-  tlag.resize(nt);
-  for (int i = 0; i < nt; ++i) {
-    tlag[i].resize(nCmt);
-    tlag[i][0] = 0.0;
-    tlag[i][1] = 0.0;
-  }
-  tlag[1][0] = 1.0;
-  tlag[1][1] = 0.0;
-  ii[0] = 0.0;
-  addl[0] = 0;
-
-  // double rel_tol = 1e-8, abs_tol = 1e-8;
-  // long int max_num_steps = 1e8;
-
-  // {
-  //   auto f1 = [&] (std::vector<double>& x) {
-  //     std::vector<std::vector<double> > tlag1(nt, {0, 0});
-  //     tlag1[1][0] = x[0];
-  //     tlag1[1][1] = x[1];
-  //     return torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
-  //                                          0, rel_tol, abs_tol, max_num_steps);
-  //   };
-
-  //   auto f2 = [&] (std::vector<stan::math::var>& x) {
-  //     std::vector<std::vector<stan::math::var> > tlag1(nt, {0, 0});
-  //     tlag1[1][0] = x[0];
-  //     tlag1[1][1] = x[1];
-  //     return torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
-  //                                          0, rel_tol, abs_tol, max_num_steps);
-  //   };
-    
-  //   torsten::test::test_grad(f1, f2, tlag[1], 2e-5, 1e-6, 1e-3, 1e-3);
-  // }
-
-  // {
-  //   auto f1 = [&] (std::vector<double>& x) {
-  //     std::vector<std::vector<double> > tlag1{x};
-  //     return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
-  //                                          0, rel_tol, abs_tol, max_num_steps);
-  //   };
-
-  //   auto f2 = [&] (std::vector<stan::math::var>& x) {
-  //     std::vector<std::vector<stan::math::var> > tlag1{x};
-  //     return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
-  //                                          0, rel_tol, abs_tol, max_num_steps);
-  //   };
-    
-  //   torsten::test::test_grad(f1, f2, tlag[0], 2e-5, 1e-6, 1e-3, 1e-3);
-  // }
-}
 
 TEST_F(TorstenOneCptTest, ode_with_steady_state_nonzero_rate) {
   // Steady state with constant rate infusion (SS = 1, rate != 0, ii = 0)

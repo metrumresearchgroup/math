@@ -21,6 +21,109 @@
 #include <chrono>
 #include <ctime>
 
+TEST_F(TorstenOdeTest_sho, t0_var) {
+  using torsten::dsolve::PKCvodesFwdSystem;
+  using torsten::dsolve::PKCvodesIntegrator;
+  using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
+  using stan::math::var;
+
+  PKCvodesIntegrator solver(rtol, atol, 1000);
+  
+  ts.resize(1); ts[0] = 1.0;
+  std::vector<double> t0_vec{t0};
+  
+  {
+    auto f1 = [&] (std::vector<double>& x) {
+      auto y = torsten::dsolve::pk_integrate_ode_bdf(f, y0, x[0], ts, theta , x_r, x_i);
+      Eigen::MatrixXd y1(1, 2);
+      y1(0) = y[0][0];
+      y1(1) = y[0][1];
+      return y1;
+    };
+    auto f2 = [&] (std::vector<var>& x) {
+      double t0 = stan::math::value_of(x[0]);
+      std::vector<var> ts_v{t0 + ts[0] - x[0]};
+      auto y = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts_v, theta , x_r, x_i);
+      Eigen::Matrix<var, Eigen::Dynamic, Eigen::Dynamic> y1(1, 2);
+      y1(0) = y[0][0];
+      y1(1) = y[0][1];
+      return y1;
+    };
+    torsten::test::test_grad(f1, f2, t0_vec, 2e-5, 1e-6, 1e-3, 1e-5);
+  }
+}
+
+TEST_F(TorstenOdeTest_chem, t0_var) {
+  using torsten::dsolve::PKCvodesFwdSystem;
+  using torsten::dsolve::PKCvodesIntegrator;
+  using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
+  using stan::math::var;
+
+  PKCvodesIntegrator solver(rtol, atol, 1000);
+  
+  ts.resize(1); ts[0] = 1.0;
+  std::vector<double> t0_vec{t0};
+  
+  {
+    auto f1 = [&] (std::vector<double>& x) {
+      auto y = torsten::dsolve::pk_integrate_ode_bdf(f, y0, x[0], ts, theta , x_r, x_i);
+      Eigen::MatrixXd y1(1, 3);
+      y1(0) = y[0][0];
+      y1(1) = y[0][1];
+      y1(2) = y[0][2];
+      return y1;
+    };
+    auto f2 = [&] (std::vector<var>& x) {
+      double t0 = stan::math::value_of(x[0]);
+      std::vector<var> ts_v{t0 + ts[0] - x[0]};
+      auto y = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts_v, theta , x_r, x_i);
+      Eigen::Matrix<var, Eigen::Dynamic, Eigen::Dynamic> y1(1, 3);
+      y1(0) = y[0][0];
+      y1(1) = y[0][1];
+      y1(2) = y[0][2];
+      return y1;
+    };
+    torsten::test::test_grad(f1, f2, t0_vec, 2e-5, 1e-6, 1e-3, 1e-5);
+  }
+}
+
+TEST_F(TorstenOdeTest_lorenz, t0_var) {
+  using torsten::dsolve::PKCvodesFwdSystem;
+  using torsten::dsolve::PKCvodesIntegrator;
+  using torsten::dsolve::PKCvodesService;
+  using torsten::PkCvodesSensMethod;
+  using stan::math::var;
+
+  PKCvodesIntegrator solver(rtol, atol, 1000);
+  
+  ts.resize(1); ts[0] = 1.0;
+  std::vector<double> t0_vec{t0};
+  
+  {
+    auto f1 = [&] (std::vector<double>& x) {
+      auto y = torsten::dsolve::pk_integrate_ode_bdf(f, y0, x[0], ts, theta , x_r, x_i);
+      Eigen::MatrixXd y1(1, 3);
+      y1(0) = y[0][0];
+      y1(1) = y[0][1];
+      y1(2) = y[0][2];
+      return y1;
+    };
+    auto f2 = [&] (std::vector<var>& x) {
+      double t0 = stan::math::value_of(x[0]);
+      std::vector<var> ts_v{t0 + ts[0] - x[0]};
+      auto y = torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts_v, theta , x_r, x_i);
+      Eigen::Matrix<var, Eigen::Dynamic, Eigen::Dynamic> y1(1, 3);
+      y1(0) = y[0][0];
+      y1(1) = y[0][1];
+      y1(2) = y[0][2];
+      return y1;
+    };
+    torsten::test::test_grad(f1, f2, t0_vec, 2e-5, 1e-6, 1e-3, 1e-5);
+  }
+}
+
 TEST_F(TorstenOdeTest_sho, cvodes_ivp_system) {
   using torsten::dsolve::PKCvodesFwdSystem;
   using torsten::dsolve::PKCvodesIntegrator;
