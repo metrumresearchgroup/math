@@ -91,6 +91,7 @@ struct FribergKarlssonTest : public testing::Test {
   }
 
   FribergKarlssonTest() :
+    f(),
     nCmt(8),
     nt(10),
     // CL , Q , Vc , Vp , ka , MTT , Circ0 , alpha , gamma

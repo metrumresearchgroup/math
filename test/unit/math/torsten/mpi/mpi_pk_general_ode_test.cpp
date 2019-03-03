@@ -11,7 +11,6 @@
 #include <stan/math/torsten/to_var.hpp>
 #include <gtest/gtest.h>
 #include <stan/math/rev/mat.hpp>  // FIX ME - include should be more specific
-#include <test/unit/math/torsten/util_PKModelTwoCpt.hpp>
 #include <vector>
 
 using std::vector;

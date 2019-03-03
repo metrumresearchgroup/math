@@ -173,9 +173,6 @@ TEST_F(TorstenOneCptModelTest, ss_solver_bolus) {
   auto y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
   EXPECT_FLOAT_EQ(y1(0).val(), 1.00330322392E-3);
   EXPECT_FLOAT_EQ(y1(1).val(), 2.07672937446E+0);
-  // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << "\n";
-//  auto // y2 = refactor::PKOneCptModelSolverSS::solve(model, amt, model.rate()[cmt-1],ii, cmt);
-  // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << "\n";
 
   std::vector<double> g1, g2;
   stan::math::set_zero_all_adjoints();
@@ -193,9 +190,6 @@ TEST_F(TorstenOneCptModelTest, ss_solver_bolus) {
   y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
   EXPECT_FLOAT_EQ(y1(0).val(), 0);
   EXPECT_FLOAT_EQ(y1(1).val(), 0.996102795153);
-  // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << "\n";
-  // y2 = refactor::PKOneCptModelSolverSS::solve(model, amt, model.rate()[cmt-1],ii, cmt);
-  // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << "\n";
 
   stan::math::set_zero_all_adjoints();
   y1(0).grad(theta, g1);
@@ -239,9 +233,6 @@ TEST_F(TorstenOneCptModelTest, ss_solver_multi_truncated_infusion) {
   auto y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
   EXPECT_FLOAT_EQ(y1(0).val(), 0.00312961339574);
   EXPECT_FLOAT_EQ(y1(1).val(), 3.61310672484);
-  // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << "\n";
-//  auto // y2 = refactor::PKOneCptModelSolverSS::solve(model, amt, model.rate()[cmt-1],ii, cmt);
-  // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << "\n";
 
   std::vector<double> g1, g2;
   stan::math::set_zero_all_adjoints();
@@ -259,9 +250,6 @@ TEST_F(TorstenOneCptModelTest, ss_solver_multi_truncated_infusion) {
   y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
   EXPECT_FLOAT_EQ(y1(0).val(), 0.0);
   EXPECT_FLOAT_EQ(y1(1).val(), 2.25697891686);
-  // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << "\n";
-  // y2 = refactor::PKOneCptModelSolverSS::solve(model, amt, model.rate()[cmt-1],ii, cmt);
-  // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << "\n";
 
   stan::math::set_zero_all_adjoints();
   y1(0).grad(theta, g1);
@@ -306,9 +294,6 @@ TEST_F(TorstenOneCptModelTest, ss_solver_const_infusion) {
   auto y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
   EXPECT_FLOAT_EQ(y1(0).val(), 916.666666667);
   EXPECT_FLOAT_EQ(y1(1).val(), 1760);
-  // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << "\n";
-//  auto // y2 = refactor::PKOneCptModelSolverSS::solve(model, amt, model.rate()[cmt-1],ii, cmt);
-  // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << "\n";
 
   std::vector<double> g1, g2;
   stan::math::set_zero_all_adjoints();
@@ -326,9 +311,6 @@ TEST_F(TorstenOneCptModelTest, ss_solver_const_infusion) {
   y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
   EXPECT_FLOAT_EQ(y1(0).val(), 0.0);
   EXPECT_FLOAT_EQ(y1(1).val(), 1232);
-  // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << "\n";
-  // y2 = refactor::PKOneCptModelSolverSS::solve(model, amt, model.rate()[cmt-1],ii, cmt);
-  // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << "\n";
 
   stan::math::set_zero_all_adjoints();
   y1(0).grad(theta, g1);
