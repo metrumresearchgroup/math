@@ -1,15 +1,13 @@
-#include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
+#include <test/unit/math/torsten/test_util.hpp>
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
 #include <test/unit/math/torsten/pk_twocpt_test_fixture.hpp>
 #include <test/unit/math/torsten/pk_twocpt_mpi_test_fixture.hpp>
-#include <test/unit/math/torsten/test_util.hpp>
 #include <stan/math/torsten/PKModelTwoCpt.hpp>
 #include <stan/math/torsten/generalOdeModel_bdf.hpp>
 #include <stan/math/torsten/generalOdeModel_rk45.hpp>
 #include <stan/math/torsten/pk_twocpt_model.hpp>
 #include <stan/math/torsten/to_var.hpp>
 #include <gtest/gtest.h>
-#include <stan/math/rev/mat.hpp>  // FIX ME - include should be more specific
 #include <vector>
 
 using std::vector;
@@ -64,6 +62,9 @@ TEST_F(TorstenTwoCptTest, multiple_bolus) {
 }
 
 TEST_F(TorstenTwoCptTest, multiple_bolus_overload) {
+  resize(3);
+  ii[0] = 4.0;
+  addl[0] = 1;
   std::vector<std::vector<double>> biovar_test(1, {0.8, 0.9, 0.9});
   std::vector<std::vector<double>> tlag_test(1, {0.4, 0.8, 0.8});
   TORSTEN_CPT_PARAM_OVERLOAD_TEST(PKModelTwoCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar_test, tlag_test, 1e-6, 1e-6);
@@ -167,9 +168,10 @@ TEST_F(TorstenTwoCptTest, steady_state) {
 }
 
 TEST_F(TorstenTwoCptTest, steady_state_overload) {
+  resize(3);
   time[0] = 0.0;
   time[1] = 0.0;
-  for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
+  for(int i = 2; i < nt; i++) time[i] = time[i - 1] + 5;
 
   amt[0] = 1200;
   addl[0] = 10;
@@ -220,9 +222,11 @@ TEST_F(TorstenTwoCptTest, multiple_steady_state_iv) {
 }
 
 TEST_F(TorstenTwoCptTest, multiple_steady_state_iv_overload) {
+  resize(3);
   time[0] = 0.0;
   time[1] = 0.0;
-  for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
+  for(int i = 2; i < nt; i++) time[i] = time[i - 1] + 5;
+  addl[0] = 1;
   amt[0] = 1200;
   rate[0] = 150;
   addl[0] = 10;
@@ -235,7 +239,6 @@ TEST_F(TorstenTwoCptTest, multiple_steady_state_iv_overload) {
 }
 
 TEST_F(TorstenTwoCptTest, events_specific_data) {
-
   nt = 11;
   pMatrix.resize(nt);
   for (int i = 0; i < nt; i++) {
@@ -330,7 +333,22 @@ TEST_F(TorstenTwoCptTest, multiple_iv_var) {
 
   rate[0] = 340;
   TORSTEN_CPT_GRAD_RATE_TEST(PKModelTwoCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag, 2e-5, 1e-6, 1e-6, 1e-6);
+}
 
+TEST_F(TorstenTwoCptTest, multiple_iv_var_overload) {
+  resize(3);
+  time[0] = 0.0;
+  time[1] = 0.0;
+  for(int i = 2; i < nt; i++) time[i] = time[i - 1] + 5;
+
+  pMatrix[0][0] = 5;  // CL
+  pMatrix[0][1] = 8;  // Q
+  pMatrix[0][2] = 35;  // Vc
+  pMatrix[0][3] = 105;  // Vp
+  pMatrix[0][4] = 1.2;  // ka
+  
+  amt[0] = 1200;
+  rate[0] = 340;
   std::vector<stan::math::var> rate_v(stan::math::to_var(rate));
   TORSTEN_CPT_PARAM_OVERLOAD_TEST(PKModelTwoCpt, time, amt, rate_v, ii, evid, cmt, addl, ss,
                                   pMatrix, biovar, tlag, 1e-6, 1e-6);
@@ -365,7 +383,20 @@ TEST_F(TorstenTwoCptTest, single_iv_central_cmt_var) {
 
   rate[0] = 780;
   TORSTEN_CPT_GRAD_RATE_TEST(PKModelTwoCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag, 2e-5, 1e-6, 1e-6, 1e-6);
+}
 
+TEST_F(TorstenTwoCptTest, single_iv_central_cmt_var_overload) {
+  resize(3);
+  time[0] = 0.0;
+  time[1] = 0.0;
+  for(int i = 2; i < nt; i++) time[i] = time[i - 1] + 5;
+
+  pMatrix[0][2] = 35;  // Vc
+  pMatrix[0][3] = 105;  // Vp
+
+  amt[0] = 1200;
+  cmt[0] = 2;
+  rate[0] = 780;
   std::vector<stan::math::var> rate_v(stan::math::to_var(rate));
   TORSTEN_CPT_PARAM_OVERLOAD_TEST(PKModelTwoCpt, time, amt, rate_v, ii, evid, cmt, addl, ss,
                                   pMatrix, biovar, tlag, 1e-6, 1e-6);

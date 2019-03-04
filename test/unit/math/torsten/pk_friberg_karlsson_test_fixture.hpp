@@ -117,6 +117,18 @@ struct FribergKarlssonTest : public testing::Test {
 
     SetUp();
   }
+
+  void resize(int n) {
+    nt = n;
+    time.resize(nt);
+    amt .resize(nt);
+    rate.resize(nt);
+    cmt .resize(nt);
+    evid.resize(nt);
+    ii  .resize(nt);
+    addl.resize(nt);
+    ss  .resize(nt);
+  }
 };
 
 #endif

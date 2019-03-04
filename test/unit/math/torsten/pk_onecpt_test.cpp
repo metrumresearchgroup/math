@@ -1,13 +1,10 @@
-#include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
-#include <gtest/gtest.h>
-// #include <test/unit/math/torsten/util_generalOdeModel.hpp>
-#include <test/unit/math/torsten/pk_onecpt_test_fixture.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
+#include <gtest/gtest.h>
+#include <test/unit/math/torsten/pk_onecpt_test_fixture.hpp>
 #include <stan/math/torsten/PKModelOneCpt.hpp>
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_twocpt_model.hpp>
 #include <gtest/gtest.h>
-#include <stan/math/rev/mat.hpp>  // FIX ME - include should be more specific
 #include <vector>
 
 using std::vector;
@@ -61,6 +58,11 @@ TEST_F(TorstenOneCptTest, multiple_bolus) {
 }
 
 TEST_F(TorstenOneCptTest, multiple_bolus_overload) {
+  resize(4);
+  time[0] = 0;
+  for(int i = 1; i < nt; i++) time[i] = time[i - 1] + 0.9;
+  addl[0] = 1;
+
   biovar[0] = std::vector<double>{0.8, 0.9};
   tlag[0] = std::vector<double>{0.5, 0.8};
   TORSTEN_CPT_PARAM_OVERLOAD_TEST(PKModelOneCpt, time, amt, rate, ii, evid, cmt, addl, ss,
@@ -185,9 +187,10 @@ TEST_F(TorstenOneCptTest, steady_state) {
 }
 
 TEST_F(TorstenOneCptTest, steady_state_overload) {
+  resize(3);
   time[0] = 0.0;
   time[1] = 0.0;
-  for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
+  for(int i = 2; i < nt; i++) time[i] = time[i - 1] + 5;
   amt[0] = 1200;
   addl[0] = 10;
   ss[0] = 1;
@@ -235,9 +238,10 @@ TEST_F(TorstenOneCptTest, multiple_steady_state_iv) {
 }
 
 TEST_F(TorstenOneCptTest, multiple_steady_state_iv_overload) {
+  resize(3);
   time[0] = 0.0;
   time[1] = 0.0;
-  for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
+  for(int i = 2; i < nt; i++) time[i] = time[i - 1] + 5;
   amt[0] = 1200;
   rate[0] = 150;
   addl[0] = 10;
@@ -337,10 +341,8 @@ TEST_F(TorstenOneCptTest, single_iv_var) {
 }
 
 TEST_F(TorstenOneCptTest, single_iv_var_overload) {
-  using std::vector;
+  resize(2);
   amt[0] = 1200;
-  rate[0] = 1200;
-
   rate[0] = 340;
   std::vector<stan::math::var> rate_v(stan::math::to_var(rate));
   TORSTEN_CPT_PARAM_OVERLOAD_TEST(PKModelOneCpt, time, amt, rate_v, ii, evid, cmt, addl, ss,
@@ -375,10 +377,8 @@ TEST_F(TorstenOneCptTest, single_iv_central_cmt_var) {
 }
 
 TEST_F(TorstenOneCptTest, single_iv_central_cmt_var_overload) {
-  using stan::math::var;
+  resize(3);
   cmt[0] = 2;  // IV infusion, not absorption from the gut
-  rate[0] = 600;
-
   rate[0] = 660;
   std::vector<stan::math::var> rate_v(stan::math::to_var(rate));
   TORSTEN_CPT_PARAM_OVERLOAD_TEST(PKModelOneCpt, time, amt, rate_v, ii, evid, cmt, addl, ss,

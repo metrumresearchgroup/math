@@ -1,4 +1,4 @@
-#include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
+#include <stan/math/prim/mat/fun/Eigen.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/math/torsten/pk_ode_test_fixture.hpp>
 #include <test/unit/math/torsten/pk_onecpt_test_fixture.hpp>
@@ -289,17 +289,13 @@ TEST_F(TorstenOneCptTest, multiple_iv_steady_state_tlag) {
 }
 
 TEST_F(TorstenOneCptTest, ode_steady_state_bolus) {
-  using std::vector;
-  using Eigen::Matrix;
-  using Eigen::MatrixXd;
-  using Eigen::Dynamic;
-
+  resize(3);
   time[0] = 0.0;
   time[1] = 0.0;
-  for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
+  for(int i = 2; i < nt; i++) time[i] = time[i - 1] + 5;
 
   amt[0] = 1200;
-  addl[0] = 5;
+  addl[0] = 2;
   ss[0] = 1;
 
   double rel_tol = 1e-12, abs_tol = 1e-12;
@@ -530,7 +526,8 @@ TEST_F(TorstenOneCptTest, multiple_bolus) {
 }
 
 TEST_F(TorstenOneCptTest, multiple_bolus_tlag_overload) {
-  addl[0] = 2;
+  resize(3);
+  addl[0] = 1;
   tlag[0] = std::vector<double>{2.8, 3.9};
 
   TORSTEN_ODE_PARAM_OVERLOAD_TEST(torsten::generalOdeModel_bdf, f, nCmt,
@@ -860,11 +857,6 @@ TEST_F(TorstenTwoCptTest, rate_par) {
 }
 
 TEST_F(FribergKarlssonTest, steady_state) {
-  using std::vector;
-  using Eigen::Matrix;
-  using Eigen::MatrixXd;
-  using Eigen::Dynamic;
-
   ss[0] = 1;
 
   double rel_tol = 1e-6, abs_tol = 1e-6;
@@ -898,9 +890,14 @@ TEST_F(FribergKarlssonTest, steady_state) {
   torsten::test::test_val(x, x_rk45, 1.5e-2, 1e-5);
   torsten::test::test_val(x, x_bdf, 1.5e-2, 1e-5);
 
+  amt[0] = 700;
+  ii[0] = 5.0;
+  resize(2);
+  time[0] = 0;
+  for(int i = 1; i < nt; i++) time[i] = time[i - 1] + 5.0;
+  addl[0] = 2;
   rel_tol = 1e-12;
   abs_tol = 1e-12;
-  addl[0] = 2;
 
   TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, theta, biovar, tlag,

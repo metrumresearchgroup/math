@@ -1,6 +1,7 @@
 #ifndef STAN_MATH_TORSTEN_TEST_UTIL
 #define STAN_MATH_TORSTEN_TEST_UTIL
 
+#include <stan/math/prim/mat/fun/Eigen.hpp>
 #include <stan/math/rev/mat.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
