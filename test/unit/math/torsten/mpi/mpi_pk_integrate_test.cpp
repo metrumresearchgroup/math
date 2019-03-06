@@ -130,7 +130,7 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_AD_bdf_mpi_performance) {
   vector<Eigen::Matrix<var, -1, -1> > y_m = pk_integrate_ode_bdf(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
 
   for (int i = 0; i < np; ++i) {
-    torsten::test::test_grad(theta_var, theta_var_m[i], y, y_m[i], 1e-7, 1e-7);
+    torsten::test::test_grad(theta_var, theta_var_m[i], y, y_m[i], 1e-7, 3e-7);
   }
 }
 
