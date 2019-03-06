@@ -4,3 +4,7 @@ ifdef TORSTEN_MPI
   LDFLAGS_MPI ?=
 endif
 
+ifdef TORSTEN_USE_STAN_ODE
+  CXXFLAGS += -DTORSTEN_USE_STAN_ODE
+endif
+
