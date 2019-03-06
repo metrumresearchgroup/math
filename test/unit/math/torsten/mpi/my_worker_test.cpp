@@ -3,7 +3,6 @@
 #include <iostream>
 #include <vector>
 #include <memory>
-#include <boost/mpi.hpp>
 
 TEST(torsten_mpi_test, my_worker) {
 
