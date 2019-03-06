@@ -2,6 +2,7 @@
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
 #include <test/unit/math/torsten/pk_twocpt_mpi_test_fixture.hpp>
+#include <test/unit/math/torsten/pk_neut_mpi_test_fixture.hpp>
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
 #include <stan/math/torsten/mpi/init.hpp>
@@ -312,43 +313,35 @@ TEST_F(TorstenPopulationPKTwoCptTest, bdf_solver_multiple_IV_doses_par_var) {
   }
 }
 
-TEST_F(TorstenPopulationPKTwoCptTest, exception_data_only) {
-  // the first individual has parameters that will cause cvode fail
-  pMatrix_m[0][0] = 1.0E-10;
-  pMatrix_m[0][1] = 1.0E-10;
-  pMatrix_m[0][2] = 1.0E-20;
-  pMatrix_m[0][3] = 1.0E+80;
-  pMatrix_m[0][4] = 1.0E+70;
-  amt_m[0] = 1.0E+20;
+TEST_F(TorstenPopulationNeutropeniaTest, exception_max_num_steps_fails) {
+  double rtol = 1e-12;
+  double atol = 1e-12;
+  long int max_num_steps = 1e1;
 
-  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
-
-  EXPECT_THROW(torsten::pop_pk_generalOdeModel_bdf(model_t::f_, model_t::Ncmt,
+  EXPECT_THROW(torsten::pop_pk_generalOdeModel_bdf(f, nCmt,
                                                    len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                                   len_pMatrix, pMatrix_m,
+                                                   len_theta, theta_m,
                                                    len_biovar, biovar_m,
-                                                   len_tlag, tlag_m),
+                                                   len_tlag, tlag_m,
+                                                   0, rtol, atol, max_num_steps),
                std::runtime_error);
 }
 
-TEST_F(TorstenPopulationPKTwoCptTest, exception_par_var) {
-  // the first individual has parameters that will cause cvode fail
-  std::vector<std::vector<stan::math::var> > pMatrix_m_v(np);
+TEST_F(TorstenPopulationNeutropeniaTest, exception_var_max_num_steps_fails) {
+  double rtol = 1e-12;
+  double atol = 1e-12;
+  long int max_num_steps = 1e1;
+
+  std::vector<std::vector<stan::math::var> > theta_m_v(np);
   for (int i = 0; i < np; ++i) {
-    pMatrix_m_v[i] = stan::math::to_var(pMatrix[0]);
+    theta_m_v[i] = stan::math::to_var(theta[0]);
   }
-  pMatrix_m_v[0][0] = 1.0E-10;
-  pMatrix_m_v[0][1] = 1.0E-10;
-  pMatrix_m_v[0][2] = 1.0E-20;
-  pMatrix_m_v[0][3] = 1.0E+80;
-  pMatrix_m_v[0][4] = 1.0E+70;
 
-  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
-
-  EXPECT_THROW(torsten::pop_pk_generalOdeModel_bdf(model_t::f_, model_t::Ncmt,
+  EXPECT_THROW(torsten::pop_pk_generalOdeModel_bdf(f, nCmt,
                                                    len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                                   len_pMatrix, pMatrix_m_v,
+                                                   len_theta, theta_m_v,
                                                    len_biovar, biovar_m,
-                                                   len_tlag, tlag_m),
+                                                   len_tlag, tlag_m,
+                                                   0, rtol, atol, max_num_steps),
                std::runtime_error);
 }

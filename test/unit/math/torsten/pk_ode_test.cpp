@@ -954,7 +954,33 @@ TEST_F(TorstenOdeTest, exception) {
   auto& f = refactor::PKTwoCptModel<double, double, double, double>::f_;
   int ncmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
 
-  EXPECT_THROW(torsten::generalOdeModel_bdf(f, ncmt, time, amt, rate, ii,
-                                                   evid, cmt, addl, ss, pMatrix,
-                                                   biovar, tlag), std::runtime_error);
+  EXPECT_NO_THROW(torsten::generalOdeModel_bdf(f, ncmt, time, amt, rate, ii,
+                                               evid, cmt, addl, ss, pMatrix,
+                                               biovar, tlag));
+}
+
+TEST_F(TorstenOdeTest_neutropenia, max_cvodes_fails) {
+  t0 = 12.0;
+  ts.resize(1);
+  ts[0] = 12.10;
+  std::vector<double> y0_bad{80000, 0.004713515595, 0.0002254631631, -1.956259535, -1.956258419, -1.956257852, -1.956257737, -1.956346997};
+  std::vector<double> y0_good{80000,0.004717011055, 0.0002256303627, -1.956258109, -1.956258109, -1.956258109, -1.956258109, -1.957624238};
+  theta = std::vector<double> {1.508795366, 0.7444735025, 0.9989168227, 0.04373528316, 2.85770127, 0.2803519852, 1.956258109, 0.9692560566, 0.3025591511};
+
+  x_r.resize(y0.size());
+  std::fill(x_r.begin(), x_r.end(), 0.0);
+
+  double rtol = 1e-6;
+  double atol = 1e-6;
+  long int max_num_steps = 1e3;
+
+  y0 = y0_bad;
+  EXPECT_THROW(stan::math::integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps), // NOLINT
+               std::runtime_error);
+  EXPECT_THROW(torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps), // NOLINT
+               std::runtime_error);
+
+  y0 = y0_good;
+  EXPECT_NO_THROW(stan::math::integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps)); // NOLINT
+  EXPECT_NO_THROW(torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps)); // NOLINT
 }

@@ -56,9 +56,9 @@ struct TorstenOdeTest : public testing::Test {
   std::vector<std::vector<double> > tlag;
 
   // for ODE integrator
-  const double t0;
-  const std::vector<double> x_r;
-  const std::vector<int> x_i;
+  double t0;
+  std::vector<double> x_r;
+  std::vector<int> x_i;
   double rtol;
   double atol;
   int max_num_steps;
@@ -251,9 +251,9 @@ struct TwoCptNeutModelODE {
 
 struct TorstenOdeTest_neutropenia : public TorstenOdeTest {
   const TwoCptNeutModelODE f;
-  const std::vector<double> ts;
-  const std::vector<double> theta;
-  const std::vector<double> y0;
+  std::vector<double> ts;
+  std::vector<double> theta;
+  std::vector<double> y0;
 
   using F = TwoCptNeutModelODE;
 
