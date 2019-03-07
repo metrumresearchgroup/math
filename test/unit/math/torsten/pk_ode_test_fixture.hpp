@@ -113,7 +113,7 @@ struct TorstenOdeTest : public testing::Test {
     }
 
     N_Vector res = N_VNew_Serial(y0.size());
-    EXPECT_EQ(ode.rhs()(ts.back(), y, res, user_data), 0);
+    EXPECT_EQ(torsten::dsolve::cvodes_rhs<Ode>()(ts.back(), y, res, user_data), 0);
     auto fval = ode.f()(ts.back(), y0, theta, x_r, x_i, msgs);
     for (size_t i = 0; i < y0.size(); ++i)
       EXPECT_EQ(NV_Ith_S(res, i), fval[i]);

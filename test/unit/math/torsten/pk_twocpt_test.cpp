@@ -97,7 +97,7 @@ TEST_F(TorstenTwoCptTest, multiple_addl_iv) {
 
   using model_t = refactor::PKTwoCptModel<double, double, double, double>;
   TORSTEN_CPT_ODE_GRAD_TEST(PKModelTwoCpt, torsten::generalOdeModel_bdf, model_t::f_, model_t::Ncmt, 
-                            time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar_test, tlag_test, 1.E-3, 5.E-4);
+                            time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar_test, tlag_test, 1.E-3, 1.E-3);
 }
 
 TEST_F(TorstenTwoCptTest, multiple_iv) {

@@ -1,7 +1,11 @@
 ifdef TORSTEN_MPI
-  LIBMPI ?=
+  # LIBMPI ?=
   CXXFLAGS_MPI += -DTORSTEN_MPI
-  LDFLAGS_MPI ?=
+  CXXFLAGS += $(CXXFLAGS_MPI)
+  LDFLAGS += $(LDFLAGS_MPI)
+  CC=mpicxx
+  CXX=mpicxx
+  # LDFLAGS_MPI ?=
 endif
 
 ifdef TORSTEN_USE_STAN_ODE
