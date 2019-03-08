@@ -1,15 +1,10 @@
-#ifdef TORSTEN_MPI
-
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
 #include <test/unit/math/rev/mat/fun/util.hpp>
-#include <stan/math/torsten/dsolve/pk_cvodes_fwd_system.hpp>
-#include <stan/math/torsten/dsolve/pk_cvodes_integrator.hpp>
 #include <stan/math/torsten/dsolve/pk_integrate_ode_adams.hpp>
 #include <stan/math/torsten/dsolve/pk_integrate_ode_bdf.hpp>
 #include <test/unit/math/torsten/pk_ode_test_fixture.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
-#include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
 #include <stan/math/rev/mat/functor/integrate_ode_bdf.hpp>
 #include <nvector/nvector_serial.h>
 #include <boost/mpi.hpp>
@@ -291,19 +286,25 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_rank_exception_data_only) {
 
   torsten::mpi::init();
 
+#ifdef TORSTEN_MPI
   MPI_Comm comm;
   comm = MPI_COMM_WORLD;
   int rank, size;
   MPI_Comm_size(comm, &size);
   MPI_Comm_rank(comm, &rank);
+#endif
 
   EXPECT_THROW(torsten::dsolve::pk_integrate_ode_bdf(f, y0_m, t0, ts_m, theta_m , x_r_m, x_i_m),
                std::runtime_error);
+#ifdef TORSTEN_MPI
   MPI_Barrier(comm);
+#endif
 
   EXPECT_THROW(torsten::dsolve::pk_integrate_ode_adams(f, y0_m, t0, ts_m, theta_m , x_r_m, x_i_m),
                std::runtime_error);
+#ifdef TORSTEN_MPI
   MPI_Barrier(comm);
+#endif
 }
 
 TEST_F(TorstenOdeTest_neutropenia, mpi_rank_exception_par_var) {
@@ -312,7 +313,8 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_rank_exception_par_var) {
   using std::vector;
 
   // size of population
-  const int np = 10;
+  const int np = 5;
+  ts.resize(5);
 
   vector<var> theta_var = stan::math::to_var(theta);
 
@@ -322,26 +324,33 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_rank_exception_par_var) {
   vector<vector<double> > x_r_m (np, x_r);
   vector<vector<int> > x_i_m (np, x_i);
 
-  int id = 8;
+  int id = 1;
   theta_var_m[id][0] = -1.0E+30;
   theta_var_m[id][1] = -1.0E+30;
   theta_var_m[id][4] = -1.0E+30;
 
   torsten::mpi::init();
 
+#ifdef TORSTEN_MPI
   MPI_Comm comm;
   comm = MPI_COMM_WORLD;
   int rank, size;
   MPI_Comm_size(comm, &size);
   MPI_Comm_rank(comm, &rank);
+#endif
 
-  EXPECT_THROW(torsten::dsolve::pk_integrate_ode_adams(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m),
+  EXPECT_THROW(torsten::dsolve::pk_integrate_ode_adams(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m,
+                                                       0, 1e-10, 1e-10, 10),
                std::runtime_error);
+#ifdef TORSTEN_MPI
   MPI_Barrier(comm);
+#endif
 
-  EXPECT_THROW(torsten::dsolve::pk_integrate_ode_bdf(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m),
+  EXPECT_THROW(torsten::dsolve::pk_integrate_ode_bdf(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m,
+                                                     0, 1e-10, 1e-10, 10),
                std::runtime_error);
+#ifdef TORSTEN_MPI
   MPI_Barrier(comm);
+#endif
 }
 
-#endif

@@ -284,7 +284,7 @@ TEST_F(TorstenOneCptTest, multiple_iv_steady_state_tlag) {
                                           0, rel_tol, abs_tol, max_num_steps);
     };
     std::vector<double> tlag_test(tlag[3]);
-    torsten::test::test_grad(f1, f2, tlag_test, 2e-5, 1e-6, 1e-3, 1e-5);
+    torsten::test::test_grad(f1, f2, tlag_test, 2e-5, 1e-5, 1e-3, 1e-5);
   }
 }
 
