@@ -922,8 +922,10 @@ TEST_F(TorstenOdeTest_chem, fwd_sens_theta_performance_repeated) {
   std::chrono::time_point<std::chrono::system_clock> start, end;
   std::chrono::duration<double> y1_elapsed, y2_elapsed;
  
+  const int nloop = 100;
+
   start = std::chrono::system_clock::now();
-  for (int i = 0; i < 1000; ++i) {
+  for (int i = 0; i < nloop; ++i) {
     y1 = pk_integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);    
   }
   end = std::chrono::system_clock::now();
@@ -931,7 +933,7 @@ TEST_F(TorstenOdeTest_chem, fwd_sens_theta_performance_repeated) {
   std::cout << "torsten solver elapsed time: " << y1_elapsed.count() << "s\n";
 
   start = std::chrono::system_clock::now();
-  for (int i = 0; i < 1000; ++i) {
+  for (int i = 0; i < nloop; ++i) {
     y2 = stan::math::integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
   }
   end = std::chrono::system_clock::now();
@@ -953,8 +955,10 @@ TEST_F(TorstenOdeTest_chem, fwd_sens_y0_theta_performance_repeated) {
   std::chrono::time_point<std::chrono::system_clock> start, end;
   std::chrono::duration<double> y1_elapsed, y2_elapsed;
  
+  const int nloop = 100;
+
   start = std::chrono::system_clock::now();
-  for (int i = 0; i < 1000; ++i) {
+  for (int i = 0; i < nloop; ++i) {
     y1 = pk_integrate_ode_bdf(f, y0_var, t0, ts, theta_var, x_r, x_i);
   }
   end = std::chrono::system_clock::now();
@@ -962,7 +966,7 @@ TEST_F(TorstenOdeTest_chem, fwd_sens_y0_theta_performance_repeated) {
   std::cout << "torsten solver elapsed time: " << y1_elapsed.count() << "s\n";
 
   start = std::chrono::system_clock::now();
-  for (int i = 0; i < 1000; ++i) {
+  for (int i = 0; i < nloop; ++i) {
     y2 = stan::math::integrate_ode_bdf(f, y0_var, t0, ts, theta_var, x_r, x_i);
   }
   end = std::chrono::system_clock::now();
