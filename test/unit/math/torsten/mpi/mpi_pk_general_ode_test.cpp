@@ -313,6 +313,64 @@ TEST_F(TorstenPopulationPKTwoCptTest, bdf_solver_multiple_IV_doses_par_var) {
   }
 }
 
+#ifdef TORSTEN_MPI
+TEST_F(TorstenPopulationPKTwoCptTest, exception_sync) {
+  using torsten::pop_pk_generalOdeModel_adams;
+  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
+  using torsten::mpi::my_worker;
+
+  torsten::mpi::init();
+
+  MPI_Comm comm;
+  comm = MPI_COMM_WORLD;
+  int rank, size;
+  MPI_Comm_size(comm, &size);
+  MPI_Comm_rank(comm, &rank);
+
+  int id = 4;
+  pMatrix_m[id][4] = -1e30;
+  if (rank == my_worker(id, np, size)) {
+    EXPECT_THROW_MSG(pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
+                                                  len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+                                                  len_pMatrix, pMatrix_m,
+                                                  len_biovar, biovar_m,
+                                                  len_tlag, tlag_m,
+                                                  0, 1e-6, 1e-6, 1e4),
+                     std::runtime_error, "CVode(mem, ts[i], y, &t1, CV_NORMAL) failed with error flag -1");
+  } else {
+    EXPECT_THROW_MSG(pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
+                                                  len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+                                                  len_pMatrix, pMatrix_m,
+                                                  len_biovar, biovar_m,
+                                                  len_tlag, tlag_m,
+                                                  0, 1e-6, 1e-6, 1e4),
+                     std::runtime_error, "received invalid data for id 4");
+  }
+  MPI_Barrier(comm);
+
+  id = 8;
+  pMatrix_m[id][4] = -1e30;
+  if (rank == my_worker(4, np, size) || rank == my_worker(8, np, size)) {
+    EXPECT_THROW_MSG(pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
+                                                  len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+                                                  len_pMatrix, pMatrix_m,
+                                                  len_biovar, biovar_m,
+                                                  len_tlag, tlag_m,
+                                                  0, 1e-6, 1e-6, 1e4),
+                     std::runtime_error, "CVode(mem, ts[i], y, &t1, CV_NORMAL) failed with error flag -1");
+  } else {
+    EXPECT_THROW_MSG(pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
+                                                  len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+                                                  len_pMatrix, pMatrix_m,
+                                                  len_biovar, biovar_m,
+                                                  len_tlag, tlag_m,
+                                                  0, 1e-6, 1e-6, 1e4),
+                     std::runtime_error, "received invalid data for id");
+  }
+  MPI_Barrier(comm);
+}
+#endif
+
 TEST_F(TorstenPopulationNeutropeniaTest, exception_max_num_steps_fails) {
   double rtol = 1e-12;
   double atol = 1e-12;
@@ -344,4 +402,81 @@ TEST_F(TorstenPopulationNeutropeniaTest, exception_var_max_num_steps_fails) {
                                                    len_tlag, tlag_m,
                                                    0, rtol, atol, max_num_steps),
                std::runtime_error);
+}
+
+TEST_F(TorstenPopulationNeutropeniaTest, domain_error) {
+  using torsten::pop_pk_generalOdeModel_bdf;
+
+  torsten::mpi::init();
+
+#ifdef TORSTEN_MPI
+  MPI_Comm comm;
+  comm = MPI_COMM_WORLD;
+  int rank, size;
+  MPI_Comm_size(comm, &size);
+  MPI_Comm_rank(comm, &rank);
+#endif
+
+  double rtol = 1e-12;
+  double atol = 1e-12;
+  long int max_num_steps = 1e1;
+
+  int id = 4;
+  for (int j = 0; j < nt; ++j) {      
+    rate_m[id * nt + j] = std::numeric_limits<double>::infinity();
+  }
+  EXPECT_THROW_MSG(pop_pk_generalOdeModel_bdf(f, nCmt,
+                                              len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+                                              len_theta, theta_m,
+                                              len_biovar, biovar_m,
+                                              len_tlag, tlag_m,
+                                              0, rtol, atol, max_num_steps),
+                   std::domain_error,
+                   "rate[109] is inf, but must be finite");
+#ifdef TORSTEN_MPI
+  MPI_Barrier(comm);
+#endif
+
+  for (int j = 0; j < nt; ++j) {      
+    rate_m[id * nt + j] = 130;
+  }
+  theta_m[id][3] = std::numeric_limits<double>::infinity();
+  EXPECT_THROW_MSG(pop_pk_generalOdeModel_bdf(f, nCmt,
+                                              len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+                                              len_theta, theta_m,
+                                              len_biovar, biovar_m,
+                                              len_tlag, tlag_m,
+                                              0, rtol, atol, max_num_steps),
+                   std::domain_error,
+                   "parameters[4] is inf, but must be finite!");
+#ifdef TORSTEN_MPI
+  MPI_Barrier(comm);
+#endif
+
+  theta_m[id][3] = std::numeric_limits<double>::quiet_NaN();
+  EXPECT_THROW_MSG(pop_pk_generalOdeModel_bdf(f, nCmt,
+                                              len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+                                              len_theta, theta_m,
+                                              len_biovar, biovar_m,
+                                              len_tlag, tlag_m,
+                                              0, rtol, atol, max_num_steps),
+                   std::domain_error,
+                   "parameters[4] is nan, but must be finite!");
+#ifdef TORSTEN_MPI
+  MPI_Barrier(comm);
+#endif
+
+  theta_m[id][3] = 1.0;
+  biovar_m[id][3] = -1.0;
+  EXPECT_THROW_MSG(pop_pk_generalOdeModel_bdf(f, nCmt,
+                                              len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+                                              len_theta, theta_m,
+                                              len_biovar, biovar_m,
+                                              len_tlag, tlag_m,
+                                              0, rtol, atol, max_num_steps),
+                   std::domain_error,
+                   "bioavailability[4] is -1, but must be >= 0");
+#ifdef TORSTEN_MPI
+  MPI_Barrier(comm);
+#endif
 }

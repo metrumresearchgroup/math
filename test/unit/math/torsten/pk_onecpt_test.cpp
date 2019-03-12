@@ -336,7 +336,7 @@ TEST_F(TorstenOneCptTest, single_iv_var) {
 
   torsten::test::test_val(amounts, x);
 
-  rate[0] = 340;
+  std::fill(rate.begin(), rate.end(), 340.0);
   TORSTEN_CPT_GRAD_RATE_TEST(PKModelOneCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag, 2e-5, 1e-6, 1e-6, 1e-6);
 }
 
@@ -372,7 +372,7 @@ TEST_F(TorstenOneCptTest, single_iv_central_cmt_var) {
 
   torsten::test::test_val(amounts, x);
 
-  rate[0] = 660;
+  std::fill(rate.begin(), rate.end(), 660.);
   TORSTEN_CPT_GRAD_RATE_TEST(PKModelOneCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag, 2e-5, 1e-6, 1e-6, 1e-6);
 }
 

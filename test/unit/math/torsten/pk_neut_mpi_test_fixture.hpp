@@ -64,6 +64,10 @@ public:
     ii[1] = 12;
     addl[1] = 1;
 
+    setup_population();
+  }
+
+  void setup_population() {
     // population data
     for (int i = 0; i < np; ++i) {
       for (int j = 0; j < nt; ++j) {      
@@ -85,13 +89,13 @@ public:
       tlag_m[i] = tlag[0];
     }
 
-    // population lenght
+    // population length
     for (int i = 0; i < np; ++i) {
       len[i] = nt;
       len_theta[i] = 1;
       len_biovar[i] = 1;
       len_tlag[i] = 1;
-    }
+    }    
   }
 
   const TwoCptNeutModelODE f;
