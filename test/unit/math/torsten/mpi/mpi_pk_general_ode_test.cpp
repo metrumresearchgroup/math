@@ -5,7 +5,7 @@
 #include <test/unit/math/torsten/pk_neut_mpi_test_fixture.hpp>
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
-#include <stan/math/torsten/mpi/init.hpp>
+#include <stan/math/torsten/mpi/envionment.hpp>
 #include <stan/math/torsten/PKModelTwoCpt.hpp>
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_twocpt_model.hpp>
@@ -319,7 +319,7 @@ TEST_F(TorstenPopulationPKTwoCptTest, exception_sync) {
   using model_t = refactor::PKTwoCptModel<double, double, double, double>;
   using torsten::mpi::my_worker;
 
-  torsten::mpi::init();
+  torsten::mpi::Envionment::init();
 
   MPI_Comm comm;
   comm = MPI_COMM_WORLD;
@@ -407,7 +407,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, exception_var_max_num_steps_fails) {
 TEST_F(TorstenPopulationNeutropeniaTest, domain_error) {
   using torsten::pop_pk_generalOdeModel_bdf;
 
-  torsten::mpi::init();
+  torsten::mpi::Envionment::init();
 
 #ifdef TORSTEN_MPI
   MPI_Comm comm;

@@ -4,7 +4,7 @@
 #include <test/unit/math/torsten/pk_twocpt_mpi_test_fixture.hpp>
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
-#include <stan/math/torsten/mpi/init.hpp>
+#include <stan/math/torsten/mpi/envionment.hpp>
 #include <stan/math/torsten/PKModelTwoCpt.hpp>
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_twocpt_model.hpp>

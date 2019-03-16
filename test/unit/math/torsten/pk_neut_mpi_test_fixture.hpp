@@ -19,7 +19,7 @@ class TorstenPopulationNeutropeniaTest : public testing::Test {
   void SetUp() {
     // make sure memory's clean before starting each test
     stan::math::recover_memory();
-    torsten::mpi::init();
+    torsten::mpi::Envionment::init();
   }
 public:
   TorstenPopulationNeutropeniaTest() :

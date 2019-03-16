@@ -33,7 +33,7 @@ TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_theta_bdf_mpi) {
   using stan::math::var;
   using std::vector;
 
-  torsten::mpi::init();
+  torsten::mpi::Envionment::init();
 
   // size of population
   const int np = 1000;
