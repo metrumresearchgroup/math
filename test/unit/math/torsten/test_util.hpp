@@ -464,6 +464,42 @@ namespace torsten {
     }
 
     /*
+     * Test @c std::vector<var> results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param theta parameters regarding which the gradient
+     *              would be taken and checked.
+     * @param pk_y one result
+     * @param stan_y the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     */
+    void test_grad(std::vector<stan::math::var>& theta1,
+                   std::vector<stan::math::var>& theta2,
+                   Eigen::Matrix<stan::math::var, -1, -1>& y1,
+                   Eigen::Matrix<stan::math::var, -1, -1>& y2) {
+      EXPECT_EQ(theta1.size(), theta2.size());
+      EXPECT_EQ(y1.rows(), y2.rows());
+      EXPECT_EQ(y1.cols(), y2.cols());
+
+      for (int i = 0; i < y1.size(); ++i) {
+        EXPECT_FLOAT_EQ(y1(i).val(), y2(i).val());
+      }
+
+      std::vector<double> g, g1;
+      for (int i = 0; i < y1.size(); ++i) {
+        stan::math::set_zero_all_adjoints();
+        y1(i).grad(theta1, g);
+        stan::math::set_zero_all_adjoints();
+        y2(i).grad(theta2, g1);
+        for (size_t m = 0; m < theta1.size(); ++m) {
+          EXPECT_FLOAT_EQ(g[m], g1[m]);
+        }
+      }
+    }
+
+    /*
      * test gradients against finite difference
      *
      * Given a functor that takes a single parameter vector,

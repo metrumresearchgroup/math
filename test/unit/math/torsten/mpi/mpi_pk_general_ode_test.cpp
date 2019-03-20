@@ -168,7 +168,7 @@ TEST_F(TorstenPopulationPKTwoCptTest, rk45_solver_multiple_bolus_doses_par_var) 
                                         len_tlag, tlag_m);
 
   for (int i = 0; i < np; ++i) {
-    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
+    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
   }
 }
 
@@ -192,7 +192,7 @@ TEST_F(TorstenPopulationPKTwoCptTest, adams_solver_multiple_bolus_doses_par_var)
                                         len_tlag, tlag_m);
 
   for (int i = 0; i < np; ++i) {
-    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
+    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
   }
 }
 
@@ -216,7 +216,7 @@ TEST_F(TorstenPopulationPKTwoCptTest, bdf_solver_multiple_bolus_doses_par_var) {
                                         len_tlag, tlag_m);
 
   for (int i = 0; i < np; ++i) {
-    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
+    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
   }
 }
 
@@ -247,7 +247,7 @@ TEST_F(TorstenPopulationPKTwoCptTest, rk45_solver_multiple_IV_doses_par_var) {
                                         len_tlag, tlag_m);
 
   for (int i = 0; i < np; ++i) {
-    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
+    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
   }
 }
 
@@ -278,7 +278,7 @@ TEST_F(TorstenPopulationPKTwoCptTest, adams_solver_multiple_IV_doses_par_var) {
                                         len_tlag, tlag_m);
 
   for (int i = 0; i < np; ++i) {
-    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
+    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
   }
 }
 
@@ -309,7 +309,7 @@ TEST_F(TorstenPopulationPKTwoCptTest, bdf_solver_multiple_IV_doses_par_var) {
                                         len_tlag, tlag_m);
 
   for (int i = 0; i < np; ++i) {
-    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
+    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
   }
 }
 
