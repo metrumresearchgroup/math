@@ -25,9 +25,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, multiple_bolus_doses_data_only) {
 
   vector<Matrix<double, Dynamic, Dynamic> > x_m =
     torsten::popPKModelTwoCpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                              len_pMatrix, pMatrix_m,
-                              len_biovar, biovar_m,
-                              len_tlag, tlag_m);
+                              pMatrix_m,
+                              biovar_m,
+                              tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_val(x_m[i], x);
@@ -47,9 +47,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, multiple_IV_doses_data_only) {
 
   vector<Matrix<double, Dynamic, Dynamic> > x_m =
     torsten::popPKModelTwoCpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                              len_pMatrix, pMatrix_m,
-                              len_biovar, biovar_m,
-                              len_tlag, tlag_m);
+                              pMatrix_m,
+                              biovar_m,
+                              tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_val(x_m[i], x);
@@ -68,9 +68,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, multiple_bolus_doses_par_var) {
 
   vector<Matrix<var, Dynamic, Dynamic> > x_m =
     torsten::popPKModelTwoCpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                              len_pMatrix, pMatrix_m_v,
-                              len_biovar, biovar_m,
-                              len_tlag, tlag_m);
+                              pMatrix_m_v,
+                              biovar_m,
+                              tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
@@ -96,9 +96,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, multiple_IV_doses_par_var) {
 
   vector<Matrix<var, Dynamic, Dynamic> > x_m =
     torsten::popPKModelTwoCpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                              len_pMatrix, pMatrix_m_v,
-                              len_biovar, biovar_m,
-                              len_tlag, tlag_m);
+                              pMatrix_m_v,
+                              biovar_m,
+                              tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);

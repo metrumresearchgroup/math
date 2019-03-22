@@ -28,9 +28,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, rk45_solver_multiple_bolus_doses_data_only
   vector<Matrix<double, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_rk45(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_val(x_m[i], x);
@@ -46,9 +46,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, bdf_solver_multiple_bolus_doses_data_only)
   vector<Matrix<double, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_bdf(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_val(x_m[i], x);
@@ -64,9 +64,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, adams_solver_multiple_bolus_doses_data_onl
   vector<Matrix<double, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_val(x_m[i], x);
@@ -89,9 +89,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, rk45_solver_multiple_IV_doses_data_only) {
   vector<Matrix<double, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_rk45(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_val(x_m[i], x);
@@ -114,9 +114,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, adams_solver_multiple_IV_doses_data_only) 
   vector<Matrix<double, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_val(x_m[i], x);
@@ -139,9 +139,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, bdf_solver_multiple_IV_doses_data_only) {
   vector<Matrix<double, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_bdf(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_val(x_m[i], x);
@@ -163,9 +163,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, rk45_solver_multiple_bolus_doses_par_var) 
   vector<Matrix<var, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_rk45(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m_v,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m_v,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
@@ -187,9 +187,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, adams_solver_multiple_bolus_doses_par_var)
   vector<Matrix<var, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m_v,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m_v,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
@@ -211,9 +211,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, bdf_solver_multiple_bolus_doses_par_var) {
   vector<Matrix<var, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_bdf(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m_v,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m_v,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
@@ -242,9 +242,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, rk45_solver_multiple_IV_doses_par_var) {
   vector<Matrix<var, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_rk45(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m_v,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m_v,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
@@ -273,9 +273,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, adams_solver_multiple_IV_doses_par_var) {
   vector<Matrix<var, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m_v,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m_v,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
@@ -304,9 +304,9 @@ TEST_F(TorstenPopulationPKTwoCptTest, bdf_solver_multiple_IV_doses_par_var) {
   vector<Matrix<var, Dynamic, Dynamic> > x_m =
     torsten::pop_pk_generalOdeModel_bdf(model_t::f_, model_t::Ncmt,
                                         len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                        len_pMatrix, pMatrix_m_v,
-                                        len_biovar, biovar_m,
-                                        len_tlag, tlag_m);
+                                        pMatrix_m_v,
+                                        biovar_m,
+                                        tlag_m);
 
   for (int i = 0; i < np; ++i) {
     torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x);
@@ -332,17 +332,17 @@ TEST_F(TorstenPopulationPKTwoCptTest, exception_sync) {
   if (rank == my_worker(id, np, size)) {
     EXPECT_THROW_MSG(pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
                                                   len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                                  len_pMatrix, pMatrix_m,
-                                                  len_biovar, biovar_m,
-                                                  len_tlag, tlag_m,
+                                                  pMatrix_m,
+                                                  biovar_m,
+                                                  tlag_m,
                                                   0, 1e-6, 1e-6, 1e4),
                      std::runtime_error, "CVode(mem, ts[i], y, &t1, CV_NORMAL) failed with error flag -1");
   } else {
     EXPECT_THROW_MSG(pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
                                                   len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                                  len_pMatrix, pMatrix_m,
-                                                  len_biovar, biovar_m,
-                                                  len_tlag, tlag_m,
+                                                  pMatrix_m,
+                                                  biovar_m,
+                                                  tlag_m,
                                                   0, 1e-6, 1e-6, 1e4),
                      std::runtime_error, "received invalid data for id 4");
   }
@@ -353,17 +353,17 @@ TEST_F(TorstenPopulationPKTwoCptTest, exception_sync) {
   if (rank == my_worker(4, np, size) || rank == my_worker(8, np, size)) {
     EXPECT_THROW_MSG(pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
                                                   len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                                  len_pMatrix, pMatrix_m,
-                                                  len_biovar, biovar_m,
-                                                  len_tlag, tlag_m,
+                                                  pMatrix_m,
+                                                  biovar_m,
+                                                  tlag_m,
                                                   0, 1e-6, 1e-6, 1e4),
                      std::runtime_error, "CVode(mem, ts[i], y, &t1, CV_NORMAL) failed with error flag -1");
   } else {
     EXPECT_THROW_MSG(pop_pk_generalOdeModel_adams(model_t::f_, model_t::Ncmt,
                                                   len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                                  len_pMatrix, pMatrix_m,
-                                                  len_biovar, biovar_m,
-                                                  len_tlag, tlag_m,
+                                                  pMatrix_m,
+                                                  biovar_m,
+                                                  tlag_m,
                                                   0, 1e-6, 1e-6, 1e4),
                      std::runtime_error, "received invalid data for id");
   }
@@ -378,9 +378,9 @@ TEST_F(TorstenPopulationNeutropeniaTest, exception_max_num_steps_fails) {
 
   EXPECT_THROW(torsten::pop_pk_generalOdeModel_bdf(f, nCmt,
                                                    len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                                   len_theta, theta_m,
-                                                   len_biovar, biovar_m,
-                                                   len_tlag, tlag_m,
+                                                   theta_m,
+                                                   biovar_m,
+                                                   tlag_m,
                                                    0, rtol, atol, max_num_steps),
                std::runtime_error);
 }
@@ -397,9 +397,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, exception_var_max_num_steps_fails) {
 
   EXPECT_THROW(torsten::pop_pk_generalOdeModel_bdf(f, nCmt,
                                                    len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                                   len_theta, theta_m_v,
-                                                   len_biovar, biovar_m,
-                                                   len_tlag, tlag_m,
+                                                   theta_m_v, biovar_m, tlag_m,
                                                    0, rtol, atol, max_num_steps),
                std::runtime_error);
 }
@@ -427,9 +425,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, domain_error) {
   }
   EXPECT_THROW_MSG(pop_pk_generalOdeModel_bdf(f, nCmt,
                                               len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                              len_theta, theta_m,
-                                              len_biovar, biovar_m,
-                                              len_tlag, tlag_m,
+                                              theta_m, biovar_m, tlag_m,
                                               0, rtol, atol, max_num_steps),
                    std::domain_error,
                    "rate[109] is inf, but must be finite");
@@ -443,9 +439,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, domain_error) {
   theta_m[id][3] = std::numeric_limits<double>::infinity();
   EXPECT_THROW_MSG(pop_pk_generalOdeModel_bdf(f, nCmt,
                                               len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                              len_theta, theta_m,
-                                              len_biovar, biovar_m,
-                                              len_tlag, tlag_m,
+                                              theta_m, biovar_m, tlag_m,
                                               0, rtol, atol, max_num_steps),
                    std::domain_error,
                    "parameters[4] is inf, but must be finite!");
@@ -456,9 +450,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, domain_error) {
   theta_m[id][3] = std::numeric_limits<double>::quiet_NaN();
   EXPECT_THROW_MSG(pop_pk_generalOdeModel_bdf(f, nCmt,
                                               len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                              len_theta, theta_m,
-                                              len_biovar, biovar_m,
-                                              len_tlag, tlag_m,
+                                              theta_m, biovar_m, tlag_m,
                                               0, rtol, atol, max_num_steps),
                    std::domain_error,
                    "parameters[4] is nan, but must be finite!");
@@ -470,9 +462,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, domain_error) {
   biovar_m[id][3] = -1.0;
   EXPECT_THROW_MSG(pop_pk_generalOdeModel_bdf(f, nCmt,
                                               len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                                              len_theta, theta_m,
-                                              len_biovar, biovar_m,
-                                              len_tlag, tlag_m,
+                                              theta_m, biovar_m, tlag_m,
                                               0, rtol, atol, max_num_steps),
                    std::domain_error,
                    "bioavailability[4] is -1, but must be >= 0");
