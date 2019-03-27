@@ -7,7 +7,6 @@
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_twocpt_model.hpp>
 #include <stan/math/torsten/pk_linode_model.hpp>
-#include <stan/math/torsten/pk_linode_solver.hpp>
 #include <stan/math/torsten/pk_ode_model.hpp>
 #include <test/unit/math/torsten/pk_ode_test_fixture.hpp>
 #include <iostream>
