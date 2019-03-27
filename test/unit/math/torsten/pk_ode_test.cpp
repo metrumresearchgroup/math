@@ -26,6 +26,7 @@ using Eigen::Dynamic;
 using torsten::generalOdeModel_rk45;
 using torsten::generalOdeModel_bdf;
 using torsten::generalOdeModel_adams;
+using torsten::NONMENEventsRecord;
 
 TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate) {
   // Steady state induced by multiple bolus doses (SS = 1, rate = 0)
@@ -271,7 +272,10 @@ TEST_F(TorstenOneCptTest, multiple_iv_steady_state_tlag) {
       std::vector<std::vector<double> > tlag1(nt);
       for (int i = 0; i < nt; ++i) tlag1[i] = tlag[i];
       tlag1[3] = x;
-      torsten::EventsManager<double, double, double, double, double, double, double> em(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
+      NONMENEventsRecord<double, double, double, double, double, double, double>
+      events_rec(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
+      torsten::EventsManager<NONMENEventsRecord<double, double, double, double, double, double, double>>
+      em(events_rec);
       return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
                                           0, rel_tol, abs_tol, max_num_steps);
     };
@@ -279,7 +283,10 @@ TEST_F(TorstenOneCptTest, multiple_iv_steady_state_tlag) {
       std::vector<std::vector<var> > tlag1(nt);
       for (int i = 0; i < nt; ++i) tlag1[i] = stan::math::to_var(tlag[i]);
       tlag1[3] = x;
-      torsten::EventsManager<double, double, double, double, double, double, var> em(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
+      NONMENEventsRecord<double, double, double, double, double, double, var>
+      events_rec(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
+      torsten::EventsManager<NONMENEventsRecord<double, double, double, double, double, double, var>>
+      em(events_rec);
       return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
                                           0, rel_tol, abs_tol, max_num_steps);
     };
