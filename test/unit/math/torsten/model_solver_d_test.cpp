@@ -1,14 +1,7 @@
-#include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
-#include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
-#include <test/unit/math/torsten/expect_matrix_eq.hpp>
+#include <stan/math/rev/mat/fun/typedefs.hpp>
 #include <test/unit/math/torsten/pk_twocpt_test_fixture.hpp>
-#include <test/unit/math/torsten/util_generalOdeModel.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
-#include <stan/math/torsten/PKModelTwoCpt.hpp>
-#include <stan/math/torsten/pk_onecpt_model.hpp>
-#include <stan/math/torsten/pk_twocpt_model.hpp>
 #include <gtest/gtest.h>
-#include <stan/math/rev/mat.hpp>  // FIX ME - include should be more specific
 #include <vector>
 
 using std::vector;

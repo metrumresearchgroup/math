@@ -1,5 +1,4 @@
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <gtest/gtest.h>
 #include <test/unit/math/torsten/pk_ode_test_fixture.hpp>
 #include <test/unit/math/torsten/pk_onecpt_test_fixture.hpp>
 #include <test/unit/math/torsten/pk_twocpt_test_fixture.hpp>
@@ -12,7 +11,7 @@
 #include <stan/math/torsten/pk_onecpt_model.hpp>
 #include <stan/math/torsten/pk_ode_model.hpp>
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
-
+#include <gtest/gtest.h>
 
 auto f  = refactor::PKOneCptModel<double,double,double,double>::f_;
 auto f2 = refactor::PKTwoCptModel<double,double,double,double>::f_;

@@ -1,14 +1,9 @@
-#include <Eigen/Dense>
-#include <Eigen/src/Core/NumTraits.h>
-#include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
-#include <test/unit/math/torsten/expect_matrix_eq.hpp>
 #include <test/unit/math/torsten/pk_onecpt_test_fixture.hpp>
 #include <test/unit/math/torsten/pk_twocpt_test_fixture.hpp>
 #include <test/unit/math/torsten/pk_twocpt_mpi_test_fixture.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
-#include <stan/math/torsten/PKModelTwoCpt.hpp>
-#include <stan/math/torsten/pk_onecpt_model.hpp>
-#include <stan/math/torsten/pk_twocpt_model.hpp>
+#include <Eigen/Dense>
+#include <Eigen/src/Core/NumTraits.h>
 #include <gtest/gtest.h>
 #include <vector>
 

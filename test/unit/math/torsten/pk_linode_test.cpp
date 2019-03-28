@@ -1,11 +1,8 @@
-#include <gtest/gtest.h>
-#include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
-#include <gtest/gtest.h>
-#include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
+#include <stan/math/rev/mat.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
 #include <stan/math/torsten/linOdeModel.hpp>
-#include <stan/math/torsten/pk_linode_model.hpp>
 #include <test/unit/math/torsten/util_linOdeModel.hpp>
+#include <gtest/gtest.h>
 #include <vector>
 
 using std::vector;
