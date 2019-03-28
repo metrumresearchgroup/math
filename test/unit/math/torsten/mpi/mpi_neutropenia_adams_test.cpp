@@ -3,10 +3,10 @@
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
 #include <test/unit/math/rev/mat/fun/util.hpp>
-#include <stan/math/torsten/dsolve/pk_cvodes_fwd_system.hpp>
-#include <stan/math/torsten/dsolve/pk_cvodes_integrator.hpp>
-#include <stan/math/torsten/dsolve/pk_integrate_ode_adams.hpp>
-#include <test/unit/math/torsten/pk_ode_test_fixture.hpp>
+#include <stan/math/torsten/dsolve/pmx_cvodes_fwd_system.hpp>
+#include <stan/math/torsten/dsolve/pmx_cvodes_integrator.hpp>
+#include <stan/math/torsten/dsolve/pmx_integrate_ode_adams.hpp>
+#include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
 #include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
 #include <stan/math/rev/mat/functor/integrate_ode_adams.hpp>
 #include <nvector/nvector_serial.h>
@@ -27,8 +27,8 @@
 #include <random>
 
 TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_theta_adams_mpi) {
-  using torsten::dsolve::PKCvodesFwdSystem;
-  using torsten::dsolve::pk_integrate_ode_adams;
+  using torsten::dsolve::PMXCvodesFwdSystem;
+  using torsten::dsolve::pmx_integrate_ode_adams;
   using stan::math::var;
   using std::vector;
 
@@ -57,7 +57,7 @@ TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_theta_adams_mpi) {
     theta_var_m[i][5] += dis2(gen);
   }
 
-  vector<Eigen::Matrix<var, -1, -1> > y_m = pk_integrate_ode_adams(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
+  vector<Eigen::Matrix<var, -1, -1> > y_m = pmx_integrate_ode_adams(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
 }
 
 #endif

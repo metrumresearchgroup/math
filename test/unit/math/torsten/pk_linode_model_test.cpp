@@ -11,7 +11,7 @@ TEST_F(TorstenCptOdeModelTest, linode_rate_dbl) {
   using refactor::PKLinODE;
   using refactor::PKOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::dsolve::pmx_integrate_ode_bdf;
 
   rate[0] = 1200;
   rate[1] = 200;
@@ -34,7 +34,7 @@ TEST_F(TorstenCptOdeModelTest, linode_rate_var) {
   using refactor::PKLinODE;
   using refactor::PKOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::dsolve::pmx_integrate_ode_bdf;
 
   rate[0] = 1200;
   rate[1] = 200;
@@ -60,7 +60,7 @@ TEST_F(TorstenCptOdeModelTest, linode_solver) {
   using refactor::PKLinODE;
   using refactor::PKOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::dsolve::pmx_integrate_ode_bdf;
   using Eigen::Matrix;
   using Eigen::Dynamic;
   using stan::math::matrix_exp;
@@ -81,7 +81,7 @@ TEST_F(TorstenCptOdeModelTest, linode_solver) {
   PKOdeFunctorRateAdaptor<PKLinODE, var> f1(model.f(), theta.size());
 
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
-  auto y1 = pk_integrate_ode_bdf(f1, yvec, t0, ts, theta, x_r, x_i, msgs);
+  auto y1 = pmx_integrate_ode_bdf(f1, yvec, t0, ts, theta, x_r, x_i, msgs);
   auto y2 = model.solve(ts[0]);
   EXPECT_FLOAT_EQ(y1[0][0].val(), y2(0).val());
   EXPECT_FLOAT_EQ(y1[0][1].val(), y2(1).val());
@@ -115,8 +115,8 @@ TEST_F(TorstenCptOdeModelTest, linode_solver_zero_rate) {
   using refactor::PKLinODE;
   using refactor::PKOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pk_integrate_ode_adams;
-  using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::dsolve::pmx_integrate_ode_adams;
+  using torsten::dsolve::pmx_integrate_ode_bdf;
   using Eigen::Matrix;
   using Eigen::Dynamic;
   using stan::math::matrix_exp;
@@ -132,7 +132,7 @@ TEST_F(TorstenCptOdeModelTest, linode_solver_zero_rate) {
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
   PKOdeFunctorRateAdaptor<PKLinODE, double> f1(model.f());
 
-  auto y1 = pk_integrate_ode_bdf(f1, yvec, t0, ts, theta, rate, x_i, msgs);
+  auto y1 = pmx_integrate_ode_bdf(f1, yvec, t0, ts, theta, rate, x_i, msgs);
   auto y2 = model.solve(ts[0]);
   EXPECT_NEAR(y1[0][0].val(), y2(0).val(), 1.E-7);
   EXPECT_NEAR(y1[0][1].val(), y2(1).val(), 1.E-7);

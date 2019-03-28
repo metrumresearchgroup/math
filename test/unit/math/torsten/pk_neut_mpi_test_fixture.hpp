@@ -5,9 +5,9 @@
 #include <gtest/gtest.h>
 #include <boost/numeric/odeint.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
-#include <test/unit/math/torsten/pk_ode_test_fixture.hpp>
-#include <stan/math/torsten/dsolve/pk_cvodes_fwd_system.hpp>
-#include <stan/math/torsten/dsolve/pk_cvodes_integrator.hpp>
+#include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
+#include <stan/math/torsten/dsolve/pmx_cvodes_fwd_system.hpp>
+#include <stan/math/torsten/dsolve/pmx_cvodes_integrator.hpp>
 #include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
 #include <test/unit/math/prim/arr/functor/lorenz.hpp>
 #include <iostream>

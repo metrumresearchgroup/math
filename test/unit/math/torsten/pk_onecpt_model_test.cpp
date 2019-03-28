@@ -9,7 +9,7 @@ TEST_F(TorstenOneCptModelTest, rate_dbl) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PKOneCptModel;
-  using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::dsolve::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
   using refactor::PKOneCptODE;
   using refactor::PKOdeFunctorRateAdaptor;
@@ -32,7 +32,7 @@ TEST_F(TorstenOneCptModelTest, rate_var) {
   using stan::math::to_var;
   using refactor::PKOneCptModel;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::dsolve::pmx_integrate_ode_bdf;
   using refactor::PKOneCptODE;
   using refactor::PKOdeFunctorRateAdaptor;
 
@@ -61,7 +61,7 @@ TEST_F(TorstenOneCptModelTest, rate_var_y0) {
   using stan::math::to_var;
   using refactor::PKOneCptModel;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::dsolve::pmx_integrate_ode_bdf;
   using refactor::PKOneCptODE;
   using refactor::PKOdeFunctorRateAdaptor;
 
@@ -93,7 +93,7 @@ TEST_F(TorstenOneCptModelTest, onecpt_solver) {
   using stan::math::to_var;
   using refactor::PKOneCptModel;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::dsolve::pmx_integrate_ode_bdf;
   using refactor::PKOneCptODE;
   using refactor::PKOdeFunctorRateAdaptor;
 
@@ -114,7 +114,7 @@ TEST_F(TorstenOneCptModelTest, onecpt_solver) {
   PKOdeFunctorRateAdaptor<PKOneCptODE, var> f1(model.f(), theta.size());
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
 
-  auto y1 = pk_integrate_ode_bdf(f1, yvec, t0, ts, theta, x_r, x_i, msgs);
+  auto y1 = pmx_integrate_ode_bdf(f1, yvec, t0, ts, theta, x_r, x_i, msgs);
   auto y2 = model.solve(ts[0]);
   EXPECT_FLOAT_EQ(y1[0][0].val(), y2(0).val());
   EXPECT_FLOAT_EQ(y1[0][1].val(), y2(1).val());
@@ -146,7 +146,7 @@ TEST_F(TorstenOneCptModelTest, ss_solver_bolus) {
   using stan::math::to_var;
   using refactor::PKOneCptModel;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::dsolve::pmx_integrate_ode_bdf;
   using refactor::PKOneCptODE;
   using refactor::PKOdeFunctorRateAdaptor;
 
@@ -208,7 +208,7 @@ TEST_F(TorstenOneCptModelTest, ss_solver_multi_truncated_infusion) {
   using stan::math::to_var;
   using refactor::PKOneCptModel;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::dsolve::pmx_integrate_ode_bdf;
   using refactor::PKOneCptODE;
   using refactor::PKOdeFunctorRateAdaptor;
 
@@ -269,7 +269,7 @@ TEST_F(TorstenOneCptModelTest, ss_solver_const_infusion) {
   using refactor::PKOneCptModel;
   using refactor::PKOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pk_integrate_ode_bdf;
+  using torsten::dsolve::pmx_integrate_ode_bdf;
 
   rate[0] = 1100;
   rate[1] = 770;

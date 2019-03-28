@@ -1,5 +1,5 @@
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <test/unit/math/torsten/pk_ode_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
 #include <test/unit/math/torsten/pk_onecpt_test_fixture.hpp>
 #include <test/unit/math/torsten/pk_twocpt_test_fixture.hpp>
 #include <test/unit/math/torsten/pk_friberg_karlsson_test_fixture.hpp>
@@ -983,10 +983,10 @@ TEST_F(TorstenOdeTest_neutropenia, max_cvodes_fails) {
   y0 = y0_bad;
   EXPECT_THROW(stan::math::integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps), // NOLINT
                std::runtime_error);
-  EXPECT_THROW(torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps), // NOLINT
+  EXPECT_THROW(torsten::dsolve::pmx_integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps), // NOLINT
                std::runtime_error);
 
   y0 = y0_good;
   EXPECT_NO_THROW(stan::math::integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps)); // NOLINT
-  EXPECT_NO_THROW(torsten::dsolve::pk_integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps)); // NOLINT
+  EXPECT_NO_THROW(torsten::dsolve::pmx_integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps)); // NOLINT
 }

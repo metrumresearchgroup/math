@@ -1,12 +1,10 @@
-#ifndef TEST_UNIT_TORSTEN_PK_ODE_TEST_FIXTURE
-#define TEST_UNIT_TORSTEN_PK_ODE_TEST_FIXTURE
+#ifndef TEST_UNIT_TORSTEN_PMX_ODE_TEST_FIXTURE
+#define TEST_UNIT_TORSTEN_PMX_ODE_TEST_FIXTURE
 
 #include <stan/math/rev/mat.hpp>
 #include <gtest/gtest.h>
 #include <boost/numeric/odeint.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
-#include <stan/math/torsten/dsolve/pk_cvodes_fwd_system.hpp>
-#include <stan/math/torsten/dsolve/pk_cvodes_integrator.hpp>
 #include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
 #include <test/unit/math/prim/arr/functor/lorenz.hpp>
 #include <iostream>
@@ -14,8 +12,8 @@
 #include <vector>
 #include <string>
 
-using torsten::dsolve::PKCvodesSystem;
-using torsten::dsolve::PKCvodesFwdSystem;
+using torsten::dsolve::PMXCvodesSystem;
+using torsten::dsolve::PMXCvodesFwdSystem;
 
 /* 
  * The problem is from chemical kinetics, from CVODES examples

@@ -1,7 +1,7 @@
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
 #include <test/unit/math/rev/mat/fun/util.hpp>
-#include <stan/math/torsten/dsolve/pk_integrate_dae.hpp>
+#include <stan/math/torsten/dsolve/pmx_integrate_dae.hpp>
 #include <test/unit/math/torsten/dae_systems.hpp>
 
 #include <nvector/nvector_serial.h>
@@ -46,9 +46,9 @@ struct StanIntegrateDAETest : public ::testing::Test {
 
 TEST_F(StanIntegrateDAETest, idas_ivp_system_yy0) {
   using torsten::dsolve::pk_idas_fwd_system;
-  using torsten::dsolve::integrate_dae;
+  using torsten::dsolve::pmx_integrate_dae;
   std::vector<std::vector<double> > yy
-      = integrate_dae(f, yy0, yp0, t0, ts, theta, x_r, x_i, 1e-4, 1e-8);
+      = pmx_integrate_dae(f, yy0, yp0, t0, ts, theta, x_r, x_i, 1e-4, 1e-8);
   EXPECT_NEAR(0.985172, yy[0][0], 1e-6);
   EXPECT_NEAR(0.0147939, yy[0][2], 1e-6);
   EXPECT_NEAR(0.905521, yy[1][0], 1e-6);
@@ -58,7 +58,7 @@ TEST_F(StanIntegrateDAETest, idas_ivp_system_yy0) {
 TEST_F(StanIntegrateDAETest, forward_sensitivity_theta) {
   using torsten::dsolve::pk_idas_fwd_system;
   using torsten::dsolve::idas_integrator;
-  using torsten::dsolve::integrate_dae;
+  using torsten::dsolve::pmx_integrate_dae;
   using stan::math::to_var;
   using stan::math::value_of;
   using stan::math::var;
@@ -66,7 +66,7 @@ TEST_F(StanIntegrateDAETest, forward_sensitivity_theta) {
   std::vector<var> theta_var = to_var(theta);
 
   std::vector<std::vector<var> > yy
-      = integrate_dae(f, yy0, yp0, t0, ts, theta_var, x_r, x_i, 1e-5, 1e-12);
+      = pmx_integrate_dae(f, yy0, yp0, t0, ts, theta_var, x_r, x_i, 1e-5, 1e-12);
   EXPECT_NEAR(0.985172, value_of(yy[0][0]), 1e-6);
   EXPECT_NEAR(0.0147939, value_of(yy[0][2]), 1e-6);
   EXPECT_NEAR(0.905519, value_of(yy[1][0]), 1e-6);
@@ -91,7 +91,7 @@ TEST_F(StanIntegrateDAETest, forward_sensitivity_theta) {
 }
 
 TEST_F(StanIntegrateDAETest, inconsistent_ic_error) {
-  using torsten::dsolve::integrate_dae;
+  using torsten::dsolve::pmx_integrate_dae;
   using stan::math::to_var;
   using stan::math::value_of;
   using stan::math::var;
@@ -100,6 +100,6 @@ TEST_F(StanIntegrateDAETest, inconsistent_ic_error) {
 
   yy0.back() = -0.1;
   EXPECT_THROW_MSG(
-      integrate_dae(f, yy0, yp0, t0, ts, theta_var, x_r, x_i, 1e-5, 1e-12),
+      pmx_integrate_dae(f, yy0, yp0, t0, ts, theta_var, x_r, x_i, 1e-5, 1e-12),
       std::domain_error, "DAE residual at t0");
 }

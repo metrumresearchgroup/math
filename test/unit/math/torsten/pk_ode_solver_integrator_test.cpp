@@ -370,14 +370,14 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver) {
 
   PkOdeIntegrator<PkAdams> integ4(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ4);
-  y1 = torsten::dsolve::pk_integrate_ode_adams(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
+  y1 = torsten::dsolve::pmx_integrate_ode_adams(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 
   PkOdeIntegrator<PkBdf> integ5(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ5);
-  y1 = torsten::dsolve::pk_integrate_ode_bdf(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
+  y1 = torsten::dsolve::pmx_integrate_ode_bdf(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
@@ -431,14 +431,14 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_y0) {
 
   PkOdeIntegrator<PkAdams> integ4(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ4);
-  y1 = torsten::dsolve::pk_integrate_ode_adams(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
+  y1 = torsten::dsolve::pmx_integrate_ode_adams(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 
   PkOdeIntegrator<PkBdf> integ5(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ5);
-  y1 = torsten::dsolve::pk_integrate_ode_bdf(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
+  y1 = torsten::dsolve::pmx_integrate_ode_bdf(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
@@ -507,11 +507,11 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_sens) {
   test_it();
 
   y = model.solve(ts[0], integ4);
-  y1 = torsten::dsolve::pk_integrate_ode_adams(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
+  y1 = torsten::dsolve::pmx_integrate_ode_adams(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   test_it();
 
   y = model.solve(ts[0], integ5);
-  y1 = torsten::dsolve::pk_integrate_ode_bdf(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
+  y1 = torsten::dsolve::pmx_integrate_ode_bdf(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   test_it();
 }
 
@@ -594,10 +594,10 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_rate_sens) {
   test_it();
 
   y = model.solve(ts[0], integ4);
-  y1 = torsten::dsolve::pk_integrate_ode_adams(f1, yvec, t0, ts, theta, x_r, x_i, msgs); // NOLINT
+  y1 = torsten::dsolve::pmx_integrate_ode_adams(f1, yvec, t0, ts, theta, x_r, x_i, msgs); // NOLINT
   test_it();
 
   y = model.solve(ts[0], integ5);
-  y1 = torsten::dsolve::pk_integrate_ode_bdf(f1, yvec, t0, ts, theta, x_r, x_i, msgs); // NOLINT
+  y1 = torsten::dsolve::pmx_integrate_ode_bdf(f1, yvec, t0, ts, theta, x_r, x_i, msgs); // NOLINT
   test_it();
 }

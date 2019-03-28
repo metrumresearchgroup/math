@@ -2,11 +2,11 @@
 #include <stan/math/rev/core.hpp>
 #include <test/unit/math/rev/mat/fun/util.hpp>
 #include <stan/math/torsten/dsolve/sundials_check.hpp>
-#include <stan/math/torsten/dsolve/pk_integrate_ode_adams.hpp>
-#include <stan/math/torsten/dsolve/pk_cvodes_integrator.hpp>
+#include <stan/math/torsten/dsolve/pmx_integrate_ode_adams.hpp>
+#include <stan/math/torsten/dsolve/pmx_cvodes_integrator.hpp>
 #include <stan/math/torsten/dsolve/cvodes_service.hpp>
 #include <stan/math/torsten/dsolve/cvodes_rhs.hpp>
-#include <test/unit/math/torsten/pk_ode_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
 #include <cvodes/cvodes.h>
 #include <cvodes/cvodes_direct.h>
 #include <sunmatrix/sunmatrix_dense.h>
@@ -48,10 +48,10 @@ struct Sho {
 };
 
 TEST_F(TorstenOdeTest_sho, service) {
-  using torsten::dsolve::PKCvodesIntegrator;
-  using torsten::dsolve::PKCvodesService;
+  using torsten::dsolve::PMXCvodesIntegrator;
+  using torsten::dsolve::PMXCvodesService;
 
-  PKCvodesService<Sho> serv(2, 1);
+  PMXCvodesService<Sho> serv(2, 1);
 
   size_t n = 2;
   N_Vector& y = serv.nv_y;
