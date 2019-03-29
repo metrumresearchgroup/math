@@ -1,25 +1,25 @@
 #include <stan/math.hpp>
 #include <test/unit/math/rev/mat/fun/util.hpp>
-#include <test/unit/math/torsten/pk_cpt_model_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_cpt_model_test_fixture.hpp>
 #include <test/unit/util.hpp>
 #include <gtest/gtest.h>
 
 TEST_F(TorstenCptOdeModelTest, linode_rate_dbl) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKLinODEModel;
-  using refactor::PKLinODE;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXLinODEModel;
+  using refactor::PMXLinODE;
+  using refactor::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
   using torsten::dsolve::pmx_integrate_ode_bdf;
 
   rate[0] = 1200;
   rate[1] = 200;
   rate[2] = 400;
-  using model_t = PKLinODEModel<double, double, double, double>;
+  using model_t = PMXLinODEModel<double, double, double, double>;
   model_t model(t0, y0, rate, linode_par);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKLinODE, double> f1(model.f());
+  PMXOdeFunctorRateAdaptor<PMXLinODE, double> f1(model.f());
 
   std::vector<double> y = f1(t0, yvec, model.par(), rate, x_i, msgs);
   EXPECT_FLOAT_EQ(y[0], rate[0]);
@@ -30,9 +30,9 @@ TEST_F(TorstenCptOdeModelTest, linode_rate_dbl) {
 TEST_F(TorstenCptOdeModelTest, linode_rate_var) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKLinODEModel;
-  using refactor::PKLinODE;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXLinODEModel;
+  using refactor::PMXLinODE;
+  using refactor::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
   using torsten::dsolve::pmx_integrate_ode_bdf;
 
@@ -41,10 +41,10 @@ TEST_F(TorstenCptOdeModelTest, linode_rate_var) {
   rate[2] = 300;
   std::vector<stan::math::var> rate_var{to_var(rate)};
   std::vector<stan::math::var> par_var(to_var(linode_par));
-  using model_t = PKLinODEModel<double, double, var, var>;
+  using model_t = PMXLinODEModel<double, double, var, var>;
   model_t model(t0, y0, rate_var, par_var);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKLinODE, var> f1(model.f(), par_var.size());
+  PMXOdeFunctorRateAdaptor<PMXLinODE, var> f1(model.f(), par_var.size());
 
   par_var.insert(par_var.end(), rate_var.begin(), rate_var.end());
   std::vector<var> y = f1(t0, yvec, par_var, x_r, x_i, msgs);
@@ -56,9 +56,9 @@ TEST_F(TorstenCptOdeModelTest, linode_rate_var) {
 TEST_F(TorstenCptOdeModelTest, linode_solver) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKLinODEModel;
-  using refactor::PKLinODE;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXLinODEModel;
+  using refactor::PMXLinODE;
+  using refactor::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
   using torsten::dsolve::pmx_integrate_ode_bdf;
   using Eigen::Matrix;
@@ -75,10 +75,10 @@ TEST_F(TorstenCptOdeModelTest, linode_solver) {
   ts.resize(1);
   std::vector<stan::math::var> theta{to_var(linode_par)};  
   std::vector<stan::math::var> rate_var{to_var(rate)};
-  using model_t = PKLinODEModel<double, double, var, var>;
+  using model_t = PMXLinODEModel<double, double, var, var>;
   model_t model(t0, y0, rate_var, theta);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKLinODE, var> f1(model.f(), theta.size());
+  PMXOdeFunctorRateAdaptor<PMXLinODE, var> f1(model.f(), theta.size());
 
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
   auto y1 = pmx_integrate_ode_bdf(f1, yvec, t0, ts, theta, x_r, x_i, msgs);
@@ -111,9 +111,9 @@ TEST_F(TorstenCptOdeModelTest, linode_solver) {
 TEST_F(TorstenCptOdeModelTest, linode_solver_zero_rate) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKLinODEModel;
-  using refactor::PKLinODE;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXLinODEModel;
+  using refactor::PMXLinODE;
+  using refactor::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
   using torsten::dsolve::pmx_integrate_ode_adams;
   using torsten::dsolve::pmx_integrate_ode_bdf;
@@ -127,10 +127,10 @@ TEST_F(TorstenCptOdeModelTest, linode_solver_zero_rate) {
   ts[0] = 20.0;
   ts.resize(1);
   std::vector<stan::math::var> theta{to_var(linode_par)};  
-  using model_t = PKLinODEModel<double, double, double, var>;
+  using model_t = PMXLinODEModel<double, double, double, var>;
   model_t model(t0, y0, rate, theta);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKLinODE, double> f1(model.f());
+  PMXOdeFunctorRateAdaptor<PMXLinODE, double> f1(model.f());
 
   auto y1 = pmx_integrate_ode_bdf(f1, yvec, t0, ts, theta, rate, x_i, msgs);
   auto y2 = model.solve(ts[0]);

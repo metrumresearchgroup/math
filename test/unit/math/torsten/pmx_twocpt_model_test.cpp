@@ -1,26 +1,26 @@
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
 #include <test/unit/math/rev/mat/fun/util.hpp>
-#include <test/unit/math/torsten/pk_cpt_model_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_cpt_model_test_fixture.hpp>
 #include <test/unit/util.hpp>
 #include <gtest/gtest.h>
 
 TEST_F(TorstenCptOdeModelTest, 2_cpt_rate_dbl) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
+  using refactor::PMXTwoCptModel;
   using torsten::dsolve::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
-  using refactor::PKTwoCptODE;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeFunctorRateAdaptor;
 
   rate[0] = 1200;
   rate[1] = 200;
   rate[2] = 300;
-  using model_t = PKTwoCptModel<double, double, double, double>;
+  using model_t = PMXTwoCptModel<double, double, double, double>;
   model_t model(t0, y0, rate, CL, Q, V2, V3, ka);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKTwoCptODE, double> f1(model.f());
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1(model.f());
 
   std::vector<double> y = f1(t0, yvec, model.par(), rate, x_i, msgs);
   EXPECT_FLOAT_EQ(y[0], rate[0]);
@@ -31,11 +31,11 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_rate_dbl) {
 TEST_F(TorstenCptOdeModelTest, 2_cpt_rate_var) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
+  using refactor::PMXTwoCptModel;
   using torsten::dsolve::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
-  using refactor::PKTwoCptODE;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeFunctorRateAdaptor;
 
   rate[0] = 1200;
   rate[1] = 200;
@@ -46,11 +46,11 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_rate_var) {
   var V3v = to_var(V3);
   var kav = to_var(ka);
   std::vector<stan::math::var> rate_var{to_var(rate)};
-  using model_t = PKTwoCptModel<double, double, var, var>;
+  using model_t = PMXTwoCptModel<double, double, var, var>;
   model_t model(t0, y0, rate_var, CLv, Qv, V2v, V3v, kav);
   std::vector<stan::math::var> theta(model.par());
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKTwoCptODE, var> f1(model.f(), theta.size());
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, var> f1(model.f(), theta.size());
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
 
   std::vector<var> y = f1(t0, yvec, theta, x_r, x_i, msgs);
@@ -62,11 +62,11 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_rate_var) {
 TEST_F(TorstenCptOdeModelTest, 2_cpt_solver) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
+  using refactor::PMXTwoCptModel;
   using torsten::dsolve::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
-  using refactor::PKTwoCptODE;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeFunctorRateAdaptor;
 
   rate[0] = 1200;
   rate[1] = 200;
@@ -83,10 +83,10 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_solver) {
   var kav = to_var(ka);
   std::vector<var> theta{CLv, Qv, V2v, V3v, kav};
   std::vector<stan::math::var> rate_var{to_var(rate)};
-  using model_t = PKTwoCptModel<double, double, var, var>;
+  using model_t = PMXTwoCptModel<double, double, var, var>;
   model_t model(t0, y0, rate_var, CLv, Qv, V2v, V3v, kav);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKTwoCptODE, var> f1(model.f(), theta.size());
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, var> f1(model.f(), theta.size());
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
 
   auto y1 = pmx_integrate_ode_bdf(f1, yvec, t0, ts, theta, x_r, x_i, msgs);
@@ -120,11 +120,11 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_solver) {
 TEST_F(TorstenCptOdeModelTest, 2_cpt_ss_solver_bolus) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
+  using refactor::PMXTwoCptModel;
   using torsten::dsolve::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
-  using refactor::PKTwoCptODE;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeFunctorRateAdaptor;
 
   rate[0] = 0;
   rate[1] = 0;
@@ -140,7 +140,7 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_ss_solver_bolus) {
   var V3v = to_var(V3);
   var kav = to_var(ka);
   std::vector<stan::math::var> rate_var{to_var(rate)};
-  using model_t = PKTwoCptModel<double, double, var, var>;
+  using model_t = PMXTwoCptModel<double, double, var, var>;
   model_t model(t0, y0, rate_var, CLv, Qv, V2v, V3v, kav);
   std::vector<var> theta{model.par()};
 
@@ -244,11 +244,11 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_ss_solver_bolus) {
 TEST_F(TorstenCptOdeModelTest, 2_cpt_ss_solver_multi_trunc_infusion) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
+  using refactor::PMXTwoCptModel;
   using torsten::dsolve::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
-  using refactor::PKTwoCptODE;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeFunctorRateAdaptor;
 
   rate[0] = 1200;
   rate[1] = 1100;
@@ -264,7 +264,7 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_ss_solver_multi_trunc_infusion) {
   var V3v = to_var(V3);
   var kav = to_var(ka);
   std::vector<stan::math::var> rate_var{to_var(rate)};
-  using model_t = PKTwoCptModel<double, double, var, var>;
+  using model_t = PMXTwoCptModel<double, double, var, var>;
   model_t model(t0, y0, rate_var, CLv, Qv, V2v, V3v, kav);
   std::vector<var> theta(model.par());
 
@@ -370,11 +370,11 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_ss_solver_multi_trunc_infusion) {
 // TEST_F(TorstenCptOdeModelTest, 2_cpt_ss_solver_const_infusion) {
 //   using stan::math::var;
 //   using stan::math::to_var;
-//   using refactor::PKTwoCptModel;
+//   using refactor::PMXTwoCptModel;
 //   using torsten::dsolve::pmx_integrate_ode_bdf;
 //   using stan::math::integrate_ode_bdf;
-//   using refactor::PKTwoCptODE;
-//   using refactor::PKOdeFunctorRateAdaptor;
+//   using refactor::PMXTwoCptODE;
+//   using refactor::PMXOdeFunctorRateAdaptor;
 
 //   rate[0] = 1200;
 //   rate[1] = 1100;
@@ -390,7 +390,7 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_ss_solver_multi_trunc_infusion) {
 //   var V3v = to_var(V3);
 //   var kav = to_var(ka);
 //   std::vector<stan::math::var> rate_var{to_var(rate)};
-//   using model_t = PKTwoCptModel<double, double, var, var>;
+//   using model_t = PMXTwoCptModel<double, double, var, var>;
 //   model_t model(t0, y0, rate_var, CLv, Qv, V2v, V3v, kav);
 //   std::vector<var> theta(model.par());
 

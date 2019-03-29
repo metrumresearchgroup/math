@@ -1,8 +1,8 @@
 #include <stan/math.hpp>
-#include <stan/math/torsten/pk_ode_model.hpp>
+#include <stan/math/torsten/pmx_ode_model.hpp>
 #include <stan/math/rev/core.hpp>
 #include <test/unit/math/rev/mat/fun/util.hpp>
-#include <test/unit/math/torsten/pk_cpt_model_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_cpt_model_test_fixture.hpp>
 
 #include <test/unit/util.hpp>
 #include <gtest/gtest.h>
@@ -10,24 +10,24 @@
 TEST_F(TorstenCptOdeModelTest, pk_integrator_t0_var) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
   using refactor::PKODEModel;
 
   y0(0) = 100.0;
   y0(1) = 1000.0;
   y0(2) = 150.0;
 
-  PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
+  PMXTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
 
-  using model1_t = PKODEModel<double, double, double, double, PKTwoCptODE>;
-  using model2_t = PKODEModel<var, double, double, double, PKTwoCptODE>;
+  using model1_t = PKODEModel<double, double, double, double, PMXTwoCptODE>;
+  using model2_t = PKODEModel<var, double, double, double, PMXTwoCptODE>;
 
   double t1 = 1.5;
   var t1_v = t1;
 
   {
-    PkOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       model1_t model(x[0], y0, rate, model0.par(), model0.f());
       return model.solve(t1, integ);
@@ -41,7 +41,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_t0_var) {
   }
 
   {
-    PkOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       model1_t model(x[0], y0, rate, model0.par(), model0.f());
       return model.solve(t1, integ);
@@ -58,24 +58,24 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_t0_var) {
 TEST_F(TorstenCptOdeModelTest, pk_integrator_rate_t0_var) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
   using refactor::PKODEModel;
 
   y0(0) = 100.0;
   y0(1) = 1000.0;
   y0(2) = 150.0;
 
-  PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
+  PMXTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
 
-  using model1_t = PKODEModel<double, double, double, double, PKTwoCptODE>;
-  using model2_t = PKODEModel<var, double, var, double, PKTwoCptODE>;
+  using model1_t = PKODEModel<double, double, double, double, PMXTwoCptODE>;
+  using model2_t = PKODEModel<var, double, var, double, PMXTwoCptODE>;
 
   double t1 = 1.5;
   var t1_v = t1;
 
   {
-    PkOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       double t0 = x[0];
       std::vector<double> rate1(x.begin() + 1, x.end());
@@ -93,7 +93,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_rate_t0_var) {
   }
 
   {
-    PkOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       double t0 = x[0];
       std::vector<double> rate1(x.begin() + 1, x.end());
@@ -114,8 +114,8 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_rate_t0_var) {
 TEST_F(TorstenCptOdeModelTest, pk_integrator_ts_var) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
   using refactor::PKODEModel;
 
   y0(0) = 100.0;
@@ -124,18 +124,18 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_ts_var) {
 
   refactor::PKRec<var> y0_v(stan::math::to_var(y0));
 
-  PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
+  PMXTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
 
-  using model1_t = PKODEModel<double, double, double, double, PKTwoCptODE>;
-  using model2_t = PKODEModel<var, var, double, double, PKTwoCptODE>;
-  using model3_t = PKODEModel<var, double, double, double, PKTwoCptODE>;
+  using model1_t = PKODEModel<double, double, double, double, PMXTwoCptODE>;
+  using model2_t = PKODEModel<var, var, double, double, PMXTwoCptODE>;
+  using model3_t = PKODEModel<var, double, double, double, PMXTwoCptODE>;
 
   double t0 = 0.0;
   stan::math::var t0_v = 0.0;
   std::vector<double> dtv{1.5};
 
   {
-    PkOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       model1_t model(t0, y0, rate, model0.par(), model0.f());
       return model.solve(x[0], integ);
@@ -148,7 +148,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_ts_var) {
   }
 
   {
-    PkOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       model1_t model(t0, y0, rate, model0.par(), model0.f());
       return model.solve(x[0], integ);
@@ -161,7 +161,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_ts_var) {
   }
 
   {
-    PkOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       model1_t model(t0, y0, rate, model0.par(), model0.f());
       return model.solve(x[0], integ);
@@ -174,7 +174,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_ts_var) {
   }
 
   {
-    PkOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       model1_t model(t0, y0, rate, model0.par(), model0.f());
       return model.solve(x[0], integ);
@@ -190,8 +190,8 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_ts_var) {
 TEST_F(TorstenCptOdeModelTest, pk_integrator_y0_var) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
   using refactor::PKODEModel;
 
   y0(0) = 100.0;
@@ -200,18 +200,18 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_y0_var) {
 
   std::vector<double> y0_vec(stan::math::to_array_1d(y0));
 
-  PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
+  PMXTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
 
-  using model1_t = PKODEModel<double, double, double, double, PKTwoCptODE>;
-  using model2_t = PKODEModel<double, var, double, double, PKTwoCptODE>;
-  using model3_t = PKODEModel<var, var, double, double, PKTwoCptODE>;
+  using model1_t = PKODEModel<double, double, double, double, PMXTwoCptODE>;
+  using model2_t = PKODEModel<double, var, double, double, PMXTwoCptODE>;
+  using model3_t = PKODEModel<var, var, double, double, PMXTwoCptODE>;
 
   double t0 = 0.2;
   stan::math::var t0_v = t0;
   double t1 = 1.0;
 
   {
-    PkOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       refactor::PKRec<double> xr = stan::math::to_vector(x);
       model1_t model(t0, xr, rate, model0.par(), model0.f());
@@ -226,7 +226,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_y0_var) {
   }
 
   {
-    PkOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       refactor::PKRec<double> xr = stan::math::to_vector(x);
       model1_t model(t0, xr, rate, model0.par(), model0.f());
@@ -241,7 +241,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_y0_var) {
   }
 
   {
-    PkOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       refactor::PKRec<double> xr = stan::math::to_vector(x);
       model1_t model(t0, xr, rate, model0.par(), model0.f());
@@ -256,7 +256,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_y0_var) {
   }
 
   {
-    PkOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
+    PMXOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
     auto f1 = [&] (std::vector<double>& x) {
       refactor::PKRec<double> xr = stan::math::to_vector(x);
       model1_t model(t0, xr, rate, model0.par(), model0.f());
@@ -274,19 +274,19 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_y0_var) {
 TEST_F(TorstenCptOdeModelTest, pk_bdf_integrator_dt_var) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
   using refactor::PKODEModel;
 
   y0(0) = 100.0;
   y0(1) = 1000.0;
   y0(2) = 0.0;
 
-  PkOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
-  PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
+  PMXOdeIntegrator<PkBdf> integ(rtol, atol, max_num_steps, msgs);
+  PMXTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
 
-  PKODEModel<double, double, double, double, PKTwoCptODE> model1(t0, y0, rate, model0.par(), model0.f());
-  using model_t = PKODEModel<var, double, double, double, PKTwoCptODE>;
+  PKODEModel<double, double, double, double, PMXTwoCptODE> model1(t0, y0, rate, model0.par(), model0.f());
+  using model_t = PKODEModel<var, double, double, double, PMXTwoCptODE>;
   var t0_v = t0;
   model_t model2(t0_v, y0, rate, model0.par(), model0.f());
 
@@ -301,19 +301,19 @@ TEST_F(TorstenCptOdeModelTest, pk_bdf_integrator_dt_var) {
 TEST_F(TorstenCptOdeModelTest, pk_adams_integrator_dt_var) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
   using refactor::PKODEModel;
 
   y0(0) = 100.0;
   y0(1) = 1000.0;
   y0(2) = 0.0;
 
-  PkOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
-  PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
+  PMXOdeIntegrator<PkAdams> integ(rtol, atol, max_num_steps, msgs);
+  PMXTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
 
-  PKODEModel<double, double, double, double, PKTwoCptODE> model1(t0, y0, rate, model0.par(), model0.f());
-  using model_t = PKODEModel<var, double, double, double, PKTwoCptODE>;
+  PKODEModel<double, double, double, double, PMXTwoCptODE> model1(t0, y0, rate, model0.par(), model0.f());
+  using model_t = PKODEModel<var, double, double, double, PMXTwoCptODE>;
   var t0_v = t0;
   model_t model2(t0_v, y0, rate, model0.par(), model0.f());
 
@@ -328,18 +328,18 @@ TEST_F(TorstenCptOdeModelTest, pk_adams_integrator_dt_var) {
 TEST_F(TorstenCptOdeModelTest, general_ode_solver) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
   using refactor::PKODEModel;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXOdeFunctorRateAdaptor;
 
   rate[0] = 1200;
   rate[1] = 2000;
   rate[2] = 3000;
-  PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
+  PMXTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKTwoCptODE, double> f1(model0.f());
-  using model_t = PKODEModel<double, double, double, double, PKTwoCptODE>;
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1(model0.f());
+  using model_t = PKODEModel<double, double, double, double, PMXTwoCptODE>;
   model_t model(t0, y0, rate, model0.par(), model0.f());
 
   Eigen::Matrix<torsten::scalar_t<model_t>, Eigen::Dynamic, 1> y;
@@ -347,35 +347,35 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver) {
   ts[0] = 20.0;
   ts.resize(1);
 
-  PkOdeIntegrator<StanRk45> integ1(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanRk45> integ1(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ1);
   y1 = stan::math::integrate_ode_rk45(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 
-  PkOdeIntegrator<StanAdams> integ2(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanAdams> integ2(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ2);
   y1 = stan::math::integrate_ode_adams(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 
-  PkOdeIntegrator<StanBdf> integ3(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanBdf> integ3(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ3);
   y1 = stan::math::integrate_ode_bdf(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 
-  PkOdeIntegrator<PkAdams> integ4(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<PkAdams> integ4(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ4);
   y1 = torsten::dsolve::pmx_integrate_ode_adams(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 
-  PkOdeIntegrator<PkBdf> integ5(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<PkBdf> integ5(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ5);
   y1 = torsten::dsolve::pmx_integrate_ode_bdf(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
@@ -386,10 +386,10 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver) {
 TEST_F(TorstenCptOdeModelTest, general_ode_solver_y0) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
   using refactor::PKODEModel;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXOdeFunctorRateAdaptor;
 
   rate[0] = 1200;
   rate[1] = 2000;
@@ -397,10 +397,10 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_y0) {
   y0[0] = 800;
   y0[1] = 0;
   y0[2] = 8000;
-  PKTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
+  PMXTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKTwoCptODE, double> f1(model0.f());
-  using model_t = PKODEModel<double, double, double, double, PKTwoCptODE>;
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1(model0.f());
+  using model_t = PKODEModel<double, double, double, double, PMXTwoCptODE>;
   model_t model(t0, y0, rate, model0.par(), model0.f());
 
   Eigen::Matrix<torsten::scalar_t<model_t>, Eigen::Dynamic, 1> y;
@@ -408,35 +408,35 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_y0) {
   ts[0] = 20.0;
   ts.resize(1);
 
-  PkOdeIntegrator<StanRk45> integ1(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanRk45> integ1(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ1);
   y1 = stan::math::integrate_ode_rk45(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 
-  PkOdeIntegrator<StanAdams> integ2(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanAdams> integ2(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ2);
   y1 = stan::math::integrate_ode_adams(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 
-  PkOdeIntegrator<StanBdf> integ3(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanBdf> integ3(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ3);
   y1 = stan::math::integrate_ode_bdf(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 
-  PkOdeIntegrator<PkAdams> integ4(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<PkAdams> integ4(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ4);
   y1 = torsten::dsolve::pmx_integrate_ode_adams(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
   EXPECT_FLOAT_EQ(y(1), y1[0][1]);
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 
-  PkOdeIntegrator<PkBdf> integ5(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<PkBdf> integ5(rtol, atol, max_num_steps, msgs);
   y = model.solve(ts[0], integ5);
   y1 = torsten::dsolve::pmx_integrate_ode_bdf(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
   EXPECT_FLOAT_EQ(y(0), y1[0][0]);
@@ -447,10 +447,10 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_y0) {
 TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_sens) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
   using refactor::PKODEModel;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXOdeFunctorRateAdaptor;
 
   rate[0] = 1200;
   rate[1] = 2000;
@@ -460,10 +460,10 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_sens) {
   y0[2] = 8000;
   std::vector<stan::math::var> theta = to_var(par);
 
-  PKTwoCptModel<double, double, double, var> model0(t0, y0, rate, theta);
+  PMXTwoCptModel<double, double, double, var> model0(t0, y0, rate, theta);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKTwoCptODE, double> f1(model0.f());
-  using model_t = PKODEModel<double, double, double, var, PKTwoCptODE>;
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1(model0.f());
+  using model_t = PKODEModel<double, double, double, var, PMXTwoCptODE>;
   model_t model(t0, y0, rate, model0.par(), model0.f());
 
   Eigen::Matrix<torsten::scalar_t<model_t>, Eigen::Dynamic, 1> y;
@@ -488,11 +488,11 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_sens) {
     }
   };
 
-  PkOdeIntegrator<StanRk45> integ1(rtol, atol, max_num_steps, msgs);
-  PkOdeIntegrator<StanAdams> integ2(rtol, atol, max_num_steps, msgs);
-  PkOdeIntegrator<StanBdf> integ3(rtol, atol, max_num_steps, msgs);
-  PkOdeIntegrator<PkAdams> integ4(rtol, atol, max_num_steps, msgs);
-  PkOdeIntegrator<PkBdf> integ5(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanRk45> integ1(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanAdams> integ2(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanBdf> integ3(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<PkAdams> integ4(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<PkBdf> integ5(rtol, atol, max_num_steps, msgs);
 
   y = model.solve(ts[0], integ1);
   y1 = stan::math::integrate_ode_rk45(f1, yvec, t0, ts, model.par(), model.rate(), x_i, msgs); // NOLINT
@@ -518,10 +518,10 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_sens) {
 TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_rate_sens) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
   using refactor::PKODEModel;
-  using refactor::PKOdeFunctorRateAdaptor;
+  using refactor::PMXOdeFunctorRateAdaptor;
 
   rate[0] = 1200;
   rate[1] = 2000;
@@ -531,15 +531,15 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_rate_sens) {
   y0[2] = 8000;
   std::vector<stan::math::var> theta = to_var(par);
   std::vector<stan::math::var> rate_var = to_var(rate);
-  // using model_t = PKTwoCptModel<double, double, var, var>;
+  // using model_t = PMXTwoCptModel<double, double, var, var>;
   // model_t model(t0, y0, rate_var, theta);
   // std::vector<double> yvec(y0.data(), y0.data() + y0.size());
   // PKODERateAdaptor<model_t> adaptor(model);
 
-  PKTwoCptModel<double, double, var, var> model0(t0, y0, rate_var, theta);
+  PMXTwoCptModel<double, double, var, var> model0(t0, y0, rate_var, theta);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PKOdeFunctorRateAdaptor<PKTwoCptODE, var> f1(model0.f(), theta.size());
-  using model_t = PKODEModel<double, double, var, var, PKTwoCptODE>;
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, var> f1(model0.f(), theta.size());
+  using model_t = PKODEModel<double, double, var, var, PMXTwoCptODE>;
   model_t model(t0, y0, model0.rate(), model0.par(), model0.f()); // NOLINT
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
 
@@ -575,11 +575,11 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_rate_sens) {
     }
   };
 
-  PkOdeIntegrator<StanRk45> integ1(rtol, atol, max_num_steps, msgs);
-  PkOdeIntegrator<StanAdams> integ2(rtol, atol, max_num_steps, msgs);
-  PkOdeIntegrator<StanBdf> integ3(rtol, atol, max_num_steps, msgs);
-  PkOdeIntegrator<PkAdams> integ4(rtol, atol, max_num_steps, msgs);
-  PkOdeIntegrator<PkBdf> integ5(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanRk45> integ1(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanAdams> integ2(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<StanBdf> integ3(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<PkAdams> integ4(rtol, atol, max_num_steps, msgs);
+  PMXOdeIntegrator<PkBdf> integ5(rtol, atol, max_num_steps, msgs);
 
   y = model.solve(ts[0], integ1);
   y1 = stan::math::integrate_ode_rk45(f1, yvec, t0, ts, theta, x_r, x_i, msgs); // NOLINT

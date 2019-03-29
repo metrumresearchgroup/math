@@ -1,11 +1,11 @@
 #include <test/unit/math/torsten/test_util.hpp>
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
-#include <test/unit/math/torsten/pk_twocpt_test_fixture.hpp>
-#include <test/unit/math/torsten/pk_twocpt_mpi_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_twocpt_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_twocpt_mpi_test_fixture.hpp>
 #include <stan/math/torsten/PKModelTwoCpt.hpp>
 #include <stan/math/torsten/generalOdeModel_bdf.hpp>
 #include <stan/math/torsten/generalOdeModel_rk45.hpp>
-#include <stan/math/torsten/pk_twocpt_model.hpp>
+#include <stan/math/torsten/pmx_twocpt_model.hpp>
 #include <stan/math/torsten/to_var.hpp>
 #include <gtest/gtest.h>
 #include <vector>
@@ -79,7 +79,7 @@ TEST_F(TorstenTwoCptTest, multiple_bolus_central_cmt) {
   TORSTEN_CPT_GRAD_BIOVAR_TEST(PKModelTwoCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar_test, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
   TORSTEN_CPT_GRAD_TLAG_TEST(PKModelTwoCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag_test, 2e-5, 1e-6, 1e-4, 1e-5);
 
-  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
+  using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
   TORSTEN_CPT_ODE_GRAD_TEST(PKModelTwoCpt, torsten::generalOdeModel_bdf, model_t::f_, model_t::Ncmt, 
                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag, 1.E-2, 1.E-2);
 }
@@ -95,13 +95,13 @@ TEST_F(TorstenTwoCptTest, multiple_addl_iv) {
   TORSTEN_CPT_GRAD_BIOVAR_TEST(PKModelTwoCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar_test, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
   TORSTEN_CPT_GRAD_TLAG_TEST(PKModelTwoCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag_test, 2e-5, 1e-6, 1e-4, 1e-5);
 
-  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
+  using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
   TORSTEN_CPT_ODE_GRAD_TEST(PKModelTwoCpt, torsten::generalOdeModel_bdf, model_t::f_, model_t::Ncmt, 
                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar_test, tlag_test, 1.E-3, 1.E-3);
 }
 
 TEST_F(TorstenTwoCptTest, multiple_iv) {
-  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
+  using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   rate[0] = 300.0;
   rate[2] = 300.0;
@@ -114,12 +114,12 @@ TEST_F(TorstenTwoCptTest, multiple_iv) {
   TORSTEN_CPT_GRAD_BIOVAR_TEST(PKModelTwoCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar_test, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
   TORSTEN_CPT_GRAD_TLAG_TEST(PKModelTwoCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag_test, 2e-5, 1e-6, 1e-4, 1e-5);
 
-  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
+  using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
   TORSTEN_CPT_ODE_GRAD_TEST(PKModelTwoCpt, torsten::generalOdeModel_bdf, model_t::f_, model_t::Ncmt, 
                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar_test, tlag_test, 1.E-3, 4.E-4);
 }
 
-TEST_F(TorstenPopulationPKTwoCptTest, multiple_bolus_tlag) {
+TEST_F(TorstenPopulationPMXTwoCptTest, multiple_bolus_tlag) {
   tlag[0][0] = 1.7;  // tlag1
   tlag[0][1] = 0;  // tlag2
   tlag[0][2] = 0;  // tlag3

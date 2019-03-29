@@ -1,5 +1,5 @@
 #include <stan/math/rev/mat/fun/typedefs.hpp>
-#include <test/unit/math/torsten/pk_twocpt_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_twocpt_test_fixture.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
 #include <gtest/gtest.h>
 #include <vector>
@@ -12,7 +12,7 @@ using refactor::PKRec;
 
 TEST_F(TorstenTwoCptTest, model_solve_d_data_only) {
   using torsten::EventsManager;
-  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
+  using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   const int ncmt = model_t::Ncmt;
   refactor::PKRec<double> init(ncmt);
@@ -33,7 +33,7 @@ TEST_F(TorstenTwoCptTest, model_solve_d_init_var) {
   using torsten::EventsManager;
   using stan::math::vector_v;
   using stan::math::var;
-  using model_t = refactor::PKTwoCptModel<double, var, double, double>;
+  using model_t = refactor::PMXTwoCptModel<double, var, double, double>;
 
   const int ncmt = model_t::Ncmt;
   refactor::PKRec<var> init(ncmt);
@@ -57,7 +57,7 @@ TEST_F(TorstenTwoCptTest, model_solve_d_rate_var) {
   using torsten::EventsManager;
   using stan::math::vector_v;
   using stan::math::var;
-  using model_t = refactor::PKTwoCptModel<double, double, var, double>;
+  using model_t = refactor::PMXTwoCptModel<double, double, var, double>;
 
   const int ncmt = model_t::Ncmt;
   refactor::PKRec<double> init(ncmt);
@@ -81,7 +81,7 @@ TEST_F(TorstenTwoCptTest, model_solve_d_par_var) {
   using torsten::EventsManager;
   using stan::math::vector_v;
   using stan::math::var;
-  using model_t = refactor::PKTwoCptModel<double, double, double, var>;
+  using model_t = refactor::PMXTwoCptModel<double, double, double, var>;
 
   const int ncmt = model_t::Ncmt;
   refactor::PKRec<double> init(ncmt);
@@ -106,7 +106,7 @@ TEST_F(TorstenTwoCptTest, model_solve_d_rate_par_var) {
   using torsten::EventsManager;
   using stan::math::vector_v;
   using stan::math::var;
-  using model_t = refactor::PKTwoCptModel<double, double, var, var>;
+  using model_t = refactor::PMXTwoCptModel<double, double, var, var>;
 
   const int ncmt = model_t::Ncmt;
   refactor::PKRec<double> init(ncmt);
@@ -129,7 +129,7 @@ TEST_F(TorstenTwoCptTest, model_solve_d_rate_par_var) {
 
 TEST_F(TorstenTwoCptTest, model_solve_d_data_only_ss) {
   using torsten::EventsManager;
-  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
+  using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   const int ncmt = model_t::Ncmt;
   refactor::PKRec<double> init(ncmt);
@@ -151,7 +151,7 @@ TEST_F(TorstenTwoCptTest, model_solve_d_init_var_ss) {
   using torsten::EventsManager;
   using stan::math::var;
   using stan::math::vector_v;
-  using model_t = refactor::PKTwoCptModel<double, var, double, double>;
+  using model_t = refactor::PMXTwoCptModel<double, var, double, double>;
 
   const int ncmt = model_t::Ncmt;
   refactor::PKRec<var> init(ncmt);
@@ -179,7 +179,7 @@ TEST_F(TorstenTwoCptTest, model_solve_d_rate_var_ss) {
   using torsten::EventsManager;
   using stan::math::var;
   using stan::math::vector_v;
-  using model_t = refactor::PKTwoCptModel<double, double, var, double>;
+  using model_t = refactor::PMXTwoCptModel<double, double, var, double>;
 
   const int ncmt = model_t::Ncmt;
   refactor::PKRec<double> init(ncmt);
@@ -207,7 +207,7 @@ TEST_F(TorstenTwoCptTest, model_solve_d_par_var_ss) {
   using torsten::EventsManager;
   using stan::math::var;
   using stan::math::vector_v;
-  using model_t = refactor::PKTwoCptModel<double, double, double, var>;
+  using model_t = refactor::PMXTwoCptModel<double, double, double, var>;
 
   const int ncmt = model_t::Ncmt;
   refactor::PKRec<double> init(ncmt);
@@ -238,7 +238,7 @@ TEST_F(TorstenTwoCptTest, model_solve_d_amt_par_var_ss) {
   using torsten::EventsManager;
   using stan::math::var;
   using stan::math::vector_v;
-  using model_t = refactor::PKTwoCptModel<double, double, double, var>;
+  using model_t = refactor::PMXTwoCptModel<double, double, double, var>;
 
   const int ncmt = model_t::Ncmt;
   refactor::PKRec<double> init(ncmt);
@@ -270,7 +270,7 @@ TEST_F(TorstenTwoCptTest, model_solve_d_amt_ii_var_ss) {
   using torsten::EventsManager;
   using stan::math::var;
   using stan::math::vector_v;
-  using model_t = refactor::PKTwoCptModel<double, double, double, double>;
+  using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   const int ncmt = model_t::Ncmt;
   refactor::PKRec<double> init(ncmt);
@@ -299,15 +299,15 @@ TEST_F(TorstenTwoCptTest, model_solve_d_amt_ii_var_ss) {
 TEST_F(TorstenTwoCptTest, rk45_model_solve_d_data_only) {
   using torsten::EventsManager;
 
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, double, double, double, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::StanRk45> integrator;
+  using model_t = refactor::PKODEModel<double, double, double, double, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::StanRk45> integrator;
 
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
@@ -325,17 +325,17 @@ TEST_F(TorstenTwoCptTest, rk45_model_solve_d_data_only) {
 
 TEST_F(TorstenTwoCptTest, rk45_model_solve_d_init_var) {
   using torsten::EventsManager;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
   using stan::math::var;
   using stan::math::vector_v;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, var, double, double, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::StanRk45> integrator;
+  using model_t = refactor::PKODEModel<double, var, double, double, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::StanRk45> integrator;
 
   refactor::PKRec<var> init(ncmt);
   init << 0, 100, 0;
@@ -357,17 +357,17 @@ TEST_F(TorstenTwoCptTest, rk45_model_solve_d_init_var) {
 
 TEST_F(TorstenTwoCptTest, rk45_model_solve_d_rate_var) {
   using torsten::EventsManager;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
   using stan::math::var;
   using stan::math::vector_v;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, double, var, double, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::StanRk45> integrator;
+  using model_t = refactor::PKODEModel<double, double, var, double, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::StanRk45> integrator;
 
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
@@ -393,17 +393,17 @@ TEST_F(TorstenTwoCptTest, rk45_model_solve_d_rate_var) {
 
 TEST_F(TorstenTwoCptTest, rk45_model_solve_d_par_var) {
   using torsten::EventsManager;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
   using stan::math::var;
   using stan::math::vector_v;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, double, double, var, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::StanRk45> integrator;
+  using model_t = refactor::PKODEModel<double, double, double, var, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::StanRk45> integrator;
 
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
@@ -426,15 +426,15 @@ TEST_F(TorstenTwoCptTest, rk45_model_solve_d_par_var) {
 
 TEST_F(TorstenTwoCptTest, rk45_model_solve_d_data_only_ss) {
   using torsten::EventsManager;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, double, double, double, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::StanRk45> integrator;
+  using model_t = refactor::PKODEModel<double, double, double, double, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::StanRk45> integrator;
 
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
@@ -456,17 +456,17 @@ TEST_F(TorstenTwoCptTest, rk45_model_solve_d_data_only_ss) {
 TEST_F(TorstenTwoCptTest, rk45_model_solve_d_init_var_ss) {
   using torsten::EventsManager;
 
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
   using stan::math::var;
   using stan::math::vector_v;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, var, double, double, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::StanRk45> integrator;
+  using model_t = refactor::PKODEModel<double, var, double, double, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::StanRk45> integrator;
 
   refactor::PKRec<var> init(ncmt);
   init << 0, 100, 0;
@@ -492,17 +492,17 @@ TEST_F(TorstenTwoCptTest, rk45_model_solve_d_init_var_ss) {
 TEST_F(TorstenTwoCptTest, rk45_model_solve_d_par_var_ss) {
   using torsten::EventsManager;
 
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
   using stan::math::var;
   using stan::math::vector_v;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, double, double, var, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::StanRk45> integrator;
+  using model_t = refactor::PKODEModel<double, double, double, var, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::StanRk45> integrator;
 
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
@@ -531,15 +531,15 @@ TEST_F(TorstenTwoCptTest, rk45_model_solve_d_par_var_ss) {
 TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_data_only) {
   using torsten::EventsManager;
 
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, double, double, double, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::PkBdf> integrator;
+  using model_t = refactor::PKODEModel<double, double, double, double, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::PkBdf> integrator;
 
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
@@ -557,17 +557,17 @@ TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_data_only) {
 
 TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_init_var) {
   using torsten::EventsManager;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
   using stan::math::var;
   using stan::math::vector_v;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, var, double, double, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::PkBdf> integrator;
+  using model_t = refactor::PKODEModel<double, var, double, double, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::PkBdf> integrator;
 
   refactor::PKRec<var> init(ncmt);
   init << 0, 100, 0;
@@ -589,17 +589,17 @@ TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_init_var) {
 
 TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_rate_var) {
   using torsten::EventsManager;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
   using stan::math::var;
   using stan::math::vector_v;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, double, var, double, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::PkBdf> integrator;
+  using model_t = refactor::PKODEModel<double, double, var, double, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::PkBdf> integrator;
 
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
@@ -625,17 +625,17 @@ TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_rate_var) {
 
 TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_par_var) {
   using torsten::EventsManager;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
   using stan::math::var;
   using stan::math::vector_v;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, double, double, var, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::PkBdf> integrator;
+  using model_t = refactor::PKODEModel<double, double, double, var, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::PkBdf> integrator;
 
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
@@ -658,15 +658,15 @@ TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_par_var) {
 
 TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_data_only_ss) {
   using torsten::EventsManager;
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, double, double, double, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::PkBdf> integrator;
+  using model_t = refactor::PKODEModel<double, double, double, double, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::PkBdf> integrator;
 
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;
@@ -688,17 +688,17 @@ TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_data_only_ss) {
 TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_init_var_ss) {
   using torsten::EventsManager;
 
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
   using stan::math::var;
   using stan::math::vector_v;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, var, double, double, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::PkBdf> integrator;
+  using model_t = refactor::PKODEModel<double, var, double, double, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::PkBdf> integrator;
 
   refactor::PKRec<var> init(ncmt);
   init << 0, 100, 0;
@@ -724,17 +724,17 @@ TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_init_var_ss) {
 TEST_F(TorstenTwoCptTest, PkBdf_model_solve_d_par_var_ss) {
   using torsten::EventsManager;
 
-  using refactor::PKTwoCptModel;
-  using refactor::PKTwoCptODE;
-  using refactor::PkOdeIntegrator;
+  using refactor::PMXTwoCptModel;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeIntegrator;
   using stan::math::var;
   using stan::math::vector_v;
 
-  const int ncmt = PKTwoCptModel<double, double, double, double>::Ncmt;
-  PKTwoCptODE f;
+  const int ncmt = PMXTwoCptModel<double, double, double, double>::Ncmt;
+  PMXTwoCptODE f;
 
-  using model_t = refactor::PKODEModel<double, double, double, var, PKTwoCptODE>;
-  PkOdeIntegrator<torsten::PkBdf> integrator;
+  using model_t = refactor::PKODEModel<double, double, double, var, PMXTwoCptODE>;
+  PMXOdeIntegrator<torsten::PkBdf> integrator;
 
   refactor::PKRec<double> init(ncmt);
   init << 0, 100, 0;

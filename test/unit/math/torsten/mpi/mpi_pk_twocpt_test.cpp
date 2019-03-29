@@ -1,13 +1,13 @@
 #include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
-#include <test/unit/math/torsten/pk_twocpt_mpi_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_twocpt_mpi_test_fixture.hpp>
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
 #include <stan/math/torsten/mpi/envionment.hpp>
 #include <stan/math/torsten/PKModelTwoCpt.hpp>
-#include <stan/math/torsten/pk_onecpt_model.hpp>
-#include <stan/math/torsten/pk_twocpt_model.hpp>
+#include <stan/math/torsten/pmx_onecpt_model.hpp>
+#include <stan/math/torsten/pmx_twocpt_model.hpp>
 #include <stan/math/torsten/to_var.hpp>
 #include <gtest/gtest.h>
 #include <stan/math/rev/mat.hpp>  // FIX ME - include should be more specific
@@ -19,7 +19,7 @@ using Eigen::Matrix;
 using Eigen::Dynamic;
 using stan::math::var;
 
-TEST_F(TorstenPopulationPKTwoCptTest, multiple_bolus_doses_data_only) {
+TEST_F(TorstenPopulationPMXTwoCptTest, multiple_bolus_doses_data_only) {
   Matrix<double, Dynamic, Dynamic> x =
     torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
@@ -34,7 +34,7 @@ TEST_F(TorstenPopulationPKTwoCptTest, multiple_bolus_doses_data_only) {
   }
 }
 
-TEST_F(TorstenPopulationPKTwoCptTest, multiple_IV_doses_data_only) {
+TEST_F(TorstenPopulationPMXTwoCptTest, multiple_IV_doses_data_only) {
   rate[0] = 300;
   for (int i = 0; i < np; ++i) {
     for (int j = 0; j < nt; ++j) {      
@@ -56,7 +56,7 @@ TEST_F(TorstenPopulationPKTwoCptTest, multiple_IV_doses_data_only) {
   }
 }
 
-TEST_F(TorstenPopulationPKTwoCptTest, multiple_bolus_doses_par_var) {
+TEST_F(TorstenPopulationPMXTwoCptTest, multiple_bolus_doses_par_var) {
   vector<vector<var> > pMatrix_m_v(np);
   vector<vector<var> > pMatrix_v(torsten::to_var(pMatrix));
   for (int i = 0; i < np; ++i) {
@@ -77,7 +77,7 @@ TEST_F(TorstenPopulationPKTwoCptTest, multiple_bolus_doses_par_var) {
   }
 }
 
-TEST_F(TorstenPopulationPKTwoCptTest, multiple_IV_doses_par_var) {
+TEST_F(TorstenPopulationPMXTwoCptTest, multiple_IV_doses_par_var) {
   rate[0] = 300;
   for (int i = 0; i < np; ++i) {
     for (int j = 0; j < nt; ++j) {      

@@ -1,20 +1,20 @@
 #include <stan/math/prim/mat/fun/Eigen.hpp>
 #include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
-#include <test/unit/math/torsten/pk_onecpt_test_fixture.hpp>
-#include <test/unit/math/torsten/pk_twocpt_test_fixture.hpp>
-#include <test/unit/math/torsten/pk_friberg_karlsson_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_onecpt_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_twocpt_test_fixture.hpp>
+#include <test/unit/math/torsten/pmx_friberg_karlsson_test_fixture.hpp>
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
 #include <stan/math/torsten/generalOdeModel_rk45.hpp>
 #include <stan/math/torsten/generalOdeModel_bdf.hpp>
-#include <stan/math/torsten/pk_twocpt_model.hpp>
-#include <stan/math/torsten/pk_onecpt_model.hpp>
-#include <stan/math/torsten/pk_ode_model.hpp>
+#include <stan/math/torsten/pmx_twocpt_model.hpp>
+#include <stan/math/torsten/pmx_onecpt_model.hpp>
+#include <stan/math/torsten/pmx_ode_model.hpp>
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
 #include <gtest/gtest.h>
 
-auto f  = refactor::PKOneCptModel<double,double,double,double>::f_;
-auto f2 = refactor::PKTwoCptModel<double,double,double,double>::f_;
+auto f  = refactor::PMXOneCptModel<double,double,double,double>::f_;
+auto f2 = refactor::PMXTwoCptModel<double,double,double,double>::f_;
 
 using stan::math::var;
 using std::vector;
@@ -957,8 +957,8 @@ TEST_F(TorstenOdeTest, exception) {
   pMatrix[0][3] = 1.0E+80;
   pMatrix[0][4] = 1.0E+70;
 
-  auto& f = refactor::PKTwoCptModel<double, double, double, double>::f_;
-  int ncmt = refactor::PKTwoCptModel<double, double, double, double>::Ncmt;
+  auto& f = refactor::PMXTwoCptModel<double, double, double, double>::f_;
+  int ncmt = refactor::PMXTwoCptModel<double, double, double, double>::Ncmt;
 
   EXPECT_NO_THROW(torsten::generalOdeModel_bdf(f, ncmt, time, amt, rate, ii,
                                                evid, cmt, addl, ss, pMatrix,

@@ -8,14 +8,14 @@
 #include <vector>
 #include <string>
 
-class TorstenPopulationPKTwoCptTest : public testing::Test {
+class TorstenPopulationPMXTwoCptTest : public testing::Test {
   void SetUp() {
     // make sure memory's clean before starting each test
     stan::math::recover_memory();
     torsten::mpi::Envionment::init();
   }
 public:
-  TorstenPopulationPKTwoCptTest() :
+  TorstenPopulationPMXTwoCptTest() :
     nt(10),
     time(nt, 0.0),
     amt(nt, 0),

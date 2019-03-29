@@ -4,10 +4,10 @@
 #include <stan/math/rev/mat.hpp>
 #include <gtest/gtest.h>
 #include <boost/numeric/odeint.hpp>
-#include <stan/math/torsten/pk_onecpt_model.hpp>
-#include <stan/math/torsten/pk_twocpt_model.hpp>
-#include <stan/math/torsten/pk_linode_model.hpp>
-#include <stan/math/torsten/pk_ode_model.hpp>
+#include <stan/math/torsten/pmx_onecpt_model.hpp>
+#include <stan/math/torsten/pmx_twocpt_model.hpp>
+#include <stan/math/torsten/pmx_linode_model.hpp>
+#include <stan/math/torsten/pmx_ode_model.hpp>
 #include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
 #include <iostream>
 #include <sstream>
