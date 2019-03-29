@@ -24,7 +24,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, multiple_bolus_doses_data_only) {
     torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
   vector<Matrix<double, Dynamic, Dynamic> > x_m =
-    torsten::popPKModelTwoCpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+    torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
                               pMatrix_m,
                               biovar_m,
                               tlag_m);
@@ -46,7 +46,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, multiple_IV_doses_data_only) {
     torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
   vector<Matrix<double, Dynamic, Dynamic> > x_m =
-    torsten::popPKModelTwoCpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+    torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
                               pMatrix_m,
                               biovar_m,
                               tlag_m);
@@ -67,7 +67,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, multiple_bolus_doses_par_var) {
     torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
   vector<Matrix<var, Dynamic, Dynamic> > x_m =
-    torsten::popPKModelTwoCpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+    torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
                               pMatrix_m_v,
                               biovar_m,
                               tlag_m);
@@ -95,7 +95,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, multiple_IV_doses_par_var) {
     torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
   vector<Matrix<var, Dynamic, Dynamic> > x_m =
-    torsten::popPKModelTwoCpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+    torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
                               pMatrix_m_v,
                               biovar_m,
                               tlag_m);
