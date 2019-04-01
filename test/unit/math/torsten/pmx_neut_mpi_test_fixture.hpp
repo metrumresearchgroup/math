@@ -39,7 +39,7 @@ public:
     theta(1, {10.74924, 16.83211, 37.33329, 98.06352, 2.001674, 119.6034, 4.787322, 0.201094, 0.000278} ),
     biovar(1, std::vector<double>(nCmt, 1.0)),
     tlag(1, std::vector<double>(nCmt, 0.0)),
-    np(10),
+    np(8),
     time_m   (np * nt),
     amt_m    (np * nt),
     rate_m   (np * nt),
@@ -51,10 +51,7 @@ public:
     theta_m  (np * theta.size()),
     biovar_m (np * biovar.size()),
     tlag_m   (np * tlag.size()),
-    len(np),
-    len_theta(np),
-    len_biovar(np),
-    len_tlag(np)
+    len(np)
   {
     SetUp();
 
@@ -92,10 +89,58 @@ public:
     // population length
     for (int i = 0; i < np; ++i) {
       len[i] = nt;
-      len_theta[i] = 1;
-      len_biovar[i] = 1;
-      len_tlag[i] = 1;
     }    
+  }
+
+  /*
+   * setup population given length of each individual,
+   * so that individual data that are greater than
+   * given length is modified by @c std::vector::resize()
+   */
+  void setup_population(const std::vector<int>& length) {
+    time_m.clear();
+    amt_m.clear();
+    rate_m.clear();
+    cmt_m.clear(); 
+    evid_m.clear();
+    ii_m.clear();
+    addl_m.clear();
+    ss_m.clear();
+    theta_m.clear();
+    biovar_m.clear();
+    tlag_m.clear();
+
+    // population data
+    for (size_t i = 0; i < length.size(); ++i) {
+      assert(length[i] <= nt);
+      for (int j = 0; j < length[i]; ++j) {
+        time_m.push_back(time[j]);
+        amt_m .push_back(amt[j]);
+        rate_m.push_back(rate[j]);
+        cmt_m .push_back(cmt[j]);
+        evid_m.push_back(evid[j]);
+        ii_m  .push_back(ii[j]);
+        addl_m.push_back(addl[j]);
+        ss_m  .push_back(ss[j]);
+      }
+    }
+
+    // population param
+    for (size_t i = 0; i < length.size(); ++i) {
+      for (int j = 0; j < length[i]; ++j) {
+        theta_m.push_back(theta[0]);
+        biovar_m.push_back(biovar[0]);
+        tlag_m.push_back(tlag[0]);
+      }
+    }
+
+    // population length
+    len.resize(length.size());
+    for (size_t i = 0; i < length.size(); ++i) {
+      len[i] = length[i];
+    }
+
+    np = length.size();
   }
 
   const TwoCptNeutModelODE f;
@@ -112,7 +157,7 @@ public:
   std::vector<std::vector<double> > theta;
   std::vector<std::vector<double> > biovar;
   std::vector<std::vector<double> > tlag;
-  const int np;
+  int np;
   std::vector<double> time_m   ;
   std::vector<double> amt_m    ;
   std::vector<double> rate_m   ;
@@ -125,9 +170,6 @@ public:
   std::vector<std::vector<double> > biovar_m ;
   std::vector<std::vector<double> > tlag_m   ;
   std::vector<int> len;
-  std::vector<int> len_theta;
-  std::vector<int> len_biovar;
-  std::vector<int> len_tlag;
 };
 
 #endif

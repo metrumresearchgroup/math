@@ -371,6 +371,72 @@ TEST_F(TorstenPopulationPMXTwoCptTest, exception_sync) {
 }
 #endif
 
+TEST_F(TorstenPopulationNeutropeniaTest, non_uniform_population_data) {
+  std::vector<int> length{nt, nt, nt - 4, nt - 3, nt - 2, nt -1, nt};
+  setup_population(length);
+
+  auto x_m = torsten::pmx_solve_group_bdf(f, nCmt,
+                                          len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+                                          theta_m, biovar_m, tlag_m);
+
+  int ibegin = 0;
+  for (size_t i = 0; i < np; ++i) {
+    std::vector<double> time_i(time_m.begin() + ibegin, time_m.begin() + ibegin + len[i]);
+    std::vector<double> amt_i(amt_m.begin() + ibegin, amt_m.begin() + ibegin + len[i]);
+    std::vector<double> rate_i(rate_m.begin() + ibegin, rate_m.begin() + ibegin + len[i]);
+    std::vector<double> ii_i(ii_m.begin() + ibegin, ii_m.begin() + ibegin + len[i]);
+    std::vector<int> evid_i(evid_m.begin() + ibegin, evid_m.begin() + ibegin + len[i]);
+    std::vector<int> cmt_i(cmt_m.begin() + ibegin, cmt_m.begin() + ibegin + len[i]);
+    std::vector<int> addl_i(addl_m.begin() + ibegin, addl_m.begin() + ibegin + len[i]);
+    std::vector<int> ss_i(ss_m.begin() + ibegin, ss_m.begin() + ibegin + len[i]);
+    std::vector<std::vector<double> > theta_i(theta_m.begin() + ibegin, theta_m.begin() + ibegin + len[i]);
+    std::vector<std::vector<double> > biovar_i(biovar_m.begin() + ibegin, biovar_m.begin() + ibegin + len[i]);
+    std::vector<std::vector<double> > tlag_i(tlag_m.begin() + ibegin, tlag_m.begin() + ibegin + len[i]);
+    auto x_i = torsten::generalOdeModel_bdf(f, nCmt,
+                                            time_i, amt_i, rate_i, ii_i, evid_i, cmt_i, addl_i, ss_i,
+                                            theta_i, biovar_i, tlag_i);
+    torsten::test::test_val(x_m[i], x_i);
+    ibegin += len[i];
+  }
+}
+
+TEST_F(TorstenPopulationNeutropeniaTest, non_uniform_population_theta_var) {
+  using stan::math::var;
+
+  std::vector<int> length{nt - 10, nt - 13, nt - 1, nt - 16, nt};
+  setup_population(length);
+
+  std::vector<std::vector<var>> theta_m_v = torsten::to_var(theta_m);
+
+  auto x_m = torsten::pmx_solve_group_bdf(f, nCmt,
+                                          len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
+                                          theta_m_v, biovar_m, tlag_m);
+
+  int ibegin = 0;
+  for (size_t i = 0; i < np; ++i) {
+    std::vector<double> time_i(time_m.begin() + ibegin, time_m.begin() + ibegin + len[i]);
+    std::vector<double> amt_i(amt_m.begin() + ibegin, amt_m.begin() + ibegin + len[i]);
+    std::vector<double> rate_i(rate_m.begin() + ibegin, rate_m.begin() + ibegin + len[i]);
+    std::vector<double> ii_i(ii_m.begin() + ibegin, ii_m.begin() + ibegin + len[i]);
+    std::vector<int> evid_i(evid_m.begin() + ibegin, evid_m.begin() + ibegin + len[i]);
+    std::vector<int> cmt_i(cmt_m.begin() + ibegin, cmt_m.begin() + ibegin + len[i]);
+    std::vector<int> addl_i(addl_m.begin() + ibegin, addl_m.begin() + ibegin + len[i]);
+    std::vector<int> ss_i(ss_m.begin() + ibegin, ss_m.begin() + ibegin + len[i]);
+    std::vector<std::vector<double>> theta_i(theta_m.begin() + ibegin, theta_m.begin() + ibegin + len[i]);
+    std::vector<std::vector<var>> theta_i_v = torsten::to_var(theta_i);
+    std::vector<std::vector<double> > biovar_i(biovar_m.begin() + ibegin, biovar_m.begin() + ibegin + len[i]);
+    std::vector<std::vector<double> > tlag_i(tlag_m.begin() + ibegin, tlag_m.begin() + ibegin + len[i]);
+    auto x_i = torsten::generalOdeModel_bdf(f, nCmt,
+                                            time_i, amt_i, rate_i, ii_i, evid_i, cmt_i, addl_i, ss_i,
+                                            theta_i_v, biovar_i, tlag_i);
+    for (int j = 0; j < len[i]; ++j) {
+      torsten::test::test_grad(theta_m_v[ibegin + j], theta_i_v[j], x_m[i], x_i);      
+    }
+
+    ibegin += len[i];
+  }
+}
+
 TEST_F(TorstenPopulationNeutropeniaTest, exception_max_num_steps_fails) {
   double rtol = 1e-12;
   double atol = 1e-12;
