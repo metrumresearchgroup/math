@@ -372,7 +372,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, exception_sync) {
 #endif
 
 TEST_F(TorstenPopulationNeutropeniaTest, non_uniform_population_data) {
-  std::vector<int> length{nt, nt, nt - 4, nt - 3, nt - 2, nt -1, nt};
+ std::vector<int> length{nt - 10, nt - 13, nt - 1, nt - 16, nt};
   setup_population(length);
 
   auto x_m = torsten::pmx_solve_group_bdf(f, nCmt,
@@ -380,7 +380,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, non_uniform_population_data) {
                                           theta_m, biovar_m, tlag_m);
 
   int ibegin = 0;
-  for (size_t i = 0; i < np; ++i) {
+  for (int i = 0; i < np; ++i) {
     std::vector<double> time_i(time_m.begin() + ibegin, time_m.begin() + ibegin + len[i]);
     std::vector<double> amt_i(amt_m.begin() + ibegin, amt_m.begin() + ibegin + len[i]);
     std::vector<double> rate_i(rate_m.begin() + ibegin, rate_m.begin() + ibegin + len[i]);
@@ -413,7 +413,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, non_uniform_population_theta_var) {
                                           theta_m_v, biovar_m, tlag_m);
 
   int ibegin = 0;
-  for (size_t i = 0; i < np; ++i) {
+  for (int i = 0; i < np; ++i) {
     std::vector<double> time_i(time_m.begin() + ibegin, time_m.begin() + ibegin + len[i]);
     std::vector<double> amt_i(amt_m.begin() + ibegin, amt_m.begin() + ibegin + len[i]);
     std::vector<double> rate_i(rate_m.begin() + ibegin, rate_m.begin() + ibegin + len[i]);
