@@ -44,23 +44,16 @@ TEST_F(TorstenOdeTest_sho, braid_app) {
   CHECK_SUNDIALS_CALL(CVDlsSetJacFn(mem, torsten::dsolve::cvodes_jac<Ode>()));
 
   // CHECK_SUNDIALS_CALL(CVode(mem, ts[1], y, &t0, CV_NORMAL));
-  CVBraidApp app(mem, ode.nv_y(), MPI_COMM_WORLD, 0.0, 1.0, 10);
+  CVBraidApp app(mem, ode.to_user_data(), ode.nv_y(), MPI_COMM_WORLD, 0.0, 1000.0, 1000);
 
-  // Split global MPI communicator into spatial and temporal communicators.
-  // Define parallel mesh by partitioning serial mesh. Parallel refinement
-  // is done in MFEMBraidApp::InitMultilevelApp(). Once parallel mesh is
-  // formed we can delete serial mesh.
   BraidUtil util;
-  // MPI_Comm comm_t;
-  // util.SplitCommworld(&comm, opts.num_procs_x, &comm_x, &comm_t);
 
   // Run Braid simulation.
   BraidCore core(comm, &app);
-  core.SetMaxLevels(0);
+  core.SetMaxLevels(3);
 
   // opts.SetBraidCoreOptions(core);
   core.Drive();
 
   MPI_Finalize();
 }
-
