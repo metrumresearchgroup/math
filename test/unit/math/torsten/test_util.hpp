@@ -46,6 +46,38 @@ namespace torsten {
      * @param y1 one result
      * @param y2 the other result to be compared against
      *              with, must of same shape and size as to @c pk_y
+     * @param rtol relative tolerance
+     * @param rtol absolute tolerance
+     */
+    template<typename T1, typename T2>
+    void test_val(const std::vector<std::vector<T1>>& y1,
+                  const std::vector<std::vector<T2>>& y2,
+                  double rtol, double atol) {
+      using stan::math::value_of;
+      EXPECT_EQ(y1.size(), y2.size());
+      for (int i = 0; i < y1.size(); ++i) {
+        EXPECT_EQ(y1[i].size(), y2[i].size());
+        for (size_t j = 0; j < y1[i].size(); ++j) {
+          double y1_ij = value_of(y1[i][j]);
+          double y2_ij = value_of(y2[i][j]);
+          if (abs(y1_ij) < 1e-5 && abs(y2_ij) < 1e-5) {
+            EXPECT_NEAR(y1_ij, y2_ij, atol);
+          } else {
+            EXPECT_NEAR(y1_ij, y2_ij, std::max(abs(y1_ij), abs(y2_ij)) * rtol);
+          }
+        }
+      }
+    }
+
+    /*
+     * Test @c MatrixXd results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
      */
     template<typename T1, typename T2>
     void test_val(const Eigen::Matrix<T1, -1, -1>& y1,
