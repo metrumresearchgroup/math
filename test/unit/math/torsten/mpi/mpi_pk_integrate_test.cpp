@@ -22,8 +22,6 @@
 #include <chrono>
 #include <ctime>
 
-
-
 TEST_F(TorstenOdeTest_chem, cvodes_ivp_system_bdf_mpi) {
   using torsten::dsolve::PMXCvodesFwdSystem;
   using stan::math::integrate_ode_bdf;

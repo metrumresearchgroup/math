@@ -16,6 +16,7 @@
 
 using std::vector;
 using Eigen::Matrix;
+using Eigen::MatrixXd;
 using Eigen::Dynamic;
 using stan::math::var;
 
@@ -23,14 +24,18 @@ TEST_F(TorstenPopulationPMXTwoCptTest, multiple_bolus_doses_data_only) {
   Matrix<double, Dynamic, Dynamic> x =
     torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
-  vector<Matrix<double, Dynamic, Dynamic> > x_m =
+  Matrix<double, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                              pMatrix_m,
-                              biovar_m,
-                              tlag_m);
+                              pMatrix_m, biovar_m, tlag_m);
 
+  int begin_i = 0;
   for (int i = 0; i < np; ++i) {
-    torsten::test::test_val(x_m[i], x);
+    MatrixXd x_i(x_m.rows(), len[i]);
+    for (int j = 0; j < len[i]; ++j) {
+      x_i.col(j) = x_m.col(begin_i + j);
+    }
+    torsten::test::test_val(x_i, x);
+    begin_i += len[i];
   }
 }
 
@@ -45,14 +50,18 @@ TEST_F(TorstenPopulationPMXTwoCptTest, multiple_IV_doses_data_only) {
   Matrix<double, Dynamic, Dynamic> x =
     torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
-  vector<Matrix<double, Dynamic, Dynamic> > x_m =
+  Matrix<double, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                              pMatrix_m,
-                              biovar_m,
-                              tlag_m);
+                                    pMatrix_m, biovar_m, tlag_m);
 
+  int begin_i = 0;
   for (int i = 0; i < np; ++i) {
-    torsten::test::test_val(x_m[i], x);
+    MatrixXd x_i(x_m.rows(), len[i]);
+    for (int j = 0; j < len[i]; ++j) {
+      x_i.col(j) = x_m.col(begin_i + j);
+    }
+    torsten::test::test_val(x_i, x);
+    begin_i += len[i];
   }
 }
 
@@ -66,14 +75,18 @@ TEST_F(TorstenPopulationPMXTwoCptTest, multiple_bolus_doses_par_var) {
   Matrix<var, Dynamic, Dynamic> x =
     torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
-  vector<Matrix<var, Dynamic, Dynamic> > x_m =
+  Matrix<var, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                              pMatrix_m_v,
-                              biovar_m,
-                              tlag_m);
+                              pMatrix_m_v, biovar_m, tlag_m);
 
+  int begin_i = 0;
   for (int i = 0; i < np; ++i) {
-    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
+    Matrix<var, Dynamic, Dynamic> x_i(x_m.rows(), len[i]);
+    for (int j = 0; j < len[i]; ++j) {
+      x_i.col(j) = x_m.col(begin_i + j);
+    }
+    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_i, x);
+    begin_i += len[i];
   }
 }
 
@@ -94,13 +107,17 @@ TEST_F(TorstenPopulationPMXTwoCptTest, multiple_IV_doses_par_var) {
   Matrix<var, Dynamic, Dynamic> x =
     torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
-  vector<Matrix<var, Dynamic, Dynamic> > x_m =
+  Matrix<var, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
-                              pMatrix_m_v,
-                              biovar_m,
-                              tlag_m);
+                              pMatrix_m_v, biovar_m, tlag_m);
 
+  int begin_i = 0;
   for (int i = 0; i < np; ++i) {
-    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_m[i], x, 1.E-8, 1.E-5);
+    Matrix<var, Dynamic, Dynamic> x_i(x_m.rows(), len[i]);
+    for (int j = 0; j < len[i]; ++j) {
+      x_i.col(j) = x_m.col(begin_i + j);
+    }
+    torsten::test::test_grad(pMatrix_m_v[i], pMatrix_v[0], x_i, x);
+    begin_i += len[i];
   }
 }

@@ -112,17 +112,28 @@ namespace torsten {
      * Test vector of vectors results against @c MatrixXd.
      *
      * @param y1 results in the form of vector of vectors
-     * @param y2 @c MatrixXd results.
+     * @param y2 @c MatrixXd results in column-major format
      */
     void test_val(const std::vector<std::vector<double> > & y1,
                   const Eigen::MatrixXd& y2) {
-      EXPECT_EQ(y1.size(), y2.rows());
+      EXPECT_EQ(y1.size(), y2.cols());
       for (size_t i = 0; i < y1.size(); ++i) {
-        EXPECT_EQ(y1[i].size(), y2.cols());
-        for (int j = 0; j < y2.cols(); ++j) {
-          EXPECT_FLOAT_EQ(y1[i][j], y2(i, j));
+        EXPECT_EQ(y1[i].size(), y2.rows());
+        for (int j = 0; j < y2.rows(); ++j) {
+          EXPECT_FLOAT_EQ(y1[i][j], y2(j, i));
         }
       }
+    }
+
+    /*
+     * Test vector of vectors results against @c MatrixXd.
+     *
+     * @param y1 results in the form of vector of vectors
+     * @param y2 @c MatrixXd results in column-major format
+     */
+    void test_val(const Eigen::MatrixXd& y2,
+                  const std::vector<std::vector<double> > & y1) {
+      test_val(y1, y2);
     }
 
     /*
@@ -235,6 +246,41 @@ namespace torsten {
     }
 
     /*
+     * Test @c vector of @c var vectors against a data matrix
+     * containing both value and gradient.
+     *
+     * @param theta parameters regarding which the gradient
+     *              would be taken by @c y1 and checked.
+     * @param y1 result in form of vector of vectors
+     * @param y2 result in form of dataa matrix, each column
+     *              ordered as y1, dy1/dp1, dy1/dp2..., y2, dy2/dp1...
+     * @param fval_esp tolerance of values
+     * @param sens_esp tolerance of gradients
+     */
+    void test_grad(std::vector<stan::math::var>& theta,
+                   std::vector<std::vector<stan::math::var>>& y1,
+                   Eigen::MatrixXd& y2,
+                   double fval_eps,
+                   double sens_eps) {
+      EXPECT_EQ(y1.size(), y2.cols());
+      for (size_t i = 0; i < y1.size(); ++i) {
+        EXPECT_EQ(y1[i].size() * (1 + theta.size()), y2.rows());
+      }
+
+      std::vector<double> g, g1;
+      for (size_t i = 0; i < y1.size(); ++i) {
+        for (size_t j = 0; j < y1[i].size(); ++j) {
+          EXPECT_NEAR(y1[i][j].val(), y2(j * (1 + theta.size()), i), fval_eps);
+          stan::math::set_zero_all_adjoints();
+          y1[i][j].grad(theta, g);
+          for (size_t m = 0; m < theta.size(); ++m) {
+            EXPECT_NEAR(g[m], y2(j * (1 + theta.size()) + m + 1, i), sens_eps);
+          }
+        }
+      }
+    }
+
+    /*
      * Test @c vector of @c var vectors against @c var matrix
      *
      * @param theta1 parameters regarding which the gradient
@@ -253,14 +299,14 @@ namespace torsten {
                    double fval_eps,
                    double sens_eps) {
       EXPECT_EQ(theta1.size(), theta2.size());
-      EXPECT_EQ(y1.size(), y2.rows());
+      EXPECT_EQ(y1.size(), y2.cols());
       for (size_t i = 0; i < y1.size(); ++i) {
-        EXPECT_EQ(y1[i].size(), y2.cols());
+        EXPECT_EQ(y1[i].size(), y2.rows());
       }
 
       for (size_t i = 0; i < y1.size(); ++i) {
         for (size_t j = 0; j < y1[i].size(); ++j) {
-          EXPECT_NEAR(y1[i][j].val(), y2(i, j).val(), fval_eps);
+          EXPECT_NEAR(y1[i][j].val(), y2(j, i).val(), fval_eps);
         }
       }
 
@@ -270,7 +316,7 @@ namespace torsten {
           stan::math::set_zero_all_adjoints();
           y1[i][j].grad(theta1, g);
           stan::math::set_zero_all_adjoints();
-          y2(i, j).grad(theta2, g1);
+          y2(j, i).grad(theta2, g1);
           for (size_t m = 0; m < theta1.size(); ++m) {
             EXPECT_NEAR(g[m], g1[m], sens_eps);
           }
