@@ -36,8 +36,8 @@ TEST_F(TorstenOneCptTest, single_bolus_tlag) {
 }
 
 TEST_F(TorstenOneCptTest, multiple_bolus) {
-  Matrix<double, Dynamic, Dynamic> x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
-  Matrix<double, Dynamic, Dynamic> amounts(10, 2);
+  MatrixXd x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
+  MatrixXd amounts(10, 2);
   amounts << 1000.0, 0.0,
     740.8182, 254.97490,
     548.8116, 436.02020,
@@ -72,10 +72,10 @@ TEST_F(TorstenOneCptTest, multiple_bolus_overload) {
 
 TEST_F(TorstenOneCptTest, multiple_bolus_central_cmt) {
   cmt[0] = 2;
-  Matrix<double, Dynamic, Dynamic> x;
+  MatrixXd x;
   x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
 
-  Matrix<double, Dynamic, Dynamic> amounts(10, 2);
+  MatrixXd amounts(10, 2);
   amounts << 0, 1000.0000,
     0,  969.2332,
     0,  939.4131,
@@ -126,9 +126,9 @@ TEST_F(TorstenOneCptTest, multiple_bolus_tlag) {
 
   amt[0] = 1200;
   
-  Matrix<double, Dynamic, Dynamic> x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
+  MatrixXd x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
   
-  Matrix<double, Dynamic, Dynamic> amounts(10, 2);
+  MatrixXd amounts(10, 2);
   amounts << 0, 0,
              0, 0,
              0, 0,
@@ -158,11 +158,11 @@ TEST_F(TorstenOneCptTest, steady_state) {
   addl[0] = 10;
   ss[0] = 1;
 
-  Matrix<double, Dynamic, Dynamic> x;
+  MatrixXd x;
   x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                              pMatrix, biovar, tlag);
 
-  Matrix<double, Dynamic, Dynamic> amounts(10, 2);
+  MatrixXd amounts(10, 2);
   amounts << 1200.0, 384.7363,
     1200.0, 384.7363,
     2.974504, 919.6159,
@@ -203,7 +203,7 @@ TEST_F(TorstenOneCptTest, steady_state_overload) {
                                   pMatrix, biovar, tlag, 1e-6, 1e-6);
 }
 
-TEST_F(TorstenOneCptTest, multiple_steady_state_iv) {
+TEST_F(TorstenOneCptTest, steady_state_multiple_infusion) {
   time[0] = 0.0;
   time[1] = 0.0;
   for(int i = 2; i < 10; i++) time[i] = time[i - 1] + 5;
@@ -211,11 +211,9 @@ TEST_F(TorstenOneCptTest, multiple_steady_state_iv) {
   rate[0] = 150;
   addl[0] = 10;
   ss[0] = 1;
-  Matrix<double, Dynamic, Dynamic> x;
-  x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
-                             pMatrix, biovar, tlag);
+  MatrixXd x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
 
-  Matrix<double, Dynamic, Dynamic> amounts(10, 2);
+  MatrixXd amounts(10, 2);
   amounts << 1.028649, 659.9385,
     1.028649, 659.9385,
     124.692706, 837.1959,
@@ -228,16 +226,45 @@ TEST_F(TorstenOneCptTest, multiple_steady_state_iv) {
     123.979747, 789.6393;
   MatrixXd xt = amounts.transpose();
 
-  for(int i = 0; i < amounts.rows(); i++) {
-    EXPECT_NEAR(xt(0, i), x(0, i), std::max(xt(0, i), x(0, i)) * 1e-6);
-    EXPECT_NEAR(xt(1, i), x(1, i), std::max(xt(1, i), x(1, i)) * 1e-6);
-  }
+  torsten::test::test_val(x, xt, 1e-6, 1e-8);
 
   std::vector<std::vector<double> > biovar_test(1, {0.8, 0.9});
   std::vector<std::vector<double> > tlag_test(1, {2.4, 1.7});
   TORSTEN_CPT_GRAD_THETA_TEST(PKModelOneCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
   TORSTEN_CPT_GRAD_BIOVAR_TEST(PKModelOneCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar_test, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
   TORSTEN_CPT_GRAD_TLAG_TEST(PKModelOneCpt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag_test, 2e-5, 1e-6, 1e-4, 1e-5);
+}
+
+TEST_F(TorstenOneCptTest, steady_state_multiple_infusion_vs_ode) {
+  resize(3);
+  amt[0] = 1200;
+  rate[0] = 100;
+  addl[0] = 0;
+  ii[0] = amt[0]/rate[0] + 5.0;
+  ss[0] = 1;
+  time[0] = 0.0;
+  time[1] = ii[0] * 0.5;
+  time[2] = ii[0];
+
+  MatrixXd x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
+
+  // compare with long-run numerical integration solution
+  resize(2);
+  amt[0] = 1200;
+  rate[0] = 100;
+  addl[0] = 20;
+  ii[0] = amt[0]/rate[0] + 5.0;
+  ss[0] = 0;
+  time[0] = 0.0;
+  time[1] = addl[0] * ii[0];
+
+  auto f = refactor::PMXOneCptModel<double, double, double, double>::f_;
+  MatrixXd x_ode = torsten::generalOdeModel_rk45(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag);
+
+  // The last columns from the two runs are the steady state results
+  for (int i = 0; i < nCmt; ++i) {
+    EXPECT_NEAR(x.rightCols(1)(i), x_ode.rightCols(1)(i), 1.e-5);
+  }
 }
 
 TEST_F(TorstenOneCptTest, multiple_steady_state_iv_overload) {
@@ -297,9 +324,9 @@ TEST_F(TorstenOneCptTest, events_specific_data) {
   ss.resize(nt);
   std::fill(ss.begin(), ss.end(), 0);
 
-  Matrix<double, Dynamic, Dynamic> x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+  MatrixXd x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                                                      pMatrix, biovar, tlag);
-  Matrix<double, Dynamic, Dynamic> amounts(nt, 2);
+  MatrixXd amounts(nt, 2);
   amounts << 1000.0, 0.0,
     4.978707e+01, 761.1109513,
     2.478752e+00, 594.7341503,
@@ -322,10 +349,10 @@ TEST_F(TorstenOneCptTest, single_iv_var) {
   amt[0] = 1200;
   rate[0] = 1200;
 
-  Matrix<double, Dynamic, Dynamic> x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+  MatrixXd x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                                                      pMatrix, biovar, tlag);
 
-  Matrix<double, Dynamic, Dynamic> amounts(10, 2);
+  MatrixXd amounts(10, 2);
   amounts << 0.00000,   0.00000,
              259.18178,  40.38605,
              451.18836, 145.61440,
@@ -357,10 +384,10 @@ TEST_F(TorstenOneCptTest, single_iv_central_cmt_var) {
   cmt[0] = 2;  // IV infusion, not absorption from the gut
   rate[0] = 600;
 
-  Matrix<double, Dynamic, Dynamic> x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+  MatrixXd x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                                                      pMatrix, biovar, tlag);
 
-  Matrix<double, Dynamic, Dynamic> amounts(10, 2);
+  MatrixXd amounts(10, 2);
   amounts << 
     0,           0,
     0, 147.6804745,
@@ -437,13 +464,13 @@ TEST(Torsten, PKModelOneCptModel_SS_rate_2) {
 
   vector<int> ss(10, 0);
 
-  Matrix<double, Dynamic, Dynamic> x;
+  MatrixXd x;
   x = PKModelOneCpt(time, amt, rate, ii, evid, cmt, addl, ss,
                     pMatrix, biovar, tlag);
 
   std::cout << x << std::endl;
 
-  Matrix<double, Dynamic, Dynamic> amounts(10, 2);
+  MatrixXd amounts(10, 2);
   amounts << 62.50420, 724.7889,
              78.70197, 723.4747,
              90.70158, 726.3310,

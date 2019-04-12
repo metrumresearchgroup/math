@@ -361,7 +361,7 @@ TEST_F(TorstenOneCptTest, ode_steady_state_bolus) {
                               2e-5, 1e-6, 1e-5, 1e-6);
 }
 
-TEST_F(TorstenOneCptTest, ode_steady_state_iv) {
+TEST_F(TorstenOneCptTest, ode_steady_state_constant_rate) {
   time[0] = 0.0;
   for(int i = 1; i < 10; i++) time[i] = time[i - 1] + 2.5;
 
