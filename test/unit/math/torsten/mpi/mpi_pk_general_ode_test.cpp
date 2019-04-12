@@ -6,7 +6,7 @@
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
 #include <stan/math/torsten/mpi/envionment.hpp>
-#include <stan/math/torsten/PKModelTwoCpt.hpp>
+#include <stan/math/torsten/pmx_solve_twocpt.hpp>
 #include <stan/math/torsten/pmx_onecpt_model.hpp>
 #include <stan/math/torsten/pmx_twocpt_model.hpp>
 #include <stan/math/torsten/to_var.hpp>
@@ -26,7 +26,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, rk45_solver_multiple_bolus_doses_data_onl
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<double, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_rk45(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
+    torsten::pmx_solve_rk45(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
   Matrix<double, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_rk45(model_t::f_, model_t::Ncmt,
@@ -48,7 +48,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, bdf_solver_multiple_bolus_doses_data_only
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<double, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_bdf(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
+    torsten::pmx_solve_bdf(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
   Matrix<double, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_bdf(model_t::f_, model_t::Ncmt,
@@ -70,7 +70,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, adams_solver_multiple_bolus_doses_data_on
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<double, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_adams(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
+    torsten::pmx_solve_adams(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
   Matrix<double, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_adams(model_t::f_, model_t::Ncmt,
@@ -99,7 +99,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, rk45_solver_multiple_IV_doses_data_only) 
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<double, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_rk45(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
+    torsten::pmx_solve_rk45(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
   Matrix<double, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_rk45(model_t::f_, model_t::Ncmt,
@@ -128,7 +128,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, adams_solver_multiple_IV_doses_data_only)
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<double, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_adams(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
+    torsten::pmx_solve_adams(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
   Matrix<double, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_adams(model_t::f_, model_t::Ncmt,
@@ -157,7 +157,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, bdf_solver_multiple_IV_doses_data_only) {
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<double, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_bdf(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
+    torsten::pmx_solve_bdf(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
   Matrix<double, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_bdf(model_t::f_, model_t::Ncmt,
@@ -185,7 +185,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, rk45_solver_multiple_bolus_doses_par_var)
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<var, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_rk45(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+    torsten::pmx_solve_rk45(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
   Matrix<var, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_rk45(model_t::f_, model_t::Ncmt,
@@ -213,7 +213,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, adams_solver_multiple_bolus_doses_par_var
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<var, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_adams(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+    torsten::pmx_solve_adams(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
   Matrix<var, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_adams(model_t::f_, model_t::Ncmt,
@@ -241,7 +241,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, bdf_solver_multiple_bolus_doses_par_var) 
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<var, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_bdf(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+    torsten::pmx_solve_bdf(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
   Matrix<var, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_bdf(model_t::f_, model_t::Ncmt,
@@ -276,7 +276,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, rk45_solver_multiple_IV_doses_par_var) {
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<var, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_rk45(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+    torsten::pmx_solve_rk45(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
   Matrix<var, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_rk45(model_t::f_, model_t::Ncmt,
@@ -311,7 +311,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, adams_solver_multiple_IV_doses_par_var) {
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<var, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_adams(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+    torsten::pmx_solve_adams(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
   Matrix<var, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_adams(model_t::f_, model_t::Ncmt,
@@ -346,7 +346,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, bdf_solver_multiple_IV_doses_par_var) {
   using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
 
   Matrix<var, Dynamic, Dynamic> x =
-    torsten::generalOdeModel_bdf(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+    torsten::pmx_solve_bdf(model_t::f_, model_t::Ncmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
   Matrix<var, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_bdf(model_t::f_, model_t::Ncmt,
@@ -442,7 +442,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, bdf_non_uniform_population_data) {
     std::vector<std::vector<double> > theta_i(theta_m.begin() + ibegin, theta_m.begin() + ibegin + len[i]);
     std::vector<std::vector<double> > biovar_i(biovar_m.begin() + ibegin, biovar_m.begin() + ibegin + len[i]);
     std::vector<std::vector<double> > tlag_i(tlag_m.begin() + ibegin, tlag_m.begin() + ibegin + len[i]);
-    auto x = torsten::generalOdeModel_bdf(f, nCmt,
+    auto x = torsten::pmx_solve_bdf(f, nCmt,
                                           time_i, amt_i, rate_i, ii_i, evid_i, cmt_i, addl_i, ss_i,
                                           theta_i, biovar_i, tlag_i);
 
@@ -478,7 +478,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, bdf_non_uniform_population_theta_var) {
     std::vector<std::vector<var>> theta_i_v = torsten::to_var(theta_i);
     std::vector<std::vector<double> > biovar_i(biovar_m.begin() + ibegin, biovar_m.begin() + ibegin + len[i]);
     std::vector<std::vector<double> > tlag_i(tlag_m.begin() + ibegin, tlag_m.begin() + ibegin + len[i]);
-    auto x = torsten::generalOdeModel_bdf(f, nCmt, time_i, amt_i, rate_i, ii_i, evid_i, cmt_i, addl_i, ss_i,
+    auto x = torsten::pmx_solve_bdf(f, nCmt, time_i, amt_i, rate_i, ii_i, evid_i, cmt_i, addl_i, ss_i,
                                             theta_i_v, biovar_i, tlag_i);
 
     Matrix<var, Dynamic, Dynamic> x_i(nCmt, len[i]);
@@ -517,7 +517,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, bdf_non_uniform_population_biovar_var) 
     std::vector<std::vector<double> > biovar_i(biovar_m.begin() + ibegin, biovar_m.begin() + ibegin + len[i]);
     std::vector<std::vector<var> > biovar_i_v = torsten::to_var(biovar_i);
     std::vector<std::vector<double> > tlag_i(tlag_m.begin() + ibegin, tlag_m.begin() + ibegin + len[i]);
-    auto x = torsten::generalOdeModel_bdf(f, nCmt, time_i, amt_i, rate_i, ii_i, evid_i, cmt_i, addl_i, ss_i,
+    auto x = torsten::pmx_solve_bdf(f, nCmt, time_i, amt_i, rate_i, ii_i, evid_i, cmt_i, addl_i, ss_i,
                                           theta_i, biovar_i_v, tlag_i);
  
     Matrix<var, Dynamic, Dynamic> x_i(nCmt, len[i]);
@@ -556,7 +556,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, rk45_non_uniform_population_multiple_IV
     std::vector<std::vector<var>> theta_i_v = torsten::to_var(theta_i);
     std::vector<std::vector<double> > biovar_i(biovar_m.begin() + ibegin, biovar_m.begin() + ibegin + len[i]);
     std::vector<std::vector<double> > tlag_i(tlag_m.begin() + ibegin, tlag_m.begin() + ibegin + len[i]);
-    auto x = torsten::generalOdeModel_bdf(f, nCmt, time_i, amt_i, rate_i, ii_i, evid_i, cmt_i, addl_i, ss_i,
+    auto x = torsten::pmx_solve_bdf(f, nCmt, time_i, amt_i, rate_i, ii_i, evid_i, cmt_i, addl_i, ss_i,
                                             theta_i_v, biovar_i, tlag_i);
 
 
@@ -597,7 +597,7 @@ TEST_F(TorstenPopulationNeutropeniaTest, rk45_non_uniform_population_multiple_IV
 // //   //   std::vector<std::vector<double>> theta_i(theta_m.begin() + ibegin, theta_m.begin() + ibegin + len[i]);
 // //   //   std::vector<std::vector<double> > biovar_i(biovar_m.begin() + ibegin, biovar_m.begin() + ibegin + len[i]);
 // //   //   std::vector<std::vector<double> > tlag_i(tlag_m.begin() + ibegin, tlag_m.begin() + ibegin + len[i]);
-// //   //   auto x_i = torsten::generalOdeModel_bdf(f, nCmt, time_i, amt_i, rate_i_v, ii_i, evid_i, cmt_i, addl_i, ss_i,
+// //   //   auto x_i = torsten::pmx_solve_bdf(f, nCmt, time_i, amt_i, rate_i_v, ii_i, evid_i, cmt_i, addl_i, ss_i,
 // //   //                                           theta_i, biovar_i, tlag_i);
 
 // //   //   std::vector<var> rate_m_i_v(rate_m_v.begin() + ibegin, rate_m_v.begin() + ibegin + len[i]);

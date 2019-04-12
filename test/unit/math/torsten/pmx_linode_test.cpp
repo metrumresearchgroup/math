@@ -1,8 +1,8 @@
 #include <stan/math/rev/mat.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
-#include <stan/math/torsten/linOdeModel.hpp>
-#include <test/unit/math/torsten/util_linOdeModel.hpp>
+#include <stan/math/torsten/pmx_solve_linode.hpp>
+#include <test/unit/math/torsten/util_pmx_solve_linode.hpp>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -10,7 +10,7 @@ using std::vector;
 using Eigen::Matrix;
 using Eigen::Dynamic;
 using Eigen::MatrixXd;
-using torsten::linOdeModel;
+using torsten::pmx_solve_linode;
 
 class TorstenLinODEOneCptTest : public testing::Test {
   void SetUp() {
@@ -70,7 +70,7 @@ TEST_F(TorstenLinODEOneCptTest, steady_state) {
   ss[0] = 1;
 
   MatrixXd x;
-  x = linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x = pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                   system_array, biovar, tlag);
 
   MatrixXd amounts(10, 2);
@@ -93,9 +93,9 @@ TEST_F(TorstenLinODEOneCptTest, steady_state) {
 
   // Test auto-diff
   std::vector<std::vector<double>> tlag_test(1, {0.4, 0.5});
-  TORSTEN_LIN_GRAD_THETA_TEST(linOdeModel, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
-  TORSTEN_CPT_GRAD_BIOVAR_TEST(linOdeModel, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
-  TORSTEN_CPT_GRAD_TLAG_TEST(linOdeModel, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag_test, 2e-5, 1e-6, 1e-4, 1e-5);
+  TORSTEN_LIN_GRAD_THETA_TEST(pmx_solve_linode, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
+  TORSTEN_CPT_GRAD_BIOVAR_TEST(pmx_solve_linode, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
+  TORSTEN_CPT_GRAD_TLAG_TEST(pmx_solve_linode, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag_test, 2e-5, 1e-6, 1e-4, 1e-5);
 }
 
 TEST_F(TorstenLinODEOneCptTest, steady_state_overloads) {
@@ -104,19 +104,19 @@ TEST_F(TorstenLinODEOneCptTest, steady_state_overloads) {
   MatrixXd x_122, x_112, x_111, x_121, x_212,
     x_211, x_221;
 
-  x_122 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_122 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                                system_array[0], biovar, tlag);
-  x_112 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_112 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                                system_array[0], biovar[0], tlag);
-  x_111 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_111 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                                system_array[0], biovar[0], tlag[0]);
-  x_121 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_121 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                                system_array[0], biovar, tlag[0]);
-  x_212 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_212 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                                system_array, biovar[0], tlag);
-  x_211 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_211 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                                system_array, biovar[0], tlag[0]);
-  x_221 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x_221 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                                system_array, biovar, tlag[0]);
 
   MatrixXd amounts(10, 2);
@@ -207,7 +207,7 @@ TEST_F(TorstenLinODEOneCptTest, signature) {
   const double rel_err = 1e-6;
 #ifndef PK_ONECPT_ODE_SIGNATURE_TEST
 #define PK_ONECPT_ODE_SIGNATURE_TEST(X, PMAT, BIOVAR, TLAG)             \
-  X = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,    \
+  X = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,    \
                            PMAT, BIOVAR, TLAG);                         \
   for (int j = 0; j < X.size(); j++)                                    \
     EXPECT_NEAR(xt(j), X(j).val(),                                 \
@@ -274,7 +274,7 @@ TEST_F(TorstenLinODEOneCptTest, steady_state_rate) {
   ss[0] = 1;
 
   MatrixXd x;
-  x = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                            system_array, biovar, tlag);
 
   MatrixXd amounts(10, 2);
@@ -296,9 +296,9 @@ TEST_F(TorstenLinODEOneCptTest, steady_state_rate) {
   }
 
   std::vector<std::vector<double>> tlag_test(1, {0.4, 0.5});
-  TORSTEN_LIN_GRAD_THETA_TEST(linOdeModel, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
-  TORSTEN_CPT_GRAD_BIOVAR_TEST(linOdeModel, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
-  TORSTEN_CPT_GRAD_TLAG_TEST(linOdeModel, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag_test, 2e-5, 1e-6, 1e-4, 1e-5);
+  TORSTEN_LIN_GRAD_THETA_TEST(pmx_solve_linode, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
+  TORSTEN_CPT_GRAD_BIOVAR_TEST(pmx_solve_linode, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
+  TORSTEN_CPT_GRAD_TLAG_TEST(pmx_solve_linode, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag_test, 2e-5, 1e-6, 1e-4, 1e-5);
 }
 
 TEST(Torsten, linOne_MultipleDoses_timePara) {
@@ -348,7 +348,7 @@ TEST(Torsten, linOne_MultipleDoses_timePara) {
   vector<int> ss(nEvent, 0);
 
   MatrixXd x;
-  x = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                            system_array, biovar, tlag);
 
   MatrixXd amounts(nEvent, 2);
@@ -368,9 +368,9 @@ TEST(Torsten, linOne_MultipleDoses_timePara) {
   torsten::test::test_val(xt, x);
 
   std::vector<std::vector<double>> tlag_test(1, {0.4, 0.5});
-  TORSTEN_LIN_GRAD_THETA_TEST(linOdeModel, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
-  TORSTEN_CPT_GRAD_BIOVAR_TEST(linOdeModel, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
-  TORSTEN_CPT_GRAD_TLAG_TEST(linOdeModel, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag_test, 2e-5, 1e-6, 1e-4, 1e-5);
+  TORSTEN_LIN_GRAD_THETA_TEST(pmx_solve_linode, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
+  TORSTEN_CPT_GRAD_BIOVAR_TEST(pmx_solve_linode, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag, 2e-5, 1e-6, 1e-4, 1e-5);
+  TORSTEN_CPT_GRAD_TLAG_TEST(pmx_solve_linode, time, amt, rate, ii, evid, cmt, addl, ss, system_array, biovar, tlag_test, 2e-5, 1e-6, 1e-4, 1e-5);
 }
 
 TEST_F(TorstenLinODEOneCptTest, rate) {
@@ -384,7 +384,7 @@ TEST_F(TorstenLinODEOneCptTest, rate) {
 
   addl[0] = 10;
 
-  MatrixXd x = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  MatrixXd x = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                                     system_array, biovar, tlag);
 
   MatrixXd amounts(10, 2);
@@ -439,18 +439,18 @@ TEST_F(TorstenLinODEOneCptTest, amt_var) {
 
 
   amt[0] += h;
-  x1 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x1 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                             system_array, biovar, tlag);
   amt[0] -= 2 * h;
-  x2 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x2 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                             system_array, biovar, tlag);
 
-  x = torsten::linOdeModel(time, amt_v, rate, ii, evid, cmt, addl, ss,
+  x = torsten::pmx_solve_linode(time, amt_v, rate, ii, evid, cmt, addl, ss,
                            system_array, biovar, tlag);
 
 #ifndef LINODE_ONECPT_AMT_VAR_TEST
 #define LINODE_ONECPT_AMT_VAR_TEST(SYS, BIOVAR, TLAG)                   \
-  x = torsten::linOdeModel(time, amt_v, rate, ii, evid, cmt, addl, ss,  \
+  x = torsten::pmx_solve_linode(time, amt_v, rate, ii, evid, cmt, addl, ss,  \
                            SYS, BIOVAR, TLAG);                          \
   test_it(x);
 
@@ -523,17 +523,17 @@ TEST_F(TorstenLinODEOneCptTest, rate_var) {
   vector<vector<var> > tlag_v{ { 0, 0 } };
 
   rate[0] += h;
-  x1 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x1 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                             system_array, biovar, tlag);
   rate[0] -= 2 * h;
-  x2 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x2 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                             system_array, biovar, tlag);
-  x = torsten::linOdeModel(time, amt, rate_v, ii, evid, cmt, addl, ss,
+  x = torsten::pmx_solve_linode(time, amt, rate_v, ii, evid, cmt, addl, ss,
                            system_array, biovar, tlag);
 
 #ifndef LINODE_ONECPT_RATE_VAR_TEST
 #define LINODE_ONECPT_RATE_VAR_TEST(SYS, BIOVAR, TLAG)                  \
-  x = torsten::linOdeModel(time, amt, rate_v, ii, evid, cmt, addl, ss,  \
+  x = torsten::pmx_solve_linode(time, amt, rate_v, ii, evid, cmt, addl, ss,  \
                            SYS, BIOVAR, TLAG);                          \
   test_it(x);
 
@@ -614,7 +614,7 @@ public:
 TEST_F(TorstenLinODETwoCptTest, MultipleDoses) {
   addl[0] = 14;
   MatrixXd x;
-  x = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                            system_array, biovar, tlag);
 
   MatrixXd amounts(10, 3);
@@ -642,7 +642,7 @@ TEST_F(TorstenLinODETwoCptTest, steady_state) {
   ss[0] = 1;
 
   MatrixXd x;
-  x = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                            system_array, biovar, tlag);
 
   MatrixXd amounts(10, 3);
@@ -678,7 +678,7 @@ TEST_F(TorstenLinODETwoCptTest, steady_state_exception) {
           << " but must be smaller than the interdose interval (ii): 12!";
   std::string msg = err_msg.str();
 
-  EXPECT_THROW_MSG(torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  EXPECT_THROW_MSG(torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                                         system_array, biovar, tlag),
                    std::invalid_argument, msg);
 }
@@ -703,7 +703,7 @@ TEST_F(TorstenLinODETwoCptTest, rate) {
   system_array[0] = system;
 
   MatrixXd x;
-  x = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                            system_array, biovar, tlag);
 
   MatrixXd amounts(10, 3);
@@ -787,18 +787,18 @@ TEST_F(TorstenLinODETwoCptTest, rate_var) {
   vector<vector<var> > tlag_v{ { 0, 0, 0 } };
 
   rate[0] += h;
-  x1 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x1 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                             system_array, biovar, tlag);
   rate[0] -= 2 * h;
-  x2 = torsten::linOdeModel(time, amt, rate, ii, evid, cmt, addl, ss,
+  x2 = torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
                             system_array, biovar, tlag);
-  x = torsten::linOdeModel(time, amt, rate_v, ii, evid, cmt, addl, ss,
+  x = torsten::pmx_solve_linode(time, amt, rate_v, ii, evid, cmt, addl, ss,
                            system_array, biovar, tlag);
 
 
 #ifndef LINODE_TWOCPT_RATE_VAR_TEST
 #define LINODE_TWOCPT_RATE_VAR_TEST(SYS, BIOVAR, TLAG)                  \
-  x = torsten::linOdeModel(time, amt, rate_v, ii, evid, cmt, addl, ss,  \
+  x = torsten::pmx_solve_linode(time, amt, rate_v, ii, evid, cmt, addl, ss,  \
                            SYS, BIOVAR, TLAG);                          \
   test_it(x);
 

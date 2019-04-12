@@ -5,13 +5,13 @@
 #include <test/unit/math/torsten/util_generalOdeModel.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
 #include <stan/math/torsten/mpi/envionment.hpp>
-#include <stan/math/torsten/PKModelTwoCpt.hpp>
+#include <stan/math/torsten/pmx_solve_twocpt.hpp>
 #include <stan/math/torsten/pmx_onecpt_model.hpp>
 #include <stan/math/torsten/pmx_twocpt_model.hpp>
 #include <stan/math/torsten/to_var.hpp>
 #include <gtest/gtest.h>
 #include <stan/math/rev/mat.hpp>  // FIX ME - include should be more specific
-#include <test/unit/math/torsten/util_PKModelTwoCpt.hpp>
+#include <test/unit/math/torsten/util_pmx_solve_twocpt.hpp>
 #include <vector>
 
 using std::vector;
@@ -22,7 +22,7 @@ using stan::math::var;
 
 TEST_F(TorstenPopulationPMXTwoCptTest, multiple_bolus_doses_data_only) {
   Matrix<double, Dynamic, Dynamic> x =
-    torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
+    torsten::pmx_solve_twocpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
   Matrix<double, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
@@ -48,7 +48,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, multiple_IV_doses_data_only) {
   }
 
   Matrix<double, Dynamic, Dynamic> x =
-    torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
+    torsten::pmx_solve_twocpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag); // NOLINT
 
   Matrix<double, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
@@ -73,7 +73,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, multiple_bolus_doses_par_var) {
   }
 
   Matrix<var, Dynamic, Dynamic> x =
-    torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+    torsten::pmx_solve_twocpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
   Matrix<var, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT
@@ -105,7 +105,7 @@ TEST_F(TorstenPopulationPMXTwoCptTest, multiple_IV_doses_par_var) {
   }
 
   Matrix<var, Dynamic, Dynamic> x =
-    torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
+    torsten::pmx_solve_twocpt(time, amt, rate, ii, evid, cmt, addl, ss, pMatrix_v, biovar, tlag); // NOLINT
 
   Matrix<var, Dynamic, Dynamic> x_m =
     torsten::pmx_solve_group_twocpt(len, time_m, amt_m, rate_m, ii_m, evid_m, cmt_m, addl_m, ss_m, // NOLINT

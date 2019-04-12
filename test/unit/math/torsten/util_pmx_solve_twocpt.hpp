@@ -7,7 +7,7 @@
 #include <test/unit/util.hpp>
 
 /**
- * Calculates finite difference for PKModelTwoCpt2 with varying parameters.
+ * Calculates finite difference for pmx_solve_twocpt2 with varying parameters.
  * Parameters are stored in pMatrix, biovar, and tlag.
  */
 Eigen::Matrix <double, Eigen::Dynamic, Eigen::Dynamic>
@@ -74,19 +74,19 @@ Eigen::Matrix <double, Eigen::Dynamic, Eigen::Dynamic>
 
     Matrix<double, Dynamic, Dynamic> pk_res_ub;
     Matrix<double, Dynamic, Dynamic> pk_res_lb;
-    pk_res_ub = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+    pk_res_ub = torsten::pmx_solve_twocpt(time, amt, rate, ii, evid, cmt, addl, ss,
                               pMatrix_ub, biovar_ub, tlag_ub);
-    pk_res_lb = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+    pk_res_lb = torsten::pmx_solve_twocpt(time, amt, rate, ii, evid, cmt, addl, ss,
                               pMatrix_lb, biovar_lb, tlag_lb);
     
     return (pk_res_ub - pk_res_lb) / (2 * diff);
 }
 
 /**
- * Test PKModelTwoCpt with only pMatrix as vars and all other continuous
+ * Test pmx_solve_twocpt with only pMatrix as vars and all other continuous
  * arguments as double.
  */
-void test_PKModelTwoCpt_finite_diff_vdd(
+void test_pmx_solve_twocpt_finite_diff_vdd(
     const std::vector<double>& time,
     const std::vector<double>& amt,
     const std::vector<double>& rate,
@@ -132,7 +132,7 @@ void test_PKModelTwoCpt_finite_diff_vdd(
   }
 
   Matrix<var, Dynamic, Dynamic> ode_res;
-  ode_res = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+  ode_res = torsten::pmx_solve_twocpt(time, amt, rate, ii, evid, cmt, addl, ss,
                           pMatrix_v, biovar, tlag);
 
   int nCmt = 3;
@@ -149,7 +149,7 @@ void test_PKModelTwoCpt_finite_diff_vdd(
 
           EXPECT_NEAR(grads_eff[k * parmCols + l],
                       finite_diff_res[k][l](i, j), diff2)
-            << "Gradient of PKModelTwoCpt failed with known"
+            << "Gradient of pmx_solve_twocpt failed with known"
             << " event data, biovar, and tlag, "
             << " and unknown parameters at event " << i
             << ", in compartment " << j
@@ -161,10 +161,10 @@ void test_PKModelTwoCpt_finite_diff_vdd(
 }
 
 /**
- * Test PKModelTwoCpt with only biovar as vars and all other continuous
+ * Test pmx_solve_twocpt with only biovar as vars and all other continuous
  * arguments as double.
  */
-void test_PKModelTwoCpt_finite_diff_dvd(
+void test_pmx_solve_twocpt_finite_diff_dvd(
     const std::vector<double>& time,
     const std::vector<double>& amt,
     const std::vector<double>& rate,
@@ -209,7 +209,7 @@ void test_PKModelTwoCpt_finite_diff_dvd(
   }
   
   Matrix<var, Dynamic, Dynamic> ode_res;
-  ode_res = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+  ode_res = torsten::pmx_solve_twocpt(time, amt, rate, ii, evid, cmt, addl, ss,
                           pMatrix, biovar_v, tlag);
   
   int nCmt = 2;
@@ -239,13 +239,13 @@ void test_PKModelTwoCpt_finite_diff_dvd(
 }
 
 /**
- * Test PKModelTwoCpt with only tlag as vars and all other continuous
+ * Test pmx_solve_twocpt with only tlag as vars and all other continuous
  * arguments as double.
  * Note: There is known issue when computing the derivative w.r.t the
  * lag time of a dosing compartment. The issue is reported on GitHub,
  * and the unit test overlooks it.
  */
-void test_PKModelTwoCpt_finite_diff_ddv(
+void test_pmx_solve_twocpt_finite_diff_ddv(
     const std::vector<double>& time,
     const std::vector<double>& amt,
     const std::vector<double>& rate,
@@ -290,7 +290,7 @@ void test_PKModelTwoCpt_finite_diff_ddv(
   }
   
   Matrix<var, Dynamic, Dynamic> ode_res;
-  ode_res = torsten::PKModelTwoCpt(time, amt, rate, ii, evid, cmt, addl, ss,
+  ode_res = torsten::pmx_solve_twocpt(time, amt, rate, ii, evid, cmt, addl, ss,
                           pMatrix, biovar, tlag_v);
   
   size_t nEvent = time.size();
@@ -349,7 +349,7 @@ void test_PKModelTwoCpt_finite_diff_ddv(
   }
 }
 
-void test_PKModelTwoCpt(const std::vector<double>& time,
+void test_pmx_solve_twocpt(const std::vector<double>& time,
                         const std::vector<double>& amt,
                         const std::vector<double>& rate,
                         const std::vector<double>& ii,
@@ -362,13 +362,13 @@ void test_PKModelTwoCpt(const std::vector<double>& time,
                         const std::vector<std::vector<double> >&tlag,
                         const double& diff,
                         const double& diff2) {
-  test_PKModelTwoCpt_finite_diff_vdd(time, amt, rate, ii, evid,
+  test_pmx_solve_twocpt_finite_diff_vdd(time, amt, rate, ii, evid,
                                     cmt, addl, ss, pMatrix, biovar, tlag,
                                     diff, diff2);
-  test_PKModelTwoCpt_finite_diff_dvd(time, amt, rate, ii, evid,
+  test_pmx_solve_twocpt_finite_diff_dvd(time, amt, rate, ii, evid,
                                     cmt, addl, ss, pMatrix, biovar, tlag,
                                     diff, diff2);
-  test_PKModelTwoCpt_finite_diff_ddv(time, amt, rate, ii, evid,
+  test_pmx_solve_twocpt_finite_diff_ddv(time, amt, rate, ii, evid,
                                     cmt, addl, ss, pMatrix, biovar, tlag,
                                     diff, diff2);
 }

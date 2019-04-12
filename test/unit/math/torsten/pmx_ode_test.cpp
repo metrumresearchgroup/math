@@ -5,8 +5,8 @@
 #include <test/unit/math/torsten/pmx_friberg_karlsson_test_fixture.hpp>
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
-#include <stan/math/torsten/generalOdeModel_rk45.hpp>
-#include <stan/math/torsten/generalOdeModel_bdf.hpp>
+#include <stan/math/torsten/pmx_solve_rk45.hpp>
+#include <stan/math/torsten/pmx_solve_bdf.hpp>
 #include <stan/math/torsten/pmx_twocpt_model.hpp>
 #include <stan/math/torsten/pmx_onecpt_model.hpp>
 #include <stan/math/torsten/pmx_ode_model.hpp>
@@ -22,9 +22,9 @@ using Eigen::Matrix;
 using Eigen::MatrixXd;
 using Eigen::Dynamic;
 
-using torsten::generalOdeModel_rk45;
-using torsten::generalOdeModel_bdf;
-using torsten::generalOdeModel_adams;
+using torsten::pmx_solve_rk45;
+using torsten::pmx_solve_bdf;
+using torsten::pmx_solve_adams;
 using torsten::NONMENEventsRecord;
 
 TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate) {
@@ -44,13 +44,13 @@ TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate) {
 
   double rel_tol = 1e-8, abs_tol = 1e-8;
   long int max_num_steps = 1e8;
-  MatrixXd x_rk45 = torsten::generalOdeModel_rk45(f, nCmt,
+  MatrixXd x_rk45 = torsten::pmx_solve_rk45(f, nCmt,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 pMatrix, biovar, tlag,
                                 0,
                                 rel_tol, abs_tol, max_num_steps);
 
-  MatrixXd x_bdf = torsten::generalOdeModel_bdf(f, nCmt,
+  MatrixXd x_bdf = torsten::pmx_solve_bdf(f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               pMatrix, biovar, tlag,
                               0,
@@ -72,32 +72,32 @@ TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate) {
   torsten::test::test_val(x_rk45, xt, 1e-6, 1e-4);
   torsten::test::test_val(x_bdf, xt, 1e-4, 1e-4);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 5e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-4, 1e-3, 1e-4);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-4, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-6);
@@ -125,12 +125,12 @@ TEST_F(TorstenOneCptTest, single_bolus_tlag) {
   double rel_tol = 1e-8, abs_tol = 1e-8;
   long int max_num_steps = 1e8;
 
-  TORSTEN_ODE_GRAD_TLAG_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_TLAG_TEST(pmx_solve_bdf, f, nCmt,
                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                              rel_tol, abs_tol, max_num_steps,
                              2e-5, 1e-10, 1e-4, 1e-5);
 
-  TORSTEN_ODE_GRAD_TLAG_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_TLAG_TEST(pmx_solve_adams, f, nCmt,
                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                              rel_tol, abs_tol, max_num_steps,
                              2e-5, 1e-10, 1e-4, 1e-5);
@@ -165,12 +165,12 @@ TEST_F(TorstenOneCptTest, multiple_bolus_tlag) {
   double rel_tol = 1e-10, abs_tol = 1e-10;
   long int max_num_steps = 1e8;
 
-  TORSTEN_ODE_GRAD_TLAG_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_TLAG_TEST(pmx_solve_bdf, f, nCmt,
                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                              rel_tol, abs_tol, max_num_steps,
                              2e-5, 1e-10, 1e-4, 1e-5);
 
-  TORSTEN_ODE_GRAD_TLAG_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_TLAG_TEST(pmx_solve_adams, f, nCmt,
                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                              rel_tol, abs_tol, max_num_steps,
                              2e-5, 1e-7, 1e-4, 1e-5);
@@ -200,12 +200,12 @@ TEST_F(TorstenOneCptTest, single_iv_tlag) {
   double rel_tol = 1e-10, abs_tol = 1e-10;
   long int max_num_steps = 1e8;
 
-  TORSTEN_ODE_GRAD_TLAG_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_TLAG_TEST(pmx_solve_bdf, f, nCmt,
                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                              rel_tol, abs_tol, max_num_steps,
                              2e-5, 1e-9, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_TLAG_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_TLAG_TEST(pmx_solve_adams, f, nCmt,
                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                              rel_tol, abs_tol, max_num_steps,
                              2e-5, 1e-8, 1e-6, 1e-6);
@@ -244,12 +244,12 @@ TEST_F(TorstenOneCptTest, multiple_iv_tlag) {
   double rel_tol = 1e-10, abs_tol = 1e-10;
   long int max_num_steps = 1e8;
 
-  TORSTEN_ODE_GRAD_TLAG_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_TLAG_TEST(pmx_solve_bdf, f, nCmt,
                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                              rel_tol, abs_tol, max_num_steps,
                              2e-5, 1e-5, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_TLAG_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_TLAG_TEST(pmx_solve_adams, f, nCmt,
                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                              rel_tol, abs_tol, max_num_steps,
                              2e-5, 1e-7, 1e-6, 1e-6);
@@ -295,7 +295,7 @@ TEST_F(TorstenOneCptTest, multiple_iv_steady_state_tlag) {
       events_rec(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
       torsten::EventsManager<NONMENEventsRecord<double, double, double, double, double, double, double>>
       em(events_rec);
-      return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+      return torsten::pmx_solve_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
                                           0, rel_tol, abs_tol, max_num_steps);
     };
     auto f2 = [&] (std::vector<stan::math::var>& x) {
@@ -306,7 +306,7 @@ TEST_F(TorstenOneCptTest, multiple_iv_steady_state_tlag) {
       events_rec(nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1);
       torsten::EventsManager<NONMENEventsRecord<double, double, double, double, double, double, var>>
       em(events_rec);
-      return torsten::generalOdeModel_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
+      return torsten::pmx_solve_bdf(f, nCmt, time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag1,
                                           0, rel_tol, abs_tol, max_num_steps);
     };
     std::vector<double> tlag_test(tlag[3]);
@@ -330,32 +330,32 @@ TEST_F(TorstenOneCptTest, ode_steady_state_bolus) {
   biovar[0] = std::vector<double>{0.8, 0.9};
   tlag[0] = std::vector<double>{2.8, 3.9};
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 5e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-4, 1e-3, 1e-4);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-6);
@@ -374,32 +374,32 @@ TEST_F(TorstenOneCptTest, ode_steady_state_constant_rate) {
   double rel_tol = 1e-12, abs_tol = 1e-12;
   long int max_num_steps = 1e8;
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 5e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-4, 1e-3, 1e-4);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-6);
@@ -417,13 +417,13 @@ TEST_F(TorstenOneCptTest, steady_state_multiple_truncated_iv) {
 
   double rel_tol = 1e-8, abs_tol = 1e-8;
   long int max_num_steps = 1e8;
-  MatrixXd x_rk45 = torsten::generalOdeModel_rk45(f, nCmt,
+  MatrixXd x_rk45 = torsten::pmx_solve_rk45(f, nCmt,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 pMatrix, biovar, tlag,
                                 0,
                                 rel_tol, abs_tol, max_num_steps);
 
-  MatrixXd x_bdf = torsten::generalOdeModel_bdf(f, nCmt,
+  MatrixXd x_bdf = torsten::pmx_solve_bdf(f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               pMatrix, biovar, tlag,
                               0,
@@ -448,17 +448,17 @@ TEST_F(TorstenOneCptTest, steady_state_multiple_truncated_iv) {
   rel_tol = 1e-12;
   abs_tol = 1e-12;
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 5e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-4, 1e-3, 1e-4);
@@ -467,17 +467,17 @@ TEST_F(TorstenOneCptTest, steady_state_multiple_truncated_iv) {
   // truncated infusions (i.e ii > 0 and rate > 0) when F *
   // amt is a parameter
 
-  // TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_rk45, f, nCmt,
+  // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, nCmt,
   //                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
   //                             rel_tol, abs_tol, max_num_steps,
   //                             2e-5, 1e-6, 1e-6, 1e-6);
 
-  // TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_bdf, f, nCmt,
+  // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, nCmt,
   //                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
   //                             rel_tol, abs_tol, max_num_steps,
   //                             2e-5, 1e-6, 1e-6, 1e-6);
 
-  // TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_adams, f, nCmt,
+  // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, nCmt,
   //                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
   //                             rel_tol, abs_tol, max_num_steps,
   //                             2e-5, 1e-6, 1e-5, 1e-6);
@@ -489,13 +489,13 @@ TEST_F(TorstenOneCptTest, multiple_bolus) {
 
   double rel_tol = 1e-8, abs_tol = 1e-8;
   long int max_num_steps = 1e8;
-  MatrixXd x_rk45 = torsten::generalOdeModel_rk45(f, nCmt,
+  MatrixXd x_rk45 = torsten::pmx_solve_rk45(f, nCmt,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 pMatrix, biovar, tlag,
                                 0,
                                 rel_tol, abs_tol, max_num_steps);
 
-  MatrixXd x_bdf = torsten::generalOdeModel_bdf(f, nCmt,
+  MatrixXd x_bdf = torsten::pmx_solve_bdf(f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               pMatrix, biovar, tlag,
                               0,
@@ -522,32 +522,32 @@ TEST_F(TorstenOneCptTest, multiple_bolus) {
   ii[0] = 3.5;
   addl[0] = 2;
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-3, 1e-4);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-4, 1e-3, 1e-4);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-6);
@@ -558,7 +558,7 @@ TEST_F(TorstenOneCptTest, multiple_bolus_tlag_overload) {
   addl[0] = 1;
   tlag[0] = std::vector<double>{2.8, 3.9};
 
-  TORSTEN_ODE_PARAM_OVERLOAD_TEST(torsten::generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_PARAM_OVERLOAD_TEST(torsten::pmx_solve_bdf, f, nCmt,
                                   time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                                   1e-10, 1e-10);
 }
@@ -658,14 +658,14 @@ TEST(Torsten, genCpt_One_abstime_SingleDose) {
   oneCptModelODE_abstime_functor f;
 
   Matrix<double, Eigen::Dynamic, Eigen::Dynamic> x_rk45;
-  x_rk45 = torsten::generalOdeModel_rk45(f, 2,
+  x_rk45 = torsten::pmx_solve_rk45(f, 2,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 pMatrix, biovar, tlag,
                                 0,
                                 rel_tol, abs_tol, max_num_steps);
 
   Matrix<double, Eigen::Dynamic, Eigen::Dynamic> x_bdf;
-  x_bdf = torsten::generalOdeModel_bdf(f, 2,
+  x_bdf = torsten::pmx_solve_bdf(f, 2,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               pMatrix, biovar, tlag,
                               0,
@@ -687,32 +687,32 @@ TEST(Torsten, genCpt_One_abstime_SingleDose) {
   expect_near_matrix_eq(xt, x_rk45, rel_err);
   expect_near_matrix_eq(xt, x_bdf, rel_err);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, 2,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_rk45, f, 2,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_bdf, f, 2,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_bdf, f, 2,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 2e-4, 1e-4);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_adams, f, 2,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_adams, f, 2,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-4, 1e-4, 1e-5);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_rk45, f, 2,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, 2,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_bdf, f, 2,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, 2,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-4, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_adams, f, 2,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, 2,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-6);
@@ -734,13 +734,13 @@ TEST_F(TorstenOneCptTest, multiple_bolus_time_dependent_param) {
 
   double rel_tol = 1e-8, abs_tol = 1e-8;
   long int max_num_steps = 1e8;
-  MatrixXd x_rk45 = torsten::generalOdeModel_rk45(f, nCmt,
+  MatrixXd x_rk45 = torsten::pmx_solve_rk45(f, nCmt,
                                          time, amt, rate, ii, evid, cmt, addl, ss,
                                          pMatrix, biovar, tlag,
                                          0,
                                          rel_tol, abs_tol, max_num_steps);
 
-  MatrixXd x_bdf = torsten::generalOdeModel_bdf(f, nCmt,
+  MatrixXd x_bdf = torsten::pmx_solve_bdf(f, nCmt,
                                        time, amt, rate, ii, evid, cmt, addl, ss,
                                        pMatrix, biovar, tlag,
                                        0,
@@ -765,33 +765,33 @@ TEST_F(TorstenOneCptTest, multiple_bolus_time_dependent_param) {
   rel_tol = 1e-12;
   abs_tol = 1e-12;
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-3, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               1e-5, 1e-6, 5e-3, 1e-4);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-4, 1e-3, 1e-4);
 
   biovar[0] = std::vector<double>{0.8, 0.8};
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-4, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               1e-5, 1e-6, 1e-4, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-4, 1e-4, 1e-6);
@@ -809,13 +809,13 @@ TEST_F(TorstenOneCptTest, rate_par) {
   double rel_tol = 1e-6, abs_tol = 1e-6;
   long int max_num_steps = 1e6;
 
-  MatrixXd x_rk45 = torsten::generalOdeModel_rk45(f, nCmt,
+  MatrixXd x_rk45 = torsten::pmx_solve_rk45(f, nCmt,
                                   time, amt, rate, ii, evid, cmt, addl, ss,
                                   pMatrix, biovar, tlag,
                                   0,
                                   rel_tol, abs_tol, max_num_steps);
 
-  MatrixXd x_bdf = torsten::generalOdeModel_bdf(f, nCmt,
+  MatrixXd x_bdf = torsten::pmx_solve_bdf(f, nCmt,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 pMatrix, biovar, tlag,
                                 0,
@@ -837,32 +837,32 @@ TEST_F(TorstenOneCptTest, rate_par) {
   torsten::test::test_val(xt, x_rk45, 1e-6, 1e-5);
   torsten::test::test_val(xt, x_bdf, 1e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 5e-5, 1e-5, 1e-5);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-3, 1e-4);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-4, 1e-4, 1e-5);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 5e-5, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-4, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-6);
@@ -884,12 +884,12 @@ TEST_F(TorstenTwoCptTest, rate_par) {
   long int max_num_steps = 1e6;
 
   MatrixXd x_rk45, x_bdf;
-  x_rk45 = generalOdeModel_rk45(f2, nCmt,
+  x_rk45 = pmx_solve_rk45(f2, nCmt,
                                          time, amt, rate, ii, evid, cmt, addl, ss,
                                          pMatrix, biovar, tlag,
                                          0,
                                          rel_tol, abs_tol, max_num_steps);
-  x_bdf = generalOdeModel_bdf(f2, nCmt,
+  x_bdf = pmx_solve_bdf(f2, nCmt,
                                        time, amt, rate, ii, evid, cmt, addl, ss,
                                        pMatrix, biovar, tlag,
                                        0,
@@ -913,32 +913,32 @@ TEST_F(TorstenTwoCptTest, rate_par) {
   expect_near_matrix_eq(xt, x_rk45, rel_err_rk45);
   expect_near_matrix_eq(xt, x_bdf, rel_err_bdf);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 4e-5, 1e-3, 1e-4);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-2, 5e-4);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-4, 1e-4, 1e-5);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 5e-5, 1e-6, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-4, 1e-6);
 
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-6);
@@ -951,13 +951,13 @@ TEST_F(FribergKarlssonTest, steady_state) {
   long int max_num_steps = 1e6;
 
   MatrixXd x_rk45, x_bdf;
-  x_rk45 = torsten::generalOdeModel_rk45(f, nCmt,
+  x_rk45 = torsten::pmx_solve_rk45(f, nCmt,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 theta, biovar, tlag,
                                 0,
                                 rel_tol, abs_tol, max_num_steps);
 
-  x_bdf = torsten::generalOdeModel_bdf(f, nCmt,
+  x_bdf = torsten::pmx_solve_bdf(f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               theta, biovar, tlag,
                               0,
@@ -987,17 +987,17 @@ TEST_F(FribergKarlssonTest, steady_state) {
   rel_tol = 1e-12;
   abs_tol = 1e-12;
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, theta, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-3, 1e-4);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, theta, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               1e-5, 1e-6, 1e-2, 2e-3);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, theta, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 3e-2, 2e-4);
@@ -1016,17 +1016,17 @@ TEST_F(FribergKarlssonTest, multiple_bolus) {
   abs_tol = 1e-12;
   addl[0] = 2;
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_rk45, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_rk45, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, theta, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-3, 1e-4);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_bdf, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, theta, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               1e-5, 1e-6, 1e-2, 2e-3);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(generalOdeModel_adams, f, nCmt,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_adams, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, theta, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-2, 2e-3);
@@ -1042,7 +1042,7 @@ TEST_F(TorstenOdeTest, exception) {
   auto& f = refactor::PMXTwoCptModel<double, double, double, double>::f_;
   int ncmt = refactor::PMXTwoCptModel<double, double, double, double>::Ncmt;
 
-  EXPECT_NO_THROW(torsten::generalOdeModel_bdf(f, ncmt, time, amt, rate, ii,
+  EXPECT_NO_THROW(torsten::pmx_solve_bdf(f, ncmt, time, amt, rate, ii,
                                                evid, cmt, addl, ss, pMatrix,
                                                biovar, tlag));
 }

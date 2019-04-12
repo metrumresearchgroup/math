@@ -20,8 +20,8 @@ using std::vector;
 using Eigen::Matrix;
 using Eigen::Dynamic;
 using Eigen::MatrixXd;
-using torsten::mixOde2CptModel_rk45;
-using torsten::mixOde2CptModel_bdf;
+using torsten::pmx_solve_twocpt_rk45;
+using torsten::pmx_solve_twocpt_bdf;
 
 struct feedbackODE {
   template <typename T0, typename T1, typename T2, typename T3>
@@ -101,7 +101,7 @@ TEST(Torsten, mixOde2Cpt_singleDose) {
   double rel_tol = 1e-6, abs_tol = 1e-6;
   long int max_num_steps = 1e6;
   Matrix<double, Dynamic, Dynamic>
-    x_rk45 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+    x_rk45 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                   time, amt, rate, ii, evid, cmt, addl, ss,
                                   parameters, biovar, tlag,
                                   0,
@@ -110,7 +110,7 @@ TEST(Torsten, mixOde2Cpt_singleDose) {
   rel_tol = 1e-10, abs_tol = 1e-10;
   max_num_steps = 1e8;
   Matrix<double, Dynamic, Dynamic>
-    x_bdf = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+    x_bdf = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters, biovar, tlag,
                                 0,
@@ -135,22 +135,22 @@ TEST(Torsten, mixOde2Cpt_singleDose) {
   // Test AutoDiff against FiniteDiff
   biovar[0] = std::vector<double>(nOde, 0.8);
   tlag[0] = std::vector<double>(nOde, 1.9);
-  TORSTEN_ODE_GRAD_THETA_TEST(mixOde2CptModel_rk45, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_twocpt_rk45, feedbackODE(), nPD,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               parameters, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-3, 1e-5);
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(mixOde2CptModel_rk45, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_twocpt_rk45, feedbackODE(), nPD,
                                time, amt, rate, ii, evid, cmt, addl, ss,
                                parameters, biovar, tlag,
                                rel_tol, abs_tol, max_num_steps,
                                2e-5, 1e-6, 1e-3, 1e-5);
-  TORSTEN_ODE_GRAD_THETA_TEST(mixOde2CptModel_bdf, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_twocpt_bdf, feedbackODE(), nPD,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               parameters, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-3, 1e-5);
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(mixOde2CptModel_bdf, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_twocpt_bdf, feedbackODE(), nPD,
                                time, amt, rate, ii, evid, cmt, addl, ss,
                                parameters, biovar, tlag,
                                rel_tol, abs_tol, max_num_steps,
@@ -207,43 +207,43 @@ TEST(Torsten, mixOde2Cpt_singleDose_overload) {
   Matrix<double, Eigen::Dynamic, Eigen::Dynamic> x_rk45_122, x_rk45_112,
     x_rk45_111, x_rk45_121, x_rk45_212, x_rk45_211, x_rk45_221;
 
-  x_rk45_122 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+  x_rk45_122 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters[0], biovar, tlag,
                                 0,
                                 rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_112 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+  x_rk45_112 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar[0], tlag,
                                     0,
                                     rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_111 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+  x_rk45_111 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar[0], tlag[0],
                                     0,
                                     rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_121 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+  x_rk45_121 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar, tlag[0],
                                     0,
                                     rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_212 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+  x_rk45_212 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar[0], tlag,
                                     0,
                                     rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_211 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+  x_rk45_211 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar[0], tlag[0],
                                     0,
                                     rel_tol, abs_tol, max_num_steps);
 
-  x_rk45_221 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+  x_rk45_221 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar, tlag[0],
                                     0,
@@ -254,43 +254,43 @@ TEST(Torsten, mixOde2Cpt_singleDose_overload) {
   Matrix<double, Eigen::Dynamic, Eigen::Dynamic> x_bdf_122, x_bdf_112,
     x_bdf_111, x_bdf_121, x_bdf_212, x_bdf_211, x_bdf_221;
 
-  x_bdf_122 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+  x_bdf_122 = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters[0], biovar, tlag,
                                 0,
                                 rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_112 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+  x_bdf_112 = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar[0], tlag,
                                     0,
                                     rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_111 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+  x_bdf_111 = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar[0], tlag[0],
                                     0,
                                     rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_121 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+  x_bdf_121 = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters[0], biovar, tlag[0],
                                     0,
                                     rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_212 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+  x_bdf_212 = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar[0], tlag,
                                     0,
                                     rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_211 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+  x_bdf_211 = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar[0], tlag[0],
                                     0,
                                     rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
 
-  x_bdf_221 = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+  x_bdf_221 = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                     time, amt, rate, ii, evid, cmt, addl, ss,
                                     parameters, biovar, tlag[0],
                                     0,
@@ -377,7 +377,7 @@ TEST(Torsten, mixOde2Cpt_rate) {
   double rel_tol = 1e-6, abs_tol = 1e-6;
   long int max_num_steps = 1e6;
   MatrixXd
-    x_rk45 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+    x_rk45 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                   time, amt, rate, ii, evid, cmt, addl, ss,
                                   parameters, biovar, tlag,
                                   0,
@@ -386,7 +386,7 @@ TEST(Torsten, mixOde2Cpt_rate) {
   rel_tol = 1e-10, abs_tol = 1e-10;
   max_num_steps = 1e8;
   MatrixXd
-    x_bdf = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+    x_bdf = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters, biovar, tlag,
                                 0,
@@ -410,22 +410,22 @@ TEST(Torsten, mixOde2Cpt_rate) {
 
   // Test AutoDiff against FiniteDiff
   // FIX ME - lag time
-  TORSTEN_ODE_GRAD_THETA_TEST(mixOde2CptModel_rk45, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_twocpt_rk45, feedbackODE(), nPD,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               parameters, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-3, 1e-5);
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(mixOde2CptModel_rk45, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_twocpt_rk45, feedbackODE(), nPD,
                                time, amt, rate, ii, evid, cmt, addl, ss,
                                parameters, biovar, tlag,
                                rel_tol, abs_tol, max_num_steps,
                                2e-5, 1e-6, 1e-3, 1e-5);
-  // TORSTEN_ODE_GRAD_THETA_TEST(mixOde2CptModel_bdf, feedbackODE(), nPD,
+  // TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_twocpt_bdf, feedbackODE(), nPD,
   //                             time, amt, rate, ii, evid, cmt, addl, ss,
   //                             parameters, biovar, tlag,
   //                             rel_tol, abs_tol, max_num_steps,
   //                             2e-5, 1e-6, 1e-3, 1e-5);
-  // TORSTEN_ODE_GRAD_BIOVAR_TEST(mixOde2CptModel_bdf, feedbackODE(), nPD,
+  // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_twocpt_bdf, feedbackODE(), nPD,
   //                              time, amt, rate, ii, evid, cmt, addl, ss,
   //                              parameters, biovar, tlag,
   //                              rel_tol, abs_tol, max_num_steps,
@@ -521,7 +521,7 @@ TEST(Torsten, mixOde2Cpt_SS_bolus) {
   double rel_tol_rk = 1e-6, abs_tol_rk = 1e-6;
   long int max_num_steps_rk = 1e6;
   MatrixXd
-    x_rk45 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+    x_rk45 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                   time, amt, rate, ii, evid, cmt, addl, ss,
                                   parameters, biovar, tlag,
                                   0,
@@ -530,7 +530,7 @@ TEST(Torsten, mixOde2Cpt_SS_bolus) {
   double rel_tol_bdf = 1e-10, abs_tol_bdf = 1e-10;
   long int max_num_steps_bdf = 1e8;
   MatrixXd
-    x_bdf = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+    x_bdf = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters, biovar, tlag,
                                 0,
@@ -553,22 +553,22 @@ TEST(Torsten, mixOde2Cpt_SS_bolus) {
   torsten::test::test_val(xt, x_bdf,  1.e-3, 1.e-8);
 
   // Test AutoDiff against FiniteDiff
-  TORSTEN_ODE_GRAD_THETA_TEST(mixOde2CptModel_rk45, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_twocpt_rk45, feedbackODE(), nPD,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               parameters, biovar, tlag,
                               rel_tol_rk, abs_tol_rk, max_num_steps_rk,
                               1e-5, 1e-6, 1e-1, 1e-3);
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(mixOde2CptModel_rk45, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_twocpt_rk45, feedbackODE(), nPD,
                                time, amt, rate, ii, evid, cmt, addl, ss,
                                parameters, biovar, tlag,
                                rel_tol_rk, abs_tol_rk, max_num_steps_rk,
                                1e-5, 1e-6, 1e-1, 1e-3);
-  TORSTEN_ODE_GRAD_THETA_TEST(mixOde2CptModel_bdf, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_twocpt_bdf, feedbackODE(), nPD,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               parameters, biovar, tlag,
                               rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf,
                               1e-6, 1e-6, 8e-1, 1e-3);
-  TORSTEN_ODE_GRAD_BIOVAR_TEST(mixOde2CptModel_bdf, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_twocpt_bdf, feedbackODE(), nPD,
                                time, amt, rate, ii, evid, cmt, addl, ss,
                                parameters, biovar, tlag,
                                rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf,
@@ -624,7 +624,7 @@ TEST(Torsten, mixOde2Cpt_SS_infusion) {
   double rel_tol_rk = 1e-6, abs_tol_rk = 1e-6;
   long int max_num_steps_rk = 1e6;
   MatrixXd
-    x_rk45 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+    x_rk45 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                   time, amt, rate, ii, evid, cmt, addl, ss,
                                   parameters, biovar, tlag,
                                   0,
@@ -635,7 +635,7 @@ TEST(Torsten, mixOde2Cpt_SS_infusion) {
   double rel_tol_bdf = 1e-10, abs_tol_bdf = 1e-10;
   double max_num_steps_bdf = 1e8;
   MatrixXd
-    x_bdf = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+    x_bdf = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters, biovar, tlag,
                                 0,
@@ -659,24 +659,24 @@ TEST(Torsten, mixOde2Cpt_SS_infusion) {
 
   // Test AutoDiff against FiniteDiff
   // diff2 obtained empirically.
-  TORSTEN_ODE_GRAD_THETA_TEST(mixOde2CptModel_rk45, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_twocpt_rk45, feedbackODE(), nPD,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               parameters, biovar, tlag,
                               rel_tol_rk, abs_tol_rk, max_num_steps_rk,
                               2e-5, 1e-6, 1e-5, 1e-5);
   // FIXME: steady state exception
-  // TORSTEN_ODE_GRAD_BIOVAR_TEST(mixOde1CptModel_rk45, feedbackODE(), nPD,
+  // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_onecpt_rk45, feedbackODE(), nPD,
   //                              time, amt, rate, ii, evid, cmt, addl, ss,
   //                              parameters, biovar, tlag,
   //                              rel_tol, abs_tol, max_num_steps,
   //                              2e-5, 1e-6, 1e-5, 1e-5)
-  TORSTEN_ODE_GRAD_THETA_TEST(mixOde2CptModel_bdf, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_twocpt_bdf, feedbackODE(), nPD,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               parameters, biovar, tlag,
                               rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf,
                               2e-5, 1e-6, 1e-3, 1e-5);
   // FIXME: steady state exception
-  // TORSTEN_ODE_GRAD_BIOVAR_TEST(mixOde1CptModel_bdf, feedbackODE(), nPD,
+  // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_onecpt_bdf, feedbackODE(), nPD,
   //                              time, amt, rate, ii, evid, cmt, addl, ss,
   //                              parameters, biovar, tlag,
   //                              rel_tol, abs_tol, max_num_steps,
@@ -730,7 +730,7 @@ TEST(Torsten, mixOdeCpt2_SS_constant_rate) {
   double rel_tol_rk = 1e-6, abs_tol_rk = 1e-6;
   long int max_num_steps_rk = 1e6;
   MatrixXd
-    x_rk45 = torsten::mixOde2CptModel_rk45(feedbackODE(), nPD,
+    x_rk45 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
                                   time, amt, rate, ii, evid, cmt, addl, ss,
                                   parameters, biovar, tlag,
                                   0,
@@ -739,7 +739,7 @@ TEST(Torsten, mixOdeCpt2_SS_constant_rate) {
   double rel_tol_bdf = 1e-10, abs_tol_bdf = 1e-10;
   double max_num_steps_bdf = 1e8;
   MatrixXd
-    x_bdf = torsten::mixOde2CptModel_bdf(feedbackODE(), nPD,
+    x_bdf = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
                                 time, amt, rate, ii, evid, cmt, addl, ss,
                                 parameters, biovar, tlag,
                                 0,
@@ -748,7 +748,7 @@ TEST(Torsten, mixOdeCpt2_SS_constant_rate) {
   // can't do constant rate in mrgsolve. Comparing to result obtained
   // with generalOdeModel, as a provisional test.
   MatrixXd
-    x = torsten::generalOdeModel_rk45(fullODE(), nOde,
+    x = torsten::pmx_solve_rk45(fullODE(), nOde,
                              time, amt, rate, ii, evid, cmt, addl, ss,
                              parameters, biovar, tlag,
                              0,
@@ -757,24 +757,24 @@ TEST(Torsten, mixOdeCpt2_SS_constant_rate) {
   torsten::test::test_val(x, x_rk45, 1.e-5, 1.e-8);
   torsten::test::test_val(x, x_bdf,  1.e-5, 1.e-8);
 
-  TORSTEN_ODE_GRAD_THETA_TEST(mixOde2CptModel_rk45, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_twocpt_rk45, feedbackODE(), nPD,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               parameters, biovar, tlag,
                               rel_tol_rk, abs_tol_rk, max_num_steps_rk,
                               2e-5, 1e-6, 1e-5, 1e-5);
   // FIXME: steady state exception
-  // TORSTEN_ODE_GRAD_BIOVAR_TEST(mixOde1CptModel_rk45, feedbackODE(), nPD,
+  // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_onecpt_rk45, feedbackODE(), nPD,
   //                              time, amt, rate, ii, evid, cmt, addl, ss,
   //                              parameters, biovar, tlag,
   //                              rel_tol, abs_tol, max_num_steps,
   //                              2e-5, 1e-6, 1e-5, 1e-5)
-  TORSTEN_ODE_GRAD_THETA_TEST(mixOde2CptModel_bdf, feedbackODE(), nPD,
+  TORSTEN_ODE_GRAD_THETA_TEST(pmx_solve_twocpt_bdf, feedbackODE(), nPD,
                               time, amt, rate, ii, evid, cmt, addl, ss,
                               parameters, biovar, tlag,
                               rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf,
                               2e-5, 1e-6, 1e-3, 1e-5);
   // FIXME: steady state exception
-  // TORSTEN_ODE_GRAD_BIOVAR_TEST(mixOde1CptModel_bdf, feedbackODE(), nPD,
+  // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_onecpt_bdf, feedbackODE(), nPD,
   //                              time, amt, rate, ii, evid, cmt, addl, ss,
   //                              parameters, biovar, tlag,
   //                              rel_tol, abs_tol, max_num_steps,
