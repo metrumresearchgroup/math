@@ -58,6 +58,112 @@ TEST_F(TorstenOdeTest_chem, cvodes_ivp_system_bdf_mpi) {
   }
 }
 
+TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_group_theta_adams) {
+  const int np = 10;
+  std::vector<double> ts0 {ts};
+
+  // the first two param are group params
+  vector<var> theta_var_all(theta.begin(), theta.end());
+  vector<var> theta_var(theta_var_all.begin() + 2, theta_var_all.end());
+  vector<var> group_theta_var(theta_var_all.begin(), theta_var_all.begin() + 2);
+  assert(theta_var.size() + group_theta_var.size() == theta.size());
+
+  vector<int> len(np, ts0.size());
+  vector<double> ts_m;
+  ts_m.reserve(np * ts0.size());
+  for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts0.begin(), ts0.end());
+  
+  vector<vector<double> > y0_m (np, y0);
+  vector<vector<var> > theta_var_m (np, theta_var);
+  vector<vector<var> > theta_var_all_m (np, theta_var_all);
+  vector<vector<double> > x_r_m (np, x_r);
+  vector<vector<int> > x_i_m (np, x_i);
+
+  Eigen::Matrix<var, -1, -1> y_m1 = pmx_integrate_ode_group_adams(f, y0_m, t0, len, ts_m, group_theta_var,theta_var_m , x_r_m, x_i_m);
+  Eigen::Matrix<var, -1, -1> y_m2 = pmx_integrate_ode_group_adams(f, y0_m, t0, len, ts_m, theta_var_all_m , x_r_m, x_i_m);
+
+  torsten::test::test_grad(theta_var_all, y_m1, y_m2, 1e-10, 1e-10);
+}
+
+TEST_F(TorstenOdeTest_neutropenia, ivp_group_theta_adams) {
+  const int np = 10;
+  std::vector<double> ts0 {ts};
+
+  // the first two param are group params
+  vector<double> theta_i(theta.begin() + 2, theta.end());
+  vector<double> group_theta(theta.begin(), theta.begin() + 2);
+  assert(theta_i.size() + group_theta.size() == theta.size());
+
+  vector<int> len(np, ts0.size());
+  vector<double> ts_m;
+  ts_m.reserve(np * ts0.size());
+  for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts0.begin(), ts0.end());
+  
+  vector<vector<double> > y0_m (np, y0);
+  vector<vector<double> > theta_m (np, theta_i);
+  vector<vector<double> > theta_all_m (np, theta);
+  vector<vector<double> > x_r_m (np, x_r);
+  vector<vector<int> > x_i_m (np, x_i);
+
+  Eigen::MatrixXd y_m1 = pmx_integrate_ode_group_adams(f, y0_m, t0, len, ts_m, group_theta, theta_m, x_r_m, x_i_m);
+  Eigen::MatrixXd y_m2 = pmx_integrate_ode_group_adams(f, y0_m, t0, len, ts_m, theta_all_m, x_r_m, x_i_m);
+
+  torsten::test::test_val(y_m1, y_m2);
+}
+
+TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_group_theta_bdf) {
+  const int np = 10;
+  std::vector<double> ts0 {ts};
+
+  // the first two param are group params
+  vector<var> theta_var_all(theta.begin(), theta.end());
+  vector<var> theta_var(theta_var_all.begin() + 2, theta_var_all.end());
+  vector<var> group_theta_var(theta_var_all.begin(), theta_var_all.begin() + 2);
+  assert(theta_var.size() + group_theta_var.size() == theta.size());
+
+  vector<int> len(np, ts0.size());
+  vector<double> ts_m;
+  ts_m.reserve(np * ts0.size());
+  for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts0.begin(), ts0.end());
+  
+  vector<vector<double> > y0_m (np, y0);
+  vector<vector<var> > theta_var_m (np, theta_var);
+  vector<vector<var> > theta_var_all_m (np, theta_var_all);
+  vector<vector<double> > x_r_m (np, x_r);
+  vector<vector<int> > x_i_m (np, x_i);
+
+  Eigen::Matrix<var, -1, -1> y_m1 = pmx_integrate_ode_group_bdf(f, y0_m, t0, len, ts_m, group_theta_var,theta_var_m , x_r_m, x_i_m);
+  Eigen::Matrix<var, -1, -1> y_m2 = pmx_integrate_ode_group_bdf(f, y0_m, t0, len, ts_m, theta_var_all_m , x_r_m, x_i_m);
+
+  torsten::test::test_grad(theta_var_all, y_m1, y_m2, 1e-10, 1e-10);
+}
+
+TEST_F(TorstenOdeTest_neutropenia, ivp_group_theta_bdf) {
+  const int np = 10;
+  std::vector<double> ts0 {ts};
+
+  // the first two param are group params
+  vector<double> theta_i(theta.begin() + 2, theta.end());
+  vector<double> group_theta(theta.begin(), theta.begin() + 2);
+  assert(theta_i.size() + group_theta.size() == theta.size());
+
+  vector<int> len(np, ts0.size());
+  vector<double> ts_m;
+  ts_m.reserve(np * ts0.size());
+  for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts0.begin(), ts0.end());
+  
+  vector<vector<double> > y0_m (np, y0);
+  vector<vector<double> > theta_m (np, theta_i);
+  vector<vector<double> > theta_all_m (np, theta);
+  vector<vector<double> > x_r_m (np, x_r);
+  vector<vector<int> > x_i_m (np, x_i);
+
+  Eigen::MatrixXd y_m1 = pmx_integrate_ode_group_bdf(f, y0_m, t0, len, ts_m, group_theta, theta_m, x_r_m, x_i_m);
+  Eigen::MatrixXd y_m2 = pmx_integrate_ode_group_bdf(f, y0_m, t0, len, ts_m, theta_all_m, x_r_m, x_i_m);
+
+  torsten::test::test_val(y_m1, y_m2);
+}
+
 TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_AD_bdf_mpi) {
   const int np = 2;
 
