@@ -11,7 +11,7 @@ TEST_F(TorstenCptOdeModelTest, linode_rate_dbl) {
   using refactor::PMXLinODE;
   using refactor::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_bdf;
 
   rate[0] = 1200;
   rate[1] = 200;
@@ -34,7 +34,7 @@ TEST_F(TorstenCptOdeModelTest, linode_rate_var) {
   using refactor::PMXLinODE;
   using refactor::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_bdf;
 
   rate[0] = 1200;
   rate[1] = 200;
@@ -60,7 +60,7 @@ TEST_F(TorstenCptOdeModelTest, linode_solver) {
   using refactor::PMXLinODE;
   using refactor::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_bdf;
   using Eigen::Matrix;
   using Eigen::Dynamic;
   using stan::math::matrix_exp;
@@ -115,8 +115,8 @@ TEST_F(TorstenCptOdeModelTest, linode_solver_zero_rate) {
   using refactor::PMXLinODE;
   using refactor::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
-  using torsten::dsolve::pmx_integrate_ode_adams;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_adams;
+  using torsten::pmx_integrate_ode_bdf;
   using Eigen::Matrix;
   using Eigen::Dynamic;
   using stan::math::matrix_exp;

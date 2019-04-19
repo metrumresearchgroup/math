@@ -27,8 +27,8 @@
 
 TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_theta_bdf_mpi) {
   using torsten::dsolve::PMXCvodesFwdSystem;
-  using torsten::dsolve::pmx_integrate_ode_group_bdf;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_group_bdf;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::var;
   using std::vector;
 

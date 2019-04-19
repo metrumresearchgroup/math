@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <stan/math/torsten/is_var.hpp>
+#include <stan/math/torsten/is_std_vector.hpp>
 #include <gtest/gtest.h>
 
 using stan::math::var;
@@ -52,4 +53,16 @@ TEST(Torsten, return_t_long) {
                var, double, var, double,
                var, double, var, double,
                var, double, double>::value));
+}
+
+TEST(Torsten, is_std_vector) {
+  EXPECT_FALSE((torsten::is_std_vector<var>::value));
+  EXPECT_FALSE((torsten::is_std_vector<std::vector<double>, double>::value));
+  EXPECT_FALSE((torsten::is_std_vector<var>::value));
+  EXPECT_FALSE((torsten::is_std_vector<var, std::vector<double>, std::vector<var> >::value));
+  EXPECT_FALSE((torsten::is_std_vector<std::vector<double>, var, std::vector<var> >::value));
+
+  EXPECT_TRUE((torsten::is_std_vector<std::vector<var>>::value));
+  EXPECT_TRUE((torsten::is_std_vector<std::vector<var>, std::vector<double> >::value));
+  EXPECT_TRUE((torsten::is_std_vector<std::vector<var>, std::vector<double>, std::vector<double> >::value));
 }

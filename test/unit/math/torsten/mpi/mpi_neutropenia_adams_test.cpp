@@ -27,8 +27,8 @@
 
 TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_theta_adams_mpi) {
   using torsten::dsolve::PMXCvodesFwdSystem;
-  using torsten::dsolve::pmx_integrate_ode_group_adams;
-  using torsten::dsolve::pmx_integrate_ode_adams;
+  using torsten::pmx_integrate_ode_group_adams;
+  using torsten::pmx_integrate_ode_adams;
   using stan::math::var;
   using std::vector;
 

@@ -35,7 +35,7 @@ TEST_F(TorstenOdeTest_sho, t0_var) {
   
   {
     auto f1 = [&] (std::vector<double>& x) {
-      auto y = torsten::dsolve::pmx_integrate_ode_bdf(f, y0, x[0], ts, theta , x_r, x_i);
+      auto y = torsten::pmx_integrate_ode_bdf(f, y0, x[0], ts, theta , x_r, x_i);
       Eigen::MatrixXd y1(1, 2);
       y1(0) = y[0][0];
       y1(1) = y[0][1];
@@ -44,7 +44,7 @@ TEST_F(TorstenOdeTest_sho, t0_var) {
     auto f2 = [&] (std::vector<var>& x) {
       double t0 = stan::math::value_of(x[0]);
       std::vector<var> ts_v{t0 + ts[0] - x[0]};
-      auto y = torsten::dsolve::pmx_integrate_ode_bdf(f, y0, t0, ts_v, theta , x_r, x_i);
+      auto y = torsten::pmx_integrate_ode_bdf(f, y0, t0, ts_v, theta , x_r, x_i);
       Eigen::Matrix<var, Eigen::Dynamic, Eigen::Dynamic> y1(1, 2);
       y1(0) = y[0][0];
       y1(1) = y[0][1];
@@ -62,7 +62,7 @@ TEST_F(TorstenOdeTest_chem, t0_var) {
   
   {
     auto f1 = [&] (std::vector<double>& x) {
-      auto y = torsten::dsolve::pmx_integrate_ode_bdf(f, y0, x[0], ts, theta , x_r, x_i);
+      auto y = torsten::pmx_integrate_ode_bdf(f, y0, x[0], ts, theta , x_r, x_i);
       Eigen::MatrixXd y1(1, 3);
       y1(0) = y[0][0];
       y1(1) = y[0][1];
@@ -72,7 +72,7 @@ TEST_F(TorstenOdeTest_chem, t0_var) {
     auto f2 = [&] (std::vector<var>& x) {
       double t0 = stan::math::value_of(x[0]);
       std::vector<var> ts_v{t0 + ts[0] - x[0]};
-      auto y = torsten::dsolve::pmx_integrate_ode_bdf(f, y0, t0, ts_v, theta , x_r, x_i);
+      auto y = torsten::pmx_integrate_ode_bdf(f, y0, t0, ts_v, theta , x_r, x_i);
       Eigen::Matrix<var, Eigen::Dynamic, Eigen::Dynamic> y1(1, 3);
       y1(0) = y[0][0];
       y1(1) = y[0][1];
@@ -91,7 +91,7 @@ TEST_F(TorstenOdeTest_lorenz, t0_var) {
   
   {
     auto f1 = [&] (std::vector<double>& x) {
-      auto y = torsten::dsolve::pmx_integrate_ode_bdf(f, y0, x[0], ts, theta , x_r, x_i);
+      auto y = torsten::pmx_integrate_ode_bdf(f, y0, x[0], ts, theta , x_r, x_i);
       Eigen::MatrixXd y1(1, 3);
       y1(0) = y[0][0];
       y1(1) = y[0][1];
@@ -101,7 +101,7 @@ TEST_F(TorstenOdeTest_lorenz, t0_var) {
     auto f2 = [&] (std::vector<var>& x) {
       double t0 = stan::math::value_of(x[0]);
       std::vector<var> ts_v{t0 + ts[0] - x[0]};
-      auto y = torsten::dsolve::pmx_integrate_ode_bdf(f, y0, t0, ts_v, theta , x_r, x_i);
+      auto y = torsten::pmx_integrate_ode_bdf(f, y0, t0, ts_v, theta , x_r, x_i);
       Eigen::Matrix<var, Eigen::Dynamic, Eigen::Dynamic> y1(1, 3);
       y1(0) = y[0][0];
       y1(1) = y[0][1];
@@ -126,7 +126,7 @@ TEST_F(TorstenOdeTest_sho, cvodes_ivp_system) {
   torsten::test::test_val(y, y1);
   torsten::test::test_val(y_mat, y1);
 
-  y = torsten::dsolve::pmx_integrate_ode_bdf(f, y0, t0, ts, theta , x_r, x_i);
+  y = torsten::pmx_integrate_ode_bdf(f, y0, t0, ts, theta , x_r, x_i);
   torsten::test::test_val(y, y1);
 
   using Ode2 = PMXCvodesFwdSystem<F, double, double, double, CV_ADAMS, CSDA>;
@@ -138,7 +138,7 @@ TEST_F(TorstenOdeTest_sho, cvodes_ivp_system) {
   torsten::test::test_val(y, y1);
   torsten::test::test_val(y_mat, y1);
 
-  y = torsten::dsolve::pmx_integrate_ode_adams(f, y0, t0, ts, theta , x_r, x_i);
+  y = torsten::pmx_integrate_ode_adams(f, y0, t0, ts, theta , x_r, x_i);
   torsten::test::test_val(y, y1);
 }
 
@@ -156,7 +156,7 @@ TEST_F(TorstenOdeTest_lorenz, cvodes_ivp_system) {
   torsten::test::test_val(y, y1);
   torsten::test::test_val(y_mat, y1);
 
-  y = torsten::dsolve::pmx_integrate_ode_bdf(f, y0, t0, ts, theta , x_r, x_i);
+  y = torsten::pmx_integrate_ode_bdf(f, y0, t0, ts, theta , x_r, x_i);
   torsten::test::test_val(y, y1);
 
   using Ode2 = PMXCvodesFwdSystem<F, double, double, double, CV_ADAMS, CSDA>;
@@ -169,7 +169,7 @@ TEST_F(TorstenOdeTest_lorenz, cvodes_ivp_system) {
   torsten::test::test_val(y, y1);
   torsten::test::test_val(y_mat, y1);
 
-  y = torsten::dsolve::pmx_integrate_ode_adams(f, y0, t0, ts, theta , x_r, x_i);
+  y = torsten::pmx_integrate_ode_adams(f, y0, t0, ts, theta , x_r, x_i);
   torsten::test::test_val(y, y1);
 }
 
@@ -221,8 +221,8 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_AD) {
   torsten::test::test_grad(theta_var, y1, y_a, 1.E-8, 1.E-5);
   torsten::test::test_grad(theta_var, y2, y_b, 1.E-8, 1.E-5);
 
-  y_a = torsten::dsolve::pmx_integrate_ode_adams(f, y0, t0, ts, theta_var, x_r, x_i);
-  y_b = torsten::dsolve::pmx_integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
+  y_a = torsten::pmx_integrate_ode_adams(f, y0, t0, ts, theta_var, x_r, x_i);
+  y_b = torsten::pmx_integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
   torsten::test::test_grad(theta_var, y1, y_a, 1.E-8, 1.E-5);
   torsten::test::test_grad(theta_var, y2, y_b, 1.E-8, 1.E-5);
 
@@ -280,8 +280,8 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0_AD) {
   torsten::test::test_grad(y0_var, y_a, y1, 1.E-8, 1.E-5);
   torsten::test::test_grad(y0_var, y_b, y2, 1.E-8, 1.E-5);
 
-  y_a = torsten::dsolve::pmx_integrate_ode_adams(f, y0_var, t0, ts, theta, x_r, x_i);
-  y_b = torsten::dsolve::pmx_integrate_ode_bdf(f, y0_var, t0, ts, theta, x_r, x_i);
+  y_a = torsten::pmx_integrate_ode_adams(f, y0_var, t0, ts, theta, x_r, x_i);
+  y_b = torsten::pmx_integrate_ode_bdf(f, y0_var, t0, ts, theta, x_r, x_i);
   torsten::test::test_grad(y0_var, y_a, y1, 1.E-8, 1.E-5);
   torsten::test::test_grad(y0_var, y_b, y2, 1.E-8, 1.E-5);
 
@@ -315,8 +315,8 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_y0) {
   torsten::test::test_grad(theta_var, y_a, y1, 1.E-8, 1.E-5);
   torsten::test::test_grad(theta_var, y_b, y2, 1.E-8, 1.E-5);
 
-  y_a = torsten::dsolve::pmx_integrate_ode_adams(f, y0_var, t0, ts, theta_var, x_r, x_i);
-  y_b = torsten::dsolve::pmx_integrate_ode_bdf(f, y0_var, t0, ts, theta_var, x_r, x_i);
+  y_a = torsten::pmx_integrate_ode_adams(f, y0_var, t0, ts, theta_var, x_r, x_i);
+  y_b = torsten::pmx_integrate_ode_bdf(f, y0_var, t0, ts, theta_var, x_r, x_i);
   torsten::test::test_grad(y0_var, y_a, y1, 1.E-8, 1.E-5);
   torsten::test::test_grad(y0_var, y_b, y2, 1.E-8, 1.E-5);
   torsten::test::test_grad(theta_var, y_a, y1, 1.E-8, 1.E-5);
@@ -351,8 +351,8 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta) {
   torsten::test::test_grad(theta_var, y_a, y1, 1.E-8, 1.E-5);
   torsten::test::test_grad(theta_var, y_b, y2, 1.E-8, 1.E-5);
 
-  y_a = torsten::dsolve::pmx_integrate_ode_adams(f, y0, t0, ts, theta_var, x_r, x_i);
-  y_b = torsten::dsolve::pmx_integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
+  y_a = torsten::pmx_integrate_ode_adams(f, y0, t0, ts, theta_var, x_r, x_i);
+  y_b = torsten::pmx_integrate_ode_bdf(f, y0, t0, ts, theta_var, x_r, x_i);
   torsten::test::test_grad(theta_var, y_a, y1, 1.E-8, 1.E-5);
   torsten::test::test_grad(theta_var, y_b, y2, 1.E-8, 1.E-5);
 
@@ -383,8 +383,8 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_y0) {
   torsten::test::test_grad(y0_var, y_a, y1, 1.E-8, 1.E-5);
   torsten::test::test_grad(y0_var, y_b, y2, 1.E-8, 1.E-5);
 
-  y_a = torsten::dsolve::pmx_integrate_ode_adams(f, y0_var, t0, ts, theta, x_r, x_i);
-  y_b = torsten::dsolve::pmx_integrate_ode_bdf(f, y0_var, t0, ts, theta, x_r, x_i);
+  y_a = torsten::pmx_integrate_ode_adams(f, y0_var, t0, ts, theta, x_r, x_i);
+  y_b = torsten::pmx_integrate_ode_bdf(f, y0_var, t0, ts, theta, x_r, x_i);
   torsten::test::test_grad(y0_var, y_a, y1, 1.E-8, 1.E-5);
   torsten::test::test_grad(y0_var, y_b, y2, 1.E-8, 1.E-5);
 
@@ -475,8 +475,8 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta_y0) {
   torsten::test::test_grad(theta_var, y_a, y1, 1.E-8, 1.E-5);
   torsten::test::test_grad(theta_var, y_b, y2, 1.E-8, 1.E-5);
 
-  y_a = torsten::dsolve::pmx_integrate_ode_adams(f, y0_var, t0, ts, theta_var, x_r, x_i);
-  y_b = torsten::dsolve::pmx_integrate_ode_bdf(f, y0_var, t0, ts, theta_var, x_r, x_i);
+  y_a = torsten::pmx_integrate_ode_adams(f, y0_var, t0, ts, theta_var, x_r, x_i);
+  y_b = torsten::pmx_integrate_ode_bdf(f, y0_var, t0, ts, theta_var, x_r, x_i);
   torsten::test::test_grad(y0_var, y_a, y1, 1.E-8, 1.E-5);
   torsten::test::test_grad(y0_var, y_b, y2, 1.E-8, 1.E-5);
   torsten::test::test_grad(theta_var, y_a, y1, 1.E-8, 1.E-5);
@@ -661,8 +661,8 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta_ts) {
 }
 
 TEST_F(TorstenOdeTest_lorenz, fwd_sens_theta_performance_adams) {
-  using torsten::dsolve::pmx_integrate_ode_adams;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_adams;
+  using torsten::pmx_integrate_ode_bdf;
 
   std::vector<var> theta_var = stan::math::to_var(theta);
   std::vector<std::vector<var> > y1, y2;
@@ -690,8 +690,8 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sens_theta_performance_adams) {
 }
 
 TEST_F(TorstenOdeTest_chem, fwd_sens_theta_performance_bdf) {
-  using torsten::dsolve::pmx_integrate_ode_adams;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_adams;
+  using torsten::pmx_integrate_ode_bdf;
 
   std::vector<var> theta_var = stan::math::to_var(theta);
   std::vector<std::vector<var> > y1, y2;
@@ -715,8 +715,8 @@ TEST_F(TorstenOdeTest_chem, fwd_sens_theta_performance_bdf) {
 }
 
 TEST_F(TorstenOdeTest_chem, fwd_sens_theta_performance_repeated) {
-  using torsten::dsolve::pmx_integrate_ode_adams;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_adams;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::var;
 
   std::vector<var> theta_var = stan::math::to_var(theta);
@@ -747,8 +747,8 @@ TEST_F(TorstenOdeTest_chem, fwd_sens_theta_performance_repeated) {
 }
 
 TEST_F(TorstenOdeTest_chem, fwd_sens_y0_theta_performance_repeated) {
-  using torsten::dsolve::pmx_integrate_ode_adams;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_adams;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::var;
 
   std::vector<var> y0_var = stan::math::to_var(y0);
@@ -780,8 +780,8 @@ TEST_F(TorstenOdeTest_chem, fwd_sens_y0_theta_performance_repeated) {
 }
 
 TEST_F(TorstenOdeTest_sho, integrate_ode_adams_theta_ts) {
-  using torsten::dsolve::pmx_integrate_ode_adams;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_adams;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::value_of;
 
   std::vector<var> theta_var = stan::math::to_var(theta);
@@ -813,7 +813,7 @@ TEST_F(TorstenOdeTest_sho, integrate_ode_adams_theta_ts) {
 }
 
 TEST_F(TorstenOdeTest_lorenz, integrate_ode_bdf_y0_ts) {
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::value_of;
   using stan::math::var;
 
@@ -846,7 +846,7 @@ TEST_F(TorstenOdeTest_lorenz, integrate_ode_bdf_y0_ts) {
 }
 
 TEST_F(TorstenOdeTest_lorenz, integrate_ode_bdf_theta_ts) {
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::value_of;
   using stan::math::var;
 
@@ -880,7 +880,7 @@ TEST_F(TorstenOdeTest_lorenz, integrate_ode_bdf_theta_ts) {
 
 TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_AD_stan_bdf) {
   using torsten::dsolve::PMXCvodesFwdSystem;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::var;
   using std::vector;
 
@@ -890,7 +890,7 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_AD_stan_bdf) {
   vector<var> theta_var1 = stan::math::to_var(theta);
   vector<var> theta_var2 = stan::math::to_var(theta);
 
-  vector<vector<var> > y1 = torsten::dsolve::pmx_integrate_ode_bdf(f, y0, t0, ts0, theta_var1, x_r, x_i);
+  vector<vector<var> > y1 = torsten::pmx_integrate_ode_bdf(f, y0, t0, ts0, theta_var1, x_r, x_i);
   vector<vector<var> > y2 = stan::math::integrate_ode_bdf(f, y0, t0, ts0, theta_var2, x_r, x_i);
 
   torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1e-7, 1e-6);
