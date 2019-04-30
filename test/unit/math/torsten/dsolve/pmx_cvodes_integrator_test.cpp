@@ -117,7 +117,7 @@ TEST_F(TorstenOdeTest_sho, cvodes_ivp_system) {
 
   using Ode1 = PMXCvodesFwdSystem<F, double, double, double, CV_BDF, CSDA>;
   
-  PMXOdeService<typename Ode1::Ode> s1(2, 1);
+  PMXOdeService<Ode1> s1(2, 1);
   Ode1 ode{s1, f, t0, ts, y0, theta, x_r, x_i, msgs};
   std::vector<std::vector<double> > y = solver.integrate(ode);
   Eigen::MatrixXd y_mat = solver.integrate<Ode1, false>(ode);
@@ -130,7 +130,7 @@ TEST_F(TorstenOdeTest_sho, cvodes_ivp_system) {
   torsten::test::test_val(y, y1);
 
   using Ode2 = PMXCvodesFwdSystem<F, double, double, double, CV_ADAMS, CSDA>;
-  PMXOdeService<typename Ode2::Ode> s2(2, 1);
+  PMXOdeService<Ode2> s2(2, 1);
   Ode2 ode2{s2, f, t0, ts, y0, theta, x_r, x_i, msgs};
   y = solver.integrate(ode2);
   y_mat = solver.integrate<Ode2, false>(ode2);
@@ -208,8 +208,8 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_AD) {
   using Ode1 = PMXCvodesFwdSystem<F, double, double, var, CV_ADAMS, AD>;
   using Ode2 = PMXCvodesFwdSystem<F, double, double, var, CV_BDF, AD>;
   
-  PMXOdeService<typename Ode1::Ode> s1(3, 3);
-  PMXOdeService<typename Ode2::Ode> s2(3, 3);
+  PMXOdeService<Ode1> s1(3, 3);
+  PMXOdeService<Ode2> s2(3, 3);
   Ode1 ode1(s1, f, t0, ts, y0, theta_var, x_r, x_i, msgs);
   Ode2 ode2(s2, f, t0, ts, y0, theta_var, x_r, x_i, msgs);
 
@@ -267,8 +267,8 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_y0_AD) {
   using Ode1 = PMXCvodesFwdSystem<F, double, var, double, CV_ADAMS, AD>;
   using Ode2 = PMXCvodesFwdSystem<F, double, var, double, CV_BDF, AD>;
   
-  PMXOdeService<typename Ode1::Ode> s1(3, 3);
-  PMXOdeService<typename Ode2::Ode> s2(3, 3);
+  PMXOdeService<Ode1> s1(3, 3);
+  PMXOdeService<Ode2> s2(3, 3);
   Ode1 ode1(s1, f, t0, ts, y0_var, theta, x_r, x_i, msgs);
   Ode2 ode2(s2, f, t0, ts, y0_var, theta, x_r, x_i, msgs);
 
