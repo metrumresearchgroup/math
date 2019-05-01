@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 #include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
 #include <test/unit/math/prim/arr/functor/lorenz.hpp>
+#include <stan/math/torsten/mpi/precomputed_gradients.hpp>
 #include <stan/math/torsten/to_var.hpp>
 #include <iostream>
 #include <sstream>
@@ -154,6 +155,37 @@ namespace torsten {
     }
 
     /*
+     * Test @c VectorXd results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     */
+    void test_val(const Eigen::VectorXd& y1, const std::vector<double>& y2) {
+      EXPECT_EQ(y1.size(), y2.size());
+      for (int i = 0; i < y1.size(); ++i) {
+        EXPECT_FLOAT_EQ(y1(i), y2[i]);
+      }
+    }
+
+    /*
+     * Test @c VectorXd results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     */
+    void test_val(const std::vector<double>& y1, const Eigen::VectorXd& y2) {
+      test_val(y2, y1);
+    }
+
+    /*
      * Test @c std::vector<var> results between two results. 
      * An example use would be to have the results coming from torsten
      * and stan, respectively, so ensure the soundness of
@@ -246,41 +278,6 @@ namespace torsten {
     }
 
     /*
-     * Test @c vector of @c var vectors against a data matrix
-     * containing both value and gradient.
-     *
-     * @param theta parameters regarding which the gradient
-     *              would be taken by @c y1 and checked.
-     * @param y1 result in form of vector of vectors
-     * @param y2 result in form of dataa matrix, each column
-     *              ordered as y1, dy1/dp1, dy1/dp2..., y2, dy2/dp1...
-     * @param fval_esp tolerance of values
-     * @param sens_esp tolerance of gradients
-     */
-    void test_grad(std::vector<stan::math::var>& theta,
-                   std::vector<std::vector<stan::math::var>>& y1,
-                   Eigen::MatrixXd& y2,
-                   double fval_eps,
-                   double sens_eps) {
-      EXPECT_EQ(y1.size(), y2.cols());
-      for (size_t i = 0; i < y1.size(); ++i) {
-        EXPECT_EQ(y1[i].size() * (1 + theta.size()), y2.rows());
-      }
-
-      std::vector<double> g, g1;
-      for (size_t i = 0; i < y1.size(); ++i) {
-        for (size_t j = 0; j < y1[i].size(); ++j) {
-          EXPECT_NEAR(y1[i][j].val(), y2(j * (1 + theta.size()), i), fval_eps);
-          stan::math::set_zero_all_adjoints();
-          y1[i][j].grad(theta, g);
-          for (size_t m = 0; m < theta.size(); ++m) {
-            EXPECT_NEAR(g[m], y2(j * (1 + theta.size()) + m + 1, i), sens_eps);
-          }
-        }
-      }
-    }
-
-    /*
      * Test @c vector of @c var vectors against @c var matrix
      *
      * @param theta1 parameters regarding which the gradient
@@ -322,6 +319,27 @@ namespace torsten {
           }
         }
       }
+    }
+
+    /*
+     * Test @c vector of @c var vectors against a data matrix
+     * containing both value and gradient.
+     *
+     * @param theta parameters regarding which the gradient
+     *              would be taken by @c y1 and checked.
+     * @param y1 result in form of vector of vectors
+     * @param y2 result in form of dataa matrix, each column
+     *              ordered as y1, dy1/dp1, dy1/dp2..., y2, dy2/dp1...
+     * @param fval_esp tolerance of values
+     * @param sens_esp tolerance of gradients
+     */
+    void test_grad(std::vector<stan::math::var>& theta,
+                   std::vector<std::vector<stan::math::var>>& y1,
+                   Eigen::MatrixXd& y2,
+                   double fval_eps,
+                   double sens_eps) {
+      Eigen::Matrix<stan::math::var, -1, -1> y2_v = torsten::precomputed_gradients(y2, theta);
+      test_grad(theta, theta, y1, y2_v, fval_eps, sens_eps);
     }
 
     /*

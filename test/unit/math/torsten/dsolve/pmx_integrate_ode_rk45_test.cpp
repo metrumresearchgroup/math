@@ -71,7 +71,7 @@ TEST_F(TorstenOdeTest_chem, odeint_rk45_fwd_sensitivity_theta) {
 
   std::vector<std::vector<stan::math::var>> y1 = integrate_ode_rk45(f, y0, t0, ts, theta_var1, x_r, x_i);
   std::vector<std::vector<stan::math::var>> y2 = pmx_integrate_ode_rk45(f, y0, t0, ts, theta_var2, x_r, x_i);
-  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-8, 1.E-5);
+  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-10, 1.E-6);
 }
 
 // TEST_F(TorstenOdeTest_chem, odeint_rk45_fwd_sensitivity_theta_matrix_result) {
@@ -80,7 +80,7 @@ TEST_F(TorstenOdeTest_chem, odeint_rk45_fwd_sensitivity_theta) {
 
 //   std::vector<std::vector<stan::math::var>> y1 = integrate_ode_rk45(f, y0, t0, ts, theta_var1, x_r, x_i);
 //   std::vector<std::vector<stan::math::var>> y2 = pmx_integrate_ode_rk45(f, y0, t0, ts, theta_var2, x_r, x_i);
-//   torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-8, 1.E-5);
+//   torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-10, 1.E-8);
 // }
 
 TEST_F(TorstenOdeTest_lorenz, odeint_rk45_fwd_sensitivity_theta) {
@@ -89,7 +89,7 @@ TEST_F(TorstenOdeTest_lorenz, odeint_rk45_fwd_sensitivity_theta) {
 
   std::vector<std::vector<stan::math::var>> y1 = integrate_ode_rk45(f, y0, t0, ts, theta_var1, x_r, x_i);
   std::vector<std::vector<stan::math::var>> y2 = pmx_integrate_ode_rk45(f, y0, t0, ts, theta_var2, x_r, x_i);
-  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-8, 1.E-5);
+  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-10, 1.E-8);
 }
 
 TEST_F(TorstenOdeTest_sho, odeint_rk45_fwd_sensitivity_theta) {
@@ -98,7 +98,7 @@ TEST_F(TorstenOdeTest_sho, odeint_rk45_fwd_sensitivity_theta) {
 
   std::vector<std::vector<stan::math::var>> y1 = integrate_ode_rk45(f, y0, t0, ts, theta_var1, x_r, x_i);
   std::vector<std::vector<stan::math::var>> y2 = pmx_integrate_ode_rk45(f, y0, t0, ts, theta_var2, x_r, x_i);
-  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-8, 1.E-5);
+  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-10, 1.E-8);
 }
 
 TEST_F(TorstenOdeTest_chem, odeint_rk45_fwd_sensitivity_y0) {
@@ -107,7 +107,7 @@ TEST_F(TorstenOdeTest_chem, odeint_rk45_fwd_sensitivity_y0) {
 
   std::vector<std::vector<stan::math::var>> y1 = integrate_ode_rk45(f, y0_var1, t0, ts, theta, x_r, x_i);
   std::vector<std::vector<stan::math::var>> y2 = pmx_integrate_ode_rk45(f, y0_var2, t0, ts, theta, x_r, x_i);
-  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-8, 1.E-5);
+  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-10, 1.E-8);
 }
 
 TEST_F(TorstenOdeTest_lorenz, odeint_rk45_fwd_sensitivity_y0) {
@@ -116,7 +116,7 @@ TEST_F(TorstenOdeTest_lorenz, odeint_rk45_fwd_sensitivity_y0) {
 
   std::vector<std::vector<stan::math::var>> y1 = integrate_ode_rk45(f, y0_var1, t0, ts, theta, x_r, x_i);
   std::vector<std::vector<stan::math::var>> y2 = pmx_integrate_ode_rk45(f, y0_var2, t0, ts, theta, x_r, x_i);
-  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-8, 1.E-5);
+  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-10, 1.E-8);
 }
 
 TEST_F(TorstenOdeTest_sho, odeint_rk45_fwd_sensitivity_y0) {
@@ -125,7 +125,7 @@ TEST_F(TorstenOdeTest_sho, odeint_rk45_fwd_sensitivity_y0) {
 
   std::vector<std::vector<stan::math::var>> y1 = integrate_ode_rk45(f, y0_var1, t0, ts, theta, x_r, x_i);
   std::vector<std::vector<stan::math::var>> y2 = pmx_integrate_ode_rk45(f, y0_var2, t0, ts, theta, x_r, x_i);
-  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-8, 1.E-5);
+  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-10, 1.E-8);
 }
 
 TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta_y0) {
@@ -136,8 +136,8 @@ TEST_F(TorstenOdeTest_sho, fwd_sensitivity_theta_y0) {
 
   std::vector<std::vector<stan::math::var>> y1 = integrate_ode_rk45(f, y0_var1, t0, ts, theta_var1, x_r, x_i);
   std::vector<std::vector<stan::math::var>> y2 = pmx_integrate_ode_rk45(f, y0_var2, t0, ts, theta_var2, x_r, x_i);
-  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-8, 1.E-5);
-  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-8, 1.E-5);
+  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-10, 1.E-8);
+  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-10, 1.E-8);
 }
 
 TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_y0) {
@@ -148,8 +148,8 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_y0) {
 
   std::vector<std::vector<stan::math::var>> y1 = integrate_ode_rk45(f, y0_var1, t0, ts, theta_var1, x_r, x_i);
   std::vector<std::vector<stan::math::var>> y2 = pmx_integrate_ode_rk45(f, y0_var2, t0, ts, theta_var2, x_r, x_i);
-  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-8, 1.E-5);
-  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-8, 1.E-5);
+  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-10, 1.E-8);
+  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-10, 1.E-8);
 }
 
 TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_y0) {
@@ -160,6 +160,6 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_y0) {
 
   std::vector<std::vector<stan::math::var>> y1 = integrate_ode_rk45(f, y0_var1, t0, ts, theta_var1, x_r, x_i);
   std::vector<std::vector<stan::math::var>> y2 = pmx_integrate_ode_rk45(f, y0_var2, t0, ts, theta_var2, x_r, x_i);
-  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-8, 1.E-5);
-  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-8, 1.E-5);
+  torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-10, 1.E-8);
+  torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-10, 1.E-8);
 }
