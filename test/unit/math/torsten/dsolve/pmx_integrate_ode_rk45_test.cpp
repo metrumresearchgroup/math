@@ -20,6 +20,7 @@
 using stan::math::integrate_ode_rk45;
 using torsten::pmx_integrate_ode_rk45;
 using stan::math::var;
+using std::vector;
 
 TEST_F(TorstenOdeTest_sho, odeint_rk45_ivp_system) {
   std::vector<std::vector<double> > y1(integrate_ode_rk45(f, y0, t0, ts, theta , x_r, x_i));
@@ -162,4 +163,42 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_y0) {
   std::vector<std::vector<stan::math::var>> y2 = pmx_integrate_ode_rk45(f, y0_var2, t0, ts, theta_var2, x_r, x_i);
   torsten::test::test_grad(y0_var1, y0_var2, y1, y2, 1.E-10, 1.E-8);
   torsten::test::test_grad(theta_var1, theta_var2, y1, y2, 1.E-10, 1.E-8);
+}
+
+// test sequential run of group solver
+TEST_F(TorstenOdeTest_neutropenia, group_rk45_fwd_sensitivity_theta) {
+  // size of population
+  const int np = 2;
+
+  vector<var> theta_var = stan::math::to_var(theta);
+
+  vector<int> len(np, ts.size());
+  vector<double> ts_m;
+  ts_m.reserve(np * ts.size());
+  for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts.begin(), ts.end());
+
+  vector<vector<double> > y0_m (np, y0);
+  vector<vector<var> > theta_var_m (np, stan::math::to_var(theta));
+  vector<vector<double> > x_r_m (np, x_r);
+  vector<vector<int> > x_i_m (np, x_i);
+
+  vector<vector<var> > y = pmx_integrate_ode_rk45(f, y0, t0, ts, theta_var, x_r, x_i);
+  Eigen::Matrix<var, -1, -1> y_m1 = pmx_integrate_ode_group_rk45(f, y0_m, t0, len, ts_m, theta_var_m , x_r_m, x_i_m);
+  Eigen::Matrix<var, -1, -1> y_m2 = pmx_integrate_ode_group_rk45(f, y0_m, t0, len, ts_m, theta_var_m , x_r_m, x_i_m);
+
+  EXPECT_EQ(y_m1.cols(), ts_m.size());
+  EXPECT_EQ(y_m2.cols(), ts_m.size());
+  int icol = 0;
+  for (int i = 0; i < np; ++i) {
+    stan::math::matrix_v y_i = y_m1.block(0, icol, y0.size(), len[i]);
+    torsten::test::test_grad(theta_var, theta_var_m[i], y, y_i, 1e-16, 1e-16);
+    icol += len[i];
+  }
+
+  icol = 0;
+  for (int i = 0; i < np; ++i) {
+    stan::math::matrix_v y_i = y_m2.block(0, icol, y0.size(), len[i]);
+    torsten::test::test_grad(theta_var, theta_var_m[i], y, y_i, 1e-16, 1e-16);
+    icol += len[i];
+  }
 }
