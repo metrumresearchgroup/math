@@ -49,9 +49,9 @@ struct Sho {
 
 TEST_F(TorstenOdeTest_sho, service) {
   using torsten::dsolve::PMXCvodesIntegrator;
-  using torsten::dsolve::PMXCvodesService;
+  using torsten::dsolve::PMXOdeService;
 
-  PMXCvodesService<Sho> serv(2, 1);
+  PMXOdeService<Sho> serv(2, 1);
 
   size_t n = 2;
   N_Vector& y = serv.nv_y;

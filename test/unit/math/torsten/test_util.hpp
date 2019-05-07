@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 #include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
 #include <test/unit/math/prim/arr/functor/lorenz.hpp>
+#include <stan/math/torsten/mpi/precomputed_gradients.hpp>
 #include <stan/math/torsten/to_var.hpp>
 #include <iostream>
 #include <sstream>
@@ -144,17 +145,28 @@ namespace torsten {
      * Test vector of vectors results against @c MatrixXd.
      *
      * @param y1 results in the form of vector of vectors
-     * @param y2 @c MatrixXd results.
+     * @param y2 @c MatrixXd results in column-major format
      */
     void test_val(const std::vector<std::vector<double> > & y1,
                   const Eigen::MatrixXd& y2) {
-      EXPECT_EQ(y1.size(), y2.rows());
+      EXPECT_EQ(y1.size(), y2.cols());
       for (size_t i = 0; i < y1.size(); ++i) {
-        EXPECT_EQ(y1[i].size(), y2.cols());
-        for (int j = 0; j < y2.cols(); ++j) {
-          EXPECT_FLOAT_EQ(y1[i][j], y2(i, j));
+        EXPECT_EQ(y1[i].size(), y2.rows());
+        for (int j = 0; j < y2.rows(); ++j) {
+          EXPECT_FLOAT_EQ(y1[i][j], y2(j, i));
         }
       }
+    }
+
+    /*
+     * Test vector of vectors results against @c MatrixXd.
+     *
+     * @param y1 results in the form of vector of vectors
+     * @param y2 @c MatrixXd results in column-major format
+     */
+    void test_val(const Eigen::MatrixXd& y2,
+                  const std::vector<std::vector<double> > & y1) {
+      test_val(y1, y2);
     }
 
     /*
@@ -172,6 +184,37 @@ namespace torsten {
       for (int i = 0; i < y1.size(); ++i) {
         EXPECT_FLOAT_EQ(y1(i), y2(i));
       }
+    }
+
+    /*
+     * Test @c VectorXd results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     */
+    void test_val(const Eigen::VectorXd& y1, const std::vector<double>& y2) {
+      EXPECT_EQ(y1.size(), y2.size());
+      for (int i = 0; i < y1.size(); ++i) {
+        EXPECT_FLOAT_EQ(y1(i), y2[i]);
+      }
+    }
+
+    /*
+     * Test @c VectorXd results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     */
+    void test_val(const std::vector<double>& y1, const Eigen::VectorXd& y2) {
+      test_val(y2, y1);
     }
 
     /*
@@ -285,14 +328,14 @@ namespace torsten {
                    double fval_eps,
                    double sens_eps) {
       EXPECT_EQ(theta1.size(), theta2.size());
-      EXPECT_EQ(y1.size(), y2.rows());
+      EXPECT_EQ(y1.size(), y2.cols());
       for (size_t i = 0; i < y1.size(); ++i) {
-        EXPECT_EQ(y1[i].size(), y2.cols());
+        EXPECT_EQ(y1[i].size(), y2.rows());
       }
 
       for (size_t i = 0; i < y1.size(); ++i) {
         for (size_t j = 0; j < y1[i].size(); ++j) {
-          EXPECT_NEAR(y1[i][j].val(), y2(i, j).val(), fval_eps);
+          EXPECT_NEAR(y1[i][j].val(), y2(j, i).val(), fval_eps);
         }
       }
 
@@ -302,12 +345,33 @@ namespace torsten {
           stan::math::set_zero_all_adjoints();
           y1[i][j].grad(theta1, g);
           stan::math::set_zero_all_adjoints();
-          y2(i, j).grad(theta2, g1);
+          y2(j, i).grad(theta2, g1);
           for (size_t m = 0; m < theta1.size(); ++m) {
             EXPECT_NEAR(g[m], g1[m], sens_eps);
           }
         }
       }
+    }
+
+    /*
+     * Test @c vector of @c var vectors against a data matrix
+     * containing both value and gradient.
+     *
+     * @param theta parameters regarding which the gradient
+     *              would be taken by @c y1 and checked.
+     * @param y1 result in form of vector of vectors
+     * @param y2 result in form of dataa matrix, each column
+     *              ordered as y1, dy1/dp1, dy1/dp2..., y2, dy2/dp1...
+     * @param fval_esp tolerance of values
+     * @param sens_esp tolerance of gradients
+     */
+    void test_grad(std::vector<stan::math::var>& theta,
+                   std::vector<std::vector<stan::math::var>>& y1,
+                   Eigen::MatrixXd& y2,
+                   double fval_eps,
+                   double sens_eps) {
+      Eigen::Matrix<stan::math::var, -1, -1> y2_v = torsten::precomputed_gradients(y2, theta);
+      test_grad(theta, theta, y1, y2_v, fval_eps, sens_eps);
     }
 
     /*
@@ -645,6 +709,68 @@ namespace torsten {
         }
       }
     }
+
+    /*
+     * test gradients against finite difference
+     *
+     * Given a functor that takes a single parameter vector,
+     * compare the gradients of the functor w.r.t. the
+     * vector parameter.
+     *
+     * @tparam F1 functor type that return data, must takes a single vector
+     * @tparam F2 functor type that return @c var, must takes a single vector
+     * argument and returns a matrix.
+     * @param f functor
+     * @param theta parameter of the functor's function
+     * @param h step size when eval finite difference
+     * @param fval_esp tolerance of values
+     * @param sens_esp tolerance of gradients
+     */
+    template<typename F1, typename F2>
+    void test_grad(F1& f1, F2& f2,
+                   std::vector<Eigen::MatrixXd>& theta,
+                   double h,
+                   double fval_eps,
+                   double r_sens_eps,  double a_sens_eps) {
+      using Eigen::MatrixXd;
+      using stan::math::matrix_v;
+      std::vector<matrix_v> theta_v(torsten::to_var(theta));
+      std::vector<MatrixXd> theta_1(theta);
+      std::vector<MatrixXd> theta_2(theta);
+
+      Eigen::MatrixXd fd = f1(theta), fd_1, fd_2;
+      matrix_v fv = f2(theta_v);
+
+      EXPECT_EQ(fd.rows(), fv.rows());
+      EXPECT_EQ(fd.cols(), fv.cols());
+      for (int i = 0; i < fd.size(); ++i) {
+        EXPECT_NEAR(fv(i).val(), fd(i), fval_eps);
+      }
+
+      std::vector<double> g;
+      for (size_t i = 0; i < theta_v.size(); ++i) {
+        for (int j = 0; j < theta_v[i].size(); ++j) {
+          std::vector<stan::math::var> p{theta_v[i](j)};
+          theta_1[i](j) -= h;
+          theta_2[i](j) += h;
+          fd_1 = f1(theta_1);
+          fd_2 = f1(theta_2);
+          theta_1[i](j) = theta[i](j);
+          theta_2[i](j) = theta[i](j);
+          for (int k = 0; k < fv.size(); ++k) {
+            stan::math::set_zero_all_adjoints();
+            fv(k).grad(p, g);
+            double g_fd = (fd_2(k) - fd_1(k))/(2 * h);
+            if (abs(g[0]) < 1e-4 || abs(g_fd) < 1e-4) {
+              EXPECT_NEAR(g[0], g_fd, a_sens_eps);
+            } else {
+              EXPECT_NEAR(g[0], g_fd, r_sens_eps * std::max(abs(g[0]), abs(g_fd)));
+            }
+          }
+        }
+      }
+    }
+
   } // namespace test
 }   // namespace torsten
 
@@ -981,16 +1107,28 @@ namespace torsten {
   }
 
 
-#define TORSTEN_CPT_GRAD_THETA_TEST(FUN, TIME, AMT, RATE, II, EVID, CMT, ADDL, SS, THETA, BIOVAR, TLAG,  \
-                                    H, EPS_VAL, EPS_RTOL, EPS_ATOL)                                      \
-  {                                                                                                      \
-    auto f1 = [&] (std::vector<std::vector<double> >& x) {                                               \
-      return FUN(TIME, AMT, RATE, II, EVID, CMT, ADDL, SS, x, BIOVAR, TLAG);                             \
-    };                                                                                                   \
-    auto f2 = [&] (std::vector<std::vector<stan::math::var> >& x) {                                      \
-      return FUN(TIME, AMT, RATE, II, EVID, CMT, ADDL, SS, x, BIOVAR, TLAG);                             \
-    };                                                                                                   \
-    torsten::test::test_grad(f1, f2, THETA, H, EPS_VAL, EPS_RTOL, EPS_ATOL);                             \
+#define TORSTEN_CPT_GRAD_THETA_TEST(FUN, TIME, AMT, RATE, II, EVID, CMT, ADDL, SS, THETA, BIOVAR, TLAG, \
+                                    H, EPS_VAL, EPS_RTOL, EPS_ATOL)                                     \
+  {                                                                                                     \
+    auto f1 = [&] (std::vector<std::vector<double> >& x) {                                              \
+      return FUN(TIME, AMT, RATE, II, EVID, CMT, ADDL, SS, x, BIOVAR, TLAG);                            \
+    };                                                                                                  \
+    auto f2 = [&] (std::vector<std::vector<stan::math::var> >& x) {                                     \
+      return FUN(TIME, AMT, RATE, II, EVID, CMT, ADDL, SS, x, BIOVAR, TLAG);                            \
+    };                                                                                                  \
+    torsten::test::test_grad(f1, f2, THETA, H, EPS_VAL, EPS_RTOL, EPS_ATOL);                            \
+  }
+
+#define TORSTEN_LIN_GRAD_THETA_TEST(FUN, TIME, AMT, RATE, II, EVID, CMT, ADDL, SS, THETA, BIOVAR, TLAG, \
+                                    H, EPS_VAL, EPS_RTOL, EPS_ATOL)                                     \
+  {                                                                                                     \
+    auto f1 = [&] (std::vector<Eigen::MatrixXd>& x) {                                                   \
+      return FUN(TIME, AMT, RATE, II, EVID, CMT, ADDL, SS, x, BIOVAR, TLAG);                            \
+    };                                                                                                  \
+    auto f2 = [&] (std::vector<stan::math::matrix_v>& x) {                                              \
+      return FUN(TIME, AMT, RATE, II, EVID, CMT, ADDL, SS, x, BIOVAR, TLAG);                            \
+    };                                                                                                  \
+    torsten::test::test_grad(f1, f2, THETA, H, EPS_VAL, EPS_RTOL, EPS_ATOL);                            \
   }
 
 #define TORSTEN_CPT_GRAD_BIOVAR_TEST(FUN, TIME, AMT, RATE, II, EVID, CMT, ADDL, SS, THETA, BIOVAR, TLAG, \
@@ -1111,7 +1249,5 @@ namespace torsten {
     };                                                                                                            \
     torsten::test::test_grad(f1, f2, RATE, H, EPS_VAL, EPS_RTOL, EPS_ATOL);                                       \
   }
-
-
 
 #endif

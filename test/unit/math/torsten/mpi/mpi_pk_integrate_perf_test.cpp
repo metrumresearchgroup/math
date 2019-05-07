@@ -5,8 +5,8 @@
 #include <test/unit/math/rev/mat/fun/util.hpp>
 #include <stan/math/torsten/dsolve/pmx_cvodes_fwd_system.hpp>
 #include <stan/math/torsten/dsolve/pmx_cvodes_integrator.hpp>
-#include <stan/math/torsten/dsolve/pmx_integrate_ode_adams.hpp>
-#include <stan/math/torsten/dsolve/pmx_integrate_ode_bdf.hpp>
+#include <stan/math/torsten/dsolve/pmx_integrate_ode_group_adams.hpp>
+#include <stan/math/torsten/dsolve/pmx_integrate_ode_group_bdf.hpp>
 #include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
 #include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
 #include <stan/math/rev/mat/functor/integrate_ode_bdf.hpp>
@@ -28,7 +28,7 @@
 
 TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_bdf_mpi) {
   using torsten::dsolve::PMXCvodesFwdSystem;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_group_bdf;
   using stan::math::var;
   using std::vector;
 
@@ -40,18 +40,22 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_bdf_mpi) {
 
   vector<var> theta_var = stan::math::to_var(theta);
 
-  vector<vector<double> > ts_m (np, ts0);
+  vector<int> len(np, ts0.size());
+  vector<double> ts_m;
+  ts_m.reserve(np * ts0.size());
+  for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts0.begin(), ts0.end());
+
   vector<vector<double> > y0_m (np, y0);
   vector<vector<var> > theta_var_m (np, theta_var);
   vector<vector<double> > x_r_m (np, x_r);
   vector<vector<int> > x_i_m (np, x_i);
 
-  vector<Eigen::Matrix<var, -1, -1> > y_m = pmx_integrate_ode_bdf(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
+  Eigen::Matrix<var, -1, -1> y_m = pmx_integrate_ode_group_bdf(f, y0_m, t0, len, ts_m, theta_var_m , x_r_m, x_i_m);
 }
 
 TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_bdf_mpi) {
   using torsten::dsolve::PMXCvodesFwdSystem;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_group_bdf;
   using stan::math::var;
   using std::vector;
 
@@ -63,18 +67,22 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_bdf_mpi) {
 
   vector<var> theta_var = stan::math::to_var(theta);
 
-  vector<vector<double> > ts_m (np, ts0);
+  vector<int> len(np, ts0.size());
+  vector<double> ts_m;
+  ts_m.reserve(np * ts0.size());
+  for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts0.begin(), ts0.end());
+
   vector<vector<double> > y0_m (np, y0);
   vector<vector<var> > theta_var_m (np, theta_var);
   vector<vector<double> > x_r_m (np, x_r);
   vector<vector<int> > x_i_m (np, x_i);
 
-  vector<Eigen::Matrix<var, -1, -1> > y_m = pmx_integrate_ode_bdf(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
+  Eigen::Matrix<var, -1, -1> y_m = pmx_integrate_ode_group_bdf(f, y0_m, t0, len, ts_m, theta_var_m , x_r_m, x_i_m);
 }
 
 TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_theta_bdf_mpi) {
   using torsten::dsolve::PMXCvodesFwdSystem;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_group_bdf;
   using stan::math::var;
   using std::vector;
 
@@ -86,18 +94,22 @@ TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_theta_bdf_mpi) {
 
   vector<var> theta_var = stan::math::to_var(theta);
 
-  vector<vector<double> > ts_m (np, ts0);
+  vector<int> len(np, ts0.size());
+  vector<double> ts_m;
+  ts_m.reserve(np * ts0.size());
+  for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts0.begin(), ts0.end());
+
   vector<vector<double> > y0_m (np, y0);
   vector<vector<var> > theta_var_m (np, theta_var);
   vector<vector<double> > x_r_m (np, x_r);
   vector<vector<int> > x_i_m (np, x_i);
 
-  vector<Eigen::Matrix<var, -1, -1> > y_m = pmx_integrate_ode_bdf(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
+  Eigen::Matrix<var, -1, -1> y_m = pmx_integrate_ode_group_bdf(f, y0_m, t0, len, ts_m, theta_var_m , x_r_m, x_i_m);
 }
 
 TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_adams_mpi) {
   using torsten::dsolve::PMXCvodesFwdSystem;
-  using torsten::dsolve::pmx_integrate_ode_adams;
+  using torsten::pmx_integrate_ode_group_adams;
   using stan::math::var;
   using std::vector;
 
@@ -109,18 +121,22 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_theta_adams_mpi) {
 
   vector<var> theta_var = stan::math::to_var(theta);
 
-  vector<vector<double> > ts_m (np, ts0);
+  vector<int> len(np, ts0.size());
+  vector<double> ts_m;
+  ts_m.reserve(np * ts0.size());
+  for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts0.begin(), ts0.end());
+
   vector<vector<double> > y0_m (np, y0);
   vector<vector<var> > theta_var_m (np, theta_var);
   vector<vector<double> > x_r_m (np, x_r);
   vector<vector<int> > x_i_m (np, x_i);
 
-  vector<Eigen::Matrix<var, -1, -1> > y_m = pmx_integrate_ode_adams(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
+  Eigen::Matrix<var, -1, -1> y_m = pmx_integrate_ode_group_adams(f, y0_m, t0, len, ts_m, theta_var_m , x_r_m, x_i_m);
 }
 
 TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_adams_mpi) {
   using torsten::dsolve::PMXCvodesFwdSystem;
-  using torsten::dsolve::pmx_integrate_ode_adams;
+  using torsten::pmx_integrate_ode_group_adams;
   using stan::math::var;
   using std::vector;
 
@@ -132,18 +148,22 @@ TEST_F(TorstenOdeTest_lorenz, fwd_sensitivity_theta_adams_mpi) {
 
   vector<var> theta_var = stan::math::to_var(theta);
 
-  vector<vector<double> > ts_m (np, ts0);
+  vector<int> len(np, ts0.size());
+  vector<double> ts_m;
+  ts_m.reserve(np * ts0.size());
+  for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts0.begin(), ts0.end());
+
   vector<vector<double> > y0_m (np, y0);
   vector<vector<var> > theta_var_m (np, theta_var);
   vector<vector<double> > x_r_m (np, x_r);
   vector<vector<int> > x_i_m (np, x_i);
 
-  vector<Eigen::Matrix<var, -1, -1> > y_m = pmx_integrate_ode_adams(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
+  Eigen::Matrix<var, -1, -1> y_m = pmx_integrate_ode_group_adams(f, y0_m, t0, len, ts_m, theta_var_m , x_r_m, x_i_m);
 }
 
 TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_theta_adams_mpi) {
   using torsten::dsolve::PMXCvodesFwdSystem;
-  using torsten::dsolve::pmx_integrate_ode_adams;
+  using torsten::pmx_integrate_ode_group_adams;
   using stan::math::var;
   using std::vector;
 
@@ -155,13 +175,17 @@ TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_theta_adams_mpi) {
 
   vector<var> theta_var = stan::math::to_var(theta);
 
-  vector<vector<double> > ts_m (np, ts0);
+  vector<int> len(np, ts0.size());
+  vector<double> ts_m;
+  ts_m.reserve(np * ts0.size());
+  for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts0.begin(), ts0.end());
+
   vector<vector<double> > y0_m (np, y0);
   vector<vector<var> > theta_var_m (np, theta_var);
   vector<vector<double> > x_r_m (np, x_r);
   vector<vector<int> > x_i_m (np, x_i);
 
-  vector<Eigen::Matrix<var, -1, -1> > y_m = pmx_integrate_ode_adams(f, y0_m, t0, ts_m, theta_var_m , x_r_m, x_i_m);
+  Eigen::Matrix<var, -1, -1> y_m = pmx_integrate_ode_group_adams(f, y0_m, t0, len, ts_m, theta_var_m , x_r_m, x_i_m);
 }
 
 #endif

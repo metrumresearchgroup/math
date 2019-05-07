@@ -9,7 +9,7 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_rate_dbl) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
   using refactor::PMXTwoCptODE;
   using refactor::PMXOdeFunctorRateAdaptor;
@@ -32,7 +32,7 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_rate_var) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
   using refactor::PMXTwoCptODE;
   using refactor::PMXOdeFunctorRateAdaptor;
@@ -63,7 +63,7 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_solver) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
   using refactor::PMXTwoCptODE;
   using refactor::PMXOdeFunctorRateAdaptor;
@@ -121,7 +121,7 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_ss_solver_bolus) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
   using refactor::PMXTwoCptODE;
   using refactor::PMXOdeFunctorRateAdaptor;
@@ -245,7 +245,7 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_ss_solver_multi_trunc_infusion) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
-  using torsten::dsolve::pmx_integrate_ode_bdf;
+  using torsten::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
   using refactor::PMXTwoCptODE;
   using refactor::PMXOdeFunctorRateAdaptor;
@@ -371,7 +371,7 @@ TEST_F(TorstenCptOdeModelTest, 2_cpt_ss_solver_multi_trunc_infusion) {
 //   using stan::math::var;
 //   using stan::math::to_var;
 //   using refactor::PMXTwoCptModel;
-//   using torsten::dsolve::pmx_integrate_ode_bdf;
+//   using torsten::pmx_integrate_ode_bdf;
 //   using stan::math::integrate_ode_bdf;
 //   using refactor::PMXTwoCptODE;
 //   using refactor::PMXOdeFunctorRateAdaptor;
