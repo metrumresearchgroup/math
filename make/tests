@@ -5,7 +5,7 @@ N_TESTS ?= 100
 ##
 # Any targets in test/ (.d, .o, executable) needs the GTEST flags
 ##
-test/% : CXXFLAGS += $(CXXFLAGS_GTEST)
+test/% : CXXFLAGS += $(CXXFLAGS_GTEST) -DTORSTEN_CVS_JAC_AD
 test/% : CPPFLAGS += $(CPPFLAGS_GTEST)
 test/% : INC += $(INC_GTEST)
 

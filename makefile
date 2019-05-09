@@ -19,6 +19,7 @@ include make/dependencies                 # rules for generating dependencies
 include make/libraries
 include make/tests
 include make/cpplint
+include make/setup_torsten.mk	# set up Torsten
 
 .PHONY: help
 help:
