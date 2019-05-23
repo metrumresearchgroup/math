@@ -25,7 +25,7 @@ struct TorstenCptOdeModelTest : public TorstenOdeTest {
   double V3;
   double ka;
   std::vector<double> par;
-  std::vector<double> linode_par;      // LinOdeModel parameters
+  Eigen::MatrixXd linode_par;      // LinOdeModel parameters
 
   TorstenCptOdeModelTest() :
     ts{0.1, 0.5, 1.0},
@@ -37,7 +37,7 @@ struct TorstenCptOdeModelTest : public TorstenOdeTest {
     V3(70.0),
     ka(1.2),
     par{CL, Q, V2, V3, ka},
-    linode_par(9) {
+    linode_par(3, 3) {
       y0 << 0.0, 0.0, 0.0;
 
       // to test LinOdeModel, we generate 2-cpt model's
@@ -51,9 +51,9 @@ struct TorstenCptOdeModelTest : public TorstenOdeTest {
        * |  ka    -(k10 + k12)     k21 |
        * |   0            k12     -k21 |
        */
-      std::vector<double> v_par
-      {-ka, ka, 0.0, 0.0, -(k10 + k12), k12, 0.0, k21, -k21};
-      linode_par = v_par;
+      // std::vector<double> v_par
+      // {-ka, ka, 0.0, 0.0, -(k10 + k12), k12, 0.0, k21, -k21};
+      linode_par << -ka, ka, 0.0, 0.0, -(k10 + k12), k12, 0.0, k21, -k21;
   }
 };
 
