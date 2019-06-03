@@ -206,7 +206,7 @@ TEST(Torsten, predSS_general_exception) {
 
   std::stringstream err_msg;
   err_msg << "Steady State Event: Infusion time (F * amt / rate) is 16"
-          << " but must be smaller than the interdose interval (ii): 12!";
+          << " but must be less than the interdose interval (ii): 12!";
   std::string msg = err_msg.str();
 
   EXPECT_THROW_MSG(PredSS(parms, amt, rate, ii, cmt),

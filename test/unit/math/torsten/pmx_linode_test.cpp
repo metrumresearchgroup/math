@@ -675,7 +675,7 @@ TEST_F(TorstenLinODETwoCptTest, steady_state_exception) {
 
   std::stringstream err_msg;
   err_msg << "Steady State Event: Infusion time (F * amt / rate) is 16"
-          << " but must be smaller than the interdose interval (ii): 12!";
+          << " but must be less than the interdose interval (ii): 12!";
   std::string msg = err_msg.str();
 
   EXPECT_THROW_MSG(torsten::pmx_solve_linode(time, amt, rate, ii, evid, cmt, addl, ss,
