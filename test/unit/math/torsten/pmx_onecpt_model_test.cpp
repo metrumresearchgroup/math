@@ -23,8 +23,8 @@ TEST_F(TorstenOneCptModelTest, rate_dbl) {
   PMXOdeFunctorRateAdaptor<PMXOneCptODE, double> f1(model.f());
 
   std::vector<double> y = f1(t0, yvec, model.par(), rate, x_i, msgs);
-  EXPECT_FLOAT_EQ(y[0], rate[0]);
-  EXPECT_FLOAT_EQ(y[1], rate[1]);
+  EXPECT_DOUBLE_EQ(y[0], rate[0]);
+  EXPECT_DOUBLE_EQ(y[1], rate[1]);
   EXPECT_FALSE(torsten::has_var_rate<model_t>::value);
 }
 
@@ -100,7 +100,30 @@ TEST_F(TorstenOneCptModelTest, onecpt_solver) {
   torsten::test::test_grad(rate_var, y1_v, y2, 1.e-6, 1.e-8);
 }
 
-TEST_F(TorstenOneCptModelTest, ss_bolus_finite_diff) {
+TEST_F(TorstenOneCptModelTest, infusion_theta_grad) {
+  rate[0] = 1100;
+  rate[1] = 810;
+  y0[0] = 150;
+  y0[1] = 50;
+
+  double dt = 2.5;
+  
+  auto f1 = [&](std::vector<double>& pars) {
+    using model_t = PMXOneCptModel<double, double, double, double>;
+    model_t model(t0, y0, rate, pars[0], pars[1], pars[2]);
+    return model.solve(dt);
+  };
+  auto f2 = [&](std::vector<var>& pars) {
+    using model_t = PMXOneCptModel<double, double, double, var>;
+    model_t model(t0, y0, rate, pars[0], pars[1], pars[2]);
+    return model.solve(dt);
+  };
+
+  std::vector<double> pars{CL, V2, ka};
+  torsten::test::test_grad(f1, f2, pars, 1.e-3, 1.e-16, 1.e-6, 1.e-12);
+}
+
+TEST_F(TorstenOneCptModelTest, ss_bolus_amt_grad) {
   rate[0] = 0;
   rate[1] = 0;
   y0[0] = 150;
@@ -132,7 +155,7 @@ TEST_F(TorstenOneCptModelTest, ss_bolus_finite_diff) {
   torsten::test::test_grad(f3, f4, amt_vec, 1.e-3, 1.e-16, 1.e-10, 1.e-12);
 }
 
-TEST_F(TorstenOneCptModelTest, ss_infusion_finite_diff) {
+TEST_F(TorstenOneCptModelTest, ss_infusion_rate_grad) {
   y0[0] = 150;
   y0[1] = 50;
   ts[0] = 10.0;
@@ -162,7 +185,7 @@ TEST_F(TorstenOneCptModelTest, ss_infusion_finite_diff) {
   torsten::test::test_grad(f3, f4, rate_vec, 1.e-3, 1.e-15, 1.e-10, 1.e-10);
 }
 
-TEST_F(TorstenOneCptModelTest, ss_bolus_at_cpt_1_run_till_steady) {
+TEST_F(TorstenOneCptModelTest, ss_bolus_amt_cpt_1_vs_transient_result) {
   rate[0] = 0;
   rate[1] = 0;
   y0[0] = 150;
@@ -200,7 +223,7 @@ TEST_F(TorstenOneCptModelTest, ss_bolus_at_cpt_1_run_till_steady) {
   torsten::test::test_grad(f1, f2, amt_vec, 1.e-3, 1.e-12, 1.e-8, 1.e-10);
 }
 
-TEST_F(TorstenOneCptModelTest, ss_bolus_at_cpt_2_run_till_steady) {
+TEST_F(TorstenOneCptModelTest, ss_bolus_amt_cpt_2_vs_transient_result) {
   rate[0] = 0;
   rate[1] = 0;
   y0[0] = 150;
@@ -238,7 +261,54 @@ TEST_F(TorstenOneCptModelTest, ss_bolus_at_cpt_2_run_till_steady) {
   torsten::test::test_grad(f1, f2, amt_vec, 1.e-3, 1.e-12, 1.e-7, 1.e-10);
 }
 
-TEST_F(TorstenOneCptModelTest, ss_infusion_at_cpt_2_run_till_steady) {
+TEST_F(TorstenOneCptModelTest, ss_infusion_at_cpt_1_finite_diff) {
+  y0[0] = 150;
+  y0[1] = 50;
+  ts[0] = 10.0;
+  ts.resize(1);
+  using model_t = PMXOneCptModel<double, double, double, double>;
+  model_t model(t0, y0, rate, CL, V2, ka);
+
+  int cmt = 1;
+  double ii = 6.0;
+  double amt = 1000;
+  
+  // FIXME: rate gradient is not correct when compared with
+  // long-running stardard solutions.
+
+  // auto f1 = [&](std::vector<double>& rate_vec) {
+  //   double t = t0;
+  //   Eigen::Matrix<double, -1, 1> y = y0;
+  //   double t_infus = amt/rate_vec[cmt - 1];
+  //   const std::vector<double> rate_zero{0.0, 0.0};
+  //   for (int i = 0; i < 200; ++i) {
+  //     Eigen::Matrix<double, 1, -1> yt;
+  //     Eigen::Matrix<double, -1, 1> ys;
+  //     yt = y.transpose();
+  //     model_t model_i(t, yt, rate_vec, CL, V2, ka);
+  //     double t_next = t + t_infus;
+  //     ys = model_i.solve(t_next);
+  //     yt = ys.transpose();
+  //     t = t_next;
+  //     model_t model_j(t, yt, rate_zero, CL, V2, ka);
+  //     t_next = t + ii - t_infus;
+  //     ys = model_j.solve(t_next);
+  //     y = ys;
+  //   }
+  //   return y;
+  // };
+
+  auto f1 = [&](std::vector<double>& rate_vec) {
+    return model.solve(amt, rate_vec[cmt - 1], ii, cmt);
+  };
+  auto f2 = [&](std::vector<var>& rate_vec) {
+    return model.solve(amt, rate_vec[cmt - 1], ii, cmt);
+  };
+  std::vector<double> rate_vec{300.0, 0.0};
+  torsten::test::test_grad(f1, f2, rate_vec, 1.e-3, 1.e-10, 1.e-8, 1.e-10);
+}
+
+TEST_F(TorstenOneCptModelTest, ss_infusion_at_cpt_2_finite_diff) {
   y0[0] = 150;
   y0[1] = 50;
   ts[0] = 10.0;
@@ -250,33 +320,39 @@ TEST_F(TorstenOneCptModelTest, ss_infusion_at_cpt_2_run_till_steady) {
   double ii = 6.0;
   double amt = 1000;
   
+  // FIXME: rate gradient is not correct when compared with
+  // long-running stardard solutions.
+
+  // auto f1 = [&](std::vector<double>& rate_vec) {
+  //   double t = t0;
+  //   Eigen::Matrix<double, -1, 1> y = y0;
+  //   double t_infus = amt/rate_vec[cmt - 1];
+  //   const std::vector<double> rate_zero{0.0, 0.0};
+  //   for (int i = 0; i < 200; ++i) {
+  //     Eigen::Matrix<double, 1, -1> yt;
+  //     Eigen::Matrix<double, -1, 1> ys;
+  //     yt = y.transpose();
+  //     model_t model_i(t, yt, rate_vec, CL, V2, ka);
+  //     double t_next = t + t_infus;
+  //     ys = model_i.solve(t_next);
+  //     yt = ys.transpose();
+  //     t = t_next;
+  //     model_t model_j(t, yt, rate_zero, CL, V2, ka);
+  //     t_next = t + ii - t_infus;
+  //     ys = model_j.solve(t_next);
+  //     y = ys;
+  //   }
+  //   return y;
+  // };
+
   auto f1 = [&](std::vector<double>& rate_vec) {
-    double t = t0;
-    Eigen::Matrix<double, -1, 1> y = y0;
-    double t_infus = amt/rate_vec[cmt - 1];
-    const std::vector<double> rate_zero{0.0, 0.0};
-    for (int i = 0; i < 200; ++i) {
-      Eigen::Matrix<double, 1, -1> yt;
-      Eigen::Matrix<double, -1, 1> ys;
-      yt = y.transpose();
-      model_t model_i(t, yt, rate_vec, CL, V2, ka);
-      double t_next = t + t_infus;
-      ys = model_i.solve(t_next);
-      yt = ys.transpose();
-      t = t_next;
-      model_t model_j(t, yt, rate_zero, CL, V2, ka);
-      t_next = t + ii - t_infus;
-      ys = model_j.solve(t_next);
-      y = ys;
-    }
-    return y;
+    return model.solve(amt, rate_vec[cmt - 1], ii, cmt);
   };
   auto f2 = [&](std::vector<var>& rate_vec) {
     return model.solve(amt, rate_vec[cmt - 1], ii, cmt);
   };
   std::vector<double> rate_vec{0.0, 300.0};
-  // FIXME: rate gradient is not correct
-  // torsten::test::test_grad(f1, f2, rate_vec, 1.e-3, 1.e-12, 1.e-8, 1.e-10);
+  torsten::test::test_grad(f1, f2, rate_vec, 1.e-3, 1.e-10, 1.e-8, 1.e-10);
 }
 
 TEST_F(TorstenOneCptModelTest, ss_bolus) {
