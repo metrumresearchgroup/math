@@ -430,6 +430,75 @@ TEST_F(TorstenOneCptModelTest, ss_infusion_grad_by_long_run_sd_vs_bdf_result) {
   }
 }
 
+TEST_F(TorstenOneCptModelTest, ss_bolus_grad_by_long_run_sd_vs_bdf_result) {
+  y0[0] = 150;
+  y0[1] = 50;
+  rate[0] = 0;
+  rate[1] = 0;
+  using model_t = refactor::PMXOneCptModel<double, var, double, double>;
+
+  int cmt = 0;
+  const double ii = 11.9;
+  
+  auto f1 = [&](std::vector<var>& amt_vec) {
+    double t = t0;
+    Eigen::Matrix<var, -1, 1> y = y0;
+    for (int i = 0; i < 100; ++i) {
+      Eigen::Matrix<var, 1, -1> yt = y.transpose();
+      model_t model_i(t, yt, rate, CL, V2, ka);
+      double t_next = t + ii;
+      Eigen::Matrix<var, -1, 1> ys = model_i.solve(t_next);
+      ys(cmt - 1) += amt_vec[0];
+      y = ys;
+      t = t_next;
+    }
+    // steady state solution is the end of II dosing before
+    // bolus is imposed, to check that we remove the
+    // bolus(added in the last iteration) from the results
+    y(cmt - 1) -= amt_vec[0];
+    return y;
+  };
+
+  PMXOneCptODE f1cpt;
+  const std::vector<double> theta{CL, V2, ka};
+  const PMXOdeIntegrator<PkBdf> integrator;
+  using ode_model_t = refactor::PKODEModel<double, var, double, double, PMXOneCptODE>;
+  auto f2 = [&](std::vector<var>& amt_vec) {
+    double t = t0;
+    Eigen::Matrix<var, -1, 1> y = y0;
+    for (int i = 0; i < 100; ++i) {
+      Eigen::Matrix<var, 1, -1> yt = y.transpose();
+      ode_model_t model_i(t, yt, rate, theta, f1cpt);
+      double t_next = t + ii;
+      Eigen::Matrix<var, -1, 1> ys = model_i.solve(t_next, integrator);
+      ys(cmt - 1) += amt_vec[0];
+      y = ys;
+      t = t_next;
+    }
+    // steady state solution is the end of II dosing before
+    // bolus is imposed, to check that we remove the
+    // bolus(added in the last iteration) from the results
+    y(cmt - 1) -= amt_vec[0];
+    return y;
+  };
+  
+  std::vector<var> amt_vec{300.0};
+
+  {
+    cmt = 1;
+    Eigen::Matrix<var, -1, 1> y1 = f1(amt_vec);
+    Eigen::Matrix<var, -1, 1> y2 = f2(amt_vec);
+    torsten::test::test_grad(amt_vec, y1, y2, 5.e-9, 5.e-11);
+  }
+
+  {
+    cmt = 2;
+    Eigen::Matrix<var, -1, 1> y1 = f1(amt_vec);
+    Eigen::Matrix<var, -1, 1> y2 = f2(amt_vec);
+    torsten::test::test_grad(amt_vec, y1, y2, 5.e-9, 5.e-11);
+  }
+}
+
 TEST_F(TorstenOneCptModelTest, ss_bolus) {
   rate[0] = 0;
   rate[1] = 0;

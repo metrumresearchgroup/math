@@ -7,7 +7,7 @@
 #include <test/unit/util.hpp>
 #include <gtest/gtest.h>
 
-TEST_F(TorstenCptOdeModelTest, pk_integrator_t0_var) {
+TEST_F(TorstenTwoCptModelTest, pk_integrator_t0_var) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
@@ -55,7 +55,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_t0_var) {
   }
 }
 
-TEST_F(TorstenCptOdeModelTest, pk_integrator_rate_t0_var) {
+TEST_F(TorstenTwoCptModelTest, pk_integrator_rate_t0_var) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
@@ -111,7 +111,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_rate_t0_var) {
   }
 }
 
-TEST_F(TorstenCptOdeModelTest, pk_integrator_ts_var) {
+TEST_F(TorstenTwoCptModelTest, pk_integrator_ts_var) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
@@ -187,7 +187,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_ts_var) {
   }
 }
 
-TEST_F(TorstenCptOdeModelTest, pk_integrator_y0_var) {
+TEST_F(TorstenTwoCptModelTest, pk_integrator_y0_var) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
@@ -271,7 +271,7 @@ TEST_F(TorstenCptOdeModelTest, pk_integrator_y0_var) {
   }
 }
 
-TEST_F(TorstenCptOdeModelTest, pk_bdf_integrator_dt_var) {
+TEST_F(TorstenTwoCptModelTest, pk_bdf_integrator_dt_var) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
@@ -298,7 +298,7 @@ TEST_F(TorstenCptOdeModelTest, pk_bdf_integrator_dt_var) {
   }
 }
 
-TEST_F(TorstenCptOdeModelTest, pk_adams_integrator_dt_var) {
+TEST_F(TorstenTwoCptModelTest, pk_adams_integrator_dt_var) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
@@ -325,7 +325,7 @@ TEST_F(TorstenCptOdeModelTest, pk_adams_integrator_dt_var) {
   }
 }
 
-TEST_F(TorstenCptOdeModelTest, general_ode_solver) {
+TEST_F(TorstenTwoCptModelTest, general_ode_solver) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
@@ -383,7 +383,7 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver) {
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 }
 
-TEST_F(TorstenCptOdeModelTest, general_ode_solver_y0) {
+TEST_F(TorstenTwoCptModelTest, general_ode_solver_y0) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
@@ -444,7 +444,7 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_y0) {
   EXPECT_FLOAT_EQ(y(2), y1[0][2]);
 }
 
-TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_sens) {
+TEST_F(TorstenTwoCptModelTest, general_ode_solver_par_sens) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;
@@ -515,7 +515,7 @@ TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_sens) {
   test_it();
 }
 
-TEST_F(TorstenCptOdeModelTest, general_ode_solver_par_rate_sens) {
+TEST_F(TorstenTwoCptModelTest, general_ode_solver_par_rate_sens) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXTwoCptModel;

@@ -14,7 +14,7 @@
 #include <vector>
 #include <string>
 
-struct TorstenCptOdeModelTest : public TorstenOdeTest {
+struct TorstenTwoCptModelTest : public TorstenOdeTest {
 
   std::vector<double> ts;
   Eigen::Matrix<double, 1, Eigen::Dynamic> y0;
@@ -27,7 +27,7 @@ struct TorstenCptOdeModelTest : public TorstenOdeTest {
   std::vector<double> par;
   Eigen::MatrixXd linode_par;      // LinOdeModel parameters
 
-  TorstenCptOdeModelTest() :
+  TorstenTwoCptModelTest() :
     ts{0.1, 0.5, 1.0},
     y0(3),
     rate(3, 0.0),

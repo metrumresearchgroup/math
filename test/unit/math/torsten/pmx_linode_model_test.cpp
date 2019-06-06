@@ -4,7 +4,7 @@
 #include <test/unit/util.hpp>
 #include <gtest/gtest.h>
 
-TEST_F(TorstenCptOdeModelTest, linode_rate_dbl) {
+TEST_F(TorstenTwoCptModelTest, linode_rate_dbl) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXLinODEModel;
@@ -28,7 +28,7 @@ TEST_F(TorstenCptOdeModelTest, linode_rate_dbl) {
   EXPECT_FLOAT_EQ(y[2], rate[2]);
 }
 
-TEST_F(TorstenCptOdeModelTest, linode_rate_var) {
+TEST_F(TorstenTwoCptModelTest, linode_rate_var) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXLinODEModel;
@@ -55,7 +55,7 @@ TEST_F(TorstenCptOdeModelTest, linode_rate_var) {
   EXPECT_FLOAT_EQ(y[2].val(), rate[2]);
 }
 
-TEST_F(TorstenCptOdeModelTest, linode_solver) {
+TEST_F(TorstenTwoCptModelTest, linode_solver) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXLinODEModel;
@@ -111,7 +111,7 @@ TEST_F(TorstenCptOdeModelTest, linode_solver) {
   }
 }
 
-TEST_F(TorstenCptOdeModelTest, linode_solver_zero_rate) {
+TEST_F(TorstenTwoCptModelTest, linode_solver_zero_rate) {
   using stan::math::var;
   using stan::math::to_var;
   using refactor::PMXLinODEModel;
