@@ -502,7 +502,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_by_long_run_sd_vs_bdf_result) {
   auto f1 = [&](std::vector<var>& amt_vec) {
     double t = t0;
     Eigen::Matrix<var, -1, 1> y = y0;
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 50; ++i) {
       Eigen::Matrix<var, 1, -1> yt = y.transpose();
       model_t model_i(t, yt, rate, CL, Q, V2, V3, ka);
       double t_next = t + ii;
@@ -525,7 +525,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_by_long_run_sd_vs_bdf_result) {
   auto f2 = [&](std::vector<var>& amt_vec) {
     double t = t0;
     Eigen::Matrix<var, -1, 1> y = y0;
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 50; ++i) {
       Eigen::Matrix<var, 1, -1> yt = y.transpose();
       ode_model_t model_i(t, yt, rate, theta, f2cpt);
       double t_next = t + ii;
@@ -565,6 +565,63 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_by_long_run_sd_vs_bdf_result) {
   }
 }
 
+TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_vs_long_run_sd) {
+  y0[0] = 150;
+  y0[1] = 50;
+  y0[2] = 50;
+  using model_t = PMXTwoCptModel<double, var, double, double>;
+
+  int cmt = 0;
+  double ii = 11.9;
+  
+  auto f1 = [&](std::vector<var>& amt_vec) {
+    double t = t0;
+    Eigen::Matrix<var, -1, 1> y = y0;
+    for (int i = 0; i < 100; ++i) {
+      Eigen::Matrix<var, 1, -1> yt = y.transpose();
+      model_t model_i(t, yt, rate, CL, Q, V2, V3, ka);
+      double t_next = t + ii;
+      Eigen::Matrix<var, -1, 1> ys = model_i.solve(t_next);
+      ys(cmt - 1) += amt_vec[0];
+      y = ys;
+      t = t_next;
+    }
+    // steady state solution is the end of II dosing before
+    // bolus is imposed, to check that we remove the
+    // bolus(added in the last iteration) from the results
+    y(cmt - 1) -= amt_vec[0];
+    return y;
+  };
+
+  auto f2 = [&](std::vector<var>& amt_vec) {
+    PMXTwoCptModel<double, double, double, double> model(t0, y0, rate, CL, Q, V2, V3, ka);
+    return model.solve(amt_vec[0], rate[cmt - 1], ii, cmt);
+  };
+
+  std::vector<var> amt_vec{300.00};
+
+  {
+    cmt = 1;
+    Eigen::Matrix<var, -1, 1> y1 = f1(amt_vec);
+    Eigen::Matrix<var, -1, 1> y2 = f2(amt_vec);
+    torsten::test::test_grad(amt_vec, y1, y2, 1.e-11, 1.e-10);
+  }
+
+  {
+    cmt = 2;
+    Eigen::Matrix<var, -1, 1> y1 = f1(amt_vec);
+    Eigen::Matrix<var, -1, 1> y2 = f2(amt_vec);
+    torsten::test::test_grad(amt_vec, y1, y2, 5.e-12, 1.e-11);
+  }
+
+  {
+    cmt = 3;
+    Eigen::Matrix<var, -1, 1> y1 = f1(amt_vec);
+    Eigen::Matrix<var, -1, 1> y2 = f2(amt_vec);
+    torsten::test::test_grad(amt_vec, y1, y2, 1.e-11, 1.e-10);
+  }
+}
+
 TEST_F(TorstenTwoCptModelTest, ss_bolus) {
   rate[0] = 0;
   rate[1] = 0;
@@ -584,7 +641,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus) {
   model_t model(t0, y0, rate_var, CLv, Qv, V2v, V3v, kav);
   std::vector<var> theta{model.par()};
 
-  //  std::cout.precision(12);
+  std::cout.precision(12);
 
   double amt = 1800;
   int cmt = 1;
@@ -621,11 +678,9 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus) {
   cmt = 2;
   y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
   
-  // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << " " << y1(2).val() << "\n";
-  // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << " " << y2(2).val() << "\n";
   EXPECT_FLOAT_EQ(y1(0).val(), 0.0);
   EXPECT_FLOAT_EQ(y1(1).val(), 700.955088612);
-  EXPECT_FLOAT_EQ(y1(2).val(), 763.661017168);
+  EXPECT_FLOAT_EQ(y1(2).val(), 724.611476748);
 
   stan::math::set_zero_all_adjoints();
   y1(0).grad(theta, g1);
@@ -643,17 +698,15 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus) {
   EXPECT_FLOAT_EQ(g1[4], 0);
   stan::math::set_zero_all_adjoints();
   y1(2).grad(theta, g1);
-  EXPECT_FLOAT_EQ(g1[0], -97.6727045238);
-  EXPECT_FLOAT_EQ(g1[1], -2.69926906473);
-  EXPECT_FLOAT_EQ(g1[2], 1.70091989107 );
-  EXPECT_FLOAT_EQ(g1[3], 13.0890426823 );
-  EXPECT_FLOAT_EQ(g1[4], -34.1823623977);
+  EXPECT_FLOAT_EQ(g1[0], -96.2552712812);
+  EXPECT_FLOAT_EQ(g1[1], -2.69328253921);
+  EXPECT_FLOAT_EQ(g1[2], 1.83656017604 );
+  EXPECT_FLOAT_EQ(g1[3], 12.7291401404 );
+  EXPECT_FLOAT_EQ(g1[4], 0);
 
   cmt = 3;
   y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
   
-  // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << " " << y1(2).val() << "\n";
-  // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << " " << y2(2).val() << "\n";
   EXPECT_FLOAT_EQ(y1(0).val(), 0.0);
   EXPECT_FLOAT_EQ(y1(1).val(), 828.127401998);
   EXPECT_FLOAT_EQ(y1(2).val(), 856.228976486);
@@ -711,8 +764,6 @@ TEST_F(TorstenTwoCptModelTest, ss_multi_trunc_infusion) {
   EXPECT_FLOAT_EQ(y1(0).val(), 0.00154469934961);
   EXPECT_FLOAT_EQ(y1(1).val(), 774.104413167);
   EXPECT_FLOAT_EQ(y1(2).val(), 799.879747792);
-  // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << " " << y1(2).val() << "\n";
-  // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << " " << y2(2).val() << "\n";
 
   stan::math::set_zero_all_adjoints();
   y1(0).grad(theta, g1);
@@ -742,8 +793,6 @@ TEST_F(TorstenTwoCptModelTest, ss_multi_trunc_infusion) {
   EXPECT_FLOAT_EQ(y1(0).val(), 0.0);
   EXPECT_FLOAT_EQ(y1(1).val(), 737.454228957);
   EXPECT_FLOAT_EQ(y1(2).val(), 762.268194176);
-  // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << " " << y1(2).val() << "\n";
-  // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << " " << y2(2).val() << "\n";
 
   stan::math::set_zero_all_adjoints();
   y1(0).grad(theta, g1);
@@ -770,8 +819,6 @@ TEST_F(TorstenTwoCptModelTest, ss_multi_trunc_infusion) {
   cmt = 3;
   y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
   
-  // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << " " << y1(2).val() << "\n";
-  // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << " " << y2(2).val() << "\n";
   EXPECT_FLOAT_EQ(y1(0).val(), 0.0);
   EXPECT_FLOAT_EQ(y1(1).val(), 888.053512871);
   EXPECT_FLOAT_EQ(y1(2).val(), 918.312019204);
@@ -799,128 +846,123 @@ TEST_F(TorstenTwoCptModelTest, ss_multi_trunc_infusion) {
   EXPECT_FLOAT_EQ(g1[4], 0.0);
 }
 
-// TEST_F(TorstenTwoCptModelTest, 2_cpt_ss_solver_const_infusion) {
-//   using stan::math::var;
-//   using stan::math::to_var;
-//   using refactor::PMXTwoCptModel;
-//   using torsten::pmx_integrate_ode_bdf;
-//   using stan::math::integrate_ode_bdf;
-//   using refactor::PMXTwoCptODE;
-//   using refactor::PMXOdeFunctorRateAdaptor;
+TEST_F(TorstenTwoCptModelTest, ss_solver_const_infusion) {
+  using stan::math::var;
+  using stan::math::to_var;
+  using refactor::PMXTwoCptModel;
+  using torsten::pmx_integrate_ode_bdf;
+  using stan::math::integrate_ode_bdf;
+  using refactor::PMXTwoCptODE;
+  using refactor::PMXOdeFunctorRateAdaptor;
 
-//   rate[0] = 1200;
-//   rate[1] = 1100;
-//   rate[2] = 800;
-//   y0[0] = 150;
-//   y0[1] = 250;
-//   y0[2] = 350;
-//   ts[0] = 10.0;
-//   ts.resize(1);
-//   var CLv = to_var(CL);
-//   var Qv  = to_var(Q);
-//   var V2v = to_var(V2);
-//   var V3v = to_var(V3);
-//   var kav = to_var(ka);
-//   std::vector<stan::math::var> rate_var{to_var(rate)};
-//   using model_t = PMXTwoCptModel<double, double, var, var>;
-//   model_t model(t0, y0, rate_var, CLv, Qv, V2v, V3v, kav);
-//   std::vector<var> theta(model.par());
+  rate[0] = 1200;
+  rate[1] = 1100;
+  rate[2] = 800;
+  y0[0] = 150;
+  y0[1] = 250;
+  y0[2] = 350;
+  ts[0] = 10.0;
+  ts.resize(1);
+  var CLv = to_var(CL);
+  var Qv  = to_var(Q);
+  var V2v = to_var(V2);
+  var V3v = to_var(V3);
+  var kav = to_var(ka);
+  std::vector<stan::math::var> rate_var{to_var(rate)};
+  using model_t = PMXTwoCptModel<double, double, var, var>;
+  model_t model(t0, y0, rate_var, CLv, Qv, V2v, V3v, kav);
+  std::vector<var> theta(model.par());
 
-//   std::cout.precision(12);
+  std::cout.precision(12);
 
-//   double amt = 1800;
-//   int cmt = 1;
-//   double ii = 0.0;
-//   std::vector<double> g1, g2;
+  double amt = 1800;
+  int cmt = 1;
+  double ii = 0.0;
+  std::vector<double> g1, g2;
 
-//   auto y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
-//   EXPECT_FLOAT_EQ(y1(0).val(), 1000);
-//   EXPECT_FLOAT_EQ(y1(1).val(), 9600);
-//   EXPECT_FLOAT_EQ(y1(2).val(), 8400);
-//   // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << " " << y1(2).val() << "\n";
-//   // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << " " << y2(2).val() << "\n";
+  auto y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
+  EXPECT_FLOAT_EQ(y1(0).val(), 1000);
+  EXPECT_FLOAT_EQ(y1(1).val(), 9600);
+  EXPECT_FLOAT_EQ(y1(2).val(), 8400);
 
-//   stan::math::set_zero_all_adjoints();
-//   y1(0).grad(theta, g1);
-//   EXPECT_FLOAT_EQ(g1[0], 0.0);
-//   EXPECT_FLOAT_EQ(g1[1], 0.0);
-//   EXPECT_FLOAT_EQ(g1[2], 0.0);
-//   EXPECT_FLOAT_EQ(g1[3], 0.0);
-//   EXPECT_FLOAT_EQ(g1[4], -833.333333333);
-//   stan::math::set_zero_all_adjoints();
-//   y1(1).grad(theta, g1);
-//   EXPECT_FLOAT_EQ(g1[0], -960);
-//   EXPECT_FLOAT_EQ(g1[1], 2.27373675443e-14 );
-//   EXPECT_FLOAT_EQ(g1[2], 120 );
-//   EXPECT_FLOAT_EQ(g1[3], -1.81898940355e-14 );
-//   EXPECT_FLOAT_EQ(g1[4], 0.0);
-//   stan::math::set_zero_all_adjoints();
-//   y1(2).grad(theta, g1);
-//   EXPECT_FLOAT_EQ(g1[0], -840);
-//   EXPECT_FLOAT_EQ(g1[1], 1.70530256582e-13);
-//   EXPECT_FLOAT_EQ(g1[2], -7.1054273576e-14);
-//   EXPECT_FLOAT_EQ(g1[3], 120 );
-//   EXPECT_FLOAT_EQ(g1[4], 1.02318153949e-12);
+  stan::math::set_zero_all_adjoints();
+  y1(0).grad(theta, g1);
+  EXPECT_FLOAT_EQ(g1[0], 0.0);
+  EXPECT_FLOAT_EQ(g1[1], 0.0);
+  EXPECT_FLOAT_EQ(g1[2], 0.0);
+  EXPECT_FLOAT_EQ(g1[3], 0.0);
+  EXPECT_FLOAT_EQ(g1[4], -833.333333333);
+  stan::math::set_zero_all_adjoints();
+  y1(1).grad(theta, g1);
+  EXPECT_FLOAT_EQ(g1[0], -960);
+  EXPECT_FLOAT_EQ(g1[1], 2.27373675443e-14 );
+  EXPECT_FLOAT_EQ(g1[2], 120 );
+  EXPECT_FLOAT_EQ(g1[3], -1.81898940355e-14 );
+  EXPECT_FLOAT_EQ(g1[4], 0.0);
+  stan::math::set_zero_all_adjoints();
+  y1(2).grad(theta, g1);
+  EXPECT_FLOAT_EQ(g1[0], -840);
+  EXPECT_FLOAT_EQ(g1[1], 1.70530256582e-13);
+  EXPECT_FLOAT_EQ(g1[2], -7.1054273576e-14);
+  EXPECT_FLOAT_EQ(g1[3], 120 );
+  EXPECT_FLOAT_EQ(g1[4], 1.02318153949e-12);
 
-//   // cmt = 2;
-//   // y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
+  // FIXME: check the results
+  // cmt = 2;
+  // y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
 
-//   EXPECT_FLOAT_EQ(y1(0).val(), 1000.0);
-//   EXPECT_FLOAT_EQ(y1(1).val(), 9600);
-//   EXPECT_FLOAT_EQ(y1(2).val(), 8400);
-//   // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << " " << y1(2).val() << "\n";
-//   // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << " " << y2(2).val() << "\n";
+  // EXPECT_FLOAT_EQ(y1(0).val(), 1000.0);
+  // EXPECT_FLOAT_EQ(y1(1).val(), 9600);
+  // EXPECT_FLOAT_EQ(y1(2).val(), 8400);
 
-//   stan::math::set_zero_all_adjoints();
-//   y1(0).grad(theta, g1);
-//   EXPECT_FLOAT_EQ(g1[0], 0.0);
-//   EXPECT_FLOAT_EQ(g1[1], 0.0);
-//   EXPECT_FLOAT_EQ(g1[2], 0.0);
-//   EXPECT_FLOAT_EQ(g1[3], 0.0);
-//   EXPECT_FLOAT_EQ(g1[4], -833.333333333);
-//   stan::math::set_zero_all_adjoints();
-//   y1(1).grad(theta, g1);
-//   EXPECT_FLOAT_EQ(g1[0], -960);
-//   EXPECT_FLOAT_EQ(g1[1], 2.27373675443e-14);
-//   EXPECT_FLOAT_EQ(g1[2], 120);
-//   EXPECT_FLOAT_EQ(g1[3], -1.81898940355e-14);
-//   EXPECT_FLOAT_EQ(g1[4], 0);
-//   stan::math::set_zero_all_adjoints();
-//   y1(2).grad(theta, g1);
-//   EXPECT_FLOAT_EQ(g1[0], -840);
-//   EXPECT_FLOAT_EQ(g1[1], 1.70530256582e-13);
-//   EXPECT_FLOAT_EQ(g1[2], -7.1054273576e-14);
-//   EXPECT_FLOAT_EQ(g1[3], 120);
-//   EXPECT_FLOAT_EQ(g1[4], 1.02318153949e-12);
+  // stan::math::set_zero_all_adjoints();
+  // y1(0).grad(theta, g1);
+  // EXPECT_FLOAT_EQ(g1[0], 0.0);
+  // EXPECT_FLOAT_EQ(g1[1], 0.0);
+  // EXPECT_FLOAT_EQ(g1[2], 0.0);
+  // EXPECT_FLOAT_EQ(g1[3], 0.0);
+  // EXPECT_FLOAT_EQ(g1[4], -833.333333333);
+  // stan::math::set_zero_all_adjoints();
+  // y1(1).grad(theta, g1);
+  // EXPECT_FLOAT_EQ(g1[0], -960);
+  // EXPECT_FLOAT_EQ(g1[1], 2.27373675443e-14);
+  // EXPECT_FLOAT_EQ(g1[2], 120);
+  // EXPECT_FLOAT_EQ(g1[3], -1.81898940355e-14);
+  // EXPECT_FLOAT_EQ(g1[4], 0);
+  // stan::math::set_zero_all_adjoints();
+  // y1(2).grad(theta, g1);
+  // EXPECT_FLOAT_EQ(g1[0], -840);
+  // EXPECT_FLOAT_EQ(g1[1], 1.70530256582e-13);
+  // EXPECT_FLOAT_EQ(g1[2], -7.1054273576e-14);
+  // EXPECT_FLOAT_EQ(g1[3], 120);
+  // EXPECT_FLOAT_EQ(g1[4], 1.02318153949e-12);
 
-//   cmt = 3;
-//   y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
+  cmt = 3;
+  y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
   
-//   // std::cout << "taki test: " << y1(0).val() << " " << y1(1).val() << " " << y1(2).val() << "\n";
-//   // std::cout << "taki test: " << y1(0).val() << " " << y2(1).val() << " " << y2(2).val() << "\n";
-//   EXPECT_FLOAT_EQ(y1(0).val(), 0.0);
-//   EXPECT_FLOAT_EQ(y1(1).val(), 6400);
-//   EXPECT_FLOAT_EQ(y1(2).val(), 7600);
+  EXPECT_FLOAT_EQ(y1(0).val(), 0.0);
+  EXPECT_FLOAT_EQ(y1(1).val(), 6400);
+  EXPECT_FLOAT_EQ(y1(2).val(), 7600);
 
-//   stan::math::set_zero_all_adjoints();
-//   y1(0).grad(theta, g1);
-//   EXPECT_FLOAT_EQ(g1[0], 0.0);
-//   EXPECT_FLOAT_EQ(g1[1], 0.0);
-//   EXPECT_FLOAT_EQ(g1[2], 0.0);
-//   EXPECT_FLOAT_EQ(g1[3], 0.0);
-//   EXPECT_FLOAT_EQ(g1[4], 0.0);
-//   stan::math::set_zero_all_adjoints();
-//   y1(1).grad(theta, g1);
-//   EXPECT_FLOAT_EQ(g1[0], -640);
-//   EXPECT_FLOAT_EQ(g1[1], -1.18559130767e-13);
-//   EXPECT_FLOAT_EQ(g1[2], 80);
-//   EXPECT_FLOAT_EQ(g1[3], 1.55913377447e-14);
-//   EXPECT_FLOAT_EQ(g1[4], 0);
-//   stan::math::set_zero_all_adjoints();
-//   y1(2).grad(theta, g1);
-//   EXPECT_FLOAT_EQ(g1[0], -560);
-//   EXPECT_FLOAT_EQ(g1[1], -71.4285714286);
-//   EXPECT_FLOAT_EQ(g1[2], 5.68434188608e-14);
-//   EXPECT_FLOAT_EQ(g1[3], 108.571428571);
-//   EXPECT_FLOAT_EQ(g1[4], 0.0);
-// }
+  stan::math::set_zero_all_adjoints();
+  y1(0).grad(theta, g1);
+  EXPECT_FLOAT_EQ(g1[0], 0.0);
+  EXPECT_FLOAT_EQ(g1[1], 0.0);
+  EXPECT_FLOAT_EQ(g1[2], 0.0);
+  EXPECT_FLOAT_EQ(g1[3], 0.0);
+  EXPECT_FLOAT_EQ(g1[4], 0.0);
+  stan::math::set_zero_all_adjoints();
+  y1(1).grad(theta, g1);
+  EXPECT_FLOAT_EQ(g1[0], -640);
+  EXPECT_FLOAT_EQ(g1[1], -1.18559130767e-13);
+  EXPECT_FLOAT_EQ(g1[2], 80);
+  EXPECT_FLOAT_EQ(g1[3], 1.55913377447e-14);
+  EXPECT_FLOAT_EQ(g1[4], 0);
+  stan::math::set_zero_all_adjoints();
+  y1(2).grad(theta, g1);
+  EXPECT_FLOAT_EQ(g1[0], -560);
+  EXPECT_FLOAT_EQ(g1[1], -71.4285714286);
+  EXPECT_FLOAT_EQ(g1[2], 5.68434188608e-14);
+  EXPECT_FLOAT_EQ(g1[3], 108.571428571);
+  EXPECT_FLOAT_EQ(g1[4], 0.0);
+}
