@@ -622,6 +622,112 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_vs_long_run_sd) {
   }
 }
 
+TEST_F(TorstenTwoCptModelTest, ss_const_infusion_grad_by_long_run_sd_vs_bdf_result) {
+  y0[0] = 150;
+  y0[1] = 50;
+  using model_t = refactor::PMXTwoCptModel<double, double, var, double>;
+
+  int cmt = 0;
+  
+  auto f1 = [&](std::vector<var>& rate_vec) {
+    model_t model(t0, y0, rate_vec, CL, Q, V2, V3, ka);
+    double t_next = 1.0e3;
+    return model.solve(t_next);
+  };
+
+  PMXTwoCptODE f2cpt;
+  const std::vector<double> theta{CL, Q, V2, V3, ka};
+  const PMXOdeIntegrator<PkBdf> integrator;
+  using ode_model_t = refactor::PKODEModel<double, double, var, double, PMXTwoCptODE>;
+  auto f2 = [&](std::vector<var>& rate_vec) {
+    ode_model_t model(t0, y0, rate_vec, theta, f2cpt);
+    double t_next = 1.0e3;
+    return model.solve(t_next, integrator);
+  };
+  
+  std::vector<var> rate_vec(3, 0.0);
+
+  {
+    cmt = 1;
+    rate_vec[cmt - 1] = 300.0;
+    Eigen::Matrix<var, -1, 1> y1 = f1(rate_vec);
+    Eigen::Matrix<var, -1, 1> y2 = f2(rate_vec);
+    torsten::test::test_grad(rate_vec, y1, y2, 5.e-9, 1.e-10);
+    rate_vec[cmt - 1] = 0.0;
+  }
+
+  {
+    cmt = 2;
+    rate_vec[cmt - 1] = 300.0;
+    Eigen::Matrix<var, -1, 1> y1 = f1(rate_vec);
+    Eigen::Matrix<var, -1, 1> y2 = f2(rate_vec);
+    torsten::test::test_grad(rate_vec, y1, y2, 5.e-8, 1.e-10);
+  }
+
+  {
+    cmt = 3;
+    rate_vec[cmt - 1] = 300.0;
+    Eigen::Matrix<var, -1, 1> y1 = f1(rate_vec);
+    Eigen::Matrix<var, -1, 1> y2 = f2(rate_vec);
+    torsten::test::test_grad(rate_vec, y1, y2, 5.e-8, 1.e-10);
+  }
+}
+
+TEST_F(TorstenTwoCptModelTest, ss_const_infusion_grad_vs_long_run_sd) {
+  y0[0] = 150;
+  y0[1] = 50;
+  using model_t = refactor::PMXTwoCptModel<double, double, var, double>;
+  using ss_model_t = refactor::PMXTwoCptModel<double, double, double, double>;
+
+  int cmt = 0;
+  
+  auto f1 = [&](std::vector<var>& rate_vec) {
+    model_t model(t0, y0, rate_vec, CL, Q, V2, V3, ka);
+    double t_next = 1.0e3;
+    return model.solve(t_next);
+  };
+
+  auto f2 = [&](std::vector<var>& rate_vec) {
+    ss_model_t model(t0, y0, rate, CL, Q, V2, V3, ka);
+    double amt = 0.0;
+    double t_next = 1.0e2;
+    double ii = 0.0;
+    return model.solve(amt, rate_vec[cmt - 1], ii, cmt);
+  };
+
+  std::vector<var> rate_vec(3, 0.0);
+
+  {
+    cmt = 1;
+    rate_vec[cmt - 1] = 300.0;
+    Eigen::Matrix<var, -1, 1> y1 = f1(rate_vec);
+    Eigen::Matrix<var, -1, 1> y2 = f2(rate_vec);
+    std::vector<var> par{rate_vec[cmt - 1]};
+    torsten::test::test_grad(par, y1, y2, 1.e-12, 1.e-12);
+    rate_vec[cmt - 1] = 0.0;
+  }
+
+  {
+    cmt = 2;
+    rate_vec[cmt - 1] = 300.0;
+    Eigen::Matrix<var, -1, 1> y1 = f1(rate_vec);
+    Eigen::Matrix<var, -1, 1> y2 = f2(rate_vec);
+    std::vector<var> par{rate_vec[cmt - 1]};
+    torsten::test::test_grad(par, y1, y2, 1.e-12, 1.e-12);
+    rate_vec[cmt - 1] = 0.0;
+  }
+
+  {
+    cmt = 3;
+    rate_vec[cmt - 1] = 300.0;
+    Eigen::Matrix<var, -1, 1> y1 = f1(rate_vec);
+    Eigen::Matrix<var, -1, 1> y2 = f2(rate_vec);
+    std::vector<var> par{rate_vec[cmt - 1]};
+    torsten::test::test_grad(par, y1, y2, 1.e-12, 1.e-12);
+    rate_vec[cmt - 1] = 0.0;
+  }
+}
+
 TEST_F(TorstenTwoCptModelTest, ss_bolus) {
   rate[0] = 0;
   rate[1] = 0;
