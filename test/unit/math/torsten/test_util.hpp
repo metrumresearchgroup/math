@@ -186,6 +186,18 @@ namespace torsten {
       }
     }
 
+    void test_val(const Eigen::VectorXd& y1, const Eigen::VectorXd& y2,
+                  double rtol, double atol) {
+      EXPECT_EQ(y1.size(), y2.size());
+      for (int i = 0; i < y1.size(); ++i) {
+        if (abs(y1(i)) < 1e-5 && abs(y2(i)) < 1e-5) {
+          EXPECT_NEAR(y1(i), y2(i), atol);
+        } else {
+          EXPECT_NEAR(y1(i), y2(i), std::max(abs(y1(i)), abs(y2(i))) * rtol);
+        }
+      }
+    }
+
     /*
      * Test @c VectorXd results between two results.
      * An example use would be to have the results coming from torsten
