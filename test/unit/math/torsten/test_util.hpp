@@ -3,11 +3,13 @@
 
 #include <stan/math/prim/mat/fun/Eigen.hpp>
 #include <stan/math/rev/mat.hpp>
+#include <stan/math/prim/mat/functor/finite_diff_gradient.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
 #include <test/unit/math/prim/arr/functor/lorenz.hpp>
 #include <stan/math/torsten/mpi/precomputed_gradients.hpp>
 #include <stan/math/torsten/to_var.hpp>
+#include <stan/math/torsten/to_vector.hpp>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -633,6 +635,8 @@ namespace torsten {
       std::vector<std::vector<double> > theta_1(theta.begin(), theta.end());
       std::vector<std::vector<double> > theta_2(theta.begin(), theta.end());
 
+      const int m = theta.size();
+      const int n = theta[0].size();
       Eigen::MatrixXd fd = f1(theta), fd_1, fd_2;
       Eigen::Matrix<stan::math::var, -1, -1> fv = f2(theta_v);
 
@@ -691,32 +695,30 @@ namespace torsten {
       std::vector<stan::math::var> theta_v(stan::math::to_var(theta));
       std::vector<double> theta_1(theta), theta_2(theta);
 
-      Eigen::MatrixXd fd = f1(theta), fd_1, fd_2;
+      Eigen::MatrixXd fd = f1(theta);
       Eigen::Matrix<stan::math::var, -1, -1> fv = f2(theta_v);
 
       EXPECT_EQ(fd.rows(), fv.rows());
       EXPECT_EQ(fd.cols(), fv.cols());
-      for (int i = 0; i < fd.size(); ++i) {
-        EXPECT_NEAR(fv(i).val(), fd(i), fval_eps);
-      }
 
       std::vector<double> g;
-      for (size_t i = 0; i < theta_v.size(); ++i) {
-        std::vector<stan::math::var> p{theta_v[i]};
-        theta_1[i] -= h;
-        theta_2[i] += h;
-        fd_1 = f1(theta_1);
-        fd_2 = f1(theta_2);
-        theta_1[i] = theta[i];
-        theta_2[i] = theta[i];
-        for (int k = 0; k < fv.size(); ++k) {
-          stan::math::set_zero_all_adjoints();
-          fv(k).grad(p, g);
-          double g_fd = (fd_2(k) - fd_1(k))/(2 * h);
-          if (abs(g[0]) < 1e-4 || abs(g_fd) < 1e-4) {
-            EXPECT_NEAR(g[0], g_fd, a_sens_eps);
+      for (int k = 0; k < fv.size(); ++k) {
+        stan::math::set_zero_all_adjoints();
+        fv(k).grad(theta_v, g);
+        const Eigen::Matrix<double, -1, 1> theta_x = stan::math::to_vector(theta);
+        auto f = [&f1, &k](const Eigen::Matrix<double, -1, 1>& x) {
+          std::vector<double> x_arr = stan::math::to_array_1d(x);
+          return f1(x_arr)(k);
+        };
+        double fx;
+        Eigen::Matrix<double, -1, 1> g_fd(g.size());
+        stan::math::finite_diff_gradient(f, theta_x, fx, g_fd, h);
+        EXPECT_NEAR(fv(k).val(), fx, fval_eps);
+        for (size_t i = 0; i < g.size(); ++i) {
+          if (abs(g[i]) < 1e-4 || abs(g_fd(i)) < 1e-4) {
+            EXPECT_NEAR(g[i], g_fd(i), a_sens_eps);
           } else {
-            EXPECT_NEAR(g[0], g_fd, r_sens_eps * std::max(abs(g[0]), abs(g_fd)));
+            EXPECT_NEAR(g[i], g_fd(i), r_sens_eps * std::max(abs(g[i]), abs(g_fd(i))));
           }
         }
       }

@@ -143,8 +143,8 @@ TEST_F(TorstenOneCptModelTest, ss_bolus_amt_grad) {
     return model.solve(amt_vec[0], rate[cmt-1], ii, cmt);
   };
   std::vector<double> amt_vec{1000.0};
-  cmt = 1; torsten::test::test_grad(f1, f2, amt_vec, 1.e-3, 1.e-16, 1.e-10, 1.e-12);
-  cmt = 2; torsten::test::test_grad(f1, f2, amt_vec, 1.e-3, 1.e-16, 1.e-10, 1.e-12);
+  cmt = 1; torsten::test::test_grad(f1, f2, amt_vec, 1.e-3, 1.e-16, 2.e-10, 1.e-12);
+  cmt = 2; torsten::test::test_grad(f1, f2, amt_vec, 1.e-3, 1.e-16, 2.e-10, 1.e-12);
 }
 
 TEST_F(TorstenOneCptModelTest, ss_infusion_rate_grad) {
@@ -167,8 +167,8 @@ TEST_F(TorstenOneCptModelTest, ss_infusion_rate_grad) {
   };
 
   std::vector<double> rate_vec{500.0};
-  cmt = 1; torsten::test::test_grad(f1, f2, rate_vec, 1.e-3, 1.e-15, 1.e-10, 1.e-10);
-  cmt = 2; torsten::test::test_grad(f1, f2, rate_vec, 1.e-3, 1.e-15, 1.e-10, 1.e-10);
+  cmt = 1; torsten::test::test_grad(f1, f2, rate_vec, 1.e-3, 1.e-15, 2.e-10, 1.e-10);
+  cmt = 2; torsten::test::test_grad(f1, f2, rate_vec, 1.e-3, 1.e-15, 2.e-10, 1.e-10);
 }
 
 TEST_F(TorstenOneCptModelTest, ss_bolus_grad_vs_long_run_sd) {
