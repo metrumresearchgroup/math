@@ -27,7 +27,7 @@ using torsten::pmx_solve_bdf;
 using torsten::pmx_solve_adams;
 using torsten::NONMENEventsRecord;
 
-TEST_F(TorstenOneCptTest, ode_with_steady_state_zero_rate) {
+TEST_F(TorstenOneCptTest, ss_zero_rate) {
   // Steady state induced by multiple bolus doses (SS = 1, rate = 0)
   using std::vector;
   using Eigen::Matrix;
@@ -255,7 +255,7 @@ TEST_F(TorstenOneCptTest, multiple_iv_tlag) {
                              2e-5, 1e-7, 1e-6, 1e-6);
 }
 
-TEST_F(TorstenOneCptTest, multiple_iv_steady_state_tlag) {
+TEST_F(TorstenOneCptTest, ss_multiple_infusion_tlag) {
   time[0] = 0.0;
   time[1] = 0.0;
   for(int i = 2; i < nt; i++) time[i] = time[i - 1] + 5;
@@ -314,7 +314,7 @@ TEST_F(TorstenOneCptTest, multiple_iv_steady_state_tlag) {
   }
 }
 
-TEST_F(TorstenOneCptTest, ode_steady_state_bolus) {
+TEST_F(TorstenOneCptTest, ss_bolus) {
   resize(3);
   time[0] = 0.0;
   time[1] = 0.0;
@@ -361,7 +361,7 @@ TEST_F(TorstenOneCptTest, ode_steady_state_bolus) {
                               2e-5, 1e-6, 1e-5, 1e-6);
 }
 
-TEST_F(TorstenOneCptTest, ode_steady_state_constant_rate) {
+TEST_F(TorstenOneCptTest, ss_constant_infusion) {
   time[0] = 0.0;
   for(int i = 1; i < 10; i++) time[i] = time[i - 1] + 2.5;
 
@@ -405,7 +405,7 @@ TEST_F(TorstenOneCptTest, ode_steady_state_constant_rate) {
                               2e-5, 1e-6, 1e-5, 1e-6);
 }
 
-TEST_F(TorstenOneCptTest, steady_state_multiple_truncated_iv) {
+TEST_F(TorstenOneCptTest, ss_multiple_infusion) {
   time[0] = 0.0;
   for(int i = 1; i < 10; i++) time[i] = time[i - 1] + 2.5;
 
@@ -463,26 +463,22 @@ TEST_F(TorstenOneCptTest, steady_state_multiple_truncated_iv) {
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-4, 1e-3, 1e-4);
 
-  // Current version does not handle the case of  multiple
-  // truncated infusions (i.e ii > 0 and rate > 0) when F *
-  // amt is a parameter
-
   biovar[0] = std::vector<double>{0.8, 0.7};
 
-  // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, nCmt,
-  //                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
-  //                             rel_tol, abs_tol, max_num_steps,
-  //                             2e-5, 1e-6, 1e-6, 1e-6);
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, nCmt,
+                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                              rel_tol, abs_tol, max_num_steps,
+                              2e-5, 1e-6, 1e-6, 1e-6);
 
-  // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, nCmt,
-  //                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
-  //                              rel_tol, abs_tol, max_num_steps,
-  //                              2e-5, 1e-10, 1.5e-6, 2e-8);
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, nCmt,
+                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                               rel_tol, abs_tol, max_num_steps,
+                               2e-5, 1e-10, 1.5e-6, 2e-8);
 
-  // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, nCmt,
-  //                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
-  //                              rel_tol, abs_tol, max_num_steps,
-  //                              2e-5, 1e-10, 1e-6, 1e-8);
+  TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, nCmt,
+                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                               rel_tol, abs_tol, max_num_steps,
+                               2e-5, 1e-10, 1e-6, 1e-8);
 }
 
 TEST_F(TorstenOneCptTest, multiple_bolus) {
@@ -1073,4 +1069,36 @@ TEST_F(TorstenOdeTest_neutropenia, max_cvodes_fails) {
   y0 = y0_good;
   EXPECT_NO_THROW(stan::math::integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps)); // NOLINT
   EXPECT_NO_THROW(torsten::pmx_integrate_ode_bdf(f, y0, t0, ts, theta, x_r, x_i, 0, rtol, atol, max_num_steps)); // NOLINT
+}
+
+TEST_F(TorstenOneCptTest, ss_multiple_infusion_rate) {
+  time[0] = 0.0;
+  for(int i = 1; i < 10; i++) time[i] = time[i - 1] + 8.0;
+
+  amt[0] = 800;
+  std::fill(rate.begin(), rate.end(), 150.0);
+  ii[0] = 5;
+  ii[5] = 2;
+  addl[0] = 0;
+  ss[0] = 1;
+  ss[5] = 1;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+  biovar[0] = std::vector<double>{0.8, 0.7};
+
+  TORSTEN_ODE_GRAD_RATE_TEST(pmx_solve_rk45, f, nCmt,
+                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                             rel_tol, abs_tol, max_num_steps,
+                             1e-3, 1e-6, 1e-6, 1e-6);
+
+  TORSTEN_ODE_GRAD_RATE_TEST(pmx_solve_bdf, f, nCmt,
+                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                             rel_tol, abs_tol, max_num_steps,
+                             1e-3, 1e-10, 6e-5, 2e-8);
+
+  TORSTEN_ODE_GRAD_RATE_TEST(pmx_solve_adams, f, nCmt,
+                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                             rel_tol, abs_tol, max_num_steps,
+                             1e-3, 1e-8, 1e-6, 1e-8);
 }
