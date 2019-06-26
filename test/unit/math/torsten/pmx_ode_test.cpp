@@ -467,20 +467,22 @@ TEST_F(TorstenOneCptTest, steady_state_multiple_truncated_iv) {
   // truncated infusions (i.e ii > 0 and rate > 0) when F *
   // amt is a parameter
 
+  biovar[0] = std::vector<double>{0.8, 0.7};
+
   // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_rk45, f, nCmt,
   //                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
   //                             rel_tol, abs_tol, max_num_steps,
   //                             2e-5, 1e-6, 1e-6, 1e-6);
 
   // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_bdf, f, nCmt,
-  //                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
-  //                             rel_tol, abs_tol, max_num_steps,
-  //                             2e-5, 1e-6, 1e-6, 1e-6);
+  //                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+  //                              rel_tol, abs_tol, max_num_steps,
+  //                              2e-5, 1e-10, 1.5e-6, 2e-8);
 
   // TORSTEN_ODE_GRAD_BIOVAR_TEST(pmx_solve_adams, f, nCmt,
-  //                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
-  //                             rel_tol, abs_tol, max_num_steps,
-  //                             2e-5, 1e-6, 1e-5, 1e-6);
+  //                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+  //                              rel_tol, abs_tol, max_num_steps,
+  //                              2e-5, 1e-10, 1e-6, 1e-8);
 }
 
 TEST_F(TorstenOneCptTest, multiple_bolus) {

@@ -9,7 +9,6 @@
 #include <test/unit/math/prim/arr/functor/lorenz.hpp>
 #include <stan/math/torsten/mpi/precomputed_gradients.hpp>
 #include <stan/math/torsten/to_var.hpp>
-#include <stan/math/torsten/to_vector.hpp>
 #include <iostream>
 #include <sstream>
 #include <vector>
