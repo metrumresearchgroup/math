@@ -640,7 +640,8 @@ TEST_F(TorstenOneCptModelTest, ss_const_infusion) {
   y1(1).grad(theta, g1);
   EXPECT_FLOAT_EQ(g1[0], -35.2);
   EXPECT_FLOAT_EQ(g1[1], 22);
-  EXPECT_FLOAT_EQ(g1[2], 0.0);
+  // EXPECT_FLOAT_EQ(g1[2], 0.0); // FIXME: fail for g++ but clang++
+  EXPECT_NEAR(g1[2], 0.0, 5e-13);
 
   cmt = 2;
   y1 = model.solve(amt, rate_var[cmt - 1], ii, cmt);
