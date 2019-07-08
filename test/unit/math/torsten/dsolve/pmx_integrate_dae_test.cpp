@@ -45,7 +45,7 @@ struct StanIntegrateDAETest : public ::testing::Test {
 };
 
 TEST_F(StanIntegrateDAETest, idas_ivp_system_yy0) {
-  using torsten::dsolve::pk_idas_fwd_system;
+  using torsten::dsolve::PMXIdasFwdSystem;
   using torsten::dsolve::pmx_integrate_dae;
   std::vector<std::vector<double> > yy
       = pmx_integrate_dae(f, yy0, yp0, t0, ts, theta, x_r, x_i, 1e-4, 1e-8);
@@ -56,8 +56,8 @@ TEST_F(StanIntegrateDAETest, idas_ivp_system_yy0) {
 }
 
 TEST_F(StanIntegrateDAETest, forward_sensitivity_theta) {
-  using torsten::dsolve::pk_idas_fwd_system;
-  using torsten::dsolve::idas_integrator;
+  using torsten::dsolve::PMXIdasFwdSystem;
+  using torsten::dsolve::PMXIdasIntegrator;
   using torsten::dsolve::pmx_integrate_dae;
   using stan::math::to_var;
   using stan::math::value_of;
@@ -77,8 +77,8 @@ TEST_F(StanIntegrateDAETest, forward_sensitivity_theta) {
   const double h = 1.e-2;
   const std::vector<double> theta1{theta[0] - theta[0] * h, theta[1], theta[2]};
   const std::vector<double> theta2{theta[0] + theta[0] * h, theta[1], theta[2]};
-  torsten::dsolve::idas_integrator solver(1e-5, 1e-12, 1000);
-  pk_idas_fwd_system<chemical_kinetics, double, double, double> dae1(
+  torsten::dsolve::PMXIdasIntegrator solver(1e-5, 1e-12, 1000);
+  PMXIdasFwdSystem<chemical_kinetics, double, double, double> dae1(
       f, eq_id, yy0, yp0, theta1, x_r, x_i, msgs),
       dae2(f, eq_id, yy0, yp0, theta2, x_r, x_i, msgs);
   std::vector<std::vector<double> > yy1 = solver.integrate(dae1, t0, ts);

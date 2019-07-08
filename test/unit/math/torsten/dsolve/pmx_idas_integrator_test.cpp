@@ -48,11 +48,11 @@ struct IDASIntegratorTest : public ::testing::Test {
 };
 
 TEST_F(IDASIntegratorTest, idas_ivp_system_yy0) {
-  using torsten::dsolve::pk_idas_fwd_system;
-  using torsten::dsolve::idas_integrator;
-  pk_idas_fwd_system<chemical_kinetics, double, double, double> dae{
+  using torsten::dsolve::PMXIdasFwdSystem;
+  using torsten::dsolve::PMXIdasIntegrator;
+  PMXIdasFwdSystem<chemical_kinetics, double, double, double> dae{
       f, eq_id, yy0, yp0, theta, x_r, x_i, msgs};
-  idas_integrator solver(1e-4, 1e-8, 1e6);
+  PMXIdasIntegrator solver(1e-4, 1e-8, 1e6);
 
   std::vector<std::vector<double> > yy = solver.integrate(dae, t0, ts);
   EXPECT_NEAR(0.985172, yy[0][0], 1e-6);
@@ -62,15 +62,15 @@ TEST_F(IDASIntegratorTest, idas_ivp_system_yy0) {
 }
 
 TEST_F(IDASIntegratorTest, forward_sensitivity_theta_chemical) {
-  using torsten::dsolve::pk_idas_fwd_system;
+  using torsten::dsolve::PMXIdasFwdSystem;
   using stan::math::to_var;
   using stan::math::value_of;
   using stan::math::var;
 
-  torsten::dsolve::idas_integrator solver(1e-5, 1e-12, 1e6);
+  torsten::dsolve::PMXIdasIntegrator solver(1e-5, 1e-12, 1e6);
   std::vector<var> theta_var = to_var(theta);
 
-  pk_idas_fwd_system<chemical_kinetics, double, double, var> dae(
+  PMXIdasFwdSystem<chemical_kinetics, double, double, var> dae(
       f, eq_id, yy0, yp0, theta_var, x_r, x_i, msgs);
   std::vector<std::vector<var> > yy = solver.integrate(dae, t0, ts);
   EXPECT_NEAR(0.985172, value_of(yy[0][0]), 1e-6);
@@ -83,7 +83,7 @@ TEST_F(IDASIntegratorTest, forward_sensitivity_theta_chemical) {
   const double h = 1.e-2;
   const std::vector<double> theta1{theta[0] - theta[0] * h, theta[1], theta[2]};
   const std::vector<double> theta2{theta[0] + theta[0] * h, theta[1], theta[2]};
-  pk_idas_fwd_system<chemical_kinetics, double, double, double> dae1(
+  PMXIdasFwdSystem<chemical_kinetics, double, double, double> dae1(
       f, eq_id, yy0, yp0, theta1, x_r, x_i, msgs),
       dae2(f, eq_id, yy0, yp0, theta2, x_r, x_i, msgs);
   std::vector<std::vector<double> > yy1 = solver.integrate(dae1, t0, ts);
@@ -99,7 +99,7 @@ TEST_F(IDASIntegratorTest, forward_sensitivity_theta_chemical) {
 }
 
 TEST_F(IDASIntegratorTest, forward_sensitivity_theta_prey) {
-  using torsten::dsolve::pk_idas_fwd_system;
+  using torsten::dsolve::PMXIdasFwdSystem;
   using stan::math::to_var;
   using stan::math::value_of;
   using stan::math::var;
@@ -114,10 +114,10 @@ TEST_F(IDASIntegratorTest, forward_sensitivity_theta_prey) {
     ts[i] = (i + 1) * 0.1;
   theta[0] = 1.0;
 
-  torsten::dsolve::idas_integrator solver(1e-4, 1e-8, 1000);
+  torsten::dsolve::PMXIdasIntegrator solver(1e-4, 1e-8, 1000);
   std::vector<var> theta_var = to_var(theta);
 
-  pk_idas_fwd_system<prey_predator_harvest, double, double, var> dae(
+  PMXIdasFwdSystem<prey_predator_harvest, double, double, var> dae(
       f2, eq_id, yy0, yp0, theta_var, x_r, x_i, msgs);
   std::vector<std::vector<var> > yy = solver.integrate(dae, t0, ts);
 
@@ -126,7 +126,7 @@ TEST_F(IDASIntegratorTest, forward_sensitivity_theta_prey) {
   const double h = 1.e-5;
   const std::vector<double> theta1{theta[0] - theta[0] * h};
   const std::vector<double> theta2{theta[0] + theta[0] * h};
-  pk_idas_fwd_system<prey_predator_harvest, double, double, double> dae1(
+  PMXIdasFwdSystem<prey_predator_harvest, double, double, double> dae1(
       f2, eq_id, yy0, yp0, theta1, x_r, x_i, msgs),
       dae2(f2, eq_id, yy0, yp0, theta2, x_r, x_i, msgs);
   std::vector<std::vector<double> > yy1 = solver.integrate(dae1, t0, ts);
@@ -142,29 +142,29 @@ TEST_F(IDASIntegratorTest, forward_sensitivity_theta_prey) {
 }
 
 TEST_F(IDASIntegratorTest, error_handling) {
-  using torsten::dsolve::pk_idas_fwd_system;
-  using torsten::dsolve::idas_integrator;
+  using torsten::dsolve::PMXIdasFwdSystem;
+  using torsten::dsolve::PMXIdasIntegrator;
   const double rtol = 1e-4;
   const double atol = 1e-8;
   const int n = 600;
 
-  ASSERT_NO_THROW(idas_integrator(rtol, atol, n));
+  ASSERT_NO_THROW(PMXIdasIntegrator(rtol, atol, n));
 
-  EXPECT_THROW_MSG(idas_integrator(-1.0E-4, atol, n), std::invalid_argument,
+  EXPECT_THROW_MSG(PMXIdasIntegrator(-1.0E-4, atol, n), std::invalid_argument,
                    "relative tolerance");
 
-  EXPECT_THROW_MSG(idas_integrator(2.E-3, atol, n), std::invalid_argument,
+  EXPECT_THROW_MSG(PMXIdasIntegrator(2.E-3, atol, n), std::invalid_argument,
                    "relative tolerance");
 
-  EXPECT_THROW_MSG(idas_integrator(rtol, -1.E-9, n), std::invalid_argument,
+  EXPECT_THROW_MSG(PMXIdasIntegrator(rtol, -1.E-9, n), std::invalid_argument,
                    "absolute tolerance");
 
-  EXPECT_THROW_MSG(idas_integrator(rtol, atol, -100), std::invalid_argument,
+  EXPECT_THROW_MSG(PMXIdasIntegrator(rtol, atol, -100), std::invalid_argument,
                    "max_num_steps");
 
-  pk_idas_fwd_system<chemical_kinetics, double, double, double> dae{
+  PMXIdasFwdSystem<chemical_kinetics, double, double, double> dae{
       f, eq_id, yy0, yp0, theta, x_r, x_i, msgs};
-  idas_integrator solver(rtol, atol, n);
+  PMXIdasIntegrator solver(rtol, atol, n);
   double bad_t0 = std::numeric_limits<double>::infinity();
   std::vector<double> bad_ts{std::numeric_limits<double>::infinity()};
   EXPECT_THROW_MSG(solver.integrate(dae, bad_t0, ts), std::domain_error,

@@ -26,7 +26,7 @@ void idas_system_test(chemical_kinetics& f, std::vector<int> eq_id,
   std::vector<double> ts{0.1, 0.2, 0.3};
   std::ostream* msgs = 0;
 
-  torsten::dsolve::pk_idas_fwd_system<chemical_kinetics, TYY, TYP, TPAR> dae{
+  torsten::dsolve::PMXIdasFwdSystem<chemical_kinetics, TYY, TYP, TPAR> dae{
       f, eq_id, yy0, yp0, theta, x_r, x_i, msgs};
   auto n = dae.n();
   EXPECT_EQ(n, yy0.size());
@@ -57,7 +57,7 @@ void idas_forward_sen_test(chemical_kinetics& f, std::vector<int> eq_id,
   std::vector<int> x_i(2, 0);
   std::ostream* msgs = 0;
 
-  torsten::dsolve::pk_idas_fwd_system<chemical_kinetics, TYY, TYP, TPAR> dae{
+  torsten::dsolve::PMXIdasFwdSystem<chemical_kinetics, TYY, TYP, TPAR> dae{
       f, eq_id, yy0, yp0, theta, x_r, x_i, msgs};
 
   auto yy = dae.nv_yy();
@@ -110,7 +110,7 @@ TEST(IDAS_DAE_SYSTEM, idas_system_io) {
   }
 }
 
-TEST(IDAS_DAE_SYSTEM, pk_idas_fwd_system_io) {
+TEST(IDAS_DAE_SYSTEM, PMXIdasFwdSystem_io) {
   chemical_kinetics f;
   std::vector<double> yy0{1.0, 0.0, 0.0};
   std::vector<double> yp0{0.1, 0.0, 0.0};
@@ -147,7 +147,7 @@ TEST(IDAS_DAE_SYSTEM, pk_idas_fwd_system_io) {
   }
 }
 
-TEST(IDAS_DAE_SYSTEM, pk_idas_fwd_system_general) {
+TEST(IDAS_DAE_SYSTEM, PMXIdasFwdSystem_general) {
   chemical_kinetics f;
   std::vector<double> yy0{0.5, 0.4, 0.2};
   std::vector<double> yp0{0.1, 0.2, 0.3};
@@ -160,7 +160,7 @@ TEST(IDAS_DAE_SYSTEM, pk_idas_fwd_system_general) {
   std::vector<int> x_i(2, 0);
   std::ostream* msgs = 0;
 
-  torsten::dsolve::pk_idas_fwd_system<chemical_kinetics, stan::math::var,
+  torsten::dsolve::PMXIdasFwdSystem<chemical_kinetics, stan::math::var,
                                   stan::math::var, stan::math::var>
       dae{f, eq_id, yy0_var, yp0_var, theta_var, x_r, x_i, msgs};
   size_t ns = dae.ns();
@@ -222,7 +222,7 @@ TEST(IDAS_DAE_SYSTEM, pk_idas_fwd_system_general) {
 }
 
 TEST(IDAS_DAE_SYSTEM, constructor_errors) {
-  using torsten::dsolve::pk_idas_fwd_system;
+  using torsten::dsolve::PMXIdasFwdSystem;
   using stan::math::var;
   chemical_kinetics f;
   std::vector<double> yy0{0.5, 0.4, 0.2};
@@ -243,7 +243,7 @@ TEST(IDAS_DAE_SYSTEM, constructor_errors) {
                                        const std::vector<double>& yp0,
                                        const std::vector<double>& theta,
                                        const std::vector<double>& x_r) {
-    pk_idas_fwd_system<chemical_kinetics, double, double, double> dae{
+    PMXIdasFwdSystem<chemical_kinetics, double, double, double> dae{
         f, eq_id, yy0, yp0, theta, x_r, x_i, msgs};
   };
 
@@ -273,7 +273,7 @@ TEST(IDAS_DAE_SYSTEM, constructor_errors) {
                                     const std::vector<var>& yp0,
                                     const std::vector<var>& theta,
                                     const std::vector<double>& x_r) {
-    pk_idas_fwd_system<chemical_kinetics, var, var, var> dae{
+    PMXIdasFwdSystem<chemical_kinetics, var, var, var> dae{
         f, eq_id, yy0, yp0, theta, x_r, x_i, msgs};
   };
 
