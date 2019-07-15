@@ -17,6 +17,42 @@
 namespace torsten {
   namespace test {
     /*
+     * Test @c std::vector<var> results between two results.
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     */
+    template<typename T1, typename T2>
+    inline void test_val(const T1& y1, const T2& y2) {
+      using stan::math::value_of;
+      EXPECT_FLOAT_EQ(value_of(y1), value_of(y2));
+    }
+
+    /*
+     * Test @c std::vector<var> results between two results. 
+     * An example use would be to have the results coming from torsten
+     * and stan, respectively, so ensure the soundness of
+     * torsten results.
+     *
+     * @param y1 one result
+     * @param y2 the other result to be compared against
+     *              with, must of same shape and size as to @c pk_y
+     */
+    template<typename T1, typename T2>
+    inline void test_val(const std::vector<T1>& y1,
+                         const std::vector<T2>& y2) {
+      using stan::math::value_of;
+      EXPECT_EQ(y1.size(), y2.size());
+      for (size_t i = 0; i < y1.size(); ++i) {
+        EXPECT_FLOAT_EQ(value_of(y1[i]), value_of(y2[i]));
+      }
+    }
+
+    /*
      * Test @c std::vector<var> results between two results. 
      * An example use would be to have the results coming from torsten
      * and stan, respectively, so ensure the soundness of

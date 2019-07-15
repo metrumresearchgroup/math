@@ -6,7 +6,7 @@ endif
 
 # turning on braid implies using MPI
 ifdef TORSTEN_BRAID
-  TORSTEN_MPI = 1
+  TORSTEN_MPI = 2
   CXXFLAGS_MPI += -DTORSTEN_BRAID -isystem $(BRAID_PATH)/braid
   LDLIBS_MPI += $(LIBBRAID)
   LDLIBS_MPI += $(BRAID_PATH)/braid/libbraid.a
@@ -16,6 +16,9 @@ endif
 ifdef TORSTEN_MPI
   # LIBMPI ?=
   CXXFLAGS_MPI += -DTORSTEN_MPI
+  ifeq ($(TORSTEN_MPI), 2)
+    CXXFLAGS_MPI += -DTORSTEN_MPI_DYN # dynamic load balance
+  endif
   CXXFLAGS += $(CXXFLAGS_MPI)
   LDFLAGS += $(LDFLAGS_MPI)
   CC=mpicxx
