@@ -1,4 +1,4 @@
-#ifdef TORSTEN_MPI
+#ifdef TORSTEN_MPI_DYN
 
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
@@ -62,7 +62,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_set_use_uniform_work) {
   vector<vector<int> > x_i_m (np, x_i);
 
   torsten::mpi::Communicator pmx_comm(torsten::mpi::Session<NUM_TORSTEN_COMM>::env, MPI_COMM_WORLD);
-  torsten::mpi::PMXDynamicLoad<torsten::dsolve::pmx_ode_group_mpi_functor> load(pmx_comm);
+  torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
 
   load.init_buf = std::vector<int>{0, 1, static_cast<int>(y0.size()), static_cast<int>(theta.size()), static_cast<int>(x_r.size()), static_cast<int>(x_i.size()), 0, 0, 0};
   load.set_work(1, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-10, 10000);
@@ -109,7 +109,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_set_use_non_uniform_work) {
   x_i.push_back(1.0); vector<vector<int> > x_i_m (np, x_i);
 
   torsten::mpi::Communicator pmx_comm(torsten::mpi::Session<NUM_TORSTEN_COMM>::env, MPI_COMM_WORLD);
-  torsten::mpi::PMXDynamicLoad<torsten::dsolve::pmx_ode_group_mpi_functor> load(pmx_comm);
+  torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
 
   load.init_buf = std::vector<int>{0, 1, static_cast<int>(y0.size()), static_cast<int>(theta.size()), static_cast<int>(x_r.size()), static_cast<int>(x_i.size()), 0, 0, 0};
   load.set_work(1, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-10, 10000);
@@ -158,15 +158,16 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_single_work) {
   vector<vector<int> > x_i_m (np, x_i);
 
   torsten::mpi::Communicator pmx_comm(torsten::mpi::Session<NUM_TORSTEN_COMM>::env, MPI_COMM_WORLD);
-  torsten::mpi::PMXDynamicLoad<torsten::dsolve::pmx_ode_group_mpi_functor> load(pmx_comm);
 
   torsten::dsolve::pmx_ode_group_mpi_functor fdyn(0);
   if (pmx_comm.rank == 0) {
-    MatrixXd res = load.master(fdyn, 1, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
+    MatrixXd res = load.master(f, 1, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
     MatrixXd sol = torsten::to_matrix(pmx_integrate_ode_adams(f, y0, t0, ts, theta, x_r, x_i, 0, 1.e-8, 1.e-8, 10000));
     torsten::test::test_val(res, sol);
     load.kill_slaves();
   } else {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   }
 }
@@ -175,12 +176,13 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_multiple_unifor
   torsten::mpi::Envionment::init();
 
   torsten::mpi::Communicator pmx_comm(torsten::mpi::Session<NUM_TORSTEN_COMM>::env, MPI_COMM_WORLD);
-  torsten::mpi::PMXDynamicLoad<torsten::dsolve::pmx_ode_group_mpi_functor> load(pmx_comm);
   std::vector<double> ts0 {ts};
 
   if (pmx_comm.rank > 0) {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
     for (int np = 1; np < 8; ++np) {
       vector<int> len(np, ts0.size());
       vector<double> ts_m;
@@ -192,29 +194,29 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_multiple_unifor
       vector<vector<double> > x_r_m (np, x_r);
       vector<vector<int> > x_i_m (np, x_i);
 
-      torsten::dsolve::pmx_ode_group_mpi_functor fdyn(0);
-      MatrixXd res = load.master(fdyn, 1, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      MatrixXd res = load.master(f, 1, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       MatrixXd sol = torsten::to_matrix(pmx_integrate_ode_adams(f, y0, t0, ts, theta, x_r, x_i, 0, 1.e-8, 1.e-8, 10000));
       for (int i = 0; i < np; ++i) {
         MatrixXd res_i = res.block(0, ts.size() * i, y0.size(), ts.size());
         torsten::test::test_val(res_i, sol);
       }
     }
-  }
 
-  load.kill_slaves();
+    load.kill_slaves();
+  }
 }
 
 TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_bdf_master_slave_multiple_non_uniform_work) {
   torsten::mpi::Envionment::init();
 
   torsten::mpi::Communicator pmx_comm(torsten::mpi::Session<NUM_TORSTEN_COMM>::env, MPI_COMM_WORLD);
-  torsten::mpi::PMXDynamicLoad<pmx_ode_group_mpi_functor> load(pmx_comm);
   std::vector<double> ts0 {ts};
 
   if (pmx_comm.rank > 0) {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
     const int np = 7;
     vector<int> len{19, 17, 10, 14, 18, 17, 16};
     vector<double> ts_m;
@@ -230,7 +232,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_bdf_master_slave_multiple_no
 
     size_t integ_id = integrator_id<PMXCvodesFwdSystem<TwoCptNeutModelODE, double, double, double, CV_BDF, AD>>::value;
     pmx_ode_group_mpi_functor fdyn(0);
-    MatrixXd res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+    MatrixXd res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
     int ic = 0;
     for (int i = 0; i < np; ++i) {
       std::vector<double> ts_i(ts0.begin(), ts0.begin() + len[i]);
@@ -239,21 +241,21 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_bdf_master_slave_multiple_no
       torsten::test::test_val(res_i, sol);
       ic += len[i];
     }
+    load.kill_slaves();
   }
-
-  load.kill_slaves();
 }
 
 TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_par_multiple_non_uniform_work) {
   torsten::mpi::Envionment::init();
 
   torsten::mpi::Communicator pmx_comm(torsten::mpi::Session<NUM_TORSTEN_COMM>::env, MPI_COMM_WORLD);
-  torsten::mpi::PMXDynamicLoad<pmx_ode_group_mpi_functor> load(pmx_comm);
   std::vector<double> ts0 {ts};
 
   if (pmx_comm.rank > 0) {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
     vector<int> len{19, 17, 10, 14, 18, 17, 16};
     const int np = len.size();
     vector<var> ts_m;
@@ -270,8 +272,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_par_multiple
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, var, double, double, CV_BDF, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<var>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -288,8 +289,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_par_multiple
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, var, double, double, CV_ADAMS, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<var>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -307,8 +307,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_par_multiple
       using scheme_t = boost::numeric::odeint::runge_kutta_dopri5<std::vector<double>, double, std::vector<double>, double>;
       using Ode = dsolve::PMXOdeintSystem<TwoCptNeutModelODE, var, double, double>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<var>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -321,21 +320,21 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_par_multiple
         its += len[i];
       }
     }
+    load.kill_slaves();
   }
-
-  load.kill_slaves();
 }
 
 TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_theta_par_multiple_non_uniform_work) {
   torsten::mpi::Envionment::init();
 
   torsten::mpi::Communicator pmx_comm(torsten::mpi::Session<NUM_TORSTEN_COMM>::env, MPI_COMM_WORLD);
-  torsten::mpi::PMXDynamicLoad<pmx_ode_group_mpi_functor> load(pmx_comm);
   std::vector<double> ts0 {ts};
 
   if (pmx_comm.rank > 0) {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
     vector<int> len{19, 17, 10, 14, 18, 17, 16};
     const int np = len.size();
     vector<double> ts_m;
@@ -361,8 +360,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_theta_par_multi
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, double, double, var, CV_BDF, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<double>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -378,8 +376,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_theta_par_multi
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, double, double, var, CV_ADAMS, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<double>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -396,8 +393,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_theta_par_multi
       using scheme_t = boost::numeric::odeint::runge_kutta_dopri5<std::vector<double>, double, std::vector<double>, double>;
       using Ode = dsolve::PMXOdeintSystem<TwoCptNeutModelODE, double, double, var>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<double>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -409,21 +405,21 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_theta_par_multi
         its += len[i];
       }
     }
+    load.kill_slaves();
   }
-
-  load.kill_slaves();
 }
 
 TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_y0_par_multiple_non_uniform_work) {
   torsten::mpi::Envionment::init();
 
   torsten::mpi::Communicator pmx_comm(torsten::mpi::Session<NUM_TORSTEN_COMM>::env, MPI_COMM_WORLD);
-  torsten::mpi::PMXDynamicLoad<pmx_ode_group_mpi_functor> load(pmx_comm);
   std::vector<double> ts0 {ts};
 
   if (pmx_comm.rank > 0) {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
     vector<int> len{19, 17, 10, 14, 18, 17, 16};
     const int np = len.size();
     vector<double> ts_m;
@@ -457,8 +453,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_y0_par_multiple
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, double, var, double, CV_BDF, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<double>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -474,8 +469,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_y0_par_multiple
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, double, var, double, CV_ADAMS, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<double>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -492,8 +486,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_y0_par_multiple
       using scheme_t = boost::numeric::odeint::runge_kutta_dopri5<std::vector<double>, double, std::vector<double>, double>;
       using Ode = dsolve::PMXOdeintSystem<TwoCptNeutModelODE, double, var, double>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<double>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -505,21 +498,21 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_y0_par_multiple
         its += len[i];
       }
     }
+    load.kill_slaves();
   }
-
-  load.kill_slaves();
 }
 
 TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_y0_theta_par_multiple_non_uniform_work) {
   torsten::mpi::Envionment::init();
 
   torsten::mpi::Communicator pmx_comm(torsten::mpi::Session<NUM_TORSTEN_COMM>::env, MPI_COMM_WORLD);
-  torsten::mpi::PMXDynamicLoad<pmx_ode_group_mpi_functor> load(pmx_comm);
   std::vector<double> ts0 {ts};
 
   if (pmx_comm.rank > 0) {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
     vector<int> len{19, 17, 10, 14, 18, 17, 16};
     const int np = len.size();
     vector<double> ts_m;
@@ -553,8 +546,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_y0_theta_par_mu
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, double, var, var, CV_ADAMS, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<double>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -573,8 +565,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_y0_theta_par_mu
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, double, var, var, CV_BDF, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<double>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -594,8 +585,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_y0_theta_par_mu
       using scheme_t = boost::numeric::odeint::runge_kutta_dopri5<std::vector<double>, double, std::vector<double>, double>;
       using Ode = dsolve::PMXOdeintSystem<TwoCptNeutModelODE, double, var, var>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<double>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -610,21 +600,21 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_y0_theta_par_mu
         its += len[i];
       }
     }
+    load.kill_slaves();
   }
-
-  load.kill_slaves();
 }
 
 TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_y0_theta_par_multiple_non_uniform_work) {
   torsten::mpi::Envionment::init();
 
   torsten::mpi::Communicator pmx_comm(torsten::mpi::Session<NUM_TORSTEN_COMM>::env, MPI_COMM_WORLD);
-  torsten::mpi::PMXDynamicLoad<pmx_ode_group_mpi_functor> load(pmx_comm);
   std::vector<double> ts0 {ts};
 
   if (pmx_comm.rank > 0) {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
     vector<int> len{19, 17, 10, 14, 18, 17, 16};
     const int np = len.size();
     vector<var> ts_m;
@@ -658,8 +648,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_y0_theta_par
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, var, var, var, CV_BDF, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<var>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -679,8 +668,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_y0_theta_par
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, var, var, var, CV_ADAMS, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<var>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -701,8 +689,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_y0_theta_par
       using scheme_t = boost::numeric::odeint::runge_kutta_dopri5<std::vector<double>, double, std::vector<double>, double>;
       using Ode = dsolve::PMXOdeintSystem<TwoCptNeutModelODE, var, var, var>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<var>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -718,21 +705,21 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_y0_theta_par
         its += len[i];
       }
     }
+    load.kill_slaves();
   }
-
-  load.kill_slaves();
 }
 
 TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_y0_par_multiple_non_uniform_work) {
   torsten::mpi::Envionment::init();
 
   torsten::mpi::Communicator pmx_comm(torsten::mpi::Session<NUM_TORSTEN_COMM>::env, MPI_COMM_WORLD);
-  torsten::mpi::PMXDynamicLoad<pmx_ode_group_mpi_functor> load(pmx_comm);
   std::vector<double> ts0 {ts};
 
   if (pmx_comm.rank > 0) {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
     vector<int> len{19, 17, 10, 14, 18, 17, 16};
     const int np = len.size();
     vector<var> ts_m;
@@ -758,8 +745,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_y0_par_multi
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, var, var, double, CV_ADAMS, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<var>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -778,8 +764,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_y0_par_multi
     {
       using Ode = PMXCvodesFwdSystem<TwoCptNeutModelODE, var, var, double, CV_BDF, AD>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<var>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -799,8 +784,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_y0_par_multi
       using scheme_t = boost::numeric::odeint::runge_kutta_dopri5<std::vector<double>, double, std::vector<double>, double>;
       using Ode = dsolve::PMXOdeintSystem<TwoCptNeutModelODE, var, var, double>;
       size_t integ_id = integrator_id<Ode>::value;
-      pmx_ode_group_mpi_functor fdyn(0);
-      Matrix<var, -1, -1> res = load.master(fdyn, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
+      Matrix<var, -1, -1> res = load.master(f, integ_id, y0_m, t0, len, ts_m, theta_m, x_r_m, x_i_m, 1.e-8, 1.e-8, 10000);
       std::vector<var>::const_iterator its = ts_m.begin();
       int ic = 0;
       for (int i = 0; i < np; ++i) {
@@ -815,9 +799,8 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_master_slave_ts_y0_par_multi
         its += len[i];
       }
     }
+    load.kill_slaves();
   }
-
-  load.kill_slaves();
 }
 
 

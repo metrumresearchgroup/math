@@ -43,6 +43,9 @@ test/unit/multiple_translation_units_test$(EXE): test/unit/libmultiple.so
 TORSTEN_TESTS := $(subst .cpp,$(EXE),$(shell find test/unit/math/torsten -name *_test.cpp))
 $(TORSTEN_TESTS) : $(LIBSUNDIALS)
 
+TORSTEN_MPI_DYN_TESTS := $(subst .cpp,$(EXE),$(shell find test/unit/math/torsten -name mpi_dynamic_load*_test.cpp))
+$(TORSTEN_MPI_DYN_TESTS) : CXXFLAGS_MPI += -DTORSTEN_MPI_DYN
+
 ############################################################
 #
 # CVODES tests
