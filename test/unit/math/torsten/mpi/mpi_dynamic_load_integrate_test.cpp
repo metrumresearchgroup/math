@@ -251,36 +251,46 @@ TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_uniform_theta) {
 
 }
 
-// TEST_F(TorstenOdeTest_neutropenia, mpi_rank_exception_data_only) {
-//   const int np = 5;
+TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_uniform_theta_exception) {
+  torsten::mpi::Envionment::init();
 
-//   vector<int> len(np, ts.size());
-//   vector<double> ts_m;
-//   ts_m.reserve(np * ts.size());
-//   for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts.begin(), ts.end());
+  const torsten::mpi::Communicator& pmx_comm =
+    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM];
 
-//   vector<vector<double> > y0_m (np, y0);
-//   vector<vector<double> > theta_m (np, theta);
-//   vector<vector<double> > x_r_m (np, x_r);
-//   vector<vector<int> > x_i_m (np, x_i);
+  if (pmx_comm.rank > 0) {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
+    load.slave();
+  } else {
+    torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_MASTER> load(pmx_comm);
+    const int np = 10;
 
-//   torsten::mpi::Envionment::init();
+    vector<var> theta_var = stan::math::to_var(theta);
 
-// #ifdef TORSTEN_MPI
-//   MPI_Comm comm;
-//   comm = MPI_COMM_WORLD;
-//   int rank, size;
-//   MPI_Comm_size(comm, &size);
-//   MPI_Comm_rank(comm, &rank);
-// #endif
+    vector<int> len(np, ts.size());
+    vector<double> ts_m;
+    ts_m.reserve(np * ts.size());
+    for (int i = 0; i < np; ++i) ts_m.insert(ts_m.end(), ts.begin(), ts.end());
 
-//   int id = 1;
+    vector<vector<double> > y0_m (np, y0);
+    vector<vector<var> > theta_var_m (np, stan::math::to_var(theta));
+    vector<vector<double> > x_r_m (np, x_r);
+    vector<vector<int> > x_i_m (np, x_i);
 
-//   theta_m[id][0] = std::numeric_limits<double>::infinity();
-//   EXPECT_THROW(torsten::pmx_integrate_ode_group_bdf(f, y0_m, t0, len, ts_m, theta_m , x_r_m, x_i_m),
-//                std::exception);
-//   EXPECT_THROW(torsten::pmx_integrate_ode_group_adams(f, y0_m, t0, len, ts_m, theta_m , x_r_m, x_i_m),
-//                std::exception);
+    std::stringstream expected_message;
+    EXPECT_THROW(pmx_integrate_ode_group_adams(f, y0_m, t0, len, ts_m, theta_var_m , x_r_m, x_i_m,
+                                               0, 1e-10, 1e-10, 1),
+                 std::exception);
+    EXPECT_THROW(pmx_integrate_ode_group_bdf(f, y0_m, t0, len, ts_m, theta_var_m , x_r_m, x_i_m,
+                                             0, 1e-10, 1e-10, 1),
+                 std::exception);
+    EXPECT_THROW(pmx_integrate_ode_group_rk45(f, y0_m, t0, len, ts_m, theta_var_m , x_r_m, x_i_m,
+                                              0, 1e-10, 1e-10, 1),
+                 std::exception);
+
+    load.kill_slaves();
+  }
+}
+
 // #ifdef TORSTEN_MPI
 //   MPI_Barrier(comm);
 // #endif
