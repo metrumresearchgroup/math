@@ -22,14 +22,23 @@
 #include <ctime>
 #include <random>
 
-template<typename... Args>
-inline auto torsten::dsolve::pmx_ode_group_mpi_functor::operator()(Args&&... args) const {
-    if (id == 0) { const TwoCptNeutModelODE f; return f(std::forward<Args>(args)...); }
+namespace torsten {
+  namespace dsolve {
 
-    // return default
-    TwoCptNeutModelODE f;
-    return f(std::forward<Args>(args)...);
+    template<typename... Args>
+    inline auto torsten::dsolve::pmx_ode_group_mpi_functor::operator()(Args&&... args) const {
+      if (id == 0) { const TwoCptNeutModelODE f; return f(std::forward<Args>(args)...); }
+
+      // return default
+      TwoCptNeutModelODE f;
+      return f(std::forward<Args>(args)...);
+    }
+
+    template<>
+    struct pmx_ode_group_mpi_functor_id<TwoCptNeutModelODE> { static constexpr int value = 0; };
+  }
 }
+
 
 using torsten::dsolve::PMXCvodesFwdSystem;
 using torsten::dsolve::pmx_ode_group_mpi_functor;

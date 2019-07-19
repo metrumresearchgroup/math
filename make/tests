@@ -46,8 +46,10 @@ $(TORSTEN_TESTS) : $(LIBSUNDIALS)
 TORSTEN_MPI_DYN_TESTS_DEP := $(subst .cpp,.d,$(shell find test/unit/math/torsten -name mpi_dynamic_load*_test.cpp))
 $(TORSTEN_MPI_DYN_TESTS_DEP) : CXXFLAGS_MPI += -DTORSTEN_MPI_DYN
 
-TORSTEN_MPI_DYN_TESTS := $(subst .cpp,$(EXE),$(shell find test/unit/math/torsten -name mpi_dynamic_load*_test.cpp))
-$(TORSTEN_MPI_DYN_TESTS) : CXXFLAGS_MPI += -DTORSTEN_MPI_DYN
+ifdef TORSTEN_MPI
+  TORSTEN_MPI_DYN_TESTS := $(subst .cpp,$(EXE),$(shell find test/unit/math/torsten -name mpi_dynamic_load*_test.cpp))
+  $(TORSTEN_MPI_DYN_TESTS) : CXXFLAGS_MPI += -DTORSTEN_MPI_DYN
+endif
 
 ############################################################
 #

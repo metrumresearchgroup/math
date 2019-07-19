@@ -37,25 +37,30 @@ using stan::math::matrix_v;
 using stan::math::var;
 using std::vector;
 
-template<typename... Args>
-inline auto torsten::dsolve::pmx_ode_group_mpi_functor::operator()(Args&&... args) const {
-    if (id == 0) { const TwoCptNeutModelODE f; return f(std::forward<Args>(args)...); }
-    if (id == 1) { const chemical_kinetics f; return f(std::forward<Args>(args)...); }
-    if (id == 2) { const lorenz_ode_fun f; return f(std::forward<Args>(args)...); }
+namespace torsten {
+  namespace dsolve {
+    template<typename... Args>
+    inline auto torsten::dsolve::pmx_ode_group_mpi_functor::operator()(Args&&... args) const {
+      if (id == 0) { const TwoCptNeutModelODE f; return f(std::forward<Args>(args)...); }
+      if (id == 1) { const chemical_kinetics f; return f(std::forward<Args>(args)...); }
+      if (id == 2) { const lorenz_ode_fun f; return f(std::forward<Args>(args)...); }
 
-    // return default
-    TwoCptNeutModelODE f;
-    return f(std::forward<Args>(args)...);
+      // return default
+      TwoCptNeutModelODE f;
+      return f(std::forward<Args>(args)...);
+    }
+
+    template<>
+    struct pmx_ode_group_mpi_functor_id<TwoCptNeutModelODE> { static constexpr int value = 0; };
+    template<>
+    struct pmx_ode_group_mpi_functor_id<chemical_kinetics> { static constexpr int value = 1; };
+    template<>
+    struct pmx_ode_group_mpi_functor_id<lorenz_ode_fun> { static constexpr int value = 2; };
+  }
 }
 
-template<>
-struct pmx_ode_group_mpi_functor_id<TwoCptNeutModelODE> { static constexpr int value = 0; };
-template<>
-struct pmx_ode_group_mpi_functor_id<chemical_kinetics> { static constexpr int value = 1; };
-template<>
-struct pmx_ode_group_mpi_functor_id<lorenz_ode_fun> { static constexpr int value = 2; };
 
-TEST_F(TorstenOdeTest_chem, cvodes_ivp_system_bdf_mpi) {
+TEST_F(TorstenOdeTest_chem, mpi_dynamic_load_cvodes_ivp_system_bdf_mpi) {
   torsten::mpi::Envionment::init();
 
   const torsten::mpi::Communicator& pmx_comm =
@@ -118,7 +123,7 @@ TEST_F(TorstenOdeTest_chem, cvodes_ivp_system_bdf_mpi) {
 
 }
 
-TEST_F(TorstenOdeTest_chem, fwd_sensitivity_non_uniform_theta) {
+TEST_F(TorstenOdeTest_chem, mpi_dynamic_load_fwd_sensitivity_non_uniform_theta) {
   torsten::mpi::Envionment::init();
 
   const torsten::mpi::Communicator& pmx_comm =
@@ -186,7 +191,7 @@ TEST_F(TorstenOdeTest_chem, fwd_sensitivity_non_uniform_theta) {
 
 }
 
-TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_uniform_theta) {
+TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_fwd_sensitivity_uniform_theta) {
   torsten::mpi::Envionment::init();
 
   const torsten::mpi::Communicator& pmx_comm =
@@ -251,7 +256,7 @@ TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_uniform_theta) {
 
 }
 
-TEST_F(TorstenOdeTest_neutropenia, fwd_sensitivity_uniform_theta_exception) {
+TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_fwd_sensitivity_uniform_theta_exception) {
   torsten::mpi::Envionment::init();
 
   const torsten::mpi::Communicator& pmx_comm =
