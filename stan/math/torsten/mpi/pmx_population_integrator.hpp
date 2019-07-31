@@ -6,6 +6,7 @@
 #include <stan/math/torsten/mpi/session.hpp>
 #include <stan/math/torsten/mpi/my_worker.hpp>
 #include <stan/math/torsten/mpi/dynamic_load.hpp>
+#include <stan/math/torsten/mpi/slave_and_cleaner.hpp>
 #include <stan/math/torsten/return_type.hpp>
 #include <stan/math/torsten/is_var.hpp>
 #include <algorithm>
@@ -41,7 +42,15 @@ namespace torsten {
 #ifdef TORSTEN_MPI_DYN
       /*
        * MPI solution with per-subject parameters, using
-       * #dynamic load balance
+       * dynamic load balance. We use a static @c slave_and_cleaner
+       * object to initialize & dismiss slaves. The first
+       * call to this function initialize the slaves, which
+       * will stay in working loop afterwards, until the destructor
+       * of @c slave_and_cleaner calls @c
+       * kill_slaves(). This happens at the end of
+       * program. After exiting working loop the slaves will
+       * move above the stack by throwing a harmless @c runtime_error,
+       * which is caught in @c stan::lang::initialize
        *
        * @tparam Tt time type
        * @tparam T_initial @c y0 type
@@ -70,8 +79,12 @@ namespace torsten {
                  std::ostream* msgs) {
         using torsten::dsolve::pmx_ode_group_mpi_functor;
         using torsten::dsolve::pmx_ode_group_mpi_functor_id;
+        using torsten::mpi::Communicator;
+        using torsten::mpi::PMXDynamicLoad;
 
-        torsten::mpi::Communicator& pmx_comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM];
+        static slave_and_cleaner session_load(torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM]);
+        const torsten::mpi::Communicator& pmx_comm = session_load.pmx_comm;
+
         int integ_id = torsten::dsolve::integrator_id<ode_t<F, Tt, T_initial, T_param, ode_pars_t...>>::value;
         int functor_id = pmx_ode_group_mpi_functor_id<F>::value;
 

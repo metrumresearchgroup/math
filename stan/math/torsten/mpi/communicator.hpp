@@ -45,7 +45,7 @@ namespace torsten {
       /*
        * type-cast to MPI_Comm object
        */
-      operator MPI_Comm() {
+      operator MPI_Comm() const {
         return this -> comm;
       }
 

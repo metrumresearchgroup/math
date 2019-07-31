@@ -608,6 +608,7 @@ namespace torsten {
 
       ~PMXDynamicLoad() {
         if(slave_alive) kill_slaves();
+        slave_alive = false;
       }
     };
 
