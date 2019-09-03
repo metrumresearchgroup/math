@@ -1073,15 +1073,17 @@ TEST_F(TorstenOdeTest_neutropenia, max_cvodes_fails) {
 
 TEST_F(TorstenOneCptTest, ss_multiple_infusion_rate) {
   time[0] = 0.0;
-  for(int i = 1; i < 10; i++) time[i] = time[i - 1] + 8.0;
+  for(int i = 1; i < 10; i++) time[i] = time[i - 1] + 3.0;
 
   amt[0] = 800;
-  std::fill(rate.begin(), rate.end(), 150.0);
-  ii[0] = 5;
-  ii[5] = 2;
+  std::fill(rate.begin(), rate.end(), 350.0);
+  ii[0] = 2.5;
+  ii[2] = 2;
   addl[0] = 0;
   ss[0] = 1;
-  ss[5] = 1;
+  ss[2] = 1;
+
+  resize(4);
 
   double rel_tol = 1e-8, abs_tol = 1e-8;
   long int max_num_steps = 1e8;
@@ -1090,15 +1092,47 @@ TEST_F(TorstenOneCptTest, ss_multiple_infusion_rate) {
   TORSTEN_ODE_GRAD_RATE_TEST(pmx_solve_rk45, f, nCmt,
                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                              rel_tol, abs_tol, max_num_steps,
-                             1e-3, 1e-6, 1e-6, 1e-6);
+                             1e-3, 1e-6, 1e-5, 1e-6);
 
   TORSTEN_ODE_GRAD_RATE_TEST(pmx_solve_bdf, f, nCmt,
                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                              rel_tol, abs_tol, max_num_steps,
-                             1e-3, 1e-10, 6e-5, 2e-8);
+                             1e-3, 1e-10, 1e-4, 2e-8);
 
   TORSTEN_ODE_GRAD_RATE_TEST(pmx_solve_adams, f, nCmt,
                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                              rel_tol, abs_tol, max_num_steps,
-                             1e-3, 1e-8, 1e-6, 1e-8);
+                             1e-3, 1e-8, 1e-5, 1e-8);
+}
+
+TEST_F(TorstenOneCptTest, multiple_infusion_rate) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 10.0;
+  resize(3);
+
+  std::vector<var> time_var(time.begin(), time.end());
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  rate[0] = 310;
+  rate[1] = 310;
+  rate[2] = 200;
+  addl[0] = 0;
+  ss[0] = 0;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  TORSTEN_ODE_GRAD_RATE_TEST(pmx_solve_bdf, f, nCmt,
+                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                             rel_tol, abs_tol, max_num_steps,
+                             2e-5, 1e-6, 1e-3, 1e-5);
+
+  amt[0] = 0;
+  amt[1] = 0;
+  TORSTEN_ODE_GRAD_RATE_TEST(pmx_solve_bdf, f, nCmt,
+                             time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                             rel_tol, abs_tol, max_num_steps,
+                             2e-5, 1e-6, 1e-3, 1e-5);
 }
