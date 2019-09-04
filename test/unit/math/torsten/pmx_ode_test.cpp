@@ -1248,3 +1248,123 @@ TEST_F(TorstenTwoCptTest, multiple_bolus_amt) {
                             rel_tol, abs_tol, max_num_steps,
                             2e-5, 1e-6, 2e-3, 1e-5);
 }
+
+TEST_F(TorstenOneCptTest, multiple_infusion_time) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 10.0;
+  resize(3);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  amt[2] = 800;
+  rate[0] = 310;
+  rate[1] = 310;
+  rate[2] = 310;
+  addl[0] = 1;
+  ii[0] = 2;
+  ss[0] = 0;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<var> time_var(time.begin(), time.end());
+
+  TORSTEN_ODE_GRAD_TIME_TEST(pmx_solve_bdf, f, nCmt,
+                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                              rel_tol, abs_tol, max_num_steps,
+                              2e-5, 1e-6, 1e-5, 1e-5);
+
+}
+
+TEST_F(TorstenOneCptTest, multiple_bolus_time) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 10.0;
+  resize(3);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  amt[2] = 800;
+  rate[0] = 310;
+  rate[1] = 310;
+  rate[2] = 310;
+  addl[0] = 0;
+  ii[0] = 0;
+  ss[0] = 0;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<var> time_var(time.begin(), time.end());
+
+  TORSTEN_ODE_GRAD_TIME_TEST(pmx_solve_bdf, f, nCmt,
+                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                              rel_tol, abs_tol, max_num_steps,
+                              2e-5, 1e-6, 5e-5, 1e-5);
+
+}
+
+TEST_F(TorstenOneCptTest, ss_multiple_infusion_time) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 10.0;
+  resize(3);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  amt[2] = 800;
+  rate[0] = 310;
+  rate[1] = 310;
+  rate[2] = 310;
+  addl[0] = 0;
+  ii[0] = 4;
+  ii[1] = 5;
+  ii[2] = 5;
+  ss[0] = 1;
+  ss[1] = 1;
+  ss[2] = 1;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<var> time_var(time.begin(), time.end());
+
+  TORSTEN_ODE_GRAD_TIME_TEST(pmx_solve_bdf, f, nCmt,
+                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                              rel_tol, abs_tol, max_num_steps,
+                              2e-5, 1e-6, 5e-5, 1e-5);
+
+}
+
+TEST_F(TorstenOneCptTest, ss_multiple_bolus_time) {
+  time[0] = 0.0;
+  time[1] = 2.0;
+  time[2] = 3.0;
+  time[3] = 10.0;
+  resize(4);
+
+  amt[0] = 1200;
+  amt[1] = 0;
+  amt[2] = 1100;
+  rate[0] = 0;
+  rate[1] = 0;
+  addl[0] = 0;
+  ii[0] = 2;
+  ii[1] = 0;
+  ii[2] = 3;
+  ss[0] = 1;
+  ss[2] = 1;
+  cmt[0] = 1;
+  cmt[2] = 2;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<var> time_var(time.begin(), time.end());
+
+  TORSTEN_ODE_GRAD_TIME_TEST(pmx_solve_bdf, f, nCmt,
+                              time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                              rel_tol, abs_tol, max_num_steps,
+                              2e-5, 1e-6, 1e-5, 8e-5);
+}
