@@ -1325,4 +1325,18 @@ namespace torsten {
     torsten::test::test_grad(f1, f2, TIME, H, EPS_VAL, EPS_RTOL, EPS_ATOL);                                       \
   }
 
+#define TORSTEN_ODE_GRAD_II_TEST(FUN, F, NCMT, TIME, AMT, RATE, II, EVID, CMT, ADDL, SS, THETA, BIOVAR, TLAG,     \
+                                   RTOL, ATOL, NSTEP,                                                             \
+                                    H, EPS_VAL, EPS_RTOL, EPS_ATOL)                                               \
+   {                                                                                                              \
+     auto f1 = [&] (std::vector<double>& x) {                                                                     \
+       return FUN(F, NCMT, TIME, AMT, RATE, x, EVID, CMT, ADDL, SS, THETA, BIOVAR, TLAG, 0, RTOL, ATOL, NSTEP);   \
+     };                                                                                                           \
+     auto f2 = [&] (std::vector<stan::math::var>& x) {                                                            \
+       return FUN(F, NCMT, TIME, AMT, RATE, x, EVID, CMT, ADDL, SS, THETA, BIOVAR, TLAG, 0, RTOL, ATOL, NSTEP);   \
+     };                                                                                                           \
+     torsten::test::test_grad(f1, f2, II, H, EPS_VAL, EPS_RTOL, EPS_ATOL);                                        \
+   }
+
+
 #endif

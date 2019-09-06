@@ -1268,13 +1268,10 @@ TEST_F(TorstenOneCptTest, multiple_infusion_time) {
   double rel_tol = 1e-8, abs_tol = 1e-8;
   long int max_num_steps = 1e8;
 
-  std::vector<var> time_var(time.begin(), time.end());
-
   TORSTEN_ODE_GRAD_TIME_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 1e-5);
-
 }
 
 TEST_F(TorstenOneCptTest, multiple_bolus_time) {
@@ -1295,8 +1292,6 @@ TEST_F(TorstenOneCptTest, multiple_bolus_time) {
 
   double rel_tol = 1e-8, abs_tol = 1e-8;
   long int max_num_steps = 1e8;
-
-  std::vector<var> time_var(time.begin(), time.end());
 
   TORSTEN_ODE_GRAD_TIME_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
@@ -1327,8 +1322,6 @@ TEST_F(TorstenOneCptTest, ss_multiple_infusion_time) {
 
   double rel_tol = 1e-8, abs_tol = 1e-8;
   long int max_num_steps = 1e8;
-
-  std::vector<var> time_var(time.begin(), time.end());
 
   TORSTEN_ODE_GRAD_TIME_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
@@ -1361,10 +1354,33 @@ TEST_F(TorstenOneCptTest, ss_multiple_bolus_time) {
   double rel_tol = 1e-8, abs_tol = 1e-8;
   long int max_num_steps = 1e8;
 
-  std::vector<var> time_var(time.begin(), time.end());
-
   TORSTEN_ODE_GRAD_TIME_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
                               2e-5, 1e-6, 1e-5, 8e-5);
+}
+
+TEST_F(TorstenOneCptTest, ss_multiple_bolus_ii) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  resize(2);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  rate[0] = 0;
+  rate[1] = 0;
+  addl[0] = 2;
+  addl[1] = 0;
+  ii[0] = 1.4;
+  ii[1] = 0.7;
+  ss[0] = 1;
+  ss[1] = 0;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  TORSTEN_ODE_GRAD_II_TEST(pmx_solve_bdf, f, nCmt,
+                           time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                           rel_tol, abs_tol, max_num_steps,
+                           2e-5, 1e-6, 1e-6, 1e-8);
 }
