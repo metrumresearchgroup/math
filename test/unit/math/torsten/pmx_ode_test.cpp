@@ -1463,3 +1463,259 @@ TEST_F(TorstenTwoCptTest, ss_multiple_infusion_amt_rate) {
                             rel_tol, abs_tol, max_num_steps,
                             2e-5, 1e-6, 1e-3, 1e-5);
 }
+
+TEST_F(TorstenTwoCptTest, multiple_infusion_ii_amt_rate) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 6.0;
+  time[3] = 7.0;
+  resize(4);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  amt[2] = 900;
+  rate[0] = 530;
+  rate[1] = 749;
+  addl[0] = 2;
+  addl[1] = 2;
+  addl[2] = 1;
+  ii[0] = 0.4;
+  ii[1] = 0.6;
+  ii[2] = 0.7;
+  ii[3] = 0.7;
+  ss[0] = 0;
+  ss[1] = 0;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<stan::math::var> amt_var(amt.begin(), amt.end());
+  std::vector<stan::math::var> rate_var(rate.begin(), rate.end());
+  TORSTEN_ODE_GRAD_II_TEST(pmx_solve_adams, f_twocpt, nCmt,
+                           time, amt_var, rate_var, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                           rel_tol, abs_tol, max_num_steps,
+                           2e-5, 1e-6, 1e-5, 1e-6);
+}
+
+TEST_F(TorstenTwoCptTest, ss_multiple_infusion_ii_amt_rate) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 6.0;
+  time[3] = 10.0;
+  resize(4);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  amt[2] = 900;
+  rate[0] = 530;
+  rate[1] = 749;
+  addl[0] = 0;
+  addl[1] = 0;
+  addl[2] = 0;
+  ii[0] = 2.4;
+  ii[1] = 2.6;
+  ii[2] = 2.7;
+  ii[3] = 2.7;
+  ss[0] = 1;
+  ss[1] = 1;
+  ss[2] = 1;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<stan::math::var> amt_var(amt.begin(), amt.end());
+  std::vector<stan::math::var> rate_var(rate.begin(), rate.end());
+  TORSTEN_ODE_GRAD_II_TEST(pmx_solve_adams, f_twocpt, nCmt,
+                           time, amt_var, rate_var, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                           rel_tol, abs_tol, max_num_steps,
+                           2e-5, 1e-6, 1e-5, 1e-6);
+}
+
+TEST_F(TorstenTwoCptTest, multiple_bolus_ii_amt_rate) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 6.0;
+  time[3] = 7.0;
+  resize(4);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  amt[2] = 900;
+  addl[0] = 2;
+  addl[1] = 2;
+  addl[2] = 1;
+  ii[0] = 1.0;
+  ii[1] = 2.0;
+  ii[2] = 3.0;
+  ii[3] = 1.0;
+  ss[0] = 0;
+  ss[1] = 0;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<stan::math::var> amt_var(amt.begin(), amt.end());
+  std::vector<stan::math::var> rate_var(rate.begin(), rate.end());
+  TORSTEN_ODE_GRAD_II_TEST(pmx_solve_adams, f_twocpt, nCmt,
+                           time, amt_var, rate_var, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                           rel_tol, abs_tol, max_num_steps,
+                           2e-5, 1e-6, 1e-5, 1e-6);
+}
+
+TEST_F(TorstenTwoCptTest, ss_multiple_bolus_ii_amt_rate) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 6.0;
+  resize(3);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  amt[2] = 900;
+  addl[0] = 0;
+  addl[1] = 0;
+  addl[2] = 0;
+  ii[0] = 1.0;
+  ii[1] = 2.0;
+  ii[2] = 3.0;
+  ss[0] = 1;
+  ss[1] = 1;
+  ss[2] = 1;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<stan::math::var> amt_var(amt.begin(), amt.end());
+  std::vector<stan::math::var> rate_var(rate.begin(), rate.end());
+  TORSTEN_ODE_GRAD_II_TEST(pmx_solve_rk45, f_twocpt, nCmt,
+                           time, amt_var, rate_var, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                           rel_tol, abs_tol, max_num_steps,
+                           2e-5, 1e-6, 1e-5, 1e-6);
+}
+
+TEST_F(TorstenTwoCptTest, ss_multiple_infusion_ii_amt) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 6.0;
+  time[3] = 10.0;
+  resize(4);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  amt[2] = 900;
+  rate[0] = 530;
+  rate[1] = 749;
+  addl[0] = 0;
+  addl[1] = 0;
+  addl[2] = 0;
+  ii[0] = 2.4;
+  ii[1] = 2.6;
+  ii[2] = 2.7;
+  ii[3] = 2.7;
+  ss[0] = 1;
+  ss[1] = 1;
+  ss[2] = 1;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<stan::math::var> amt_var(amt.begin(), amt.end());
+  std::vector<stan::math::var> rate_var(rate.begin(), rate.end());
+  TORSTEN_ODE_GRAD_II_TEST(pmx_solve_adams, f_twocpt, nCmt,
+                           time, amt_var, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                           rel_tol, abs_tol, max_num_steps,
+                           2e-5, 1e-6, 1e-5, 1e-6);
+}
+
+TEST_F(TorstenTwoCptTest, ss_multiple_bolus_ii_amt) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 6.0;
+  resize(3);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  amt[2] = 900;
+  addl[0] = 0;
+  addl[1] = 0;
+  addl[2] = 0;
+  ii[0] = 1.0;
+  ii[1] = 2.0;
+  ii[2] = 3.0;
+  ss[0] = 1;
+  ss[1] = 1;
+  ss[2] = 1;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<stan::math::var> amt_var(amt.begin(), amt.end());
+  std::vector<stan::math::var> rate_var(rate.begin(), rate.end());
+  TORSTEN_ODE_GRAD_II_TEST(pmx_solve_rk45, f_twocpt, nCmt,
+                           time, amt_var, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                           rel_tol, abs_tol, max_num_steps,
+                           2e-5, 1e-6, 1e-5, 1e-6);
+}
+
+TEST_F(TorstenTwoCptTest, ss_multiple_infusion_ii_rate) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 6.0;
+  time[3] = 10.0;
+  resize(4);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  amt[2] = 900;
+  rate[0] = 530;
+  rate[1] = 749;
+  addl[0] = 0;
+  addl[1] = 0;
+  addl[2] = 0;
+  ii[0] = 2.4;
+  ii[1] = 2.6;
+  ii[2] = 2.7;
+  ii[3] = 2.7;
+  ss[0] = 1;
+  ss[1] = 1;
+  ss[2] = 1;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<stan::math::var> amt_var(amt.begin(), amt.end());
+  std::vector<stan::math::var> rate_var(rate.begin(), rate.end());
+  TORSTEN_ODE_GRAD_II_TEST(pmx_solve_adams, f_twocpt, nCmt,
+                           time, amt, rate_var, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                           rel_tol, abs_tol, max_num_steps,
+                           2e-5, 1e-6, 1e-5, 1e-6);
+}
+
+TEST_F(TorstenTwoCptTest, ss_multiple_bolus_ii_rate) {
+  time[0] = 0.0;
+  time[1] = 5.0;
+  time[2] = 6.0;
+  resize(3);
+
+  amt[0] = 1200;
+  amt[1] = 800;
+  amt[2] = 900;
+  addl[0] = 0;
+  addl[1] = 0;
+  addl[2] = 0;
+  ii[0] = 1.0;
+  ii[1] = 2.0;
+  ii[2] = 3.0;
+  ss[0] = 1;
+  ss[1] = 1;
+  ss[2] = 1;
+
+  double rel_tol = 1e-8, abs_tol = 1e-8;
+  long int max_num_steps = 1e8;
+
+  std::vector<stan::math::var> amt_var(amt.begin(), amt.end());
+  std::vector<stan::math::var> rate_var(rate.begin(), rate.end());
+  TORSTEN_ODE_GRAD_II_TEST(pmx_solve_rk45, f_twocpt, nCmt,
+                           time, amt, rate_var, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
+                           rel_tol, abs_tol, max_num_steps,
+                           2e-5, 1e-6, 1e-5, 1e-6);
+}
