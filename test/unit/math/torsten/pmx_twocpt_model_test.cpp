@@ -93,12 +93,12 @@ TEST_F(TorstenTwoCptModelTest, infusion_theta_grad) {
 
   double dt = 2.5;
   
-  auto f1 = [&](std::vector<double>& pars) {
+  auto f1 = [&](const std::vector<double>& pars) {
     using model_t = PMXTwoCptModel<double, double, double, double>;
     model_t model(t0, y0, rate, pars[0], pars[1], pars[2], pars[3], pars[4]);
     return model.solve(dt);
   };
-  auto f2 = [&](std::vector<var>& pars) {
+  auto f2 = [&](const std::vector<var>& pars) {
     using model_t = PMXTwoCptModel<double, double, double, var>;
     model_t model(t0, y0, rate, pars[0], pars[1], pars[2], pars[3], pars[4]);
     return model.solve(dt);
@@ -123,10 +123,10 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_amt_grad) {
   double ii = 12.5;
   
   int cmt = 0;
-  auto f1 = [&](std::vector<double>& amt_vec) {
+  auto f1 = [&](const std::vector<double>& amt_vec) {
     return model.solve(amt_vec[0], rate[cmt-1], ii, cmt);
   };
-  auto f2 = [&](std::vector<var>& amt_vec) {
+  auto f2 = [&](const std::vector<var>& amt_vec) {
     return model.solve(amt_vec[0], rate[cmt-1], ii, cmt);
   };
   std::vector<double> amt_vec{1000.0};
@@ -148,10 +148,10 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_rate_grad) {
   double ii = 12.5;
   
   int cmt = 0;
-  auto f1 = [&](std::vector<double>& rate_vec) {
+  auto f1 = [&](const std::vector<double>& rate_vec) {
     return model.solve(amt, rate_vec[0], ii, cmt);
   };
-  auto f2 = [&](std::vector<var>& rate_vec) {
+  auto f2 = [&](const std::vector<var>& rate_vec) {
     return model.solve(amt, rate_vec[0], ii, cmt);
   };
   std::vector<double> rate_vec{130.0};
@@ -175,7 +175,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_by_long_run_sd_vs_bdf_result) {
   int cmt = 0;
   const double ii = 8.5;
   
-  auto f1 = [&](std::vector<double>& amt_vec) {
+  auto f1 = [&](const std::vector<double>& amt_vec) {
     double t = t0;
     Eigen::Matrix<double, -1, 1> y = y0;
     for (int i = 0; i < 100; ++i) {
@@ -198,7 +198,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_by_long_run_sd_vs_bdf_result) {
   const std::vector<double> theta{CL, Q, V2, V3, ka};
   const PMXOdeIntegrator<PkBdf> integrator;
   using ode_model_t = PKODEModel<double, double, double, double, PMXTwoCptODE>;
-  auto f2 = [&](std::vector<double>& amt_vec) {
+  auto f2 = [&](const std::vector<double>& amt_vec) {
     double t = t0;
     Eigen::Matrix<double, -1, 1> y = y0;
     for (int i = 0; i < 100; ++i) {
@@ -251,7 +251,7 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_grad_vs_long_run_sd) {
   double ii = 6.0;
   double amt = 1000;
   
-  auto f1 = [&](std::vector<var>& rate_vec) {
+  auto f1 = [&](const std::vector<var>& rate_vec) {
     var t = t0;
     Eigen::Matrix<var, -1, 1> y = y0;
     var t_infus = amt/rate_vec[cmt - 1];
@@ -273,7 +273,7 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_grad_vs_long_run_sd) {
     return y;
   };
 
-  auto f2 = [&](std::vector<var>& rate_vec) {
+  auto f2 = [&](const std::vector<var>& rate_vec) {
     PMXTwoCptModel<double, double, double, double> model(t0, y0, rate, CL, Q, V2, V3, ka);
     return model.solve(amt, rate_vec[cmt - 1], ii, cmt);
   };
@@ -326,7 +326,7 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_by_long_run_sd_vs_bdf_result) {
   const double ii = 11.9;
   const double amt = 1000;
   
-  auto f1 = [&](std::vector<double>& rate_vec) {
+  auto f1 = [&](const std::vector<double>& rate_vec) {
     double t = t0;
     Eigen::Matrix<double, -1, 1> y = y0;
     double t_infus = amt/rate_vec[cmt - 1];
@@ -352,7 +352,7 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_by_long_run_sd_vs_bdf_result) {
   const std::vector<double> theta{CL, Q, V2, V3, ka};
   const PMXOdeIntegrator<PkBdf> integrator;
   using ode_model_t = refactor::PKODEModel<double, double, double, double, PMXTwoCptODE>;
-  auto f2 = [&](std::vector<double>& rate_vec) {
+  auto f2 = [&](const std::vector<double>& rate_vec) {
     double t = t0;
     Eigen::Matrix<double, -1, 1> y = y0;
     double t_infus = amt/rate_vec[cmt - 1];
@@ -411,7 +411,7 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_grad_by_long_run_sd_vs_bdf_result) {
   const double ii = 11.9;
   const double amt = 1000;
   
-  auto f1 = [&](std::vector<var>& rate_vec) {
+  auto f1 = [&](const std::vector<var>& rate_vec) {
     var t = t0;
     Eigen::Matrix<var, -1, 1> y = y0;
     var t_infus = amt/rate_vec[cmt - 1];
@@ -437,7 +437,7 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_grad_by_long_run_sd_vs_bdf_result) {
   const std::vector<double> theta{CL, Q, V2, V3, ka};
   const PMXOdeIntegrator<PkBdf> integrator;
   using ode_model_t = refactor::PKODEModel<var, var, var, double, PMXTwoCptODE>;
-  auto f2 = [&](std::vector<var>& rate_vec) {
+  auto f2 = [&](const std::vector<var>& rate_vec) {
     var t = t0;
     Eigen::Matrix<var, -1, 1> y = y0;
     var t_infus = amt/rate_vec[cmt - 1];
@@ -499,7 +499,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_by_long_run_sd_vs_bdf_result) {
   int cmt = 0;
   const double ii = 11.9;
   
-  auto f1 = [&](std::vector<var>& amt_vec) {
+  auto f1 = [&](const std::vector<var>& amt_vec) {
     double t = t0;
     Eigen::Matrix<var, -1, 1> y = y0;
     for (int i = 0; i < 50; ++i) {
@@ -522,7 +522,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_by_long_run_sd_vs_bdf_result) {
   const std::vector<double> theta{CL, Q, V2, V3, ka};
   const PMXOdeIntegrator<PkBdf> integrator;
   using ode_model_t = refactor::PKODEModel<double, var, double, double, PMXTwoCptODE>;
-  auto f2 = [&](std::vector<var>& amt_vec) {
+  auto f2 = [&](const std::vector<var>& amt_vec) {
     double t = t0;
     Eigen::Matrix<var, -1, 1> y = y0;
     for (int i = 0; i < 50; ++i) {
@@ -574,7 +574,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_vs_long_run_sd) {
   int cmt = 0;
   double ii = 11.9;
   
-  auto f1 = [&](std::vector<var>& amt_vec) {
+  auto f1 = [&](const std::vector<var>& amt_vec) {
     double t = t0;
     Eigen::Matrix<var, -1, 1> y = y0;
     for (int i = 0; i < 100; ++i) {
@@ -593,7 +593,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_vs_long_run_sd) {
     return y;
   };
 
-  auto f2 = [&](std::vector<var>& amt_vec) {
+  auto f2 = [&](const std::vector<var>& amt_vec) {
     PMXTwoCptModel<double, double, double, double> model(t0, y0, rate, CL, Q, V2, V3, ka);
     return model.solve(amt_vec[0], rate[cmt - 1], ii, cmt);
   };
