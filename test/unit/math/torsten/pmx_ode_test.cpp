@@ -1357,7 +1357,7 @@ TEST_F(TorstenOneCptTest, ss_multiple_bolus_time) {
   TORSTEN_ODE_GRAD_TIME_TEST(pmx_solve_bdf, f, nCmt,
                               time, amt, rate, ii, evid, cmt, addl, ss, pMatrix, biovar, tlag,
                               rel_tol, abs_tol, max_num_steps,
-                              2e-5, 1e-6, 1e-5, 8e-5);
+                              2e-5, 1e-6, 1e-5, 9e-5);
 }
 
 TEST_F(TorstenOneCptTest, ss_multiple_bolus_ii) {
