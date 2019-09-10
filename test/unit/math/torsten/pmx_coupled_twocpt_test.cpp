@@ -731,28 +731,31 @@ TEST(Torsten, mixOdeCpt2_SS_constant_rate) {
   long int max_num_steps_rk = 1e6;
   MatrixXd
     x_rk45 = torsten::pmx_solve_twocpt_rk45(feedbackODE(), nPD,
-                                  time, amt, rate, ii, evid, cmt, addl, ss,
-                                  parameters, biovar, tlag,
-                                  0,
-                                  rel_tol_rk, abs_tol_rk, max_num_steps_rk);
+                                            time, amt, rate, ii, evid, cmt, addl, ss,
+                                            parameters, biovar, tlag,
+                                            0,
+                                            rel_tol_rk, abs_tol_rk, max_num_steps_rk,
+                                            1.e-10, 1.e-3, 100);
 
   double rel_tol_bdf = 1e-10, abs_tol_bdf = 1e-10;
   double max_num_steps_bdf = 1e8;
   MatrixXd
     x_bdf = torsten::pmx_solve_twocpt_bdf(feedbackODE(), nPD,
-                                time, amt, rate, ii, evid, cmt, addl, ss,
-                                parameters, biovar, tlag,
-                                0,
-                                rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
+                                          time, amt, rate, ii, evid, cmt, addl, ss,
+                                          parameters, biovar, tlag,
+                                          0,
+                                          rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf,
+                                          1.e-10, 1.e-3, 100);
 
   // can't do constant rate in mrgsolve. Comparing to result obtained
   // with generalOdeModel, as a provisional test.
   MatrixXd
     x = torsten::pmx_solve_rk45(fullODE(), nOde,
-                             time, amt, rate, ii, evid, cmt, addl, ss,
-                             parameters, biovar, tlag,
-                             0,
-                             rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf);
+                                time, amt, rate, ii, evid, cmt, addl, ss,
+                                parameters, biovar, tlag,
+                                0,
+                                rel_tol_bdf, abs_tol_bdf, max_num_steps_bdf,
+                                1.e-10, 1.e-3, 100);
 
   torsten::test::test_val(x, x_rk45, 1.e-5, 1.e-8);
   torsten::test::test_val(x, x_bdf,  1.e-5, 1.e-8);
