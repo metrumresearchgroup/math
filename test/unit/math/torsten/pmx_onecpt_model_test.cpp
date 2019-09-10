@@ -108,12 +108,12 @@ TEST_F(TorstenOneCptModelTest, infusion_theta_grad) {
 
   double dt = 2.5;
   
-  auto f1 = [&](std::vector<double>& pars) {
+  auto f1 = [&](const std::vector<double>& pars) {
     using model_t = PMXOneCptModel<double, double, double, double>;
     model_t model(t0, y0, rate, pars[0], pars[1], pars[2]);
     return model.solve(dt);
   };
-  auto f2 = [&](std::vector<var>& pars) {
+  auto f2 = [&](const std::vector<var>& pars) {
     using model_t = PMXOneCptModel<double, double, double, var>;
     model_t model(t0, y0, rate, pars[0], pars[1], pars[2]);
     return model.solve(dt);
@@ -136,10 +136,10 @@ TEST_F(TorstenOneCptModelTest, ss_bolus_amt_grad) {
   double ii = 12.0;
   
   int cmt = 0;
-  auto f1 = [&](std::vector<double>& amt_vec) {
+  auto f1 = [&](const std::vector<double>& amt_vec) {
     return model.solve(amt_vec[0], rate[cmt-1], ii, cmt);
   };
-  auto f2 = [&](std::vector<var>& amt_vec) {
+  auto f2 = [&](const std::vector<var>& amt_vec) {
     return model.solve(amt_vec[0], rate[cmt-1], ii, cmt);
   };
   std::vector<double> amt_vec{1000.0};
@@ -159,10 +159,10 @@ TEST_F(TorstenOneCptModelTest, ss_infusion_rate_grad) {
   double ii = 12.0;
   
   int cmt = 0;
-  auto f1 = [&](std::vector<double>& rate_vec) {
+  auto f1 = [&](const std::vector<double>& rate_vec) {
     return model.solve(amt, rate_vec[0], ii, cmt);
   };
-  auto f2 = [&](std::vector<var>& rate_vec) {
+  auto f2 = [&](const std::vector<var>& rate_vec) {
     return model.solve(amt, rate_vec[0], ii, cmt);
   };
 
@@ -184,7 +184,7 @@ TEST_F(TorstenOneCptModelTest, ss_bolus_grad_vs_long_run_sd) {
   int cmt = 0;
   double ii = 12.0;
   
-  auto f1 = [&](std::vector<double>& amt_vec) {
+  auto f1 = [&](const std::vector<double>& amt_vec) {
     double t = t0;
     Eigen::Matrix<double, -1, 1> y = y0;
     for (int i = 0; i < 100; ++i) {
@@ -202,7 +202,7 @@ TEST_F(TorstenOneCptModelTest, ss_bolus_grad_vs_long_run_sd) {
     y(cmt - 1) -= amt_vec[0];
     return y;
   };
-  auto f2 = [&](std::vector<var>& amt_vec) {
+  auto f2 = [&](const std::vector<var>& amt_vec) {
     return model.solve(amt_vec[0], rate[cmt - 1], ii, cmt);
   };
   std::vector<double> amt_vec{1000.0};
