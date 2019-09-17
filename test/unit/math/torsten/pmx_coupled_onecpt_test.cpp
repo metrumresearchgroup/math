@@ -87,12 +87,6 @@ TEST_F(TorstenCoupledOneCptTest, single_bolus) {
 }
 
 TEST_F(TorstenCoupledOneCptTest, single_dose_overload) {
-  double rel_tol = 1e-6, abs_tol = 1e-6;
-  long int max_num_steps = 1e6;
-
-  Matrix<double, Eigen::Dynamic, Eigen::Dynamic> x_rk45_122, x_rk45_112, 
-    x_rk45_111, x_rk45_121, x_rk45_212, x_rk45_211, x_rk45_221;
-
   CoupledOneCptODE f;
 
   TORSTEN_ODE_PARAM_OVERLOAD_TEST(pmx_solve_onecpt_rk45, f,
