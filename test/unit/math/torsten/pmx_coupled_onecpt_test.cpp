@@ -5,18 +5,6 @@
 #include <test/unit/math/torsten/test_util.hpp>
 #include <gtest/gtest.h>
 
-// Note: for tuning parameters of ODE integrators,
-// use default values.
-// For rk45:
-//   * rel_tol = 1e-6
-//   * abs_tol = 1e-6
-//   * max_num_steps = 1e6
-//
-// For bdf:
-//   * rel_tol = 1e-10
-//   * abs_tol = 1e-10
-//   * max_num_steps = 1e8
-
 using std::vector;
 using Eigen::Matrix;
 using Eigen::Dynamic;
