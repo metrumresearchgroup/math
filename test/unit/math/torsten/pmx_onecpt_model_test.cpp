@@ -20,7 +20,7 @@ TEST_F(TorstenOneCptModelTest, rate_dbl) {
   using model_t = PMXOneCptModel<double, double, double, double>;
   model_t model(t0, y0, rate, CL, V2, ka);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PMXOdeFunctorRateAdaptor<PMXOneCptODE, double> f1(model.f());
+  PMXOdeFunctorRateAdaptor<PMXOneCptODE, double> f1;
 
   std::vector<double> y = f1(t0, yvec, model.par(), rate, x_i, msgs);
   EXPECT_DOUBLE_EQ(y[0], rate[0]);
@@ -39,7 +39,7 @@ TEST_F(TorstenOneCptModelTest, rate_var) {
   model_t model(t0, y0, rate_var, CLv, V2v, kav);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
   std::vector<stan::math::var> theta(model.par());
-  PMXOdeFunctorRateAdaptor<PMXOneCptODE, var> f1(model.f(), theta.size());
+  PMXOdeFunctorRateAdaptor<PMXOneCptODE, var> f1;
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
 
   std::vector<var> y = f1(t0, yvec, theta, x_r, x_i, msgs);
@@ -62,7 +62,7 @@ TEST_F(TorstenOneCptModelTest, rate_var_y0) {
   model_t model(t0, y0, rate_var, CLv, V2v, kav);
   std::vector<stan::math::var> theta(model.par());
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PMXOdeFunctorRateAdaptor<PMXOneCptODE, var> f1(model.f(), theta.size());
+  PMXOdeFunctorRateAdaptor<PMXOneCptODE, var> f1;
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
 
   std::vector<var> y = f1(t0, yvec, theta, x_r, x_i, msgs);
@@ -88,7 +88,7 @@ TEST_F(TorstenOneCptModelTest, sd_solver) {
   model_t model(t0, y0, rate_var, CLv, V2v, kav);
   std::vector<stan::math::var> theta(model.par());
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PMXOdeFunctorRateAdaptor<PMXOneCptODE, var> f1(model.f(), theta.size());
+  PMXOdeFunctorRateAdaptor<PMXOneCptODE, var> f1;
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
 
   auto y1 = pmx_integrate_ode_bdf(f1, yvec, t0, ts, theta, x_r, x_i, msgs);

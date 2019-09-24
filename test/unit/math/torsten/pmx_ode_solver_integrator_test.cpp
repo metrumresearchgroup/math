@@ -338,7 +338,7 @@ TEST_F(TorstenTwoCptModelTest, general_ode_solver) {
   rate[2] = 3000;
   PMXTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1(model0.f());
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1;
   using model_t = PKODEModel<double, double, double, double, PMXTwoCptODE>;
   model_t model(t0, y0, rate, model0.par(), model0.f());
 
@@ -399,7 +399,7 @@ TEST_F(TorstenTwoCptModelTest, general_ode_solver_y0) {
   y0[2] = 8000;
   PMXTwoCptModel<double, double, double, double> model0(t0, y0, rate, CL, Q, V2, V3, ka); // NOLINT
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1(model0.f());
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1;
   using model_t = PKODEModel<double, double, double, double, PMXTwoCptODE>;
   model_t model(t0, y0, rate, model0.par(), model0.f());
 
@@ -462,7 +462,7 @@ TEST_F(TorstenTwoCptModelTest, general_ode_solver_par_sens) {
 
   PMXTwoCptModel<double, double, double, var> model0(t0, y0, rate, theta);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1(model0.f());
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1;
   using model_t = PKODEModel<double, double, double, var, PMXTwoCptODE>;
   model_t model(t0, y0, rate, model0.par(), model0.f());
 
@@ -538,7 +538,7 @@ TEST_F(TorstenTwoCptModelTest, general_ode_solver_par_rate_sens) {
 
   PMXTwoCptModel<double, double, var, var> model0(t0, y0, rate_var, theta);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, var> f1(model0.f(), theta.size());
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, var> f1;
   using model_t = PKODEModel<double, double, var, var, PMXTwoCptODE>;
   model_t model(t0, y0, model0.rate(), model0.par(), model0.f()); // NOLINT
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());

@@ -22,7 +22,7 @@ TEST_F(TorstenTwoCptModelTest, rate_dbl) {
   using model_t = PMXTwoCptModel<double, double, double, double>;
   model_t model(t0, y0, rate, CL, Q, V2, V3, ka);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1(model.f());
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, double> f1;
 
   std::vector<double> y = f1(t0, yvec, model.par(), rate, x_i, msgs);
   EXPECT_FLOAT_EQ(y[0], rate[0]);
@@ -44,7 +44,7 @@ TEST_F(TorstenTwoCptModelTest, rate_var) {
   model_t model(t0, y0, rate_var, CLv, Qv, V2v, V3v, kav);
   std::vector<stan::math::var> theta(model.par());
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, var> f1(model.f(), theta.size());
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, var> f1;
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
 
   std::vector<var> y = f1(t0, yvec, theta, x_r, x_i, msgs);
@@ -72,7 +72,7 @@ TEST_F(TorstenTwoCptModelTest, sd_solver) {
   using model_t = PMXTwoCptModel<double, double, var, var>;
   model_t model(t0, y0, rate_var, CLv, Qv, V2v, V3v, kav);
   std::vector<double> yvec(y0.data(), y0.data() + y0.size());
-  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, var> f1(model.f(), theta.size());
+  PMXOdeFunctorRateAdaptor<PMXTwoCptODE, var> f1;
   theta.insert(theta.end(), rate_var.begin(), rate_var.end());
 
   auto y1 = pmx_integrate_ode_bdf(f1, yvec, t0, ts, theta, x_r, x_i, msgs);
@@ -959,7 +959,6 @@ TEST_F(TorstenTwoCptModelTest, ss_solver_const_infusion) {
   using torsten::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
   using refactor::PMXTwoCptODE;
-  using refactor::PMXOdeFunctorRateAdaptor;
 
   rate[0] = 1200;
   rate[1] = 1100;
