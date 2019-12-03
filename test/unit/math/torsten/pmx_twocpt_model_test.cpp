@@ -15,6 +15,22 @@ using stan::math::integrate_ode_bdf;
 using refactor::PMXTwoCptODE;
 using refactor::PMXOdeFunctorRateAdaptor;
 
+TEST_F(TorstenTwoCptModelTest, ka_zero) {
+  y0(0) = 745;
+  y0(1) = 100;
+  y0(2) = 130;  
+  rate[0] = 1200;
+  rate[1] = 200;
+  rate[2] = 300;
+  ka = 0.0;
+  using model_t = PMXTwoCptModel<double, double, double, double>;
+  model_t model(t0, y0, rate, CL, Q, V2, V3, ka);
+  auto y = model.solve(ts[0]);
+  EXPECT_FLOAT_EQ(y(0), 865.0);
+  EXPECT_FLOAT_EQ(y(1), 120.52635);
+  EXPECT_FLOAT_EQ(y(2), 158.09552);
+}
+
 TEST_F(TorstenTwoCptModelTest, rate_dbl) {
   rate[0] = 1200;
   rate[1] = 200;
