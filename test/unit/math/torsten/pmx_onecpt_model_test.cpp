@@ -14,6 +14,20 @@ using torsten::pmx_integrate_ode_bdf;
 using refactor::PMXOneCptODE;
 using refactor::PMXOdeFunctorRateAdaptor;
 
+TEST_F(TorstenOneCptModelTest, ka_zero) {
+  y0(0) = 745;
+  y0(1) = 100;
+  rate[0] = 1200;
+  rate[1] = 200;
+  ka = 0.0;
+  using model_t = PMXOneCptModel<double, double, double, double>;
+  model_t model(t0, y0, rate, CL, V2, ka);
+  std::vector<double> yvec(y0.data(), y0.data() + y0.size());
+  auto y = model.solve(ts[0]);
+  EXPECT_FLOAT_EQ(y(0), 865.0);
+  EXPECT_FLOAT_EQ(y(1), 113.32912);
+}
+
 TEST_F(TorstenOneCptModelTest, rate_dbl) {
   rate[0] = 1200;
   rate[1] = 200;
