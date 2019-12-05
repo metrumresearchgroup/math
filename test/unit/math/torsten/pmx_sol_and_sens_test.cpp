@@ -65,6 +65,7 @@ struct rk45_sen {
 
 TEST_F(TorstenOdeTest_chem, odeint_rk45_fwd_sensitivity_theta) {
   using stan::math::var;
+  ts.resize(1);
   
   rk45_sol<chemical_kinetics> f0(f, y0, t0);
   rk45_sen<chemical_kinetics> f1(f, y0, t0);

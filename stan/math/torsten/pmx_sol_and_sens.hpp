@@ -54,15 +54,15 @@ namespace torsten {
    * vector type is @var with gradients to @theta.
    *
    */
-  template <typename F0, typename F1>
-  std::vector<stan::math::var> pmx_sol_and_sens(const F0& f0, const F1& f1,
-                                  const std::vector<stan::math::var>& theta,
+  template <typename F0, typename F1, typename T>
+  std::vector<T> pmx_sol_and_sens(const F0& f0, const F1& f1,
+                                  const std::vector<T>& theta,
                                   const std::vector<double>& x_r,
                                   const std::vector<int>& x_i,
                                   std::ostream* msgs) {
     std::vector<double> theta_d(stan::math::value_of(theta));
     std::vector<std::vector<double> > raw(f1(theta_d, x_r, x_i, msgs));
-    std::vector<stan::math::var> res(raw.size());
+    std::vector<T> res(raw.size());
     std::transform(raw.begin(), raw.end(), res.begin(),
                    [&theta](std::vector<double>& qoi_grad) {
                      double qoi = qoi_grad[0];
