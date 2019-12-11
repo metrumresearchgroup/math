@@ -19,10 +19,10 @@
  */
 
 #define NUM_TORSTEN_COMM 4
-#define TORSTEN_COMM_PMX_PARM 0
-#define TORSTEN_COMM_PMX_DATA 1
-#define TORSTEN_COMM_ODE_PARM 2
-#define TORSTEN_COMM_ODE_DATA 3
+#define TORSTEN_COMM   0
+#define TORSTEN_COMM_1 1
+#define TORSTEN_COMM_2 2
+#define TORSTEN_COMM_3 3
 
 namespace torsten {
   namespace mpi {

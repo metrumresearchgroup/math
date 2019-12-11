@@ -272,9 +272,9 @@ namespace torsten{
       std::ostringstream rank_fail_msg;
 
       MPI_Comm comm;
-      comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_PMX_PARM];
-      int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_PMX_PARM].rank;
-      int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_PMX_PARM].size;
+      comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
+      int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].rank;
+      int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].size;
 
       std::vector<MPI_Request> req(np);
       vector<MatrixXd> res_d(np);
@@ -424,9 +424,9 @@ namespace torsten{
       std::ostringstream rank_fail_msg;
 
       MPI_Comm comm;
-      comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_PMX_DATA];
-      int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_PMX_DATA].rank;
-      int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_PMX_DATA].size;
+      comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
+      int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].rank;
+      int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].size;
 
       std::vector<MPI_Request> req(np);
 

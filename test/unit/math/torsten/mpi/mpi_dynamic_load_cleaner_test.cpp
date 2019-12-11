@@ -63,7 +63,7 @@ TEST_F(TorstenOdeTest_chem, mpi_dynamic_load_cvodes_ivp_system_bdf_mpi) {
   torsten::mpi::Envionment::init();
 
   const torsten::mpi::Communicator& pmx_comm =
-    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM];
+    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
 
   torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_CLEANER> master(pmx_comm);
 
@@ -125,7 +125,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_fwd_sensitivity_uniform_thet
   torsten::mpi::Envionment::init();
 
   const torsten::mpi::Communicator& pmx_comm =
-    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM];
+    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
 
   torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_CLEANER> master(pmx_comm);
 
@@ -189,7 +189,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_fwd_sensitivity_uniform_thet
   torsten::mpi::Envionment::init();
 
   const torsten::mpi::Communicator& pmx_comm =
-    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM];
+    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
 
   torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_CLEANER> master(pmx_comm);
 
@@ -228,7 +228,7 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_fwd_exit_work_loop_exception
   torsten::mpi::Envionment::init();
 
   const torsten::mpi::Communicator& pmx_comm =
-    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM];
+    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
 
   torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_CLEANER> master(pmx_comm);
 

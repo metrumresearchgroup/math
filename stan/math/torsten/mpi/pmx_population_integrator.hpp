@@ -82,7 +82,7 @@ namespace torsten {
         using torsten::mpi::Communicator;
         using torsten::mpi::PMXDynamicLoad;
 
-        static slave_and_cleaner session_load(torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM]);
+        static slave_and_cleaner session_load(torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM]);
         const torsten::mpi::Communicator& pmx_comm = session_load.pmx_comm;
 
         int integ_id = torsten::dsolve::integrator_id<ode_t<F, Tt, T_initial, T_param, ode_pars_t...>>::value;
@@ -135,9 +135,9 @@ namespace torsten {
         torsten::dsolve::PMXOdeService<Ode> serv(n, m);
     
         MPI_Comm comm;
-        comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM];
-        int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM].rank;
-        int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM].size;
+        comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
+        int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].rank;
+        int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].size;
 
         using scalar_type = typename torsten::return_t<Tt, T_initial, T_param>::type;
 
@@ -260,9 +260,9 @@ namespace torsten {
         torsten::dsolve::PMXOdeService<Ode> serv(n, m);
     
         MPI_Comm comm;
-        comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM];
-        int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM].rank;
-        int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_PARM].size;
+        comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
+        int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].rank;
+        int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].size;
 
         using scalar_type = typename torsten::return_t<Tt, T_initial, T_param>::type;
 
@@ -382,9 +382,9 @@ namespace torsten {
         torsten::dsolve::PMXOdeService<Ode> serv(n, m);
     
         MPI_Comm comm;
-        comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_DATA];
-        int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_DATA].rank;
-        int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM_ODE_DATA].size;
+        comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
+        int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].rank;
+        int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].size;
 
         Eigen::MatrixXd res = Eigen::MatrixXd::Zero(n, ts.size());
         std::vector<MPI_Request> req(np);
