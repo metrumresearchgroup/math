@@ -34,9 +34,9 @@ namespace torsten {
        * initialization stage of stan::lang.
        */
       slave_and_cleaner(const Communicator& comm_in) : pmx_comm(comm_in) {
-        if (comm_in.rank > 0) {
+        if (comm_in.rank() > 0) {
           PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(comm_in);
-          std::cout << "Torsten: " << "MPI slave " << comm_in.rank <<  " initialized" << "\n";
+          std::cout << "Torsten: " << "MPI slave " << comm_in.rank() <<  " initialized" << "\n";
           load.slave();          
           throw slave_dismiss(pmx_comm);
         }

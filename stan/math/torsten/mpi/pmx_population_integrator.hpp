@@ -3,7 +3,7 @@
 
 #include <stan/math/prim/mat/fun/to_matrix.hpp>
 #include <stan/math/torsten/mpi/precomputed_gradients.hpp>
-#include <stan/math/torsten/mpi/session.hpp>
+#include <stan/math/torsten/mpi/envionment.hpp>
 #include <stan/math/torsten/mpi/my_worker.hpp>
 #include <stan/math/torsten/mpi/dynamic_load.hpp>
 #include <stan/math/torsten/mpi/slave_and_cleaner.hpp>
@@ -82,8 +82,8 @@ namespace torsten {
         using torsten::mpi::Communicator;
         using torsten::mpi::PMXDynamicLoad;
 
-        static slave_and_cleaner session_load(torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM]);
-        const torsten::mpi::Communicator& pmx_comm = session_load.pmx_comm;
+        const Communicator& pmx_comm(torsten::mpi::Session::intra_chain_comm());
+        static slave_and_cleaner session_load(pmx_comm);
 
         int integ_id = torsten::dsolve::integrator_id<ode_t<F, Tt, T_initial, T_param, ode_pars_t...>>::value;
         int functor_id = pmx_ode_group_mpi_functor_id<F>::value;
@@ -134,10 +134,9 @@ namespace torsten {
         using Ode = ode_t<F, Tt, T_initial, T_param, ode_pars_t...>;
         torsten::dsolve::PMXOdeService<Ode> serv(n, m);
     
-        MPI_Comm comm;
-        comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
-        int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].rank;
-        int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].size;
+        const torsten::mpi::Communicator& pmx_comm(torsten::mpi::Session::intra_chain_comm());
+        int rank = pmx_comm.rank();
+        int size = pmx_comm.size();
 
         using scalar_type = typename torsten::return_t<Tt, T_initial, T_param>::type;
 
@@ -182,7 +181,7 @@ namespace torsten {
             break;
           }
 
-          MPI_Ibcast(res_d[i].data(), res_d[i].size(), MPI_DOUBLE, my_worker_id, comm, &req[i]);
+          MPI_Ibcast(res_d[i].data(), res_d[i].size(), MPI_DOUBLE, my_worker_id, pmx_comm.comm(), &req[i]);
         }
 
         int begin_id = 0;
@@ -259,10 +258,9 @@ namespace torsten {
 
         torsten::dsolve::PMXOdeService<Ode> serv(n, m);
     
-        MPI_Comm comm;
-        comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
-        int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].rank;
-        int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].size;
+        const torsten::mpi::Communicator& pmx_comm(torsten::mpi::Session::intra_chain_comm());
+        int rank = pmx_comm.rank();
+        int size = pmx_comm.size();
 
         using scalar_type = typename torsten::return_t<Tt, T_initial, T_param>::type;
 
@@ -311,7 +309,7 @@ namespace torsten {
             break;
           }
 
-          MPI_Ibcast(res_d[i].data(), res_d[i].size(), MPI_DOUBLE, my_worker_id, comm, &req[i]);
+          MPI_Ibcast(res_d[i].data(), res_d[i].size(), MPI_DOUBLE, my_worker_id, pmx_comm.comm(), &req[i]);
         }
 
         int begin_id = 0;
@@ -381,10 +379,9 @@ namespace torsten {
 
         torsten::dsolve::PMXOdeService<Ode> serv(n, m);
     
-        MPI_Comm comm;
-        comm = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
-        int rank = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].rank;
-        int size = torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM].size;
+        const torsten::mpi::Communicator& pmx_comm(torsten::mpi::Session::intra_chain_comm());
+        int rank = pmx_comm.rank();
+        int size = pmx_comm.size();
 
         Eigen::MatrixXd res = Eigen::MatrixXd::Zero(n, ts.size());
         std::vector<MPI_Request> req(np);
@@ -421,7 +418,7 @@ namespace torsten {
             break;
           }
 
-          MPI_Ibcast(&res(begin_id), size_id, MPI_DOUBLE, my_worker_id, comm, &req[i]);
+          MPI_Ibcast(&res(begin_id), size_id, MPI_DOUBLE, my_worker_id, pmx_comm.comm(), &req[i]);
           begin_ids[i] = begin_id;
           begin_id += size_id;
         }

@@ -3,7 +3,5 @@
 
 #include <stan/math/torsten/mpi/my_worker.hpp>
 #include <stan/math/torsten/mpi/envionment.hpp>
-#include <stan/math/torsten/mpi/communicator.hpp>
-// #include <stan/math/torsten/mpi/pmx_population_integrator.hpp>
 
 #endif

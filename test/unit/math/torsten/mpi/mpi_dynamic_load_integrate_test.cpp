@@ -61,12 +61,14 @@ namespace torsten {
 
 
 TEST_F(TorstenOdeTest_chem, mpi_dynamic_load_cvodes_ivp_system_bdf_mpi) {
+  using torsten::mpi::Session;
+  using torsten::mpi::Communicator;
+
   torsten::mpi::Envionment::init();
 
-  const torsten::mpi::Communicator& pmx_comm =
-    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
+  const Communicator& pmx_comm(Session::intra_chain_comm());
 
-  if (pmx_comm.rank > 0) {
+  if (pmx_comm.rank() > 0) {
     torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {
@@ -124,12 +126,14 @@ TEST_F(TorstenOdeTest_chem, mpi_dynamic_load_cvodes_ivp_system_bdf_mpi) {
 }
 
 TEST_F(TorstenOdeTest_chem, mpi_dynamic_load_fwd_sensitivity_non_uniform_theta) {
+  using torsten::mpi::Session;
+  using torsten::mpi::Communicator;
+
   torsten::mpi::Envionment::init();
 
-  const torsten::mpi::Communicator& pmx_comm =
-    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
+  const Communicator& pmx_comm(Session::intra_chain_comm());
 
-  if (pmx_comm.rank > 0) {
+  if (pmx_comm.rank() > 0) {
     torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {
@@ -192,12 +196,14 @@ TEST_F(TorstenOdeTest_chem, mpi_dynamic_load_fwd_sensitivity_non_uniform_theta) 
 }
 
 TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_fwd_sensitivity_uniform_theta) {
+  using torsten::mpi::Session;
+  using torsten::mpi::Communicator;
+
   torsten::mpi::Envionment::init();
 
-  const torsten::mpi::Communicator& pmx_comm =
-    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
+  const Communicator& pmx_comm(Session::intra_chain_comm());
 
-  if (pmx_comm.rank > 0) {
+  if (pmx_comm.rank() > 0) {
     torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {
@@ -257,12 +263,14 @@ TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_fwd_sensitivity_uniform_thet
 }
 
 TEST_F(TorstenOdeTest_neutropenia, mpi_dynamic_load_fwd_sensitivity_uniform_theta_exception) {
+  using torsten::mpi::Session;
+  using torsten::mpi::Communicator;
+
   torsten::mpi::Envionment::init();
 
-  const torsten::mpi::Communicator& pmx_comm =
-    torsten::mpi::Session<NUM_TORSTEN_COMM>::comms[TORSTEN_COMM];
+  const Communicator& pmx_comm(Session::intra_chain_comm());
 
-  if (pmx_comm.rank > 0) {
+  if (pmx_comm.rank() > 0) {
     torsten::mpi::PMXDynamicLoad<TORSTEN_MPI_DYN_SLAVE> load(pmx_comm);
     load.slave();
   } else {

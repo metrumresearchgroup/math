@@ -30,17 +30,17 @@ namespace torsten {
      * MPI communicator wrapper for RAII. Note that no
      * MPI's predfined comm sich as @c MPI_COMM_WOLRD are allowed.
      */
-    template<int N_comm>
-    struct Session {
-      static torsten::mpi::Envionment env;
-      static std::vector<torsten::mpi::Communicator> comms;
-    };
+  //   template<int N_comm>
+  //   struct Session {
+  //     static torsten::mpi::Envionment env;
+  //     static std::vector<torsten::mpi::Communicator> comms;
+  //   };
 
-    template<int N_comm>
-    torsten::mpi::Envionment Session<N_comm>::env;
+  //   template<int N_comm>
+  //   torsten::mpi::Envionment Session<N_comm>::env;
 
-    template<int N_comm>
-    std::vector<Communicator> Session<N_comm>::comms(N_comm, Communicator(Session<N_comm>::env, MPI_COMM_WORLD));
+  //   template<int N_comm>
+  //   std::vector<Communicator> Session<N_comm>::comms(N_comm, Communicator(Session<N_comm>::env, MPI_COMM_WORLD));
   }
 }
 
