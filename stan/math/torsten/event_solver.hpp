@@ -3,7 +3,7 @@
 
 #include <stan/math/torsten/dsolve/pk_vars.hpp>
 #include <stan/math/torsten/events_manager.hpp>
-#include <stan/math/torsten/mpi/session.hpp>
+#include <stan/math/torsten/mpi/envionment.hpp>
 #include <stan/math/torsten/mpi/precomputed_gradients.hpp>
 #include <Eigen/Dense>
 #include <vector>

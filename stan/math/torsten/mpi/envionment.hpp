@@ -211,32 +211,28 @@ namespace torsten {
 
       static const Communicator& inter_chain_comm(int num_mpi_chains) {
         if (inter_chain.comm() == MPI_COMM_NULL) {
-          mpi_comm_inter_chain(num_mpi_chains);          
-          inter_chain.set_comm(MPI_COMM_INTER_CHAIN);
+          inter_chain.set_comm(mpi_comm_inter_chain(num_mpi_chains));
         }
         return inter_chain;
       }
         
       static const Communicator& inter_chain_comm() {
         if (inter_chain.comm() == MPI_COMM_NULL) {
-          mpi_comm_inter_chain();
-          inter_chain.set_comm(MPI_COMM_INTER_CHAIN);
+          inter_chain.set_comm(mpi_comm_inter_chain());
         }
         return inter_chain;
       }
 
       static const Communicator& intra_chain_comm(int num_mpi_chains) {
         if (intra_chain.comm() == MPI_COMM_NULL) {
-          mpi_comm_intra_chain(num_mpi_chains);          
-          intra_chain.set_comm(MPI_COMM_INTRA_CHAIN);
+          intra_chain.set_comm(mpi_comm_intra_chain(num_mpi_chains));
         }
         return intra_chain;
       }
         
       static const Communicator& intra_chain_comm() {
         if (intra_chain.comm() == MPI_COMM_NULL) {
-          mpi_comm_intra_chain();
-          intra_chain.set_comm(MPI_COMM_INTRA_CHAIN);
+          intra_chain.set_comm(mpi_comm_intra_chain());
         }
         return intra_chain;
       }
