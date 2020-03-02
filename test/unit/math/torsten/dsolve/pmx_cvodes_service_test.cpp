@@ -1,6 +1,6 @@
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+#include <test/unit/math/rev/fun/util.hpp>
 #include <stan/math/torsten/dsolve/sundials_check.hpp>
 #include <stan/math/torsten/dsolve/pmx_integrate_ode_adams.hpp>
 #include <stan/math/torsten/dsolve/pmx_cvodes_integrator.hpp>
@@ -15,6 +15,7 @@
 #include <ostream>
 #include <vector>
 
+using torsten::dsolve::PMXOdeintSystem;
 
 struct Sho {
   harm_osc_ode_fun f;

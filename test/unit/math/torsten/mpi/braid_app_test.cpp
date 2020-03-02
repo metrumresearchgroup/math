@@ -1,7 +1,7 @@
 #ifdef TORSTEN_BRAID
 #include <stan/math/torsten/mpi/cvodes_braid.hpp>
-#include <stan/math/rev/mat.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+//
+#include <test/unit/math/rev/fun/util.hpp>
 #include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
 #include <gtest/gtest.h>
 #include <iostream>

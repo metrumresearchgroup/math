@@ -1,7 +1,7 @@
 #ifndef TEST_UNIT_TORSTEN_PK_TWOCPT_MODEL_TEST_FIXTURE
 #define TEST_UNIT_TORSTEN_PK_TWOCPT_MODEL_TEST_FIXTURE
 
-#include <stan/math/rev/mat.hpp>
+// #include <stan/math/rev/mat.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <sstream>

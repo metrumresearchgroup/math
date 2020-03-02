@@ -1,10 +1,10 @@
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+#include <test/unit/math/rev/fun/util.hpp>
 #include <stan/math/torsten/dsolve/pmx_integrate_ode_adams.hpp>
 #include <stan/math/torsten/dsolve/pmx_integrate_ode_bdf.hpp>
 #include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
-#include <stan/math/rev/mat/functor/integrate_ode_bdf.hpp>
+#include <stan/math/rev/functor/integrate_ode_bdf.hpp>
 #include <nvector/nvector_serial.h>
 #include <test/unit/util.hpp>
 #include <gtest/gtest.h>
@@ -22,6 +22,9 @@ using torsten::dsolve::PMXCvodesFwdSystem;
 using torsten::dsolve::PMXCvodesIntegrator;
 using torsten::dsolve::PMXOdeService;
 using torsten::PMXCvodesSensMethod;
+using torsten::AD;
+using torsten::CSDA;
+using torsten::DQ;
 using stan::math::var;
 
 TEST_F(TorstenOdeTest_sho, t0_var) {

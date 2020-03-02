@@ -1,6 +1,7 @@
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+#include <stan/math/torsten/pmx_ode_integrator.hpp>
+#include <test/unit/math/rev/fun/util.hpp>
 #include <test/unit/math/torsten/pmx_cpt_model_test_fixture.hpp>
 #include <test/unit/util.hpp>
 #include <gtest/gtest.h>
@@ -9,11 +10,12 @@ using stan::math::var;
 using stan::math::to_var;
 using stan::math::vector_v;
 using stan::math::matrix_v;
-using refactor::PMXTwoCptModel;
+using torsten::PMXTwoCptModel;
 using torsten::pmx_integrate_ode_bdf;
 using stan::math::integrate_ode_bdf;
-using refactor::PMXTwoCptODE;
-using refactor::PMXOdeFunctorRateAdaptor;
+using torsten::PMXTwoCptODE;
+using torsten::PMXOdeFunctorRateAdaptor;
+using torsten::PMXOdeIntegrator;
 
 TEST_F(TorstenTwoCptModelTest, ka_zero) {
   y0(0) = 745;
@@ -177,7 +179,7 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_rate_grad) {
 }
 
 TEST_F(TorstenTwoCptModelTest, ss_bolus_by_long_run_sd_vs_bdf_result) {
-  using refactor::PKODEModel;
+  using torsten::PKODEModel;
 
   rate[0] = 0;
   rate[1] = 0;
@@ -212,7 +214,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_by_long_run_sd_vs_bdf_result) {
 
   PMXTwoCptODE f2cpt;
   const std::vector<double> theta{CL, Q, V2, V3, ka};
-  const PMXOdeIntegrator<PkBdf> integrator;
+  const torsten::PMXOdeIntegrator<torsten::PkBdf> integrator;
   using ode_model_t = PKODEModel<double, double, double, double, PMXTwoCptODE>;
   auto f2 = [&](const std::vector<double>& amt_vec) {
     double t = t0;
@@ -336,7 +338,7 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_grad_vs_long_run_sd) {
 TEST_F(TorstenTwoCptModelTest, ss_infusion_by_long_run_sd_vs_bdf_result) {
   y0[0] = 150;
   y0[1] = 50;
-  using model_t = refactor::PMXTwoCptModel<double, double, double, double>;
+  using model_t = torsten::PMXTwoCptModel<double, double, double, double>;
 
   int cmt = 0;
   const double ii = 11.9;
@@ -366,8 +368,8 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_by_long_run_sd_vs_bdf_result) {
 
   PMXTwoCptODE f2cpt;
   const std::vector<double> theta{CL, Q, V2, V3, ka};
-  const PMXOdeIntegrator<PkBdf> integrator;
-  using ode_model_t = refactor::PKODEModel<double, double, double, double, PMXTwoCptODE>;
+  const torsten::PMXOdeIntegrator<torsten::PkBdf> integrator;
+  using ode_model_t = torsten::PKODEModel<double, double, double, double, PMXTwoCptODE>;
   auto f2 = [&](const std::vector<double>& rate_vec) {
     double t = t0;
     Eigen::Matrix<double, -1, 1> y = y0;
@@ -421,7 +423,7 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_by_long_run_sd_vs_bdf_result) {
 TEST_F(TorstenTwoCptModelTest, ss_infusion_grad_by_long_run_sd_vs_bdf_result) {
   y0[0] = 150;
   y0[1] = 50;
-  using model_t = refactor::PMXTwoCptModel<var, var, var, double>;
+  using model_t = torsten::PMXTwoCptModel<var, var, var, double>;
 
   int cmt = 0;
   const double ii = 11.9;
@@ -451,8 +453,8 @@ TEST_F(TorstenTwoCptModelTest, ss_infusion_grad_by_long_run_sd_vs_bdf_result) {
 
   PMXTwoCptODE f2cpt;
   const std::vector<double> theta{CL, Q, V2, V3, ka};
-  const PMXOdeIntegrator<PkBdf> integrator;
-  using ode_model_t = refactor::PKODEModel<var, var, var, double, PMXTwoCptODE>;
+  const torsten::PMXOdeIntegrator<torsten::PkBdf> integrator;
+  using ode_model_t = torsten::PKODEModel<var, var, var, double, PMXTwoCptODE>;
   auto f2 = [&](const std::vector<var>& rate_vec) {
     var t = t0;
     Eigen::Matrix<var, -1, 1> y = y0;
@@ -510,7 +512,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_by_long_run_sd_vs_bdf_result) {
   rate[0] = 0;
   rate[1] = 0;
   rate[2] = 0;
-  using model_t = refactor::PMXTwoCptModel<double, var, double, double>;
+  using model_t = torsten::PMXTwoCptModel<double, var, double, double>;
 
   int cmt = 0;
   const double ii = 11.9;
@@ -536,8 +538,8 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_by_long_run_sd_vs_bdf_result) {
 
   PMXTwoCptODE f2cpt;
   const std::vector<double> theta{CL, Q, V2, V3, ka};
-  const PMXOdeIntegrator<PkBdf> integrator;
-  using ode_model_t = refactor::PKODEModel<double, var, double, double, PMXTwoCptODE>;
+  const torsten::PMXOdeIntegrator<torsten::PkBdf> integrator;
+  using ode_model_t = torsten::PKODEModel<double, var, double, double, PMXTwoCptODE>;
   auto f2 = [&](const std::vector<var>& amt_vec) {
     double t = t0;
     Eigen::Matrix<var, -1, 1> y = y0;
@@ -641,7 +643,7 @@ TEST_F(TorstenTwoCptModelTest, ss_bolus_grad_vs_long_run_sd) {
 TEST_F(TorstenTwoCptModelTest, ss_const_infusion_grad_by_long_run_sd_vs_bdf_result) {
   y0[0] = 150;
   y0[1] = 50;
-  using model_t = refactor::PMXTwoCptModel<double, double, var, double>;
+  using model_t = torsten::PMXTwoCptModel<double, double, var, double>;
 
   int cmt = 0;
   
@@ -653,8 +655,8 @@ TEST_F(TorstenTwoCptModelTest, ss_const_infusion_grad_by_long_run_sd_vs_bdf_resu
 
   PMXTwoCptODE f2cpt;
   const std::vector<double> theta{CL, Q, V2, V3, ka};
-  const PMXOdeIntegrator<PkBdf> integrator;
-  using ode_model_t = refactor::PKODEModel<double, double, var, double, PMXTwoCptODE>;
+  const torsten::PMXOdeIntegrator<torsten::PkBdf> integrator;
+  using ode_model_t = torsten::PKODEModel<double, double, var, double, PMXTwoCptODE>;
   auto f2 = [&](std::vector<var>& rate_vec) {
     ode_model_t model(t0, y0, rate_vec, theta, f2cpt);
     double t_next = 1.0e3;
@@ -692,8 +694,8 @@ TEST_F(TorstenTwoCptModelTest, ss_const_infusion_grad_by_long_run_sd_vs_bdf_resu
 TEST_F(TorstenTwoCptModelTest, ss_const_infusion_grad_vs_long_run_sd) {
   y0[0] = 150;
   y0[1] = 50;
-  using model_t = refactor::PMXTwoCptModel<double, double, var, double>;
-  using ss_model_t = refactor::PMXTwoCptModel<double, double, double, double>;
+  using model_t = torsten::PMXTwoCptModel<double, double, var, double>;
+  using ss_model_t = torsten::PMXTwoCptModel<double, double, double, double>;
 
   int cmt = 0;
   
@@ -971,10 +973,10 @@ TEST_F(TorstenTwoCptModelTest, ss_multi_trunc_infusion) {
 TEST_F(TorstenTwoCptModelTest, ss_solver_const_infusion) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PMXTwoCptModel;
+  using torsten::PMXTwoCptModel;
   using torsten::pmx_integrate_ode_bdf;
   using stan::math::integrate_ode_bdf;
-  using refactor::PMXTwoCptODE;
+  using torsten::PMXTwoCptODE;
 
   rate[0] = 1200;
   rate[1] = 1100;

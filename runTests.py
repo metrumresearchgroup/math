@@ -36,7 +36,7 @@ def processCLIArgs():
 
     tests_help_msg = "The path(s) to the test case(s) to run.\n"
     tests_help_msg += "Example: 'test/unit', 'test/prob', and/or\n"
-    tests_help_msg += "         'test/unit/math/prim/scal/fun/abs_test.cpp'"
+    tests_help_msg += "         'test/unit/math/prim/fun/abs_test.cpp'"
     parser.add_argument("tests", nargs="+", type=str,
                         help=tests_help_msg)
     f_help_msg = "Only tests with file names matching these will be executed.\n"
@@ -92,12 +92,18 @@ def doCommand(command, exit_on_failure=True):
 
 def generateTests(j):
     """Generate all tests and pass along the j parameter to make."""
-    doCommand('make -j%d generate-tests -s' % (j or 1))
+    if isWin():
+        doCommand('mingw32-make -j%d generate-tests -s' % (j or 1))
+    else:
+        doCommand('make -j%d generate-tests -s' % (j or 1))
 
 
 def makeTest(name, j):
     """Run the make command for a given single test."""
-    doCommand('make -j%d %s' % (j or 1, name))
+    if isWin():
+        doCommand('mingw32-make -j%d %s' % (j or 1, name))
+    else:
+        doCommand('make -j%d %s' % (j or 1, name))
 
 def commandExists(command):
     p = subprocess.Popen(command, shell=True,

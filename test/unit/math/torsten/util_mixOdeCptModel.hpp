@@ -1,9 +1,13 @@
 #ifndef TEST_UNIT_MATH_TORSTEN_UTIL_MIXODE1CPTMODEL_HPP
 #define TEST_UNIT_MATH_TORSTEN_UTIL_MIXODE1CPTMODEL_HPP
 
-#include <stan/math/rev/mat.hpp>
+//
 #include <gtest/gtest.h>
-#include <test/unit/math/rev/arr/util.hpp>
+#include <stan/math/torsten/pmx_solve_onecpt_bdf.hpp>
+#include <stan/math/torsten/pmx_solve_onecpt_rk45.hpp>
+#include <stan/math/torsten/pmx_solve_twocpt_bdf.hpp>
+#include <stan/math/torsten/pmx_solve_twocpt_rk45.hpp>
+#include <test/unit/math/rev/util.hpp>
 #include <test/unit/util.hpp>
 
 /**

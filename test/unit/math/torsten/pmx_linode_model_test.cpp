@@ -1,5 +1,5 @@
 #include <stan/math.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+#include <test/unit/math/rev/fun/util.hpp>
 #include <test/unit/math/torsten/pmx_cpt_model_test_fixture.hpp>
 #include <test/unit/util.hpp>
 #include <gtest/gtest.h>
@@ -7,9 +7,9 @@
 TEST_F(TorstenTwoCptModelTest, linode_rate_dbl) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PMXLinODEModel;
-  using refactor::PMXLinODE;
-  using refactor::PMXOdeFunctorRateAdaptor;
+  using torsten::PMXLinODEModel;
+  using torsten::PMXLinODE;
+  using torsten::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
   using torsten::pmx_integrate_ode_bdf;
 
@@ -31,9 +31,9 @@ TEST_F(TorstenTwoCptModelTest, linode_rate_dbl) {
 TEST_F(TorstenTwoCptModelTest, linode_rate_var) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PMXLinODEModel;
-  using refactor::PMXLinODE;
-  using refactor::PMXOdeFunctorRateAdaptor;
+  using torsten::PMXLinODEModel;
+  using torsten::PMXLinODE;
+  using torsten::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
   using torsten::pmx_integrate_ode_bdf;
 
@@ -58,9 +58,9 @@ TEST_F(TorstenTwoCptModelTest, linode_rate_var) {
 TEST_F(TorstenTwoCptModelTest, linode_solver) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PMXLinODEModel;
-  using refactor::PMXLinODE;
-  using refactor::PMXOdeFunctorRateAdaptor;
+  using torsten::PMXLinODEModel;
+  using torsten::PMXLinODE;
+  using torsten::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
   using torsten::pmx_integrate_ode_bdf;
   using Eigen::Matrix;
@@ -114,9 +114,9 @@ TEST_F(TorstenTwoCptModelTest, linode_solver) {
 TEST_F(TorstenTwoCptModelTest, linode_solver_zero_rate) {
   using stan::math::var;
   using stan::math::to_var;
-  using refactor::PMXLinODEModel;
-  using refactor::PMXLinODE;
-  using refactor::PMXOdeFunctorRateAdaptor;
+  using torsten::PMXLinODEModel;
+  using torsten::PMXLinODE;
+  using torsten::PMXOdeFunctorRateAdaptor;
   using stan::math::integrate_ode_bdf;
   using torsten::pmx_integrate_ode_adams;
   using torsten::pmx_integrate_ode_bdf;

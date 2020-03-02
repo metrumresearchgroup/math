@@ -1,4 +1,4 @@
-#include <stan/math/rev/mat.hpp>  // FIX ME - more specific
+//  // FIX ME - more specific
 #include <gtest/gtest.h>
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>

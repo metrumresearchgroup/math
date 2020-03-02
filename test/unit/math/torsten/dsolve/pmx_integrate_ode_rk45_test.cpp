@@ -1,12 +1,12 @@
-#include <stan/math/rev/arr.hpp>
+#include <stan/math/rev.hpp>
 #include <gtest/gtest.h>
 #include <stan/math/torsten/dsolve/pmx_integrate_ode_rk45.hpp>
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+#include <test/unit/math/rev/fun/util.hpp>
 #include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
-#include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
-#include <stan/math/rev/mat/functor/integrate_ode_bdf.hpp>
+#include <test/unit/math/prim/functor/harmonic_oscillator.hpp>
+#include <stan/math/rev/functor/integrate_ode_bdf.hpp>
 #include <nvector/nvector_serial.h>
 #include <test/unit/util.hpp>
 #include <stdio.h>
@@ -19,6 +19,11 @@
 
 using stan::math::integrate_ode_rk45;
 using torsten::pmx_integrate_ode_rk45;
+using torsten::dsolve::PMXOdeintSystem;
+using torsten::dsolve::PMXOdeService;
+using torsten::dsolve::Odeint;
+using torsten::dsolve::PMXOdeintIntegrator;
+using torsten::pmx_integrate_ode_group_rk45;
 using stan::math::var;
 using std::vector;
 
@@ -31,11 +36,11 @@ TEST_F(TorstenOdeTest_sho, odeint_rk45_ivp_system) {
 TEST_F(TorstenOdeTest_sho, odeint_rk45_ivp_system_matrix_result) {
   std::vector<std::vector<double> > y1(integrate_ode_rk45(f, y0, t0, ts, theta, x_r, x_i, msgs, atol, rtol, max_num_steps));
 
-  using Ode = dsolve::PMXOdeintSystem<harm_osc_ode_fun, double, double, double>;
-  dsolve::PMXOdeService<Ode, dsolve::Odeint> serv(y0.size(), theta.size());
+  using Ode = PMXOdeintSystem<harm_osc_ode_fun, double, double, double>;
+  PMXOdeService<Ode, Odeint> serv(y0.size(), theta.size());
   Ode ode{serv, f, t0, ts, y0, theta, x_r, x_i, msgs};
   using scheme_t = boost::numeric::odeint::runge_kutta_dopri5<std::vector<double>, double, std::vector<double>, double>;
-  dsolve::PMXOdeintIntegrator<scheme_t> solver(rtol, atol, max_num_steps);
+  PMXOdeintIntegrator<scheme_t> solver(rtol, atol, max_num_steps);
   Eigen::MatrixXd y2 = solver.integrate<Ode, false>(ode);
 
   torsten::test::test_val(y1, y2);
@@ -50,11 +55,11 @@ TEST_F(TorstenOdeTest_lorenz, odeint_rk45_ivp_system) {
 TEST_F(TorstenOdeTest_lorenz, odeint_rk45_ivp_system_matrix_result) {
  std::vector<std::vector<double> > y1(integrate_ode_rk45(f, y0, t0, ts, theta, x_r, x_i, msgs, atol, rtol, max_num_steps));
 
-  using Ode = dsolve::PMXOdeintSystem<lorenz_ode_fun, double, double, double>;
-  dsolve::PMXOdeService<Ode, dsolve::Odeint> serv(y0.size(), theta.size());
+  using Ode = PMXOdeintSystem<lorenz_ode_fun, double, double, double>;
+  PMXOdeService<Ode, Odeint> serv(y0.size(), theta.size());
   Ode ode{serv, f, t0, ts, y0, theta, x_r, x_i, msgs};
   using scheme_t = boost::numeric::odeint::runge_kutta_dopri5<std::vector<double>, double, std::vector<double>, double>;
-  dsolve::PMXOdeintIntegrator<scheme_t> solver(rtol, atol, max_num_steps);
+  PMXOdeintIntegrator<scheme_t> solver(rtol, atol, max_num_steps);
   Eigen::MatrixXd y2 = solver.integrate<Ode, false>(ode);
 
   torsten::test::test_val(y1, y2);
@@ -103,11 +108,11 @@ TEST_F(TorstenOdeTest_sho, rk45_theta_var_matrix_result) {
   std::vector<var> theta_var = stan::math::to_var(theta);
   vector<vector<var> > y1(integrate_ode_rk45(f, y0, t0, ts, theta_var, x_r, x_i, msgs, atol, rtol, max_num_steps));
 
-  using Ode = dsolve::PMXOdeintSystem<harm_osc_ode_fun, double, double, var>;
-  dsolve::PMXOdeService<Ode, dsolve::Odeint> serv(y0.size(), theta.size());
+  using Ode = PMXOdeintSystem<harm_osc_ode_fun, double, double, var>;
+  PMXOdeService<Ode, Odeint> serv(y0.size(), theta.size());
   Ode ode{serv, f, t0, ts, y0, theta_var, x_r, x_i, msgs};
   using scheme_t = boost::numeric::odeint::runge_kutta_dopri5<std::vector<double>, double, std::vector<double>, double>;
-  dsolve::PMXOdeintIntegrator<scheme_t> solver(rtol, atol, max_num_steps);
+  PMXOdeintIntegrator<scheme_t> solver(rtol, atol, max_num_steps);
   Eigen::MatrixXd y2 = solver.integrate<Ode, false>(ode);
 
   torsten::test::test_grad(theta_var, y1, y2, 1.e-8, 1.e-8);

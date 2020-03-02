@@ -1,12 +1,11 @@
 #ifndef STAN_MATH_TORSTEN_TEST_UTIL
 #define STAN_MATH_TORSTEN_TEST_UTIL
 
-#include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <stan/math/rev/mat.hpp>
-#include <stan/math/torsten/finite_diff_gradient.hpp>
 #include <gtest/gtest.h>
-#include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
-#include <test/unit/math/prim/arr/functor/lorenz.hpp>
+#include <stan/math/rev/core.hpp>
+#include <stan/math/rev/meta.hpp>
+#include <stan/math/prim/fun/Eigen.hpp>
+#include <stan/math/torsten/finite_diff_gradient.hpp>
 #include <stan/math/torsten/mpi/precomputed_gradients.hpp>
 #include <stan/math/torsten/to_var.hpp>
 #include <iostream>

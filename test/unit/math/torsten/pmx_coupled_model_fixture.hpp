@@ -1,7 +1,7 @@
 #ifndef TEST_UNIT_TORSTEN_PK_CPT_MODEL_TEST_FIXTURE
 #define TEST_UNIT_TORSTEN_PK_CPT_MODEL_TEST_FIXTURE
 
-#include <stan/math/rev/mat.hpp>
+//
 #include <gtest/gtest.h>
 #include <boost/numeric/odeint.hpp>
 #include <stan/math/torsten/pmx_onecpt_model.hpp>

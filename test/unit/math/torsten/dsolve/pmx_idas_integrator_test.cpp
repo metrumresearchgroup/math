@@ -1,6 +1,6 @@
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+#include <test/unit/math/rev/fun/util.hpp>
 #include <stan/math/torsten/dsolve/pmx_idas_fwd_system.hpp>
 #include <stan/math/torsten/dsolve/pmx_idas_integrator.hpp>
 #include <test/unit/math/torsten/dae_systems.hpp>

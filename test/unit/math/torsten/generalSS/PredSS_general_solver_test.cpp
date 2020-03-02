@@ -1,6 +1,8 @@
-#include <stan/math/rev/mat.hpp>  // FIX ME - more specific
+//  // FIX ME - more specific
 #include <stan/math/torsten/PKModel/Pred/PredSS_oneCpt.hpp>
 #include <stan/math/torsten/PKModel/Pred/PredSS_general.hpp>
+#include <stan/math/torsten/PKModel/functors/general_functor.hpp>
+#include <stan/math/torsten/PKModel/Pred/PredSS_linOde.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/util.hpp>
 

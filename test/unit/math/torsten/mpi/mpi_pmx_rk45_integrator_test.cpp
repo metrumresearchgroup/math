@@ -1,7 +1,7 @@
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
-#include <stan/math/rev/mat/fun/typedefs.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+#include <stan/math/rev/fun/typedefs.hpp>
+#include <test/unit/math/rev/fun/util.hpp>
 #include <stan/math/torsten/dsolve/pmx_integrate_ode_rk45.hpp>
 #include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
@@ -21,6 +21,7 @@
 
 using stan::math::integrate_ode_rk45;
 using torsten::pmx_integrate_ode_group_rk45;
+using torsten::pmx_integrate_ode_rk45;
 using stan::math::matrix_v;
 using stan::math::var;
 using std::vector;

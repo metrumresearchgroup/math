@@ -1,4 +1,6 @@
-#include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
+#include <stan/math/rev/core.hpp>
+#include <stan/math/torsten/pmx_solve_bdf.hpp>
+#include <stan/math/torsten/pmx_solve_rk45.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/math/torsten/util_mixOdeCptModel.hpp>

@@ -2,6 +2,8 @@
 #define TEST_MATH_MATRIX_EXPECT_NEAR_MATRIX_EQ_HPP
 
 #include <gtest/gtest.h>
+#include <stan/math/prim/fun/Eigen.hpp>
+#include <stan/math/rev/fun/Eigen_NumTraits.hpp>
 
 void expect_near_matrix_eq(const
                            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& a,

@@ -1,12 +1,12 @@
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
-#include <stan/math/rev/mat/fun/typedefs.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+#include <stan/math/rev/fun/typedefs.hpp>
+#include <test/unit/math/rev/fun/util.hpp>
 #include <stan/math/torsten/dsolve/pmx_integrate_ode_adams.hpp>
 #include <stan/math/torsten/dsolve/pmx_integrate_ode_bdf.hpp>
 #include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
-#include <stan/math/rev/mat/functor/integrate_ode_bdf.hpp>
+#include <stan/math/rev/functor/integrate_ode_bdf.hpp>
 #include <nvector/nvector_serial.h>
 #include <stan/math/torsten/mpi/envionment.hpp>
 #include <test/unit/util.hpp>

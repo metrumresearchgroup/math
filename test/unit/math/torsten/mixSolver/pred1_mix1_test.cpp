@@ -1,6 +1,7 @@
-#include <stan/math/rev/mat.hpp>  // FIX ME - more specific
+//  // FIX ME - more specific
 #include <stan/math/torsten/PKModel/Pred/Pred1_mix1.hpp>
 #include <stan/math/torsten/PKModel/functors/mix1_functor.hpp>
+#include <stan/math/rev/fun/pow.hpp>
 #include <gtest/gtest.h>
 
 struct ODE_functor {

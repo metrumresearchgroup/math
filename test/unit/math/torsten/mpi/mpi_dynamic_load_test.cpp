@@ -3,9 +3,8 @@
 #include <stan/math.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/torsten/mpi/dynamic_load.hpp>
-#include <test/unit/math/rev/mat/fun/util.hpp>
+#include <test/unit/math/rev/fun/util.hpp>
 #include <test/unit/math/torsten/pmx_ode_test_fixture.hpp>
-#include <test/unit/math/prim/arr/functor/harmonic_oscillator.hpp>
 #include <nvector/nvector_serial.h>
 #include <boost/mpi.hpp>
 #include <test/unit/util.hpp>

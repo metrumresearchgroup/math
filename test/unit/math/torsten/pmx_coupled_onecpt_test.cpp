@@ -1,4 +1,8 @@
-#include <stan/math/prim/mat/fun/Eigen.hpp>
+#include <stan/math/rev/core.hpp>
+#include <stan/math/prim/fun/Eigen.hpp>
+#include <stan/math/torsten/pmx_solve_onecpt_rk45.hpp>
+#include <stan/math/torsten/pmx_solve_rk45.hpp>
+#include <stan/math/torsten/pmx_solve_onecpt_bdf.hpp>
 #include <test/unit/math/torsten/test_util.hpp>
 #include <test/unit/math/torsten/util_mixOdeCptModel.hpp>
 #include <test/unit/math/torsten/pmx_coupled_model_fixture.hpp>
@@ -10,6 +14,7 @@ using Eigen::Matrix;
 using Eigen::Dynamic;
 using Eigen::MatrixXd;
 using torsten::pmx_solve_onecpt_rk45;
+using torsten::pmx_solve_rk45;
 using torsten::pmx_solve_onecpt_bdf;
 
 TEST_F(TorstenCoupledOneCptTest, single_bolus) {

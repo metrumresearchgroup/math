@@ -1,4 +1,4 @@
-#include <stan/math/rev/mat.hpp>  // FIX ME - includes should be more specific
+#include <stan/math/rev/core.hpp>
 #include <test/unit/math/torsten/expect_near_matrix_eq.hpp>
 #include <test/unit/math/torsten/expect_matrix_eq.hpp>
 #include <test/unit/math/torsten/pmx_twocpt_mpi_test_fixture.hpp>
@@ -8,9 +8,10 @@
 #include <stan/math/torsten/pmx_solve_twocpt.hpp>
 #include <stan/math/torsten/pmx_onecpt_model.hpp>
 #include <stan/math/torsten/pmx_twocpt_model.hpp>
+#include <stan/math/torsten/pmx_solve_rk45.hpp>
+#include <stan/math/torsten/pmx_solve_bdf.hpp>
 #include <stan/math/torsten/to_var.hpp>
 #include <gtest/gtest.h>
-#include <stan/math/rev/mat.hpp>  // FIX ME - include should be more specific
 #include <test/unit/math/torsten/util_pmx_solve_twocpt.hpp>
 #include <vector>
 

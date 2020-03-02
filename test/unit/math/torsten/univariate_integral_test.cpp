@@ -1,6 +1,9 @@
+#include <stan/math/prim/fun/value_of.hpp>
+#include <stan/math/rev/fun/value_of.hpp>
+#include <stan/math/torsten/univariate_integral.hpp>
 #include <stan/math/torsten/PKModel/functors/functor.hpp>
-#include <stan/math/rev/mat.hpp>
-#include <stan/math/prim/arr.hpp>
+#include <stan/math/rev/fun/to_var.hpp>
+#include <stan/math/prim.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <sstream>
@@ -69,8 +72,8 @@ TEST(univariate_integral, const_example) {
   std::vector<double> x_r;
   std::vector<int> x_i;
   std::vector<stan::math::var> theta_var = stan::math::to_var(theta);
-  using stan::math::univariate_integral_rk45;
-  using stan::math::univariate_integral_bdf;
+  using torsten::univariate_integral_rk45;
+  using torsten::univariate_integral_bdf;
   
   {
     auto res { univariate_integral_rk45(f0, t0, t1, theta, x_r, x_i) };
@@ -102,8 +105,8 @@ TEST(univariate_integral, linear_example) {
   std::vector<double> x_r;
   std::vector<int> x_i;
   std::vector<stan::math::var> theta_var = stan::math::to_var(theta);  
-  using stan::math::univariate_integral_rk45;
-  using stan::math::univariate_integral_bdf;
+  using torsten::univariate_integral_rk45;
+  using torsten::univariate_integral_bdf;
 
   {
     auto res { univariate_integral_rk45(f0, t0, t1, theta, x_r, x_i) };
@@ -135,8 +138,8 @@ TEST(univariate_integral, quad_example) {
   std::vector<double> x_r;
   std::vector<int> x_i;
   std::vector<stan::math::var> theta_var = stan::math::to_var(theta);  
-  using stan::math::univariate_integral_rk45;
-  using stan::math::univariate_integral_bdf;
+  using torsten::univariate_integral_rk45;
+  using torsten::univariate_integral_bdf;
 
   {
     auto res { univariate_integral_rk45(f0, t0, t1, theta, x_r, x_i) };
@@ -170,8 +173,8 @@ TEST(univariate_integral, quad_example_var) {
   stan::math::var t0_var = stan::math::to_var(t0);  
   stan::math::var t1_var = stan::math::to_var(t1);  
   std::vector<stan::math::var> theta_var = stan::math::to_var(theta);  
-  using stan::math::univariate_integral_rk45;
-  using stan::math::univariate_integral_bdf;
+  using torsten::univariate_integral_rk45;
+  using torsten::univariate_integral_bdf;
 
   {
     auto res { univariate_integral_rk45(f0,
