@@ -1,0 +1,6 @@
+[submodule "stan/math/torsten"]
+	path = stan/math/torsten
+	url = git@github.com:metrumresearchgroup/torsten_math.git
+[submodule "test/unit/math/torsten"]
+	path = test/unit/math/torsten
+	url = git@github.com:metrumresearchgroup/torsten_math_tests.git
