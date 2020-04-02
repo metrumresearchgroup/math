@@ -5,7 +5,7 @@ N_TESTS ?= 100
 ##
 # Any targets in test/ (.d, .o, executable) needs the GTEST flags
 ##
-test/% : CXXFLAGS += $(CXXFLAGS_GTEST) -DTORSTEN_CVS_JAC_AD
+test/% : CXXFLAGS += $(CXXFLAGS_GTEST)
 test/% : CPPFLAGS += $(CPPFLAGS_GTEST)
 test/% : INC += $(INC_GTEST)
 
@@ -37,22 +37,6 @@ test/unit/multiple_translation_units_test$(EXE): test/unit/libmultiple.so
 
 ############################################################
 #
-# torsten tests
-##
-
-TORSTEN_TESTS := $(subst .cpp,$(EXE),$(shell find test/unit/math/torsten -name *_test.cpp))
-$(TORSTEN_TESTS) : $(LIBSUNDIALS)
-
-TORSTEN_MPI_DYN_TESTS_DEP := $(subst .cpp,.d,$(shell find test/unit/math/torsten -name mpi_dynamic_load*_test.cpp))
-$(TORSTEN_MPI_DYN_TESTS_DEP) : CXXFLAGS_MPI += -DTORSTEN_MPI_DYN
-
-ifdef TORSTEN_MPI
-  TORSTEN_MPI_DYN_TESTS := $(subst .cpp,$(EXE),$(shell find test/unit/math/torsten -name mpi_dynamic_load*_test.cpp))
-  $(TORSTEN_MPI_DYN_TESTS) : CXXFLAGS_MPI += -DTORSTEN_MPI_DYN
-endif
-
-############################################################
-#
 # CVODES tests
 ##
 
@@ -68,11 +52,6 @@ $(CVODES_TESTS) : $(LIBSUNDIALS)
 IDAS_TESTS := $(subst .cpp,$(EXE),$(call findfiles,test,*idas*_test.cpp) $(call findfiles,test,*_dae*_test.cpp))
 $(IDAS_TESTS) : $(LIBSUNDIALS)
 
-
-ifdef TORSTEN_MPI
-#  MPI_TESTS := $(subst .cpp,$(EXE),$(shell find test -name *mpi_*test.cpp))
-  GTEST_CXXFLAGS += $(CXXFLAGS_MPI)
-endif
 
 ############################################################
 #
