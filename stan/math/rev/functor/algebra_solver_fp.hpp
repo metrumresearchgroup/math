@@ -252,6 +252,14 @@ struct FixedPointSolver<KinsolFixedPointEnv<F>, fp_jac_type> {
         KINSol(mem, env.nv_x_, KIN_FP, env.nv_u_scal_, env.nv_f_scal_),
         max_num_steps);
 
+#ifdef TORSTEN_INFO
+  long int nfevals;
+  KINGetNumFuncEvals(mem, &nfevals);
+  std::cout << "torsten info: fixed-point solver: "
+            << "number of system function evaluations = "
+            << nfevals << "\n";
+#endif
+
     for (int i = 0; i < N; ++i) {
       x(i) = NV_Ith_S(env.nv_x_, i);
     }
