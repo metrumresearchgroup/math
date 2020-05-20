@@ -15,11 +15,12 @@ help:
 -include make/local                       # user-defined variables
 
 include make/compiler_flags               # CXX, CXXFLAGS, LDFLAGS set by the end of this file
-include make/setup_torsten.mk		  # Torsten
+include make/torsten_setup.mk		  # Torsten
 include make/dependencies                 # rules for generating dependencies
 include make/libraries
 include make/tests
 include make/torsten_tests.mk             # torsten tests
+include make/torsten_clean.mk             # torsten cleanup
 include make/cpplint
 include make/clang-tidy
 
@@ -109,12 +110,6 @@ clean:
 	@echo '  removing generated test files'
 	@$(RM) $(wildcard test/prob/generate_tests$(EXE))
 	@$(RM) $(call findfiles,test/prob,*_generated_*_test.cpp)
-	@echo '  removing torsten test executables'
-	@$(RM) $(call findfiles,stan/math/torsten/test,*_test$(EXE))
-	@$(RM) $(call findfiles,stan/math/torsten/test,*_test.d)
-	@$(RM) $(call findfiles,stan/math/torsten/test,*_test.d.*)
-	@$(RM) $(call findfiles,stan/math/torsten/test,*_test.xml)
-	@$(RM) $(call findfiles,stan/math/torsten/test,*.o)
 
 clean-doxygen:
 	@echo '  removing doxygen'
