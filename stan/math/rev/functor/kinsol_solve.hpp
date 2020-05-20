@@ -117,14 +117,6 @@ Eigen::VectorXd kinsol_solve(
                            scaling, scaling),
                     max_num_steps);
 
-#ifdef TORSTEN_INFO
-  long int nfevals;
-  KINGetNumFuncEvals(kinsol_data.kinsol_memory_, &nfevals);
-  std::cout << "torsten info: Newton solver"
-            << "number of evaluations of the system function = "
-            << nfevals << "\n";
-#endif
-
   Eigen::VectorXd x_solution(N);
   for (int i = 0; i < N; i++)
     x_solution(i) = NV_Ith_S(nv_x, i);

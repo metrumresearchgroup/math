@@ -162,7 +162,6 @@ def main():
     except IOError:
         torsten_mpi = False
 
-
     # pass 0: generate all auto-generated tests
     if any(['test/prob' in arg for arg in inputs.tests]):
         generateTests(inputs.j)
