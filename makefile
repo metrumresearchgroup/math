@@ -125,7 +125,7 @@ clean-deps:
 	@$(RM) $(call findfiles,lib,*.d.*)
 	@$(RM) $(call findfiles,stan,*.dSYM)
 
-clean-all: clean clean-doxygen clean-deps clean-libraries
+clean-all: clean clean-doxygen clean-deps clean-libraries clean-torsten
 
 .PHONY: test-math-dependencies
 test-math-dependencies:
