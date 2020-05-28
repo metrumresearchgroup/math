@@ -39,7 +39,7 @@ ifdef TORSTEN_MPI
   $(TORSTEN_MPI_DYN_TESTS) : CXXFLAGS_MPI += -DTORSTEN_MPI_DYN
 endif
 
-ifdef TORSTEN_MPI
+ifneq ($(call ifdef_any_of,TORSTEN_MPI STAN_LANG_MPI),)
 #  MPI_TESTS := $(subst .cpp,$(EXE),$(shell find test -name *mpi_*test.cpp))
   GTEST_CXXFLAGS += $(CXXFLAGS_MPI)
 endif

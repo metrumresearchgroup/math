@@ -1,7 +1,7 @@
 #ifdef STAN_LANG_MPI
 
 #include <gtest/gtest.h>
-#include <stan/math/prim/mat/fun/welford_covar_estimator.hpp>
+#include <stan/math/prim/fun/welford_covar_estimator.hpp>
 #include <stan/math/mpi/mpi_covar_estimator.hpp>
 #include <boost/mpi.hpp>
 #include <fstream>
