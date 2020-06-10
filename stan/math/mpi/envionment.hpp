@@ -130,8 +130,8 @@ namespace math {
         if(MPI_COMM_INTER_CHAIN == MPI_COMM_NULL) {
           int world_size;
           MPI_Comm_size(MPI_COMM_STAN, &world_size);
-          stan::math::check_greater_or_equal("MPI inter-chain session",
-                                             "number of procs", world_size,
+          stan::math::check_greater_or_equal("MPI cross-chain(nproc >= num_chains)",
+                                             "nproc", world_size,
                                              num_mpi_chains);
 
           MPI_Group stan_group, new_group;
