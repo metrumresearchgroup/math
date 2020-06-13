@@ -223,14 +223,7 @@ namespace math {
       static bool is_in_inter_chain_comm(int num_mpi_chains) {
         return inter_chain_comm(num_mpi_chains).rank() >= 0;
       }
-
     };
-
-    Envionment Session::env;
-    MPI_Comm Session::MPI_COMM_INTER_CHAIN(MPI_COMM_NULL);
-    MPI_Comm Session::MPI_COMM_INTRA_CHAIN(MPI_COMM_NULL);
-    Communicator Session::inter_chain(MPI_COMM_NULL);
-    Communicator Session::intra_chain(MPI_COMM_NULL);
 
 #endif  // #if defined(STAN_LANG_MPI) || defined(TORSTEN_MPI)
   }
