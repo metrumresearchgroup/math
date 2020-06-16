@@ -1,7 +1,7 @@
 #ifdef STAN_LANG_MPI
 
 #include <gtest/gtest.h>
-#include <stan/math/mpi/envionment.hpp>
+#include <stan/math/mpi/environment.hpp>
 #include <boost/mpi.hpp>
 #include <fstream>
 
@@ -10,6 +10,8 @@ using Eigen::Matrix;
 using std::vector;
 using stan::math::mpi::Communicator;
 using stan::math::mpi::Session;
+
+#include <stan/math/mpi/session_def.cpp>
 
 TEST(mpi_comm_test, mpi_inter_intra_comms) {
   const Communicator world_comm(MPI_COMM_STAN);

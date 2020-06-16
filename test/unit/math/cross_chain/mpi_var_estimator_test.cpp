@@ -12,6 +12,8 @@ using std::vector;
 using stan::math::mpi::Communicator;
 using stan::math::mpi::Session;
 
+#include <stan/math/mpi/session_def.cpp>
+
 TEST(mpi_variance_test, var_estimator) {
   const Communicator comm(MPI_COMM_STAN);
 

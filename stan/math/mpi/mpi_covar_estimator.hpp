@@ -3,7 +3,7 @@
 
 #ifdef STAN_LANG_MPI
 
-#include <stan/math/mpi/envionment.hpp>
+#include <stan/math/mpi/environment.hpp>
 #include <stan/math/prim/fun/welford_covar_estimator.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
