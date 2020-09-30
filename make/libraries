@@ -192,7 +192,6 @@ $(BOOST)/stage/lib/mpi.so: $(BOOST)/user-config.jam
 $(BOOST)/stage/lib/libboost_serialization.so: $(BOOST)/stage/lib/mpi.so
 $(BOOST)/stage/lib/libboost_mpi.so: $(BOOST)/stage/lib/mpi.so
 
-
 $(BOOST)/stage/lib/libboost_serialization.dylib: $(BOOST)/stage/lib/mpi.so
 	install_name_tool -add_rpath "$(BOOST_LIBRARY_ABSOLUTE_PATH)" "$(BOOST)/stage/lib/libboost_serialization.dylib"
 	install_name_tool -id @rpath/libboost_serialization.dylib "$(BOOST)/stage/lib/libboost_serialization.dylib"
@@ -214,6 +213,34 @@ clean-mpi:
 endif
 
 ############################################################
+# boost::filesystem build rules
+
+ifdef MPI_ADAPTED_WARMUP
+
+##
+# Boost build options
+BOOST_PARALLEL_JOBS ?= 1
+
+$(BOOST)/stage/lib/libboost_filesystem.dylib $(BOOST)/stage/lib/libboost_regexp.dylib: $(BOOST)/user-config.jam
+	@mkdir -p $(dir $@)
+	cd $(BOOST); ./bootstrap.sh
+	cd $(BOOST); ./b2 --user-config=user-config.jam --layout=system --with-filesystem --with-regex -j$(BOOST_PARALLEL_JOBS) variant=release link=shared threading=multi runtime-link=shared hardcode-dll-paths=true dll-path="$(BOOST_LIBRARY_ABSOLUTE_PATH)" cxxstd=11
+	@install_name_tool -add_rpath "$(BOOST_LIBRARY_ABSOLUTE_PATH)" $@
+	@install_name_tool -id @rpath/libboost_filesystem.dylib "$(BOOST)/stage/lib/libboost_filesystem.dylib"
+	@install_name_tool -id @rpath/libboost_regex.dylib "$(BOOST)/stage/lib/libboost_regex.dylib"
+
+$(BOOST)/stage/lib/libboost_filesystem.so $(BOOST)/stage/lib/libboost_regexp.so: $(BOOST)/user-config.jam
+	@mkdir -p $(dir $@)
+	cd $(BOOST); ./bootstrap.sh
+	cd $(BOOST); ./b2 --user-config=user-config.jam --layout=system --with-filesystem --with-regex -j$(BOOST_PARALLEL_JOBS) variant=release link=shared threading=multi runtime-link=shared hardcode-dll-paths=true dll-path="$(BOOST_LIBRARY_ABSOLUTE_PATH)" cxxstd=11
+
+clean-boost-warmup:
+	@echo '  cleaning boost targets'
+	$(RM) -r $(wildcard $(BOOST)/stage/lib $(BOOST)/bin.v2 $(BOOST)/tools/build/src/engine/bootstrap/ $(BOOST)/tools/build/src/engine/bin.* $(BOOST)/project-config.jam* $(BOOST)/b2 $(BOOST)/bjam $(BOOST)/bootstrap.log)
+
+endif
+
+############################################################
 # Google Test:
 #   Build the google test library.
 $(GTEST)/src/gtest-all.o: CXXFLAGS += $(CXXFLAGS_GTEST)
@@ -225,5 +252,5 @@ $(GTEST)/src/gtest-all.o: INC += $(INC_GTEST)
 ############################################################
 # Clean all libraries
 
-.PHONY: clean-libraries clean-sundials clean-mpi clean-tbb
-clean-libraries: clean-sundials clean-mpi clean-tbb
+.PHONY: clean-libraries clean-sundials clean-mpi clean-tbb clean-boost-warmup
+clean-libraries: clean-sundials clean-mpi clean-tbb clean-boost-warmup
