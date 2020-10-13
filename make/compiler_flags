@@ -253,7 +253,17 @@ ifdef STAN_MPI
   CXXFLAGS_MPI ?= -Wno-delete-non-virtual-dtor
 endif
 
+################################################################################
+# Setup boost libs required by cross-chain warmup: boost::filesystem & boost::regex
+#
 
+ifdef MPI_ADAPTED_WARMUP
+  CROSS_CHAIN_BOOST_TARGETS ?= $(addsuffix $(LIBRARY_SUFFIX),$(BOOST)/stage/lib/libboost_filesystem $(BOOST)/stage/lib/libboost_regex)
+  BOOST_LIBRARY_ABSOLUTE_PATH = $(abspath $(BOOST)/stage/lib)
+
+  LDFLAGS += -Wl,-L,"$(BOOST_LIBRARY_ABSOLUTE_PATH)" -Wl,-rpath,"$(BOOST_LIBRARY_ABSOLUTE_PATH)"
+  CXXFLAGS += -Wno-delete-non-virtual-dtor
+endif
 
 CXXFLAGS += $(CXXFLAGS_LANG) $(CXXFLAGS_OS) $(CXXFLAGS_WARNINGS) $(CXXFLAGS_BOOST) $(CXXFLAGS_EIGEN) $(CXXFLAGS_OPENCL) $(CXXFLAGS_MPI) $(CXXFLAGS_THREADS) $(CXXFLAGS_TBB) -O$(O) $(INC)
 CPPFLAGS += $(CPPFLAGS_LANG) $(CPPFLAGS_OS) $(CPPFLAGS_WARNINGS) $(CPPFLAGS_BOOST) $(CPPFLAGS_EIGEN) $(CPPFLAGS_OPENCL) $(CPPFLAGS_MPI) $(CPPFLAGS_TBB)

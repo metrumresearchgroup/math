@@ -14,10 +14,13 @@ help:
 -include $(HOME)/.config/stan/make.local  # user-defined variables
 -include make/local                       # user-defined variables
 
+include make/torsten_setup.mk		  # Torsten
 include make/compiler_flags               # CXX, CXXFLAGS, LDFLAGS set by the end of this file
 include make/dependencies                 # rules for generating dependencies
 include make/libraries
 include make/tests
+include make/torsten_tests.mk             # torsten tests
+include make/torsten_clean.mk             # torsten cleanup
 include make/cpplint
 include make/clang-tidy
 
@@ -122,7 +125,7 @@ clean-deps:
 	@$(RM) $(call findfiles,lib,*.d.*)
 	@$(RM) $(call findfiles,stan,*.dSYM)
 
-clean-all: clean clean-doxygen clean-deps clean-libraries
+clean-all: clean clean-doxygen clean-deps clean-libraries clean-torsten
 
 .PHONY: test-math-dependencies
 test-math-dependencies:
