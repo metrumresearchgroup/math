@@ -155,6 +155,12 @@ def main():
     except IOError:
         stan_mpi = False
 
+    try:
+        with open("make/local") as f:
+            torsten_mpi =  "TORSTEN_MPI" in f.read()
+    except IOError:
+        torsten_mpi = False
+
     # pass 0: generate all auto-generated tests
     if any(['test/prob' in arg for arg in inputs.tests]):
         generateTests(inputs.j)
@@ -176,7 +182,7 @@ def main():
         for t in tests:
             if inputs.debug:
                 print("run single test: %s" % testname)
-            runTest(t, inputs.run_all, mpi = stan_mpi, j = inputs.j)
+            runTest(t, inputs.run_all, mpi = stan_mpi or torsten_mpi, j = inputs.j)
 
 
 if __name__ == "__main__":
