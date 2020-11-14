@@ -123,7 +123,7 @@ clean-deps:
 	@$(RM) $(call findfiles,stan,*.d.*)
 	@$(RM) $(call findfiles,test,*.d.*)
 	@$(RM) $(call findfiles,lib,*.d.*)
-	@$(RM) $(call findfiles,stan,*.dSYM)
+	@$(RM) -r $(call findfiles,stan,*.dSYM)
 
 clean-all: clean clean-doxygen clean-deps clean-libraries clean-torsten
 
