@@ -64,8 +64,10 @@ class arena_matrix : public Eigen::Map<MatrixType> {
                   other.rows(), other.cols()) {
     *this = other;
   }
+
   /**
-   * Constructs `arena_matrix` from an expression.
+   * Constructs `arena_matrix` from an expression. This makes an assumption that
+   * any other `Eigen::Map` also contains memory allocated in the arena.
    * @param other expression
    */
   arena_matrix(const Base& other)  // NOLINT
@@ -113,5 +115,29 @@ class arena_matrix : public Eigen::Map<MatrixType> {
 
 }  // namespace math
 }  // namespace stan
+
+namespace Eigen {
+namespace internal {
+
+template <typename T>
+struct traits<stan::math::arena_matrix<T>> {
+  using base = traits<Eigen::Map<T>>;
+  enum {
+    PlainObjectTypeInnerSize = base::PlainObjectTypeInnerSize,
+    InnerStrideAtCompileTime = base::InnerStrideAtCompileTime,
+    OuterStrideAtCompileTime = base::OuterStrideAtCompileTime,
+    Alignment = base::Alignment,
+    Flags = base::Flags
+  };
+};
+
+template <typename T>
+struct evaluator<stan::math::arena_matrix<T>> : evaluator<Eigen::Map<T>> {
+  using base = evaluator<Eigen::Map<T>>;
+  enum { Flags = base::Flags, Alignment = base::Alignment };
+};
+
+}  // namespace internal
+}  // namespace Eigen
 
 #endif
