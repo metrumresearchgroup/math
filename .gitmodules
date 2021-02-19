@@ -1,4 +1,4 @@
 [submodule "stan/math/torsten"]
 	path = stan/math/torsten
 	url = https://github.com/metrumresearchgroup/torsten_math.git
-        branch = develop
+        branch = mpi_in_time_ode
