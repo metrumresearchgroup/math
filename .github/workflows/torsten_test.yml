@@ -1,4 +1,4 @@
-name: Torsten unit tests
+name: Torsten Math tests
 
 on:
   pull_request:
