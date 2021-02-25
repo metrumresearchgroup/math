@@ -6,7 +6,7 @@ N_TESTS ?= 100
 # Any targets in test/ (.d, .o, executable) needs the GTEST flags
 ##
 
-stan/math/torsten/test/% : CXXFLAGS += $(CXXFLAGS_GTEST) -DTORSTEN_CVS_JAC_AD
+stan/math/torsten/test/% : CXXFLAGS += $(CXXFLAGS_GTEST)
 stan/math/torsten/test/% : CPPFLAGS += $(CPPFLAGS_GTEST)
 stan/math/torsten/test/% : INC += $(INC_GTEST)
 

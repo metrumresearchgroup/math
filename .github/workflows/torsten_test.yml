@@ -59,53 +59,53 @@ jobs:
         name: gtest_outputs_xml
         path: '**/*_test.xml'
 
-  win:
-    name: windows tests
-    runs-on: windows-latest
-    needs: nix
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '2.x'
-    - name: Download RTools
-      run: Invoke-WebRequest -Uri https://cran.r-project.org/bin/windows/Rtools/rtools40-x86_64.exe -OutFile ./R40.exe
-    - name: Install RTools
-      shell: powershell
-      run: Start-Process -FilePath ./R40.exe -ArgumentList /VERYSILENT -NoNewWindow -Wait
-    - name: PATH Setup
-      shell: powershell
-      run: echo "C:\RTools40\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-    - name: PATH Setup
-      shell: powershell
-      run: echo "C:\RTools40\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-    - name: Print g++ version
-      shell: powershell
-      run: g++ --version
-    - name: Print g++ path
-      shell: powershell
-      run: Get-Command g++ | Select-Object -ExpandProperty Definition
-    - name: Print mingw32-make version
-      shell: powershell
-      run: mingw32-make --version
-    - name: Print mingw32-make path
-      shell: powershell
-      run: Get-Command mingw32-make | Select-Object -ExpandProperty Definition
-    - name: Build Math libs
-      shell: powershell
-      run: mingw32-make -f make/standalone math-libs
-    - name: Add TBB to PATH
-      shell: powershell
-      run: echo "D:\a\math\math\lib\tbb" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-    - name: Run full unit tests
-      shell: powershell
-      run: python runTests.py -j2 stan/math/torsten/test/unit
-    - name: Upload gtest_output xml
-      uses: actions/upload-artifact@v2
-      if: failure()
-      with:
-        name: gtest_outputs_xml
-        path: '**/*_test.xml'
+#  win:
+#    name: windows tests
+#    runs-on: windows-latest
+#    needs: nix
+#
+#    steps:
+#    - uses: actions/checkout@v2
+#      with:
+#        submodules: recursive
+#    - uses: actions/setup-python@v2
+#      with:
+#        python-version: '2.x'
+#    - name: Download RTools
+#      run: Invoke-WebRequest -Uri https://cran.r-project.org/bin/windows/Rtools/rtools40-x86_64.exe -OutFile ./R40.exe
+#    - name: Install RTools
+#      shell: powershell
+#      run: Start-Process -FilePath ./R40.exe -ArgumentList /VERYSILENT -NoNewWindow -Wait
+#    - name: PATH Setup
+#      shell: powershell
+#      run: echo "C:\RTools40\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+#    - name: PATH Setup
+#      shell: powershell
+#      run: echo "C:\RTools40\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+#    - name: Print g++ version
+#      shell: powershell
+#      run: g++ --version
+#    - name: Print g++ path
+#      shell: powershell
+#      run: Get-Command g++ | Select-Object -ExpandProperty Definition
+#    - name: Print mingw32-make version
+#      shell: powershell
+#      run: mingw32-make --version
+#    - name: Print mingw32-make path
+#      shell: powershell
+#      run: Get-Command mingw32-make | Select-Object -ExpandProperty Definition
+#    - name: Build Math libs
+#      shell: powershell
+#      run: mingw32-make -f make/standalone math-libs
+#    - name: Add TBB to PATH
+#      shell: powershell
+#      run: echo "D:\a\math\math\lib\tbb" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+#    - name: Run full unit tests
+#      shell: powershell
+#      run: python runTests.py -j2 stan/math/torsten/test/unit
+#    - name: Upload gtest_output xml
+#      uses: actions/upload-artifact@v2
+#      if: failure()
+#      with:
+#        name: gtest_outputs_xml
+#        path: '**/*_test.xml'

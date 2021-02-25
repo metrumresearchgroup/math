@@ -1,7 +1,7 @@
 # By default we use DQ, but user can choose AD for Jacobian
 # computation in CVODES' newton iterations.
-ifdef TORSTEN_CVS_JAC_AD
-   CXXFLAGS += -DTORSTEN_CVS_JAC_AD
+ifdef TORSTEN_CVS_JAC_DQ
+   CXXFLAGS += -DTORSTEN_CVS_JAC_DQ
 endif
 
 # turning on braid implies using MPI
