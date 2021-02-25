@@ -1,3 +1,5 @@
+[![Torsten tests](https://github.com/metrumresearchgroup/math/actions/workflows/torsten_test.yml/badge.svg)](https://github.com/metrumresearchgroup/math/actions/workflows/torsten_test.yml)
+
 The <b>Stan Math Library</b> is a C++, reverse-mode automatic
 differentiation library designed to be usable, extensive and
 extensible, efficient, scalable, stable, portable, and redistributable
