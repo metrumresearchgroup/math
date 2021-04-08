@@ -70,19 +70,19 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: '2.x'
-    - name: Set up R 4
+    - name: Set up R 4.0
       uses: r-lib/actions/setup-r@v1
       with:
-       r-version: 4.0
+        r-version: 4.0
     - name: Print g++ info
-     run: |
-       g++ --version
-       Get-Command g++ | Select-Object -ExpandProperty Definition
+      run: |
+        g++ --version
+        Get-Command g++ | Select-Object -ExpandProperty Definition
     - name: Print mingw32-make info
       shell: powershell
-     run: |
-      mingw32-make --version
-      Get-Command mingw32-make | Select-Object -ExpandProperty Definition
+      run: |
+        mingw32-make --version
+        Get-Command mingw32-make | Select-Object -ExpandProperty Definition
     - name: Build Math libs
       shell: powershell
       run: mingw32-make -f make/standalone math-libs
