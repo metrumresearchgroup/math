@@ -23,7 +23,7 @@ namespace math {
  *
  * @tparam Lmm ID of ODE solver (1: ADAMS, 2: BDF)
  * @tparam F Type of ODE right hand side
- * @tparam T_y0 Type of scalars for initial state
+ * @tparam T_y0 Type of initial state
  * @tparam T_param Type of scalars for parameters
  * @tparam T_t0 Type of scalar of initial time point
  * @tparam T_ts Type of time-points where ODE solution is returned
@@ -183,8 +183,8 @@ class cvodes_integrator {
    * @throw <code>std::invalid_argument</code> if arguments are the wrong
    *   size or tolerances or max_num_steps are out of range.
    */
-  cvodes_integrator(const char* function_name, const F& f,
-                    const Eigen::Matrix<T_y0, Eigen::Dynamic, 1>& y0,
+  template <require_eigen_col_vector_t<T_y0>* = nullptr>
+  cvodes_integrator(const char* function_name, const F& f, const T_y0& y0,
                     const T_t0& t0, const std::vector<T_ts>& ts,
                     double relative_tolerance, double absolute_tolerance,
                     long int max_num_steps,  // NOLINT(runtime/int)
@@ -279,8 +279,11 @@ class cvodes_integrator {
           CVodeSetUserData(cvodes_mem, reinterpret_cast<void*>(this)),
           "CVodeSetUserData");
 
-      cvodes_set_options(cvodes_mem, relative_tolerance_, absolute_tolerance_,
-                         max_num_steps_);
+      cvodes_set_options(cvodes_mem, max_num_steps_);
+
+      check_flag_sundials(CVodeSStolerances(cvodes_mem, relative_tolerance_,
+                                            absolute_tolerance_),
+                          "CVodeSStolerances");
 
       check_flag_sundials(CVodeSetLinearSolver(cvodes_mem, LS_, A_),
                           "CVodeSetLinearSolver");

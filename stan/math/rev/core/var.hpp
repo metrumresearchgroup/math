@@ -1,18 +1,19 @@
 #ifndef STAN_MATH_REV_CORE_VAR_HPP
 #define STAN_MATH_REV_CORE_VAR_HPP
 
+#ifdef STAN_OPENCL
+#include <stan/math/opencl/rev/vari.hpp>
+#include <stan/math/opencl/plain_type.hpp>
+#endif
 #include <stan/math/rev/core/vari.hpp>
 #include <stan/math/rev/core/grad.hpp>
 #include <stan/math/rev/core/chainable_alloc.hpp>
 #include <stan/math/prim/meta.hpp>
 #include <stan/math/rev/meta/is_vari.hpp>
 #include <stan/math/rev/meta/arena_type.hpp>
-#include <stan/math/rev/functor/reverse_pass_callback.hpp>
+#include <stan/math/rev/core/reverse_pass_callback.hpp>
 #include <ostream>
 #include <vector>
-#ifdef STAN_OPENCL
-#include <stan/math/opencl/rev/vari.hpp>
-#endif
 
 namespace stan {
 namespace math {
@@ -91,7 +92,7 @@ class var_value<T, require_floating_point_t<T>> {
    *
    * @return The value of this variable.
    */
-  inline const auto& val() const { return vi_->val_; }
+  inline const auto& val() const { return vi_->val(); }
 
   /**
    * Return a reference of the derivative of the root expression with
@@ -101,7 +102,7 @@ class var_value<T, require_floating_point_t<T>> {
    *
    * @return Adjoint for this variable.
    */
-  inline auto& adj() const { return vi_->adj_; }
+  inline auto& adj() const { return vi_->adj(); }
 
   /**
    * Return a reference to the derivative of the root expression with
@@ -112,6 +113,7 @@ class var_value<T, require_floating_point_t<T>> {
    * @return Adjoint for this variable.
    */
   inline auto& adj() { return vi_->adj_; }
+
   /**
    * Compute the gradient of this (dependent) variable with respect to
    * the specified vector of (independent) variables, assigning the
@@ -309,12 +311,9 @@ class var_value<T, require_floating_point_t<T>> {
  */
 template <typename T>
 class var_value<
-    T, require_t<bool_constant<is_eigen<T>::value || is_matrix_cl<T>::value>>> {
-  static_assert(
-      std::is_floating_point<value_type_t<T>>::value,
-      "The template for must be a floating point or a container holding"
-      " floating point types");
-
+    T, require_t<bool_constant<
+           (is_eigen<T>::value || is_kernel_expression_and_not_scalar<T>::value)
+           && std::is_floating_point<value_type_t<T>>::value>>> {
  public:
   using value_type = T;  // type in vari_value.
   using vari_type = std::conditional_t<is_plain_type<value_type>::value,
@@ -359,7 +358,7 @@ class var_value<
    * @tparam S A type that is convertible to `value_type`.
    * @param x Value of the variable.
    */
-  template <typename S, require_convertible_t<S&, value_type>* = nullptr>
+  template <typename S, require_assignable_t<value_type, S>* = nullptr>
   var_value(S&& x) : vi_(new vari_type(std::forward<S>(x), false)) {}  // NOLINT
 
   /**
@@ -368,7 +367,7 @@ class var_value<
    * @param other the value to assign
    * @return this
    */
-  template <typename S, require_convertible_t<S&, value_type>* = nullptr,
+  template <typename S, require_assignable_t<value_type, S>* = nullptr,
             require_all_plain_type_t<T, S>* = nullptr>
   var_value(const var_value<S>& other) : vi_(other.vi_) {}
 
@@ -380,7 +379,7 @@ class var_value<
    * @return this
    */
   template <typename S, typename T_ = T,
-            require_convertible_t<S&, value_type>* = nullptr,
+            require_assignable_t<value_type, S>* = nullptr,
             require_not_plain_type_t<S>* = nullptr,
             require_plain_type_t<T_>* = nullptr>
   var_value(const var_value<S>& other) : vi_(new vari_type(other.vi_->val_)) {
@@ -401,7 +400,8 @@ class var_value<
    *
    * @return The value of this variable.
    */
-  inline const auto& val() const { return vi_->val_; }
+  inline const auto& val() const { return vi_->val(); }
+  inline auto& val_op() { return vi_->val(); }
 
   /**
    * Return a reference to the derivative of the root expression with
@@ -411,13 +411,13 @@ class var_value<
    *
    * @return Adjoint for this variable.
    */
-  inline auto& adj() { return vi_->adj_; }
-  inline auto& adj() const { return vi_->adj_; }
-  inline auto& adj_op() { return vi_->adj_; }
+  inline auto& adj() { return vi_->adj(); }
+  inline auto& adj() const { return vi_->adj(); }
+  inline auto& adj_op() { return vi_->adj(); }
 
-  inline Eigen::Index rows() const { return vi_->val_.rows(); }
-  inline Eigen::Index cols() const { return vi_->val_.cols(); }
-  inline Eigen::Index size() const { return vi_->val_.size(); }
+  inline Eigen::Index rows() const { return vi_->rows(); }
+  inline Eigen::Index cols() const { return vi_->cols(); }
+  inline Eigen::Index size() const { return vi_->size(); }
 
   // POINTER OVERRIDES
 
@@ -484,7 +484,8 @@ class var_value<
    * @return The result of subtracting the specified variable from
    * this variable.
    */
-  inline var_value<T>& operator-=(const var_value<T>& b);
+  template <typename S, require_st_var<S>* = nullptr>
+  inline var_value<T>& operator-=(const S& b);
 
   /**
    * The compound subtract/assignment operator for scalars (C++).
@@ -497,7 +498,8 @@ class var_value<
    * @return The result of subtracting the specified variable from this
    * variable.
    */
-  inline var_value<T>& operator-=(T b);
+  template <typename S, require_st_arithmetic<S>* = nullptr>
+  inline var_value<T>& operator-=(const S& b);
 
   /**
    * The compound multiply/assignment operator for variables (C++).
@@ -575,6 +577,20 @@ class var_value<
   }
 
   /**
+   * View transpose of eigen matrix.
+   */
+  inline auto transpose() const {
+    using vari_sub = decltype(vi_->transpose());
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->transpose()));
+  }
+  inline auto transpose() {
+    using vari_sub = decltype(vi_->transpose());
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->transpose()));
+  }
+
+  /**
    * View of the head of Eigen vector types.
    * @param n Number of elements to return from top of vector.
    */
@@ -648,6 +664,20 @@ class var_value<
     using vari_sub = decltype(vi_->col(i));
     using var_sub = var_value<value_type_t<vari_sub>>;
     return var_sub(new vari_sub(vi_->col(i)));
+  }
+
+  /**
+   * View a `matrix_cl` as a column vector.
+   */
+  inline auto as_column_vector_or_scalar() const {
+    using vari_sub = decltype(vi_->as_column_vector_or_scalar());
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->as_column_vector_or_scalar()));
+  }
+  inline auto as_column_vector_or_scalar() {
+    using vari_sub = decltype(vi_->as_column_vector_or_scalar());
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->as_column_vector_or_scalar()));
   }
 
   /**
@@ -793,6 +823,112 @@ class var_value<
   }
 
   /**
+   * Return a block consisting of the top rows
+   * @param n Number of rows
+   */
+  inline auto topRows(Eigen::Index n) const {
+    using vari_sub = decltype(vi_->topRows(n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->topRows(n)));
+  }
+  inline auto topRows(Eigen::Index n) {
+    using vari_sub = decltype(vi_->topRows(n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->topRows(n)));
+  }
+
+  /**
+   * Return a block consisting of the bottom rows
+   * @param n Number of rows
+   */
+  inline auto bottomRows(Eigen::Index n) const {
+    using vari_sub = decltype(vi_->bottomRows(n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->bottomRows(n)));
+  }
+  inline auto bottomRows(Eigen::Index n) {
+    using vari_sub = decltype(vi_->bottomRows(n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->bottomRows(n)));
+  }
+
+  /**
+   * Return a block consisting of rows in the middle.
+   * @param start_row Starting row index
+   * @param n Number of rows
+   */
+  inline auto middleRows(Eigen::Index start_row, Eigen::Index n) const {
+    using vari_sub = decltype(vi_->middleRows(start_row, n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->middleRows(start_row, n)));
+  }
+  inline auto middleRows(Eigen::Index start_row, Eigen::Index n) {
+    using vari_sub = decltype(vi_->middleRows(start_row, n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->middleRows(start_row, n)));
+  }
+
+  /**
+   * Return a block consisting of the left-most columns
+   * @param n Number of columns
+   */
+  inline auto leftCols(Eigen::Index n) const {
+    using vari_sub = decltype(vi_->leftCols(n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->leftCols(n)));
+  }
+  inline auto leftCols(Eigen::Index n) {
+    using vari_sub = decltype(vi_->leftCols(n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->leftCols(n)));
+  }
+
+  /**
+   * Return a block consisting of the right-most columns
+   * @param n Number of columns
+   */
+  inline auto rightCols(Eigen::Index n) const {
+    using vari_sub = decltype(vi_->rightCols(n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->rightCols(n)));
+  }
+  inline auto rightCols(Eigen::Index n) {
+    using vari_sub = decltype(vi_->rightCols(n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->rightCols(n)));
+  }
+
+  /**
+   * Return a block consisting of columns in the middle.
+   * @param start_col Starting column index
+   * @param n Number of columns
+   */
+  inline auto middleCols(Eigen::Index start_col, Eigen::Index n) const {
+    using vari_sub = decltype(vi_->middleCols(start_col, n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->middleCols(start_col, n)));
+  }
+  inline auto middleCols(Eigen::Index start_col, Eigen::Index n) {
+    using vari_sub = decltype(vi_->middleCols(start_col, n));
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->middleCols(start_col, n)));
+  }
+
+  /**
+   * Return an Array.
+   */
+  inline auto array() const {
+    using vari_sub = decltype(vi_->array());
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->array()));
+  }
+  inline auto array() {
+    using vari_sub = decltype(vi_->array());
+    using var_sub = var_value<value_type_t<vari_sub>>;
+    return var_sub(new vari_sub(vi_->array()));
+  }
+
+  /**
    * Write the value of this autodiff variable and its adjoint to
    * the specified output stream.
    *
@@ -834,7 +970,7 @@ class var_value<
    * @param other the value to assign
    * @return this
    */
-  template <typename S, require_convertible_t<S&, value_type>* = nullptr,
+  template <typename S, require_assignable_t<value_type, S>* = nullptr,
             require_all_plain_type_t<T, S>* = nullptr>
   inline var_value<T>& operator=(const var_value<S>& other) {
     vi_ = other.vi_;
@@ -848,8 +984,9 @@ class var_value<
    * @param other the value to assign
    * @return this
    */
-  template <typename S, require_convertible_t<S&, value_type>* = nullptr,
-            require_any_not_plain_type_t<T, S>* = nullptr>
+  template <typename S, typename T_ = T,
+            require_assignable_t<value_type, S>* = nullptr,
+            require_any_not_plain_type_t<T_, S>* = nullptr>
   inline var_value<T>& operator=(const var_value<S>& other) {
     arena_t<plain_type_t<T>> prev_val = vi_->val_;
     vi_->val_ = other.val();
@@ -918,8 +1055,9 @@ using var = var_value<double>;
  * @ingroup type_trait
  */
 template <typename T>
-struct scalar_type<math::var_value<T>> {
-  using type = math::var_value<scalar_type_t<T>>;
+struct scalar_type<T, std::enable_if_t<is_var<T>::value>> {
+  using type
+      = math::var_value<scalar_type_t<typename std::decay_t<T>::value_type>>;
 };
 
 }  // namespace stan

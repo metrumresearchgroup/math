@@ -3,20 +3,18 @@
 #ifdef STAN_OPENCL
 
 #include <stan/math/opencl/matrix_cl_view.hpp>
-#include <stan/math/opencl/err.hpp>
+#include <stan/math/opencl/err/check_opencl.hpp>
 #include <stan/math/prim/meta.hpp>
 #include <stan/math/opencl/kernel_generator/type_str.hpp>
 #include <stan/math/opencl/kernel_generator/name_generator.hpp>
 #include <stan/math/opencl/kernel_generator/operation_cl.hpp>
 #include <stan/math/opencl/kernel_generator/scalar.hpp>
 #include <stan/math/opencl/kernel_generator/as_operation_cl.hpp>
-#include <stan/math/opencl/kernel_generator/is_kernel_expression.hpp>
 #include <stan/math/opencl/kernel_generator/common_return_scalar.hpp>
 #include <algorithm>
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <set>
 #include <utility>
 
 namespace stan {
@@ -186,8 +184,12 @@ class binary_operation : public operation_cl<Derived, T_res, T_a, T_b> {
             as_operation_cl(std::forward<T_b>(b))};                           \
   }
 
-ADD_BINARY_OPERATION(addition_, operator+, common_scalar_t<T_a COMMA T_b>, "+");
-ADD_BINARY_OPERATION(subtraction_, operator-, common_scalar_t<T_a COMMA T_b>,
+ADD_BINARY_OPERATION(addition_operator_, operator+,
+                     common_scalar_t<T_a COMMA T_b>, "+");
+ADD_BINARY_OPERATION(addition_, add, common_scalar_t<T_a COMMA T_b>, "+");
+ADD_BINARY_OPERATION(subtraction_operator_, operator-,
+                     common_scalar_t<T_a COMMA T_b>, "-");
+ADD_BINARY_OPERATION(subtraction_, subtract, common_scalar_t<T_a COMMA T_b>,
                      "-");
 ADD_BINARY_OPERATION_WITH_CUSTOM_CODE(
     elt_multiply_, elt_multiply, common_scalar_t<T_a COMMA T_b>, "*",
@@ -200,12 +202,21 @@ ADD_BINARY_OPERATION_WITH_CUSTOM_CODE(
       return {std::max(diags0.first, diags1.first),
               std::min(diags0.second, diags1.second)};
     });
-
 ADD_BINARY_OPERATION_WITH_CUSTOM_CODE(
     elt_divide_, elt_divide, common_scalar_t<T_a COMMA T_b>, "/",
     inline std::pair<int, int> extreme_diagonals() const {
       return {-rows() + 1, cols() - 1};
     });
+ADD_BINARY_OPERATION_WITH_CUSTOM_CODE(
+    elt_modulo_, operator%, common_scalar_t<T_a COMMA T_b>, "%",
+    static_assert(
+        std::is_integral<scalar_type_t<T_a>>::value&&
+            std::is_integral<scalar_type_t<T_b>>::value,
+        "both operands to operator% must have integral scalar types!");
+    inline std::pair<int, int> extreme_diagonals() const {
+      return {-rows() + 1, cols() - 1};
+    });
+
 ADD_BINARY_OPERATION(less_than_, operator<, bool, "<");
 ADD_BINARY_OPERATION_WITH_CUSTOM_CODE(
     less_than_or_equal_, operator<=, bool,
