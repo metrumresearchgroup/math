@@ -299,8 +299,8 @@ class cvodes_integrator {
                 CV_STAGGERED, &cvodes_integrator::cv_rhs_sens, nv_state_sens_),
             "CVodeSensInit");
 
-        // check_flag_sundials(CVodeSetSensErrCon(cvodes_mem, SUNTRUE),
-        //                     "CVodeSetSensErrCon");
+        check_flag_sundials(CVodeSetSensErrCon(cvodes_mem, SUNTRUE),
+                            "CVodeSetSensErrCon");
 
         check_flag_sundials(CVodeSensEEtolerances(cvodes_mem),
                             "CVodeSensEEtolerances");

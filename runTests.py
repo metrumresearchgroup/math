@@ -381,12 +381,7 @@ def main():
         for t in tests:
             if inputs.debug:
                 print("run single test: %s" % testname)
-
             runTest(t, inputs.run_all, mpi=stan_mpi or torsten_mpi, j=inputs.j)
-
-=======
-            runTest(t, inputs.run_all, mpi=stan_mpi, j=inputs.j)
->>>>>>> master
     cleanupJumboTests(jumboFiles)
 
 
