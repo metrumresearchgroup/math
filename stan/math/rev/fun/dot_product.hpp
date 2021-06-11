@@ -6,10 +6,11 @@
 #include <stan/math/rev/fun/value_of.hpp>
 #include <stan/math/rev/fun/to_arena.hpp>
 #include <stan/math/rev/core/arena_matrix.hpp>
-#include <stan/math/rev/functor/reverse_pass_callback.hpp>
+#include <stan/math/rev/core/reverse_pass_callback.hpp>
 #include <stan/math/prim/meta.hpp>
 #include <stan/math/prim/err.hpp>
 #include <stan/math/prim/fun/Eigen.hpp>
+#include <stan/math/prim/fun/as_column_vector_or_scalar.hpp>
 #include <stan/math/prim/fun/dot_product.hpp>
 #include <stan/math/prim/fun/typedefs.hpp>
 #include <stan/math/prim/fun/value_of.hpp>
@@ -30,45 +31,46 @@ namespace math {
  * @return Dot product of the vectors.
  * @throw std::domain_error if sizes of v1 and v2 do not match.
  */
-template <typename T1, typename T2, require_all_container_t<T1, T2>* = nullptr,
-          require_any_vt_var<T1, T2>* = nullptr>
-inline return_type_t<T1, T2> dot_product(const T1& v1, const T2& v2) {
+template <typename T1, typename T2, require_all_vector_t<T1, T2>* = nullptr,
+          require_not_complex_t<return_type_t<T1, T2>>* = nullptr,
+          require_all_not_std_vector_t<T1, T2>* = nullptr,
+          require_any_st_var<T1, T2>* = nullptr>
+inline var dot_product(const T1& v1, const T2& v2) {
   check_matching_sizes("dot_product", "v1", v1, "v2", v2);
 
-  const auto& v1_col = as_column_vector_or_scalar(v1);
-  const auto& v2_col = as_column_vector_or_scalar(v2);
-
-  arena_t<Eigen::VectorXd> v1_val_arena
-      = to_arena_if<!is_constant<T2>::value>(value_of(v1_col));
-  arena_t<Eigen::VectorXd> v2_val_arena
-      = to_arena_if<!is_constant<T1>::value>(value_of(v2_col));
-
-  double res_val;
-  if (is_constant<T1>::value) {
-    res_val = dot_product(v1_val_arena, value_of(v2_col));
-  } else if (is_constant<T2>::value) {
-    res_val = dot_product(value_of(v1_col), v2_val_arena);
-  } else {
-    res_val = dot_product(v1_val_arena, v2_val_arena);
+  if (v1.size() == 0) {
+    return 0.0;
   }
-  var res(res_val);
 
-  arena_t<Eigen::Matrix<value_type_t<T1>, Eigen::Dynamic, 1>> v1_arena
-      = to_arena_if<!is_constant<T1>::value>(v1_col);
-  arena_t<Eigen::Matrix<value_type_t<T2>, Eigen::Dynamic, 1>> v2_arena
-      = to_arena_if<!is_constant<T2>::value>(v2_col);
-
-  reverse_pass_callback(
-      [v1_arena, v2_arena, res, v1_val_arena, v2_val_arena]() mutable {
-        if (!is_constant<T1>::value) {
-          forward_as<vector_v>(v1_arena).adj() += res.adj() * v2_val_arena;
-        }
-        if (!is_constant<T2>::value) {
-          forward_as<vector_v>(v2_arena).adj() += res.adj() * v1_val_arena;
-        }
-      });
-
-  return res;
+  if (!is_constant<T1>::value && !is_constant<T2>::value) {
+    arena_t<promote_scalar_t<var, T1>> v1_arena = v1;
+    arena_t<promote_scalar_t<var, T2>> v2_arena = v2;
+    return make_callback_var(
+        v1_arena.val().dot(v2_arena.val()),
+        [v1_arena, v2_arena](const auto& vi) mutable {
+          const auto res_adj = vi.adj();
+          for (Eigen::Index i = 0; i < v1_arena.size(); ++i) {
+            v1_arena.adj().coeffRef(i) += res_adj * v2_arena.val().coeff(i);
+            v2_arena.adj().coeffRef(i) += res_adj * v1_arena.val().coeff(i);
+          }
+        });
+  } else if (!is_constant<T2>::value) {
+    arena_t<promote_scalar_t<var, T2>> v2_arena = v2;
+    arena_t<promote_scalar_t<double, T1>> v1_val_arena = value_of(v1);
+    return make_callback_var(v1_val_arena.dot(v2_arena.val()),
+                             [v1_val_arena, v2_arena](const auto& vi) mutable {
+                               v2_arena.adj().array()
+                                   += vi.adj() * v1_val_arena.array();
+                             });
+  } else {
+    arena_t<promote_scalar_t<var, T1>> v1_arena = v1;
+    arena_t<promote_scalar_t<double, T2>> v2_val_arena = value_of(v2);
+    return make_callback_var(v1_arena.val().dot(v2_val_arena),
+                             [v1_arena, v2_val_arena](const auto& vi) mutable {
+                               v1_arena.adj().array()
+                                   += vi.adj() * v2_val_arena.array();
+                             });
+  }
 }
 
 }  // namespace math
