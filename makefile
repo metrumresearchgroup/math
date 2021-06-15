@@ -15,11 +15,14 @@ help:
 -include make/local                       # user-defined variables
 
 include make/compiler_flags               # CXX, CXXFLAGS, LDFLAGS set by the end of this file
+include make/torsten_setup.mk		  # Torsten
 include make/dependencies                 # rules for generating dependencies
 include make/libraries
 include make/tests
+include make/torsten_tests.mk             # torsten tests
+include make/torsten_clean.mk             # torsten cleanup
 include make/cpplint
-include make/setup_torsten.mk	# set up Torsten
+include make/clang-tidy
 
 .PHONY: help
 help:
@@ -47,7 +50,6 @@ help:
 	@echo '      * rev -> prim'
 	@echo '      * fwd -> prim'
 	@echo '      * mix -> {rev, fwd, prim}'
-	@echo '      * within {prim, rev, fwd, mix}: mat -> arr -> scal'
 	@echo ''
 	@echo '  Cpplint'
 	@echo '  - cpplint       : runs cpplint.py on source files. requires python 2.7.'
@@ -55,6 +57,22 @@ help:
 	@echo '                      CPPLINT = $(CPPLINT)'
 	@echo '                    To set the version of python 2, set the PYTHON2 variable:'
 	@echo '                      PYTHON2 = $(PYTHON2)'
+	@echo ''
+	@echo ' Clang Tidy'
+	@echo ' - clang-tidy     : runs the clang-tidy makefile over the test suite.'
+	@echo '                    Options:'
+	@echo '                     files: (Optional) regex for file names to include in the check'
+	@echo '                      Default runs all the tests in unit'
+	@echo '                     tidy_checks: (Optional) A set of checks'
+	@echo '                      Default runs a hand picked selection of tests'
+	@echo ''
+	@echo '     Example: This runs clang-tidy over all the multiply tests in prim'
+	@echo ''
+	@echo '     make clang-tidy files=*prim*multiply*'
+	@echo ''
+	@echo ' - clang-tidy-fix : same as above but runs with the -fix flag.'
+	@echo '                    For automated fixes, outputs a yaml named'
+	@echo '                    .clang-fixes.yml'
 	@echo ''
 	@echo 'Documentation:'
 	@echo '  Doxygen'
@@ -64,7 +82,7 @@ help:
 	@echo '  - clean         : Basic clean. Leaves doc and compiled libraries intact.'
 	@echo '  - clean-deps    : Removes dependency files for tests. If tests stop building,'
 	@echo '                    run this target.'
-	@echo '  - clean-libraries : Removes binaries built for libraries including CVODES.'
+	@echo '  - clean-libraries : Removes binaries built for libraries including CVODES and the TBB.'
 	@echo '  - clean-all     : Cleans up all of Stan.'
 	@echo ''
 	@echo '--------------------------------------------------------------------------------'
@@ -80,16 +98,23 @@ doxygen:
 ##
 .PHONY: clean clean-doxygen clean-deps clean-all
 clean:
-	@echo '  removing test executables'
-	$(shell find test -type f -name "*_test$(EXE)" -exec rm {} +)
-	$(shell find test -type f -name "*_test.d" -exec rm {} +)
-	$(shell find test -type f -name "*_test.d.*" -exec rm {} +)
-	$(shell find test -type f -name "*_test.xml" -exec rm {} +)
-	$(shell find test -type f -name "*.o" -exec rm {} +)
-	$(RM) $(wildcard $(GTEST)/src/gtest-all.o)
 	@echo '  removing generated test files'
-	$(RM) $(wildcard test/prob/generate_tests$(EXE))
-	$(shell find test/prob -name '*_generated_*_test.cpp' -type f -exec rm {} +)
+	@$(RM) $(wildcard test/prob/generate_tests$(EXE))
+	@$(RM) $(call findfiles,test/prob,*_generated_v_test.cpp)
+	@$(RM) $(call findfiles,test/prob,*_generated_vv_test.cpp)
+	@$(RM) $(call findfiles,test/prob,*_generated_fd_test.cpp)
+	@$(RM) $(call findfiles,test/prob,*_generated_fv_test.cpp)
+	@$(RM) $(call findfiles,test/prob,*_generated_ffd_test.cpp)
+	@$(RM) $(call findfiles,test/prob,*_generated_ffv_test.cpp)
+	@$(RM) $(call findfiles,test/prob,*_generated_*_test.cpp)
+	@echo '  removing test executables'
+	@$(RM) $(call findfiles,test,*_test$(EXE))
+	@$(RM) $(call findfiles,test,*_test.d)
+	@$(RM) $(call findfiles,test,*_test.d.*)
+	@$(RM) $(call findfiles,test,*_test.xml)
+	@$(RM) $(call findfiles,test,*.o)
+	@$(RM) $(wildcard $(GTEST)/src/gtest-all.o)
+	@$(RM) $(TEST_STANC)
 
 clean-doxygen:
 	@echo '  removing doxygen'
@@ -97,12 +122,19 @@ clean-doxygen:
 
 clean-deps:
 	@echo '  removing dependency files'
-	$(shell find stan test lib -type f -name '*.d' -exec rm {} +)
-	$(shell find stan test lib -type f -name '*.d.*' -exec rm {} +)
-	$(shell find stan  -type f -name '*.dSYM' -exec rm {} +)
+	@$(RM) $(call findfiles,stan,*.d)
+	@$(RM) $(call findfiles,test,*.d)
+	@$(RM) $(call findfiles,lib,*.d)
+	@$(RM) $(call findfiles,stan,*.d.*)
+	@$(RM) $(call findfiles,test,*.d.*)
+	@$(RM) $(call findfiles,lib,*.d.*)
+	@$(RM) -r $(call findfiles,stan,*.dSYM)
 
-clean-all: clean clean-doxygen clean-deps clean-libraries
+clean-all: clean clean-doxygen clean-deps clean-libraries clean-torsten
 
+.PHONY: test-math-dependencies
+test-math-dependencies:
+	@./runChecks.py
 ##
 # Debug target that allows you to print a variable
 ##
