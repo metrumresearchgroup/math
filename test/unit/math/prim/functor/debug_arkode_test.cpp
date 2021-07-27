@@ -18,6 +18,18 @@ struct arkode_rhs {
   }  
 };
 
+template<typename Ode>
+struct arkode_wt {
+  static int fn(N_Vector y, N_Vector ewt, void* user_data) {
+    Ode* ode = static_cast<Ode*>(user_data);
+    int n = NV_LENGTH_S(y);
+    for (int i = 0; i < n; ++i) {
+      NV_Ith_S(ewt, i) = 1.0/(ode -> atol + ode -> rtol * abs(NV_Ith_S(y, i)));
+    }
+    return 0;
+  }
+};
+
 /**
  * RAII for arkode
  */
@@ -76,13 +88,20 @@ struct ode_observer {
   }
 };
 
-struct lotka_volterra
-{
-  const std::vector<double>& theta;
+struct lotka_volterra {
+  static constexpr double rtol=1.e-12;
+  static constexpr double atol=1.e-12;
+  static constexpr int max_num_steps=1000000;
 
-  lotka_volterra(const std::vector<double>& theta0) : theta(theta0) {}
+  const std::vector<double>& theta;
+  long int n_eval;
+
+  lotka_volterra(const std::vector<double>& theta0) :
+    theta(theta0), n_eval(0)
+  {}
 
   void operator()(double t_in, N_Vector& y, N_Vector& ydot) {
+    n_eval++;
     double alpha = theta[0];
     double beta = theta[1];
     double gamma = theta[2];
@@ -93,6 +112,7 @@ struct lotka_volterra
   }
 
   void operator()(const std::vector<double>& y, std::vector<double>& ydot, double t) {
+    n_eval++;
     double alpha = theta[0];
     double beta = theta[1];
     double gamma = theta[2];
@@ -111,8 +131,6 @@ TEST(arkode, lotka) {
   PMXOdeService<lotka_volterra> serv(y0);
   void* mem = serv.mem;
   N_Vector& y = serv.nv_y;
-  double rtol = 1.e-12, atol=1.e-12;
-  int max_num_steps = 1000000;
   int nt = 10;
   std::vector<double> ts(nt);
   for (auto i = 0; i < nt; ++i) {
@@ -121,8 +139,8 @@ TEST(arkode, lotka) {
 
   CHECK_SUNDIALS_CALL(ERKStepReInit(mem, arkode_rhs<lotka_volterra>::fn, 0.0, y));
   CHECK_SUNDIALS_CALL(ERKStepSetUserData(mem, static_cast<void*>(&ode)));
-  CHECK_SUNDIALS_CALL(ERKStepSStolerances(mem, rtol, atol));
-  CHECK_SUNDIALS_CALL(ERKStepSetMaxNumSteps(mem, max_num_steps));
+  CHECK_SUNDIALS_CALL(ERKStepSStolerances(mem, ode.rtol, ode.atol));
+  CHECK_SUNDIALS_CALL(ERKStepSetMaxNumSteps(mem, ode.max_num_steps));
   CHECK_SUNDIALS_CALL(ERKStepSetAdaptivityMethod(mem, 2, SUNTRUE, SUNFALSE, NULL));
 
   CHECK_SUNDIALS_CALL(ERKStepSetTableNum(mem, DORMAND_PRINCE_7_4_5));
@@ -136,16 +154,54 @@ TEST(arkode, lotka) {
     CHECK_SUNDIALS_CALL(ERKStepEvolve(mem, ts[i], y, &t1, ARK_NORMAL));
     ob(y, t1);
   }
-  // std::cout << ob.result << "\n";
+
+  long int n_eval;
+  ERKStepGetNumRhsEvals(mem, &n_eval);
+  assert(ode.n_eval == n_eval);
+  std::cout << "# of RHS evals: " << ode.n_eval << "\n";
 }
+
+// TEST(arkode_wmrs, lotka) {
+//   int n = 2;
+//   std::vector<double> theta{1.5, 1.05, 1.5, 2.05};
+//   std::vector<double> y0{0.3, 0.8};
+//   lotka_volterra ode(theta);
+//   PMXOdeService<lotka_volterra> serv(y0);
+//   void* mem = serv.mem;
+//   N_Vector& y = serv.nv_y;
+//   int nt = 10;
+//   std::vector<double> ts(nt);
+//   for (auto i = 0; i < nt; ++i) {
+//     ts[i] = (i + 1) * 1000.0;
+//   }
+
+//   CHECK_SUNDIALS_CALL(ERKStepReInit(mem, arkode_rhs<lotka_volterra>::fn, 0.0, y));
+//   CHECK_SUNDIALS_CALL(ERKStepSetUserData(mem, static_cast<void*>(&ode)));
+//   CHECK_SUNDIALS_CALL(ERKStepSStolerances(mem, ode.rtol, ode.atol));
+//   CHECK_SUNDIALS_CALL(ERKStepSetMaxNumSteps(mem, ode.max_num_steps));
+//   CHECK_SUNDIALS_CALL(ERKStepSetAdaptivityMethod(mem, 2, SUNTRUE, SUNFALSE, NULL));
+
+//   CHECK_SUNDIALS_CALL(ERKStepSetTableNum(mem, DORMAND_PRINCE_7_4_5));
+//   ERKStepWFtolerances(mem, arkode_wt<lotka_volterra>::fn);
+//   ERKStepSetInitStep(mem, 0.1);
+
+//   double t0 = 0;
+//   double t1 = t0;
+      
+//   ode_observer ob(n, ts.size());
+//   for (auto i = 0; i < ts.size(); ++i) {
+//     CHECK_SUNDIALS_CALL(ERKStepEvolve(mem, ts[i], y, &t1, ARK_NORMAL));
+//     ob(y, t1);
+//   }
+//   std::cout << "taki test: " << ode.n_eval << "\n";
+//   // std::cout << ob.result << "\n";
+// }
 
 TEST(odeint, lotka) {
   int n = 2;
   std::vector<double> theta{1.5, 1.05, 1.5, 2.05};
   std::vector<double> y0{0.3, 0.8};
   lotka_volterra ode(theta);
-  double rtol = 1.e-12, atol=1.e-12;
-  int max_num_steps = 1000000;
 
   double t0 = 0;
   int nt = 10;
@@ -157,11 +213,11 @@ TEST(odeint, lotka) {
 
   const double init_dt = 0.1;
   ode_observer ob(n, ts.size() - 1);
-  integrate_times(make_dense_output(atol, rtol, boost::numeric::odeint::runge_kutta_dopri5<std::vector<double>, double, std::vector<double>, double>()),
+  integrate_times(make_dense_output(ode.atol, ode.rtol, boost::numeric::odeint::runge_kutta_dopri5<std::vector<double>, double, std::vector<double>, double>()),
                   boost::ref(ode), y0,
                   ts.begin(), ts.end(),
                   init_dt, boost::ref(ob),
-                  boost::numeric::odeint::max_step_checker(max_num_steps));
+                  boost::numeric::odeint::max_step_checker(ode.max_num_steps));
 
-  // std::cout << ob.result << "\n";
+  std::cout << "# of RHS evals: " << ode.n_eval << "\n";
 }
