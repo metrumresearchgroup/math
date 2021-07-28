@@ -139,7 +139,7 @@ TEST(arkode, lotka) {
   end = std::chrono::system_clock::now();
   elapsed = (end - start);
 
-  std::cout << "ERKStep elapsed time: " << elapsed.count() << "s\n";
+  std::cout << "ERKStep elapsed time: " << elapsed.count() << " ms\n";
 
   long int n_eval;
   ERKStepGetNumRhsEvals(mem, &n_eval);
