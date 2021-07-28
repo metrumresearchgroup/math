@@ -30,34 +30,6 @@ struct arkode_wt {
   }
 };
 
-/**
- * RAII for arkode
- */
-template <typename Ode>
-struct PMXOdeService {
-  int n;                        /**< ode system size */
-  N_Vector nv_y;                /**< state vector */
-  void* mem;                    /**< memory */
-
-  /**
-   * Construct  mem & workspace
-   *
-   */
-  PMXOdeService(std::vector<double> const& y0) :
-    n(y0.size()),
-    nv_y(N_VNew_Serial(n)),
-    mem(ERKStepCreate(arkode_rhs<Ode>::fn, 0.0, nv_y)) {
-    for (auto i = 0; i < n; ++i) {
-      NV_Ith_S(nv_y, i) = y0[i];
-    }
-  }
-
-  ~PMXOdeService() {
-    ERKStepFree(&mem);          // Free integrator memory
-    N_VDestroy(nv_y);           // Free y vector
-  }
-};
-
 struct ode_observer {
   int n;
   int nt;
@@ -128,19 +100,21 @@ struct lotka_volterra {
 };
 
 TEST(arkode, lotka) {
-  int n = 2;
   std::vector<double> theta{1.5, 1.05, 1.5, 2.05};
   std::vector<double> y0{0.3, 0.8};
+  int n = y0.size();
   lotka_volterra ode(theta);
-  PMXOdeService<lotka_volterra> serv(y0);
-  void* mem = serv.mem;
-  N_Vector& y = serv.nv_y;
+  
   int nt = 10;
   std::vector<double> ts(nt);
   for (auto i = 0; i < nt; ++i) {
     ts[i] = (i + 1) * 1000.0;
   }
 
+  N_Vector y = N_VNew_Serial(n);
+  NV_Ith_S(y, 0) = y0[0];
+  NV_Ith_S(y, 1) = y0[1];
+  void* mem = ERKStepCreate(arkode_rhs<lotka_volterra>::fn, 0.0, y);
   CHECK_SUNDIALS_CALL(ERKStepReInit(mem, arkode_rhs<lotka_volterra>::fn, 0.0, y));
   CHECK_SUNDIALS_CALL(ERKStepSetUserData(mem, static_cast<void*>(&ode)));
   CHECK_SUNDIALS_CALL(ERKStepSStolerances(mem, ode.rtol, ode.atol));
@@ -163,43 +137,10 @@ TEST(arkode, lotka) {
   ERKStepGetNumRhsEvals(mem, &n_eval);
   assert(ode.n_eval == n_eval);
   ode.print_n_eval("arkode");
+
+  ERKStepFree(&mem);          // Free integrator memory
+  N_VDestroy(y);           // Free y vector
 }
-
-// TEST(arkode_wmrs, lotka) {
-//   int n = 2;
-//   std::vector<double> theta{1.5, 1.05, 1.5, 2.05};
-//   std::vector<double> y0{0.3, 0.8};
-//   lotka_volterra ode(theta);
-//   PMXOdeService<lotka_volterra> serv(y0);
-//   void* mem = serv.mem;
-//   N_Vector& y = serv.nv_y;
-//   int nt = 10;
-//   std::vector<double> ts(nt);
-//   for (auto i = 0; i < nt; ++i) {
-//     ts[i] = (i + 1) * 1000.0;
-//   }
-
-//   CHECK_SUNDIALS_CALL(ERKStepReInit(mem, arkode_rhs<lotka_volterra>::fn, 0.0, y));
-//   CHECK_SUNDIALS_CALL(ERKStepSetUserData(mem, static_cast<void*>(&ode)));
-//   CHECK_SUNDIALS_CALL(ERKStepSStolerances(mem, ode.rtol, ode.atol));
-//   CHECK_SUNDIALS_CALL(ERKStepSetMaxNumSteps(mem, ode.max_num_steps));
-//   CHECK_SUNDIALS_CALL(ERKStepSetAdaptivityMethod(mem, 2, SUNTRUE, SUNFALSE, NULL));
-
-//   CHECK_SUNDIALS_CALL(ERKStepSetTableNum(mem, DORMAND_PRINCE_7_4_5));
-//   ERKStepWFtolerances(mem, arkode_wt<lotka_volterra>::fn);
-//   ERKStepSetInitStep(mem, 0.1);
-
-//   double t0 = 0;
-//   double t1 = t0;
-      
-//   ode_observer ob(n, ts.size());
-//   for (auto i = 0; i < ts.size(); ++i) {
-//     CHECK_SUNDIALS_CALL(ERKStepEvolve(mem, ts[i], y, &t1, ARK_NORMAL));
-//     ob(y, t1);
-//   }
-//   std::cout << "taki test: " << ode.n_eval << "\n";
-//   // std::cout << ob.result << "\n";
-// }
 
 TEST(odeint, lotka) {
   int n = 2;
