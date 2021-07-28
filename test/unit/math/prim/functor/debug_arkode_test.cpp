@@ -100,6 +100,10 @@ struct lotka_volterra {
     theta(theta0), n_eval(0)
   {}
 
+  void print_n_eval(std::string info) {
+    std::cout << "# of RHS evals ( " << info << " ) :" << n_eval << "\n";
+  }
+
   void operator()(double t_in, N_Vector& y, N_Vector& ydot) {
     n_eval++;
     double alpha = theta[0];
@@ -158,7 +162,7 @@ TEST(arkode, lotka) {
   long int n_eval;
   ERKStepGetNumRhsEvals(mem, &n_eval);
   assert(ode.n_eval == n_eval);
-  std::cout << "# of RHS evals: " << ode.n_eval << "\n";
+  ode.print_n_eval("arkode");
 }
 
 // TEST(arkode_wmrs, lotka) {
@@ -219,5 +223,5 @@ TEST(odeint, lotka) {
                   init_dt, boost::ref(ob),
                   boost::numeric::odeint::max_step_checker(ode.max_num_steps));
 
-  std::cout << "# of RHS evals: " << ode.n_eval << "\n";
+  ode.print_n_eval("odeint");
 }
