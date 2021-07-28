@@ -83,8 +83,12 @@ struct lotka_volterra {
     double gamma = theta[2];
     double delta = theta[3];
 
-    NV_Ith_S(ydot, 0) = (alpha - beta * NV_Ith_S(y, 1)) * NV_Ith_S(y, 0);
-    NV_Ith_S(ydot, 1) = (-gamma + delta * NV_Ith_S(y, 0)) * NV_Ith_S(y, 1);
+    // NV_Ith_S(ydot, 0) = (alpha - beta * NV_Ith_S(y, 1)) * NV_Ith_S(y, 0);
+    // NV_Ith_S(ydot, 1) = (-gamma + delta * NV_Ith_S(y, 0)) * NV_Ith_S(y, 1);
+    double *ydata = NV_DATA_S(y);
+    double *yddata = NV_DATA_S(ydot);    
+    yddata[0] = (alpha - beta * ydata[1]) * ydata[0];
+    yddata[1] = (-gamma + delta * ydata[0]) * ydata[1];
   }
 
   void operator()(const std::vector<double>& y, std::vector<double>& ydot, double t) {
@@ -176,45 +180,47 @@ TEST(odeint, lotka) {
   ode.print_n_eval("odeint");
 }
 
-// TEST(arkode, rhs_eval) {
-//   N_Vector y = N_VNew_Serial(1);
-//   N_Vector ydot = N_VNew_Serial(1);
-//   NV_Ith_S(y, 0) = 1.0;         // dummy
-//   NV_Ith_S(ydot, 0) = 1.0;      // dummy
+TEST(arkode, rhs_eval) {
+  int n = 2;
+  std::vector<double> theta{1.5, 1.05, 1.5, 2.05};
+  std::vector<double> y0{0.3, 0.8};
+  lotka_volterra ode(theta);
 
-//   const long int n_eval = 99999;
+  const long int n_eval = 99999999;
 
-//   std::chrono::time_point<std::chrono::system_clock> start, end;
-//   std::chrono::duration<double, std::milli> elapsed;
-//   start = std::chrono::system_clock::now();
-//   for (auto i = 0; i < n_eval; ++i) {
-//     for (auto j = 0; j < n_eval; ++j) {
-//       NV_Ith_S(ydot, 0) = NV_Ith_S(y, 0) * NV_Ith_S(y, 0);
-//       NV_Ith_S(ydot, 0) = NV_Ith_S(y, 0) * NV_Ith_S(y, 0);
-//     }
-//   }
-//   end = std::chrono::system_clock::now();
-//   elapsed = (end - start);
+  N_Vector y = N_VNew_Serial(n);
+  N_Vector ydot = N_VNew_Serial(n);
+  NV_Ith_S(y, 0) = y0[0];         // dummy
+  NV_Ith_S(y, 1) = y0[1];         // dummy
 
-//   std::cout << "arkode RHS elapsed time: " << elapsed.count() << " ms\n";
-// }
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+  std::chrono::duration<double, std::milli> elapsed;
+  start = std::chrono::system_clock::now();
+  for (auto i = 0; i < n_eval; ++i) {
+    ode(0.1 * i, y, ydot);    
+  }
+  end = std::chrono::system_clock::now();
+  elapsed = (end - start);
 
-// TEST(odeint, rhs_eval) {
-//   int n = 2;
-//   std::vector<double> theta{1.5, 1.05, 1.5, 2.05};
-//   std::vector<double> y{0.3, 0.8}, ydot(n);
-//   lotka_volterra ode(theta);
+  std::cout << "arkode RHS elapsed time: " << elapsed.count() << " ms\n";
+}
 
-//   const long int n_eval = 99999999;
+TEST(odeint, rhs_eval) {
+  int n = 2;
+  std::vector<double> theta{1.5, 1.05, 1.5, 2.05};
+  std::vector<double> y{0.3, 0.8}, ydot(n);
+  lotka_volterra ode(theta);
 
-//   std::chrono::time_point<std::chrono::system_clock> start, end;
-//   std::chrono::duration<double, std::milli> elapsed;
-//   start = std::chrono::system_clock::now();
-//   for (long int i = 0; i < n_eval; ++i) {
-//     ode(y, ydot, 0.1 * i);
-//   }
-//   end = std::chrono::system_clock::now();
-//   elapsed = (end - start);
+  const long int n_eval = 99999999;
 
-//   std::cout << "odeint RHS elapsed time: " << elapsed.count() << " ms\n";
-// }
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+  std::chrono::duration<double, std::milli> elapsed;
+  start = std::chrono::system_clock::now();
+  for (long int i = 0; i < n_eval; ++i) {
+    ode(y, ydot, 0.1 * i);
+  }
+  end = std::chrono::system_clock::now();
+  elapsed = (end - start);
+
+  std::cout << "odeint RHS elapsed time: " << elapsed.count() << " ms\n";
+}
