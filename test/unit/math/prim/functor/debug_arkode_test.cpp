@@ -127,10 +127,19 @@ TEST(arkode, lotka) {
   double t1 = t0;
       
   ode_observer ob(n, ts.size());
+
+
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+  std::chrono::duration<double> elapsed;
+  start = std::chrono::system_clock::now();
   for (auto i = 0; i < ts.size(); ++i) {
     CHECK_SUNDIALS_CALL(ERKStepEvolve(mem, ts[i], y, &t1, ARK_NORMAL));
     ob(y, t1);
   }
+  end = std::chrono::system_clock::now();
+  elapsed = (end - start);
+
+  std::cout << "ERKStep elapsed time: " << elapsed.count() << "s\n";
 
   long int n_eval;
   ERKStepGetNumRhsEvals(mem, &n_eval);
