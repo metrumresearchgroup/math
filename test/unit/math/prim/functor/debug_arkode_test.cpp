@@ -115,7 +115,6 @@ TEST(arkode, lotka) {
   NV_Ith_S(y, 0) = y0[0];
   NV_Ith_S(y, 1) = y0[1];
   void* mem = ERKStepCreate(arkode_rhs<lotka_volterra>::fn, 0.0, y);
-  CHECK_SUNDIALS_CALL(ERKStepReInit(mem, arkode_rhs<lotka_volterra>::fn, 0.0, y));
   CHECK_SUNDIALS_CALL(ERKStepSetUserData(mem, static_cast<void*>(&ode)));
   CHECK_SUNDIALS_CALL(ERKStepSStolerances(mem, ode.rtol, ode.atol));
   CHECK_SUNDIALS_CALL(ERKStepSetMaxNumSteps(mem, ode.max_num_steps));
