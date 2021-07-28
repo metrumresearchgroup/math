@@ -130,7 +130,7 @@ TEST(arkode, lotka) {
 
 
   std::chrono::time_point<std::chrono::system_clock> start, end;
-  std::chrono::duration<double> elapsed;
+  std::chrono::duration<double, std::milli> elapsed;
   start = std::chrono::system_clock::now();
   for (auto i = 0; i < ts.size(); ++i) {
     CHECK_SUNDIALS_CALL(ERKStepEvolve(mem, ts[i], y, &t1, ARK_NORMAL));
@@ -148,6 +148,7 @@ TEST(arkode, lotka) {
 
   ERKStepFree(&mem);          // Free integrator memory
   N_VDestroy(y);           // Free y vector
+
 }
 
 TEST(odeint, lotka) {
