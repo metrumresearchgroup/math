@@ -76,7 +76,7 @@ struct lotka_volterra {
     std::cout << "# of RHS evals ( " << info << " ) :" << n_eval << "\n";
   }
 
-  void operator()(double t_in, N_Vector& y, N_Vector& ydot) {
+  inline void operator()(double t_in, N_Vector& y, N_Vector& ydot) {
     n_eval++;
     double alpha = theta[0];
     double beta = theta[1];
@@ -101,7 +101,79 @@ struct lotka_volterra {
     ydot[0] = (alpha - beta * y[1]) * y[0];
     ydot[1] = (-gamma + delta * y[0]) * y[1];
   }
+
+  inline void operator()(double const y[2], double ydot[2], double t) {
+    n_eval++;
+    double alpha = theta[0];
+    double beta = theta[1];
+    double gamma = theta[2];
+    double delta = theta[3];
+
+    ydot[0] = (alpha - beta * y[1]) * y[0];
+    ydot[1] = (-gamma + delta * y[0]) * y[1];
+  }
 };
+
+struct lotka_volterra_repeated {
+  static constexpr double rtol=1.e-12;
+  static constexpr double atol=1.e-12;
+  static constexpr int max_num_steps=1000000;
+
+  const std::vector<double>& theta;
+  long int n_eval;
+  const long int n_block;
+
+  lotka_volterra_repeated(const std::vector<double>& theta0) :
+    theta(theta0), n_eval(0), n_block(99999)
+  {}
+
+  void print_n_eval(std::string info) {
+    std::cout << "# of RHS evals ( " << info << " ) :" << n_eval << "\n";
+  }
+
+  inline void operator()(double t_in, N_Vector& y, N_Vector& ydot) {
+    n_eval++;
+    double alpha = theta[0];
+    double beta = theta[1];
+    double gamma = theta[2];
+    double delta = theta[3];
+
+    double *ydata = NV_DATA_S(y);
+    double *yddata = NV_DATA_S(ydot);    
+
+    for (auto i = 0; i < n_block; ++i) {
+      yddata[i * 2 + 0] = (alpha - beta * ydata[i * 2 + 1]) * ydata[i * 2 + 0];
+      yddata[i * 2 + 1] = (-gamma + delta * ydata[i * 2 + 0]) * ydata[i * 2 + 1];
+    }
+  }
+
+  void operator()(const std::vector<double>& y, std::vector<double>& ydot, double t) {
+    n_eval++;
+    double alpha = theta[0];
+    double beta = theta[1];
+    double gamma = theta[2];
+    double delta = theta[3];
+
+    for (auto i = 0; i < n_block; ++i) {
+      ydot[i * 2 + 0] = (alpha - beta * y[i * 2 + 1]) * y[i * 2 + 0];
+      ydot[i * 2 + 1] = (-gamma + delta * y[i * 2 + 0]) * y[i * 2 + 1];
+    }
+  }
+
+  inline void operator()(double const y[], double ydot[], double t) {
+    n_eval++;
+    double alpha = theta[0];
+    double beta = theta[1];
+    double gamma = theta[2];
+    double delta = theta[3];
+
+    for (auto i = 0; i < n_block; ++i) {
+      ydot[i * 2 + 0] = (alpha - beta * y[i * 2 + 1]) * y[i * 2 + 0];
+      ydot[i * 2 + 1] = (-gamma + delta * y[i * 2 + 0]) * y[i * 2 + 1];
+    }
+  }
+};
+
 
 TEST(arkode, lotka) {
   std::vector<double> theta{1.5, 1.05, 1.5, 2.05};
@@ -131,7 +203,6 @@ TEST(arkode, lotka) {
   double t1 = t0;
       
   ode_observer ob(n, ts.size());
-
 
   std::chrono::time_point<std::chrono::system_clock> start, end;
   std::chrono::duration<double, std::milli> elapsed;
@@ -180,47 +251,124 @@ TEST(odeint, lotka) {
   ode.print_n_eval("odeint");
 }
 
-TEST(arkode, rhs_eval) {
+TEST(arkode_rhs_eval, rhs_eval) {
   int n = 2;
+  const long int n_eval = 9999999;
   std::vector<double> theta{1.5, 1.05, 1.5, 2.05};
   std::vector<double> y0{0.3, 0.8};
+  std::vector<std::vector<double>> ydot0(n_eval, std::vector<double>(n));
   lotka_volterra ode(theta);
 
-  const long int n_eval = 99999999;
-
-  N_Vector y = N_VNew_Serial(n);
-  N_Vector ydot = N_VNew_Serial(n);
-  NV_Ith_S(y, 0) = y0[0];         // dummy
-  NV_Ith_S(y, 1) = y0[1];         // dummy
+  std::vector<double*> ydotp(n_eval);
+  std::vector<N_Vector> ydot(n_eval);
+  for (auto i = 0; i < n_eval; ++i) {
+    ydotp[i] = ydot0[i].data();
+    ydot[i] = N_VMake_Serial(n, ydotp[i]);
+  }
+  double* yp = y0.data();
+  N_Vector y = N_VMake_Serial(n, yp);
 
   std::chrono::time_point<std::chrono::system_clock> start, end;
   std::chrono::duration<double, std::milli> elapsed;
+
   start = std::chrono::system_clock::now();
   for (auto i = 0; i < n_eval; ++i) {
-    ode(0.1 * i, y, ydot);    
+    ode(yp, ydotp[i], 0.1);
   }
   end = std::chrono::system_clock::now();
   elapsed = (end - start);
+  std::cout << "data pointer RHS eval elapsed time: " << elapsed.count() << " ms\n";
 
-  std::cout << "arkode RHS elapsed time: " << elapsed.count() << " ms\n";
-}
+  start = std::chrono::system_clock::now();
+  for (auto i = 0; i < n_eval; ++i) {
+    ode(0.1, y, ydot[i]);
+  }
+  end = std::chrono::system_clock::now();
+  elapsed = (end - start);
+  std::cout << "N_Vector 1 RHS eval elapsed time: " << elapsed.count() << " ms\n";
 
-TEST(odeint, rhs_eval) {
-  int n = 2;
-  std::vector<double> theta{1.5, 1.05, 1.5, 2.05};
-  std::vector<double> y{0.3, 0.8}, ydot(n);
-  lotka_volterra ode(theta);
+  start = std::chrono::system_clock::now();
+  for (auto i = 0; i < n_eval; ++i) {
+    double alpha = theta[0];
+    double beta = theta[1];
+    double gamma = theta[2];
+    double delta = theta[3];
 
-  const long int n_eval = 99999999;
+    double *ydata = NV_DATA_S(y);
+    double *yddata = NV_DATA_S(ydot[i]);    
+    yddata[0] = (alpha - beta * ydata[1]) * ydata[0];
+    yddata[1] = (-gamma + delta * ydata[0]) * ydata[1];
+  }
+  end = std::chrono::system_clock::now();
+  elapsed = (end - start);
+  std::cout << "N_Vector 2 RHS eval elapsed time: " << elapsed.count() << " ms\n";
 
-  std::chrono::time_point<std::chrono::system_clock> start, end;
-  std::chrono::duration<double, std::milli> elapsed;
   start = std::chrono::system_clock::now();
   for (long int i = 0; i < n_eval; ++i) {
-    ode(y, ydot, 0.1 * i);
+    ode(y0, ydot0[i], 0.1);
   }
   end = std::chrono::system_clock::now();
   elapsed = (end - start);
 
   std::cout << "odeint RHS elapsed time: " << elapsed.count() << " ms\n";
+
+  N_VDestroy(y);
+  for (auto i = 0; i < n_eval; ++i) {
+    N_VDestroy(ydot[i]);
+  }
+}
+
+TEST(arkode_large_system, rhs_eval) {
+  std::vector<double> theta{1.5, 1.05, 1.5, 2.05};
+  lotka_volterra_repeated ode(theta);
+  int n = ode.n_block * 2;
+  const long int n_eval = 999;
+  std::vector<double> y0(n);
+  for (auto i = 0; i < ode.n_block; ++i) {
+    y0[i * 2 + 0] = 0.3;
+    y0[i * 2 + 1] = 0.8;
+  }
+  std::vector<std::vector<double>> ydot0(n_eval, std::vector<double>(n));
+
+  std::vector<double*> ydotp(n_eval);
+  std::vector<N_Vector> ydot(n_eval);
+  for (auto i = 0; i < n_eval; ++i) {
+    ydotp[i] = ydot0[i].data();
+    ydot[i] = N_VMake_Serial(n, ydotp[i]);
+  }
+  double* yp = y0.data();
+  N_Vector y = N_VMake_Serial(n, yp);
+
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+  std::chrono::duration<double, std::milli> elapsed;
+
+  start = std::chrono::system_clock::now();
+  for (auto i = 0; i < n_eval; ++i) {
+    ode(yp, ydotp[i], 0.1);
+  }
+  end = std::chrono::system_clock::now();
+  elapsed = (end - start);
+  std::cout << "data pointer RHS eval elapsed time: " << elapsed.count() << " ms\n";
+
+  start = std::chrono::system_clock::now();
+  for (auto i = 0; i < n_eval; ++i) {
+    ode(0.1, y, ydot[i]);
+  }
+  end = std::chrono::system_clock::now();
+  elapsed = (end - start);
+  std::cout << "N_Vector 1 RHS eval elapsed time: " << elapsed.count() << " ms\n";
+
+  start = std::chrono::system_clock::now();
+  for (long int i = 0; i < n_eval; ++i) {
+    ode(y0, ydot0[i], 0.1);
+  }
+  end = std::chrono::system_clock::now();
+  elapsed = (end - start);
+
+  std::cout << "odeint RHS elapsed time: " << elapsed.count() << " ms\n";
+
+  N_VDestroy(y);
+  for (auto i = 0; i < n_eval; ++i) {
+    N_VDestroy(ydot[i]);
+  }
 }
