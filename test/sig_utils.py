@@ -56,6 +56,11 @@ simplex = "simplex"
 pos_definite = "positive_definite_matrix"
 scalar_return_type = "scalar_return_type"
 
+make_special_arg_values = {
+    simplex : "make_simplex",
+    pos_definite : "make_pos_definite_matrix"
+}
+
 # list of function arguments that need special scalar values.
 # None means to use the default argument value.
 special_arg_values = {
@@ -133,6 +138,7 @@ special_arg_values = {
 # list of functions we do not test. These are mainly functions implemented in compiler
 # (not in Stan Math).
 ignored = [
+    "lchoose",
     "lmultiply",
     "assign_add",
     "assign_divide",

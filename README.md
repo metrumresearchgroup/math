@@ -1,4 +1,4 @@
-[![Torsten Math tests](https://github.com/metrumresearchgroup/math/actions/workflows/torsten_test.yml/badge.svg)](https://github.com/metrumresearchgroup/math/actions/workflows/torsten_test.yml)
+<div><a href="https://zenodo.org/badge/latestdoi/38388440"><img src="https://zenodo.org/badge/38388440.svg"/></a></div>
 
 The <b>Stan Math Library</b> is a C++, reverse-mode automatic
 differentiation library designed to be usable, extensive and
@@ -6,9 +6,6 @@ extensible, efficient, scalable, stable, portable, and redistributable
 in order to facilitate the construction and utilization of algorithms
 that utilize derivatives.
 
-\htmlonly
- <div><a href="https://zenodo.org/badge/latestdoi/38388440"><img src="https://zenodo.org/badge/38388440.svg"/></a></div>
-\endhtmlonly
 
 Licensing
 ---------
@@ -29,7 +26,7 @@ Stan Math depends on four libraries:
 
 - Boost (version 1.75.0): [Boost Home Page](https://www.boost.org)
 - Eigen (version 3.3.9: [Eigen Home Page](https://eigen.tuxfamily.org/index.php?title=Main_Page)
-- SUNDIALS (version 5.7.0): [Sundials Home Page](https://computation.llnl.gov/projects/sundials/sundials-software)
+- SUNDIALS (version 6.0.0): [Sundials Home Page](https://computation.llnl.gov/projects/sundials/sundials-software)
 - Intel TBB (version 2020.3): [Intel TBB Home Page](https://www.threadingbuildingblocks.org)
 
 These are distributed under the `lib/` subdirectory. Only these
@@ -39,6 +36,12 @@ Documentation
 ------------
 
 Documentation for Stan math is available at [mc-stan.org/math](https://mc-stan.org/math/)
+
+Contributing
+------------
+
+We love contributions from everyone in the form of good discussion, issues, and pull requests.
+If you are interested in contributing to Stan math please check the [Contributing Guide](http://mc-stan.org/math/contributing.html).
 
 Installation
 ------------
@@ -93,7 +96,7 @@ The standalone makefile ensures that all the required `-I` include
 statements are given to the compiler and the necessary libraries are
 linked: `~/stan-dev/math` and `~/stan-dev/math/lib/eigen_3.3.9` and
 `~/stan-dev/math/lib/boost_1.75.0` and
-`~/stan-dev/math/lib/sundials_5.7.0/include` and
+`~/stan-dev/math/lib/sundials_6.0.0/include` and
 `~/stan-dev/math/lib/tbb_2020.3/include`. The
 `~/stan-dev/math/lib/tbb` directory is created by the `math-libs`
 makefile target automatically and contains the dynamically loaded
