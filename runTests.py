@@ -397,6 +397,12 @@ def main():
     except IOError:
         stan_mpi = False
 
+    try:
+        with open("make/local") as f:
+            torsten_mpi =  "TORSTEN_MPI" in f.read()
+    except IOError:
+        torsten_mpi = False
+
     jumboFiles = []
 
     if inputs.changed:
@@ -437,7 +443,7 @@ def main():
             for t in tests:
                 if inputs.debug:
                     print("run single test: %s" % t)
-                runTest(t, inputs.run_all, mpi=stan_mpi, j=inputs.j)
+                runTest(t, inputs.run_all, mpi=stan_mpi or torsten_mpi, j=inputs.j)
     except BaseException as e:
        print(e, file=sys.stderr)
        sys.exit(1)

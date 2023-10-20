@@ -15,9 +15,12 @@ help:
 -include make/local                       # user-defined variables
 
 include make/compiler_flags               # CXX, CXXFLAGS, LDFLAGS set by the end of this file
+include make/torsten_setup.mk		  # Torsten
 include make/dependencies                 # rules for generating dependencies
 include make/libraries
 include make/tests
+include make/torsten_tests.mk             # torsten tests
+include make/torsten_clean.mk             # torsten cleanup
 include make/cpplint
 include make/clang-tidy
 
@@ -124,7 +127,7 @@ clean-deps:
 	@$(RM) $(call findfiles,stan,*.d.*)
 	@$(RM) $(call findfiles,test,*.d.*)
 	@$(RM) $(call findfiles,lib,*.d.*)
-	@$(RM) $(call findfiles,stan,*.dSYM)
+	@$(RM) -r $(call findfiles,stan,*.dSYM)
 
 clean-all: clean clean-doxygen clean-deps clean-libraries
 
