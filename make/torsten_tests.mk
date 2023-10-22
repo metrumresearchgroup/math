@@ -26,13 +26,13 @@ endif
 ##
 
 TORSTEN_TESTS := $(subst .cpp,$(EXE),$(shell find stan/math/torsten/test/unit -name *_test.cpp))
-$(TORSTEN_TESTS) : $(LIBSUNDIALS)
+$(TORSTEN_TESTS) : $(SUNDIALS_TARGETS)
 
 TORSTEN_FULL_TESTS := $(subst .cpp,$(EXE),$(shell find stan/math/torsten/test/full_unit -name *_test.cpp))
-$(TORSTEN_FULL_TESTS) : $(LIBSUNDIALS)
+$(TORSTEN_FULL_TESTS) : $(SUNDIALS_TARGETS)
 
 TORSTEN_PERF_TESTS := $(subst .cpp,$(EXE),$(shell find stan/math/torsten/test/performance -name *_test.cpp))
-$(TORSTEN_PERF_TESTS) : $(LIBSUNDIALS)
+$(TORSTEN_PERF_TESTS) : $(SUNDIALS_TARGETS)
 
 TORSTEN_MPI_DYN_TESTS_DEP := $(subst .cpp,.d,$(shell find stan/math/torsten/test/unit -name mpi_dynamic_load*_test.cpp))
 $(TORSTEN_MPI_DYN_TESTS_DEP) : CXXFLAGS_MPI += -DTORSTEN_MPI_DYN

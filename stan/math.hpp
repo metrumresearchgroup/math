@@ -18,7 +18,7 @@
 
 #include <stan/math/rev.hpp>
 
-// #include <stan/math/torsten/torsten.hpp>
-// using namespace torsten;
+#include <stan/math/torsten/torsten.hpp>
+using namespace torsten;
 
 #endif
