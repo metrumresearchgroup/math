@@ -444,8 +444,8 @@ void expect_ad_matvar_impl(const ad_tolerances& tols, const F& f,
       [](const auto&... args) {
         return stan::math::disjunction<is_var_matrix<decltype(args)>...>::value
                || stan::math::disjunction<stan::math::conjunction<
-                      is_std_vector<decltype(args)>,
-                      is_var_matrix<value_type_t<decltype(args)>>>...>::value;
+                   is_std_vector<decltype(args)>,
+                   is_var_matrix<value_type_t<decltype(args)>>>...>::value;
       },
       A_vm_tuple);
 
@@ -968,9 +968,9 @@ void expect_ad_vectorized_matvar(const ad_tolerances& tols, const F& f,
   std::vector<decltype(y_vec)> y_stdvec_vec{y_vec, y_vec};
   std::vector<std::vector<T1>> x_stdvec_stdvec{x_stdvec, x_stdvec};
   std::vector<std::vector<T2>> y_stdvec_stdvec{y_stdvec, y_stdvec};
-  expect_ad_matvar(tols, f, x[0], y);                 // scal, mat
-  expect_ad_matvar(tols, f, x[0], y_vec);             // scal, mat
-  expect_ad_matvar(tols, f, x[0], y_stdvec);          // scal, nest<mat>
+  expect_ad_matvar(tols, f, x_scal, y);               // scal, mat
+  expect_ad_matvar(tols, f, x_scal, y_vec);           // scal, mat
+  expect_ad_matvar(tols, f, x_scal, y_stdvec);        // scal, nest<mat>
   expect_ad_matvar(tols, f, x, y_vec);                // stdvec, vec
   expect_ad_matvar(tols, f, x_stdvec, y_stdvec_vec);  // nest<stdvec>, nest<vec>
   expect_ad_matvar(tols, f, x_stdvec, y);             // nest<stdvec>, mat

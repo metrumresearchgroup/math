@@ -86,10 +86,10 @@ TEST(MathPrimMat, vec_eigen_vec_eigen_gp_exponential_cov1) {
     for (int j = 0; j < 3; j++) {
       EXPECT_FLOAT_EQ(
           sigma * sigma
-              * std::exp(-1.0
-                         * stan::math::sqrt(
-                               stan::math::squared_distance(x1[i], x2[j]))
-                         / l),
+              * std::exp(
+                  -1.0
+                  * stan::math::sqrt(stan::math::squared_distance(x1[i], x2[j]))
+                  / l),
           cov(i, j))
           << "index: (" << i << ", " << j << ")";
     }
@@ -109,7 +109,6 @@ TEST(MathPrimMat, vec_eigen_vec_eigen_gp_exponential_cov1) {
 
 TEST(MathPrimMat, vec_eigen_vec_eigen_ard_gp_exponential_cov1) {
   double sigma = 0.3;
-  double temp;
 
   std::vector<double> l = {1, 2, 3};
 

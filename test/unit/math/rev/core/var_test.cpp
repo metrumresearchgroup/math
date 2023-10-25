@@ -561,8 +561,6 @@ TEST_F(AgradRev, var_matrix_view_assignment) {
   var_value<Eigen::MatrixXd> A_v_colwise_reverse = A_v.colwise_reverse();
   var_value<Eigen::MatrixXd> A_v_rowwise_colwise_reverse
       = A_v.rowwise_reverse().colwise_reverse();
-  var A_v_coeff1 = A_v.coeff(5);
-  var A_v_coeff2 = A_v.coeff(1, 2);
   A_v.block(0, 0, 3, 3) = A_v.block(1, 1, 3, 3);
   // Checks adjoints from all assigned slices are propogated upwards
   var b_v = stan::math::sum(A_v_block) + stan::math::sum(A_v_transpose)
@@ -594,8 +592,6 @@ TEST_F(AgradRev, var_matrix_view_assignment_const) {
   var_value<Eigen::MatrixXd> A_v_colwise_reverse = A_v.colwise_reverse();
   var_value<Eigen::MatrixXd> A_v_rowwise_colwise_reverse
       = A_v.rowwise_reverse().colwise_reverse();
-  var A_v_coeff1 = A_v.coeff(5);
-  var A_v_coeff2 = A_v.coeff(1, 2);
   A_v.block(0, 0, 3, 3) = A_v.block(1, 1, 3, 3);
   // Checks adjoints from all assigned slices are propogated upwards
   var b_v = stan::math::sum(A_v_block) + stan::math::sum(A_v_transpose)
@@ -627,8 +623,6 @@ TEST_F(AgradRev, var_matrix_view_eval) {
   auto A_v_rowwise_colwise_reverse
       = A_v.rowwise_reverse().colwise_reverse().eval();
   // NOTE: Coefficient references make a new var.
-  auto A_v_coeff1 = A_v.coeff(5);
-  auto A_v_coeff2 = A_v.coeff(1, 2);
   A_v.block(0, 0, 3, 3) = A_v.block(1, 1, 3, 3);
   // Checks adjoints from all assigned slices are propogated upwards
   var b_v = stan::math::sum(A_v_block) + stan::math::sum(A_v_transpose)
@@ -898,4 +892,21 @@ TEST_F(AgradRev, grad) {
   EXPECT_FLOAT_EQ(1.0, f.adj());
   EXPECT_FLOAT_EQ(11.0, a.adj());
   EXPECT_FLOAT_EQ(5.0, b.adj());
+}
+
+TEST_F(AgradRev, matrix_compile_time_conversions) {
+  using stan::math::var_value;
+  Eigen::VectorXd colvec_vals = Eigen::VectorXd::Random(5);
+  Eigen::RowVectorXd rowvec_vals = Eigen::VectorXd::Random(5);
+  Eigen::Matrix<double, 1, 1> x11_vals
+      = Eigen::Matrix<double, 1, 1>::Random(1, 1);
+  var_value<Eigen::Matrix<double, -1, 1>> colvec = colvec_vals;
+  var_value<Eigen::Matrix<double, 1, -1>> rowvec = rowvec_vals;
+  colvec = rowvec;
+  EXPECT_MATRIX_FLOAT_EQ(colvec.val().transpose(), rowvec.val());
+  var_value<Eigen::Matrix<double, 1, 1>> x11 = x11_vals;
+  colvec = x11;
+  rowvec = x11;
+  EXPECT_MATRIX_FLOAT_EQ(colvec.val(), rowvec.val());
+  EXPECT_MATRIX_FLOAT_EQ(x11.val(), rowvec.val());
 }

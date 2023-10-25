@@ -20,4 +20,5 @@
 
 #include <stan/math/torsten/torsten.hpp>
 using namespace torsten;
+
 #endif

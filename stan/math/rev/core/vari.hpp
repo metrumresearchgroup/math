@@ -736,6 +736,11 @@ class vari_value<T, require_all_t<is_plain_type<T>, is_eigen_dense_base<T>>>
     }
   }
 
+ protected:
+  template <typename S, require_not_same_t<T, S>* = nullptr>
+  explicit vari_value(const vari_value<S>* x) : val_(x->val_), adj_(x->adj_) {}
+
+ public:
   /**
    * Return a constant reference to the value of this vari.
    *
@@ -843,7 +848,7 @@ class vari_value<T, require_eigen_sparse_base_t<T>> : public vari_base,
    */
   template <typename S, require_convertible_t<S&, T>* = nullptr>
   explicit vari_value(S&& x)
-      : adj_(x), val_(std::forward<S>(x)), chainable_alloc() {
+      : chainable_alloc(), adj_(x), val_(std::forward<S>(x)) {
     this->set_zero_adjoint();
     ChainableStack::instance_->var_stack_.push_back(this);
   }
@@ -866,7 +871,7 @@ class vari_value<T, require_eigen_sparse_base_t<T>> : public vari_base,
    */
   template <typename S, require_convertible_t<S&, T>* = nullptr>
   vari_value(S&& x, bool stacked)
-      : adj_(x), val_(std::forward<S>(x)), chainable_alloc() {
+      : chainable_alloc(), adj_(x), val_(std::forward<S>(x)) {
     this->set_zero_adjoint();
     if (stacked) {
       ChainableStack::instance_->var_stack_.push_back(this);

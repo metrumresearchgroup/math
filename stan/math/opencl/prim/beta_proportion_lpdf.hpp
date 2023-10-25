@@ -8,7 +8,7 @@
 #include <stan/math/prim/fun/log1m.hpp>
 #include <stan/math/prim/fun/log1p.hpp>
 #include <stan/math/opencl/kernel_generator.hpp>
-#include <stan/math/prim/functor/operands_and_partials.hpp>
+#include <stan/math/prim/functor/partials_propagator.hpp>
 
 namespace stan {
 namespace math {
@@ -80,9 +80,9 @@ return_type_t<T_y_cl, T_loc_cl, T_prec_cl> beta_proportion_lpdf(
       elt_multiply(mukappa_expr - 1, log_y_expr)
       + elt_multiply(kappa_val - mukappa_expr - 1, log1m_y_expr)
       + static_select<include_summand<propto, T_prec_cl>::value>(
-            lgamma(kappa_val), 0)
+          lgamma(kappa_val), 0)
       - static_select<include_summand<propto, T_loc_cl, T_prec_cl>::value>(
-            lgamma(mukappa_expr) + lgamma(kappa_val - mukappa_expr), 0));
+          lgamma(mukappa_expr) + lgamma(kappa_val - mukappa_expr), 0));
   auto y_deriv_expr = elt_divide(mukappa_expr - 1, y_val)
                       + elt_divide(kappa_val - mukappa_expr - 1, y_val - 1);
   auto digamma_mukappa_expr = digamma(mukappa_expr);
@@ -110,16 +110,15 @@ return_type_t<T_y_cl, T_loc_cl, T_prec_cl> beta_proportion_lpdf(
 
   T_partials_return logp = sum(from_matrix_cl(logp_cl));
 
-  operands_and_partials<decltype(y_col), decltype(mu_col), decltype(kappa_col)>
-      ops_partials(y_col, mu_col, kappa_col);
+  auto ops_partials = make_partials_propagator(y_col, mu_col, kappa_col);
   if (!is_constant<T_y_cl>::value) {
-    ops_partials.edge1_.partials_ = std::move(y_deriv_cl);
+    partials<0>(ops_partials) = std::move(y_deriv_cl);
   }
   if (!is_constant<T_loc_cl>::value) {
-    ops_partials.edge2_.partials_ = std::move(mu_deriv_cl);
+    partials<1>(ops_partials) = std::move(mu_deriv_cl);
   }
   if (!is_constant<T_prec_cl>::value) {
-    ops_partials.edge3_.partials_ = std::move(kappa_deriv_cl);
+    partials<2>(ops_partials) = std::move(kappa_deriv_cl);
   }
 
   return ops_partials.build(logp);
