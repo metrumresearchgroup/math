@@ -1,21 +1,22 @@
 #include <stan/math/rev.hpp>
+#include <test/unit/math/rev/util.hpp>
 #include <gtest/gtest.h>
 #include <chrono>
 #include <thread>
 
-TEST(Profiling, double_basic) {
+TEST_F(AgradRev, Profiling_double_basic) {
   using stan::math::profile;
   using stan::math::var;
-  stan::math::profile_map profiles;
+  stan::math::profile_map prof_map;
   double a = 3.0, b = 2.0, c;
   {
-    profile<double> p1("p1", profiles);
+    profile<double> p1("p1", prof_map);
     c = log(exp(a)) * log(exp(b));
     std::chrono::milliseconds timespan(10);
     std::this_thread::sleep_for(timespan);
   }
   {
-    profile<int> p1("p1", profiles);
+    profile<int> p1("p1", prof_map);
     c = log(exp(a)) * log(exp(b));
     std::chrono::milliseconds timespan(10);
     std::this_thread::sleep_for(timespan);
@@ -23,17 +24,17 @@ TEST(Profiling, double_basic) {
 
   stan::math::profile_key key = {"p1", std::this_thread::get_id()};
   EXPECT_NEAR(c, 6.0, 1E-8);
-  EXPECT_EQ(profiles[key].get_chain_stack_used(), 0);
-  EXPECT_EQ(profiles[key].get_nochain_stack_used(), 0);
-  EXPECT_FLOAT_EQ(profiles[key].get_rev_time(), 0.0);
-  EXPECT_EQ(profiles[key].get_num_rev_passes(), 0);
-  EXPECT_EQ(profiles[key].get_num_fwd_passes(), 2);
-  EXPECT_EQ(profiles[key].get_num_no_AD_fwd_passes(), 2);
-  EXPECT_EQ(profiles[key].get_num_AD_fwd_passes(), 0);
-  EXPECT_TRUE(profiles[key].get_fwd_time() > 0.0);
+  EXPECT_EQ(prof_map[key].get_chain_stack_used(), 0);
+  EXPECT_EQ(prof_map[key].get_nochain_stack_used(), 0);
+  EXPECT_FLOAT_EQ(prof_map[key].get_rev_time(), 0.0);
+  EXPECT_EQ(prof_map[key].get_num_rev_passes(), 0);
+  EXPECT_EQ(prof_map[key].get_num_fwd_passes(), 2);
+  EXPECT_EQ(prof_map[key].get_num_no_AD_fwd_passes(), 2);
+  EXPECT_EQ(prof_map[key].get_num_AD_fwd_passes(), 0);
+  EXPECT_TRUE(prof_map[key].get_fwd_time() > 0.0);
 }
 
-TEST(Profiling, var_basic) {
+TEST_F(AgradRev, Profiling_var_basic) {
   using stan::math::profile;
   using stan::math::var;
   stan::math::profile_map profiles;
@@ -59,7 +60,7 @@ TEST(Profiling, var_basic) {
   EXPECT_TRUE(profiles[key].get_rev_time() > 0.0);
 }
 
-TEST(Profiling, var_exception) {
+TEST_F(AgradRev, Profiling_var_exception) {
   using stan::math::profile;
   using stan::math::var;
   stan::math::profile_map profiles;
@@ -89,7 +90,7 @@ TEST(Profiling, var_exception) {
   EXPECT_TRUE(profiles[key_t1].get_rev_time() == 0.0);
 }
 
-TEST(Profiling, var_loop) {
+TEST_F(AgradRev, Profiling_var_loop) {
   using stan::math::profile;
   using stan::math::var;
   stan::math::profile_map profiles;
@@ -117,7 +118,7 @@ TEST(Profiling, var_loop) {
   EXPECT_TRUE(profiles[key_t1].get_rev_time() > 0.0);
 }
 
-TEST(Profiling, duplicate_active_profile) {
+TEST_F(AgradRev, Profiling_duplicate_active_profile) {
   using stan::math::profile;
   using stan::math::var;
   stan::math::profile_map profiles;

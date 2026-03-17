@@ -61,7 +61,7 @@ namespace math {
  */
 template <typename T, require_arithmetic_t<T>* = nullptr>
 inline return_type_t<T> rising_factorial(const T& x, int n) {
-  static const char* function = "rising_factorial";
+  static constexpr const char* function = "rising_factorial";
   check_not_nan(function, "first argument", x);
   check_nonnegative(function, "second argument", n);
   return boost::math::rising_factorial(x, n, boost_policy_t<>());
@@ -78,10 +78,13 @@ inline return_type_t<T> rising_factorial(const T& x, int n) {
  * @return rising_factorial function applied to the two inputs.
  */
 template <typename T1, typename T2, require_any_container_t<T1, T2>* = nullptr>
-inline auto rising_factorial(const T1& a, const T2& b) {
-  return apply_scalar_binary(a, b, [&](const auto& c, const auto& d) {
-    return rising_factorial(c, d);
-  });
+inline auto rising_factorial(T1&& a, T2&& b) {
+  return apply_scalar_binary(
+      [](auto&& c, auto&& d) {
+        return rising_factorial(std::forward<decltype(c)>(c),
+                                std::forward<decltype(d)>(d));
+      },
+      std::forward<T1>(a), std::forward<T2>(b));
 }
 
 }  // namespace math

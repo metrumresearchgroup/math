@@ -1,12 +1,13 @@
 #ifndef STAN_MATH_REV_FUN_SQRT_HPP
 #define STAN_MATH_REV_FUN_SQRT_HPP
 
-#include <stan/math/prim/fun/sqrt.hpp>
 #include <stan/math/rev/meta.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/rev/fun/atan2.hpp>
 #include <stan/math/rev/fun/cos.hpp>
 #include <stan/math/rev/fun/hypot.hpp>
+#include <stan/math/rev/fun/sin.hpp>
+#include <stan/math/prim/fun/sqrt.hpp>
 #include <cmath>
 #include <complex>
 
@@ -43,7 +44,9 @@ namespace math {
  */
 inline var sqrt(const var& a) {
   return make_callback_var(std::sqrt(a.val()), [a](auto& vi) mutable {
-    a.adj() += vi.adj() / (2.0 * vi.val());
+    if (vi.val() != 0.0) {
+      a.adj() += vi.adj() / (2.0 * vi.val());
+    }
   });
 }
 
@@ -58,7 +61,9 @@ template <typename T, require_var_matrix_t<T>* = nullptr>
 inline auto sqrt(const T& a) {
   return make_callback_var(
       a.val().array().sqrt().matrix(), [a](auto& vi) mutable {
-        a.adj().array() += vi.adj().array() / (2.0 * vi.val_op().array());
+        a.adj().array()
+            += (vi.val_op().array() == 0.0)
+                   .select(0.0, vi.adj().array() / (2.0 * vi.val_op().array()));
       });
 }
 

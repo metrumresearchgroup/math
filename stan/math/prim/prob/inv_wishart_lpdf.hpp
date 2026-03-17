@@ -42,15 +42,15 @@ namespace math {
  * semi-positive definite.
  */
 template <bool propto, typename T_y, typename T_dof, typename T_scale>
-return_type_t<T_y, T_dof, T_scale> inv_wishart_lpdf(const T_y& W,
-                                                    const T_dof& nu,
-                                                    const T_scale& S) {
+inline return_type_t<T_y, T_dof, T_scale> inv_wishart_lpdf(const T_y& W,
+                                                           const T_dof& nu,
+                                                           const T_scale& S) {
   using Eigen::Dynamic;
   using Eigen::Matrix;
   using T_W_ref = ref_type_t<T_y>;
   using T_nu_ref = ref_type_t<T_dof>;
   using T_S_ref = ref_type_t<T_scale>;
-  static const char* function = "inv_wishart_lpdf";
+  static constexpr const char* function = "inv_wishart_lpdf";
   check_size_match(function, "Rows of random variable", W.rows(),
                    "columns of scale parameter", S.rows());
   check_square(function, "random variable", W);
@@ -70,19 +70,19 @@ return_type_t<T_y, T_dof, T_scale> inv_wishart_lpdf(const T_y& W,
 
   return_type_t<T_y, T_dof, T_scale> lp(0.0);
 
-  if (include_summand<propto, T_dof>::value) {
+  if constexpr (include_summand<propto, T_dof>::value) {
     lp -= lmgamma(k, 0.5 * nu_ref);
   }
-  if (include_summand<propto, T_dof, T_scale>::value) {
+  if constexpr (include_summand<propto, T_dof, T_scale>::value) {
     lp += 0.5 * nu_ref * log_determinant_ldlt(ldlt_S);
   }
-  if (include_summand<propto, T_y, T_dof, T_scale>::value) {
+  if constexpr (include_summand<propto, T_y, T_dof, T_scale>::value) {
     lp -= 0.5 * (nu_ref + k + 1.0) * log_determinant_ldlt(ldlt_W);
   }
-  if (include_summand<propto, T_y, T_scale>::value) {
+  if constexpr (include_summand<propto, T_y, T_scale>::value) {
     lp -= 0.5 * trace(mdivide_left_ldlt(ldlt_W, S_ref));
   }
-  if (include_summand<propto, T_dof, T_scale>::value) {
+  if constexpr (include_summand<propto, T_dof, T_scale>::value) {
     lp -= nu_ref * k * HALF_LOG_TWO;
   }
   return lp;

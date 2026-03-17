@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
 Replacement for runtest target in Makefile.
@@ -23,9 +23,12 @@ testsfx = "_test.cpp"
 
 allowed_paths_with_jumbo = [
     "test/unit/math/prim/",
+    "test/unit/math/prim/constraint",
     "test/unit/math/",
     "test/unit/math/rev/",
+     "test/unit/math/rev/constraint",
     "test/unit/math/fwd/",
+    "test/unit/math/fwd/constraint",
     "test/unit/math/mix/",
     "test/unit/math/mix/fun/",
     "test/unit/math/opencl/",
@@ -33,18 +36,21 @@ allowed_paths_with_jumbo = [
 ]
 
 jumbo_folders = [
+    "test/unit/math/prim/constraint",
     "test/unit/math/prim/core",
     "test/unit/math/prim/err",
     "test/unit/math/prim/fun",
     "test/unit/math/prim/functor",
     "test/unit/math/prim/meta",
     "test/unit/math/prim/prob",
+     "test/unit/math/rev/constraint",
     "test/unit/math/rev/core",
     "test/unit/math/rev/err",
     "test/unit/math/rev/fun",
     "test/unit/math/rev/functor",
     "test/unit/math/rev/meta",
     "test/unit/math/rev/prob",
+    "test/unit/math/fwd/constraint",
     "test/unit/math/fwd/core",
     "test/unit/math/fwd/fun",
     "test/unit/math/fwd/functor",
@@ -58,7 +64,9 @@ jumbo_folders = [
     "test/unit/math/opencl/device_functions",
     "test/unit/math/opencl/kernel_generator",
     "test/unit/math/opencl/prim",
+    "test/unit/math/opencl/prim/constraint",
     "test/unit/math/opencl/rev",
+    "test/unit/math/opencl/rev/constraint",
 ]
 
 
@@ -177,10 +185,7 @@ def doCommand(command, exit_on_failure=True):
 
 def generateTests(j):
     """Generate all tests and pass along the j parameter to make."""
-    if isWin():
-        doCommand("mingw32-make -j%d generate-tests -s" % (j or 1))
-    else:
-        doCommand("make -j%d generate-tests -s" % (j or 1))
+    doCommand("make -j%d generate-tests -s" % (j or 1))
 
 
 def divide_chunks(l, n):
@@ -238,10 +243,7 @@ def cleanupJumboTests(paths):
 
 def makeTest(name, j):
     """Run the make command for a given single test."""
-    if isWin():
-        doCommand("mingw32-make -j%d %s" % (j or 1, name))
-    else:
-        doCommand("make -j%d %s" % (j or 1, name))
+    doCommand("make -j%d %s" % (j or 1, name))
 
 
 def commandExists(command):
@@ -317,7 +319,8 @@ def findChangedTests(debug):
     import subprocess
 
     changed_files = subprocess.run(
-        ["git", "diff", "--name-only", "origin/develop...HEAD"], text=True, capture_output=True
+        ["git", "diff", "--name-only", "--diff-filter=d", "origin/develop...HEAD"],
+        text=True, capture_output=True
     ).stdout.splitlines()
     if debug:
         print("Changed files:", changed_files)
@@ -374,13 +377,13 @@ def handleExpressionTests(tests, only_functions, n_test_files):
 def checkToolchainPathWindows():
     if isWin():
         p1 = subprocess.Popen(
-            "where.exe mingw32-make",
+            "where.exe make",
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
         )
         out, err = p1.communicate()
-        if re.search(" |\(|\)", out):
+        if re.search(r" |\(|\)", out):
             stopErr(
                 "The RTools toolchain is installed in a path with spaces or bracket. Please reinstall to a valid path.",
                 -1,

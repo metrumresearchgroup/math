@@ -51,7 +51,7 @@ inline typename VectorBuilder<true, int, T_alpha>::type bernoulli_logit_glm_rng(
   const size_t N = x.cols();
   const size_t M = x.rows();
 
-  static const char* function = "bernoulli_logit_glm_rng";
+  static constexpr const char* function = "bernoulli_logit_glm_rng";
   check_consistent_size(function, "Weight vector", beta, N);
   check_consistent_size(function, "Vector of intercepts", alpha, M);
   T_x_ref x_ref = x;
@@ -64,10 +64,10 @@ inline typename VectorBuilder<true, int, T_alpha>::type bernoulli_logit_glm_rng(
   const auto& beta_vector = as_column_vector_or_scalar(beta_ref);
 
   Eigen::VectorXd x_beta;
-  if (is_vector<T_beta>::value) {
+  if constexpr (is_vector<T_beta>::value) {
     x_beta = x_ref * beta_vector;
   } else {
-    x_beta = (x_ref.array() * forward_as<double>(beta_vector)).rowwise().sum();
+    x_beta = (x_ref.array() * beta_vector).rowwise().sum();
   }
 
   scalar_seq_view<T_alpha> alpha_vec(alpha_ref);

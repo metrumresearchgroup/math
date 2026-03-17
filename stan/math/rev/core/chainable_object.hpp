@@ -1,11 +1,9 @@
 #ifndef STAN_MATH_REV_CORE_CHAINABLE_OBJECT_HPP
 #define STAN_MATH_REV_CORE_CHAINABLE_OBJECT_HPP
 
-#include <stan/math/rev/meta.hpp>
-#include <stan/math/rev/core/chainable_alloc.hpp>
-#include <stan/math/rev/core/typedefs.hpp>
 #include <stan/math/prim/fun/Eigen.hpp>
-#include <stan/math/prim/fun/typedefs.hpp>
+#include <stan/math/prim/meta.hpp>
+#include <stan/math/rev/core/chainable_alloc.hpp>
 #include <vector>
 
 namespace stan {
@@ -57,7 +55,7 @@ class chainable_object : public chainable_alloc {
  * @return pointer to object held in `chainable_object`
  */
 template <typename T>
-auto make_chainable_ptr(T&& obj) {
+inline auto make_chainable_ptr(T&& obj) {
   auto ptr = new chainable_object<T>(std::forward<T>(obj));
   return &ptr->get();
 }
@@ -112,7 +110,7 @@ class unsafe_chainable_object : public chainable_alloc {
  * @return pointer to object held in `chainable_object`
  */
 template <typename T>
-auto make_unsafe_chainable_ptr(T&& obj) {
+inline auto make_unsafe_chainable_ptr(T&& obj) {
   auto ptr = new unsafe_chainable_object<T>(std::forward<T>(obj));
   return &ptr->get();
 }

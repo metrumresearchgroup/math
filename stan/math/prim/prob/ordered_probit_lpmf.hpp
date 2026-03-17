@@ -45,13 +45,13 @@ namespace math {
  * of different lengths.
  */
 template <bool propto, typename T_y, typename T_loc, typename T_cut>
-return_type_t<T_loc, T_cut> ordered_probit_lpmf(const T_y& y,
-                                                const T_loc& lambda,
-                                                const T_cut& c) {
+inline return_type_t<T_loc, T_cut> ordered_probit_lpmf(const T_y& y,
+                                                       const T_loc& lambda,
+                                                       const T_cut& c) {
   using std::exp;
   using std::log;
   using T_lambda_ref = ref_type_t<T_loc>;
-  static const char* function = "ordered_probit";
+  static constexpr const char* function = "ordered_probit";
 
   check_nonzero_size(function, "Cut-points", c);
   int N = math::size(lambda);
@@ -101,9 +101,9 @@ return_type_t<T_loc, T_cut> ordered_probit_lpmf(const T_y& y,
 }
 
 template <typename T_y, typename T_loc, typename T_cut>
-return_type_t<T_loc, T_cut> ordered_probit_lpmf(const T_y& y,
-                                                const T_loc& lambda,
-                                                const T_cut& c) {
+inline return_type_t<T_loc, T_cut> ordered_probit_lpmf(const T_y& y,
+                                                       const T_loc& lambda,
+                                                       const T_cut& c) {
   return ordered_probit_lpmf<false>(y, lambda, c);
 }
 }  // namespace math

@@ -3,8 +3,12 @@
 
 #include <stan/math/prim/meta.hpp>
 #include <stan/math/fwd/core.hpp>
-#include <stan/math/prim/fun/hypergeometric_pFq.hpp>
+#include <stan/math/fwd/fun/value_of.hpp>
+#include <stan/math/prim/fun/dot_product.hpp>
 #include <stan/math/prim/fun/grad_pFq.hpp>
+#include <stan/math/prim/fun/hypergeometric_pFq.hpp>
+#include <stan/math/prim/fun/as_column_vector_or_scalar.hpp>
+#include <stan/math/prim/fun/to_ref.hpp>
 
 namespace stan {
 namespace math {
@@ -21,33 +25,35 @@ namespace math {
  * @param[in] z Scalar z argument
  * @return Generalized hypergeometric function
  */
-template <typename Ta, typename Tb, typename Tz,
-          require_all_matrix_t<Ta, Tb>* = nullptr,
-          require_return_type_t<is_fvar, Ta, Tb, Tz>* = nullptr>
-inline return_type_t<Ta, Tb, Tz> hypergeometric_pFq(const Ta& a, const Tb& b,
-                                                    const Tz& z) {
-  using fvar_t = return_type_t<Ta, Tb, Tz>;
-  ref_type_t<Ta> a_ref = a;
-  ref_type_t<Tb> b_ref = b;
-  auto grad_tuple = grad_pFq(a_ref, b_ref, z);
+template <
+    typename Ta, typename Tb, typename Tz,
+    typename FvarT = return_type_t<Ta, Tb, Tz>, bool grad_a = is_autodiff_v<Ta>,
+    bool grad_b = is_autodiff_v<Tb>, bool grad_z = is_autodiff_v<Tz>,
+    require_all_vector_t<Ta, Tb>* = nullptr, require_fvar_t<FvarT>* = nullptr>
+inline FvarT hypergeometric_pFq(Ta&& a, Tb&& b, Tz&& z) {
+  auto&& a_ref = to_ref(as_column_vector_or_scalar(a));
+  auto&& b_ref = to_ref(as_column_vector_or_scalar(b));
+  auto&& a_val = value_of(a_ref);
+  auto&& b_val = value_of(b_ref);
+  auto&& z_val = value_of(z);
 
-  typename fvar_t::Scalar grad = 0;
+  partials_type_t<FvarT> pfq_val = hypergeometric_pFq(a_val, b_val, z_val);
+  auto grad_tuple
+      = grad_pFq<grad_a, grad_b, grad_z>(pfq_val, a_val, b_val, z_val);
 
-  if (!is_constant<Ta>::value) {
-    grad += dot_product(forward_as<promote_scalar_t<fvar_t, Ta>>(a_ref).d(),
-                        std::get<0>(grad_tuple));
+  FvarT rtn = FvarT(pfq_val, 0.0);
+
+  if constexpr (grad_a) {
+    rtn.d_ += dot_product(a_ref.d(), std::get<0>(grad_tuple));
   }
-  if (!is_constant<Tb>::value) {
-    grad += dot_product(forward_as<promote_scalar_t<fvar_t, Tb>>(b_ref).d(),
-                        std::get<1>(grad_tuple));
+  if constexpr (grad_b) {
+    rtn.d_ += dot_product(b_ref.d(), std::get<1>(grad_tuple));
   }
-  if (!is_constant<Tz>::value) {
-    grad += forward_as<promote_scalar_t<fvar_t, Tz>>(z).d_
-            * std::get<2>(grad_tuple);
+  if constexpr (grad_z) {
+    rtn.d_ += z.d_ * std::get<2>(grad_tuple);
   }
 
-  return fvar_t(
-      hypergeometric_pFq(value_of(a_ref), value_of(b_ref), value_of(z)), grad);
+  return rtn;
 }
 
 }  // namespace math

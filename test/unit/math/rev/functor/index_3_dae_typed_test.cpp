@@ -1,4 +1,5 @@
 #include <stan/math/rev.hpp>
+#include <test/unit/math/rev/util.hpp>
 #include <boost/mp11.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/math/rev/functor/test_fixture_ode.hpp>
@@ -25,10 +26,10 @@ using dae_test_types = boost::mp11::mp_product<
 
 TYPED_TEST_SUITE_P(index_3_dae_test);
 TYPED_TEST_P(index_3_dae_test, solver_failure) {
-  EXPECT_THROW_MSG(this->apply_solver(), std::runtime_error,
+  EXPECT_THROW_MSG(this->apply_solver(), std::domain_error,
                    "Error test failures occurred too many times");
   this->ts = {0.0001};
-  EXPECT_THROW_MSG(this->apply_solver_tol(), std::runtime_error,
+  EXPECT_THROW_MSG(this->apply_solver_tol(), std::domain_error,
                    "Error test failures occurred too many times");
 }
 

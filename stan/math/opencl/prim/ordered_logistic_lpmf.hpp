@@ -70,7 +70,7 @@ template <bool propto, typename T_y_cl, typename T_loc_cl, typename T_cuts_cl,
 inline return_type_t<T_y_cl, T_loc_cl, T_cuts_cl> ordered_logistic_lpmf(
     const T_y_cl& y, const T_loc_cl& lambda, const T_cuts_cl& cuts) {
   constexpr bool is_y_vector = !is_stan_scalar<T_y_cl>::value;
-  static const char* function = "ordered_logistic_lpmf(OpenCL)";
+  static constexpr const char* function = "ordered_logistic_lpmf(OpenCL)";
 
   if (size(y) != 1) {
     check_size_match(function, "Size of ", "y", math::size(y), "Size of",
@@ -100,7 +100,7 @@ inline return_type_t<T_y_cl, T_loc_cl, T_cuts_cl> ordered_logistic_lpmf(
     check_cl(function, "Cuts", cuts_val, "finite") = isfinite(cuts_val);
   }
 
-  if (!include_summand<propto, T_loc_cl, T_cuts_cl>::value) {
+  if constexpr (!include_summand<propto, T_loc_cl, T_cuts_cl>::value) {
     return 0.0;
   }
 
@@ -113,8 +113,8 @@ inline return_type_t<T_y_cl, T_loc_cl, T_cuts_cl> ordered_logistic_lpmf(
       = opencl_kernels::ordered_logistic.get_option("LOCAL_SIZE_");
   const int wgs = (N_instances + local_size - 1) / local_size;
 
-  bool need_lambda_derivative = !is_constant_all<T_loc_cl>::value;
-  bool need_cuts_derivative = !is_constant_all<T_cuts_cl>::value;
+  bool need_lambda_derivative = is_autodiff_v<T_loc_cl>;
+  bool need_cuts_derivative = is_autodiff_v<T_cuts_cl>;
   bool need_broadcasting = N_cut_sets == 1 && N_instances != 1;
   matrix_cl<double> logp_cl(wgs, 1);
   matrix_cl<double> lambda_derivative_cl(N_instances,
@@ -144,10 +144,10 @@ inline return_type_t<T_y_cl, T_loc_cl, T_cuts_cl> ordered_logistic_lpmf(
   }
   auto ops_partials = make_partials_propagator(lambda, cuts);
 
-  if (!is_constant_all<T_loc_cl>::value) {
+  if constexpr (is_autodiff_v<T_loc_cl>) {
     partials<0>(ops_partials) = lambda_derivative_cl;
   }
-  if (!is_constant_all<T_cuts_cl>::value) {
+  if constexpr (is_autodiff_v<T_cuts_cl>) {
     if (need_broadcasting) {
       partials<1>(ops_partials) = rowwise_sum(cuts_derivative_cl);
     } else {

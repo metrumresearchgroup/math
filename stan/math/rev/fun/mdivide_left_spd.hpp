@@ -1,13 +1,14 @@
 #ifndef STAN_MATH_REV_FUN_MDIVIDE_LEFT_SPD_HPP
 #define STAN_MATH_REV_FUN_MDIVIDE_LEFT_SPD_HPP
 
+#include <stan/math/prim/fun/Eigen.hpp>
 #include <stan/math/rev/meta.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/rev/core/typedefs.hpp>
 #include <stan/math/prim/err.hpp>
-#include <stan/math/prim/fun/Eigen.hpp>
 #include <stan/math/prim/fun/to_ref.hpp>
 #include <stan/math/prim/fun/typedefs.hpp>
+#include <stan/math/prim/fun/mdivide_left_spd.hpp>
 #include <vector>
 
 namespace stan {
@@ -154,7 +155,7 @@ mdivide_left_spd(const EigMat1 &A, const EigMat2 &b) {
   constexpr int C1 = EigMat1::ColsAtCompileTime;
   constexpr int R2 = EigMat2::RowsAtCompileTime;
   constexpr int C2 = EigMat2::ColsAtCompileTime;
-  static const char *function = "mdivide_left_spd";
+  static constexpr const char *function = "mdivide_left_spd";
   check_multiplicable(function, "A", A, "b", b);
   const auto &A_ref = to_ref(A);
   check_symmetric(function, "A", A_ref);
@@ -185,7 +186,7 @@ mdivide_left_spd(const EigMat1 &A, const EigMat2 &b) {
   constexpr int C1 = EigMat1::ColsAtCompileTime;
   constexpr int R2 = EigMat2::RowsAtCompileTime;
   constexpr int C2 = EigMat2::ColsAtCompileTime;
-  static const char *function = "mdivide_left_spd";
+  static constexpr const char *function = "mdivide_left_spd";
   check_multiplicable(function, "A", A, "b", b);
   const auto &A_ref = to_ref(A);
   check_symmetric(function, "A", A_ref);
@@ -216,7 +217,7 @@ mdivide_left_spd(const EigMat1 &A, const EigMat2 &b) {
   constexpr int C1 = EigMat1::ColsAtCompileTime;
   constexpr int R2 = EigMat2::RowsAtCompileTime;
   constexpr int C2 = EigMat2::ColsAtCompileTime;
-  static const char *function = "mdivide_left_spd";
+  static constexpr const char *function = "mdivide_left_spd";
   check_multiplicable(function, "A", A, "b", b);
   const auto &A_ref = to_ref(A);
   check_symmetric(function, "A", A_ref);
@@ -268,7 +269,7 @@ inline auto mdivide_left_spd(const T1 &A, const T2 &B) {
 
   check_multiplicable("mdivide_left_spd", "A", A, "B", B);
 
-  if (!is_constant<T1>::value && !is_constant<T2>::value) {
+  if constexpr (is_autodiff_v<T1> && is_autodiff_v<T2>) {
     arena_t<promote_scalar_t<var, T1>> arena_A = A;
     arena_t<promote_scalar_t<var, T2>> arena_B = B;
 
@@ -295,7 +296,7 @@ inline auto mdivide_left_spd(const T1 &A, const T2 &B) {
     });
 
     return ret_type(res);
-  } else if (!is_constant<T1>::value) {
+  } else if constexpr (is_autodiff_v<T1>) {
     arena_t<promote_scalar_t<var, T1>> arena_A = A;
 
     check_symmetric("mdivide_left_spd", "A", arena_A.val());

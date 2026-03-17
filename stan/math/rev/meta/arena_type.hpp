@@ -3,16 +3,13 @@
 
 #include <stan/math/prim/meta/is_eigen.hpp>
 #include <stan/math/prim/meta/is_var.hpp>
+#include <stan/math/prim/meta/is_tuple.hpp>
 #include <stan/math/prim/meta/plain_type.hpp>
 #include <stan/math/rev/core/arena_allocator.hpp>
 #include <stan/math/rev/core/chainable_alloc.hpp>
+#include <stan/math/rev/core/var_value_fwd_declare.hpp>
 
 namespace stan {
-namespace math {
-// forward declaration
-template <typename MatrixType>
-class arena_matrix;
-}  // namespace math
 
 namespace internal {
 template <typename T, typename = void, typename = void>
@@ -51,6 +48,7 @@ struct arena_type_impl<
                      && T::ColsAtCompileTime != Eigen::Dynamic>> {
   using type = plain_type_t<T>;
 };
+
 }  // namespace internal
 
 /**

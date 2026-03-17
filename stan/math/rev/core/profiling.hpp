@@ -7,6 +7,7 @@
 #include <stan/math/rev/meta.hpp>
 #include <stan/math/rev/fun/value_of.hpp>
 #include <stan/math/prim/err.hpp>
+#include <tbb/concurrent_unordered_map.h>
 #include <iostream>
 #include <sstream>
 #include <thread>
@@ -52,7 +53,7 @@ class profile_info {
 
   template <typename T>
   void fwd_pass_start() {
-    if (!is_constant<T>::value) {
+    if constexpr (is_autodiff_v<T>) {
       start_chain_stack_size_ = ChainableStack::instance_->var_stack_.size();
       start_nochain_stack_size_
           = ChainableStack::instance_->var_nochain_stack_.size();
@@ -63,7 +64,7 @@ class profile_info {
 
   template <typename T>
   void fwd_pass_stop() {
-    if (!is_constant<T>::value) {
+    if constexpr (is_autodiff_v<T>) {
       n_fwd_AD_passes_++;
       chain_stack_size_sum_ += (ChainableStack::instance_->var_stack_.size()
                                 - start_chain_stack_size_ - 1);
@@ -115,7 +116,24 @@ class profile_info {
 
 using profile_key = std::pair<std::string, std::thread::id>;
 
-using profile_map = std::map<profile_key, profile_info>;
+namespace internal {
+struct hash_profile_key {
+  std::size_t operator()(const profile_key& key) const {
+    return std::hash<std::string>()(key.first)
+           ^ std::hash<std::thread::id>()(key.second);
+  }
+};
+struct equal_profile_key {
+  bool operator()(const profile_key& lhs, const profile_key& rhs) const {
+    return lhs.first == rhs.first && lhs.second == rhs.second;
+  }
+};
+
+}  // namespace internal
+
+using profile_map = tbb::concurrent_unordered_map<profile_key, profile_info,
+                                                  internal::hash_profile_key,
+                                                  internal::equal_profile_key>;
 
 /**
  * Profiles C++ lines where the object is in scope.
@@ -148,14 +166,14 @@ class profile {
       throw std::runtime_error(msg.str());
     }
     profile_->fwd_pass_start<T>();
-    if (!is_constant<T>::value) {
+    if constexpr (is_autodiff_v<T>) {
       reverse_pass_callback(
           [profile = this->profile_]() mutable { profile->rev_pass_stop(); });
     }
   }
   ~profile() {
     profile_->fwd_pass_stop<T>();
-    if (!is_constant<T>::value) {
+    if constexpr (is_autodiff_v<T>) {
       reverse_pass_callback(
           [profile = this->profile_]() mutable { profile->rev_pass_start(); });
     }

@@ -79,9 +79,9 @@ inline auto hmm_marginal(const T_omega& log_omegas, const T_Gamma& Gamma,
   using eig_matrix_partial
       = Eigen::Matrix<T_partial_type, Eigen::Dynamic, Eigen::Dynamic>;
   using eig_vector_partial = Eigen::Matrix<T_partial_type, Eigen::Dynamic, 1>;
-  using T_omega_ref = ref_type_if_t<!is_constant<T_omega>::value, T_omega>;
-  using T_Gamma_ref = ref_type_if_t<!is_constant<T_Gamma>::value, T_Gamma>;
-  using T_rho_ref = ref_type_if_t<!is_constant<T_rho>::value, T_rho>;
+  using T_omega_ref = ref_type_if_not_constant_t<T_omega>;
+  using T_Gamma_ref = ref_type_if_not_constant_t<T_Gamma>;
+  using T_rho_ref = ref_type_if_not_constant_t<T_rho>;
   int n_states = log_omegas.rows();
   int n_transitions = log_omegas.cols() - 1;
 
@@ -127,7 +127,7 @@ inline auto hmm_marginal(const T_omega& log_omegas, const T_Gamma& Gamma,
     grad_corr[n] = exp(alpha_log_norms[n] + kappa_log_norms[n] - norm_norm);
   }
 
-  if (!is_constant_all<T_Gamma>::value) {
+  if constexpr (is_autodiff_v<T_Gamma>) {
     for (int n = n_transitions - 1; n >= 0; --n) {
       edge<1>(ops_partials).partials_
           += grad_corr[n] * alphas.col(n)
@@ -136,15 +136,15 @@ inline auto hmm_marginal(const T_omega& log_omegas, const T_Gamma& Gamma,
     }
   }
 
-  if (!is_constant_all<T_omega, T_rho>::value) {
+  if constexpr (is_any_autodiff_v<T_omega, T_rho>) {
     // Boundary terms
     if (n_transitions == 0) {
-      if (!is_constant_all<T_omega>::value) {
+      if constexpr (is_autodiff_v<T_omega>) {
         edge<0>(ops_partials).partials_
             = omegas.cwiseProduct(rho_val) / exp(log_marginal_density);
       }
 
-      if (!is_constant_all<T_rho>::value) {
+      if constexpr (is_autodiff_v<T_rho>) {
         edge<2>(ops_partials).partials_
             = omegas.col(0) / exp(log_marginal_density);
       }
@@ -153,7 +153,7 @@ inline auto hmm_marginal(const T_omega& log_omegas, const T_Gamma& Gamma,
       auto grad_corr_boundary = exp(kappa_log_norms(0) - norm_norm);
       eig_vector_partial C = Gamma_val * omegas.col(1).cwiseProduct(kappa[0]);
 
-      if (!is_constant_all<T_omega>::value) {
+      if constexpr (is_autodiff_v<T_omega>) {
         eig_matrix_partial log_omega_jacad
             = Eigen::MatrixXd::Zero(n_states, n_transitions + 1);
 
@@ -168,7 +168,7 @@ inline auto hmm_marginal(const T_omega& log_omegas, const T_Gamma& Gamma,
             = log_omega_jacad.cwiseProduct(omegas / unnormed_marginal);
       }
 
-      if (!is_constant_all<T_rho>::value) {
+      if constexpr (is_autodiff_v<T_rho>) {
         partials<2>(ops_partials) = grad_corr_boundary
                                     * C.cwiseProduct(omegas.col(0))
                                     / unnormed_marginal;

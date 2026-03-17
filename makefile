@@ -2,16 +2,11 @@
 # Stan Math Library
 # -----------------
 #
-# To customize your build, set make variables in either:
-#    ~/.config/stan/make.local
-#    make/local
-# Variables in make/local is loaded after ~/.config/stan/make.local
-
+# To customize your build, set make variables in the file make/local.
 
 ## 'help' is the default make target.
 help:
 
--include $(HOME)/.config/stan/make.local  # user-defined variables
 -include make/local                       # user-defined variables
 
 include make/compiler_flags               # CXX, CXXFLAGS, LDFLAGS set by the end of this file
@@ -50,11 +45,7 @@ help:
 	@echo '      * mix -> {rev, fwd, prim}'
 	@echo ''
 	@echo '  Cpplint'
-	@echo '  - cpplint       : runs cpplint.py on source files. requires python 2.7.'
-	@echo '                    cpplint is called using the CPPLINT variable:'
-	@echo '                      CPPLINT = $(CPPLINT)'
-	@echo '                    To set the version of python 2, set the PYTHON2 variable:'
-	@echo '                      PYTHON2 = $(PYTHON2)'
+	@echo '  - cpplint       : runs cpplint on source files.'
 	@echo ''
 	@echo ' Clang Tidy'
 	@echo ' - clang-tidy     : runs the clang-tidy makefile over the test suite.'
@@ -99,6 +90,7 @@ doxygen:
 clean:
 	@echo '  removing generated test files'
 	@$(RM) $(wildcard test/prob/generate_tests$(EXE))
+	@$(RM) $(EXPRESSION_TESTS) $(call findfiles,test/expressions,*_test.cpp)
 	@$(RM) $(call findfiles,test/prob,*_generated_v_test.cpp)
 	@$(RM) $(call findfiles,test/prob,*_generated_vv_test.cpp)
 	@$(RM) $(call findfiles,test/prob,*_generated_fd_test.cpp)
@@ -127,7 +119,8 @@ clean-deps:
 	@$(RM) $(call findfiles,stan,*.d.*)
 	@$(RM) $(call findfiles,test,*.d.*)
 	@$(RM) $(call findfiles,lib,*.d.*)
-	@$(RM) -r $(call findfiles,stan,*.dSYM)
+	@$(RM) $(call findfiles,stan,*.dSYM)
+	@$(RM) $(call findfiles,make,ucrt)
 
 clean-all: clean clean-doxygen clean-deps clean-libraries clean-torsten
 

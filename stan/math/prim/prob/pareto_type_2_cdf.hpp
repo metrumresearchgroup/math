@@ -21,16 +21,16 @@ namespace math {
 template <typename T_y, typename T_loc, typename T_scale, typename T_shape,
           require_all_not_nonscalar_prim_or_rev_kernel_expression_t<
               T_y, T_loc, T_scale, T_shape>* = nullptr>
-return_type_t<T_y, T_loc, T_scale, T_shape> pareto_type_2_cdf(
+inline return_type_t<T_y, T_loc, T_scale, T_shape> pareto_type_2_cdf(
     const T_y& y, const T_loc& mu, const T_scale& lambda,
     const T_shape& alpha) {
   using T_partials_return = partials_return_t<T_y, T_loc, T_scale, T_shape>;
-  using T_y_ref = ref_type_if_t<!is_constant<T_y>::value, T_y>;
-  using T_mu_ref = ref_type_if_t<!is_constant<T_loc>::value, T_loc>;
-  using T_lambda_ref = ref_type_if_t<!is_constant<T_scale>::value, T_scale>;
-  using T_alpha_ref = ref_type_if_t<!is_constant<T_shape>::value, T_shape>;
+  using T_y_ref = ref_type_if_not_constant_t<T_y>;
+  using T_mu_ref = ref_type_if_not_constant_t<T_loc>;
+  using T_lambda_ref = ref_type_if_not_constant_t<T_scale>;
+  using T_alpha_ref = ref_type_if_not_constant_t<T_shape>;
   using std::pow;
-  static const char* function = "pareto_type_2_cdf";
+  static constexpr const char* function = "pareto_type_2_cdf";
   check_consistent_sizes(function, "Random variable", y, "Location parameter",
                          mu, "Scale parameter", lambda, "Shape parameter",
                          alpha);
@@ -55,41 +55,38 @@ return_type_t<T_y, T_loc, T_scale, T_shape> pareto_type_2_cdf(
   check_positive_finite(function, "Shape parameter", alpha_val);
   check_greater_or_equal(function, "Random variable", y_val, mu_val);
 
-  const auto& summed = to_ref_if<!is_constant_all<T_y, T_loc, T_scale>::value>(
+  const auto& summed = to_ref_if<is_any_autodiff_v<T_y, T_loc, T_scale>>(
       lambda_val + y_val - mu_val);
-  const auto& temp
-      = to_ref_if<!is_constant_all<T_shape>::value>(summed / lambda_val);
+  const auto& temp = to_ref_if<is_autodiff_v<T_shape>>(summed / lambda_val);
   const auto& p1_pow_alpha
-      = to_ref_if<!is_constant_all<T_y, T_loc, T_scale, T_shape>::value>(
+      = to_ref_if<is_any_autodiff_v<T_y, T_loc, T_scale, T_shape>>(
           pow(temp, -alpha_val));
   T_partials_return P = prod(1.0 - p1_pow_alpha);
 
   auto ops_partials
       = make_partials_propagator(y_ref, mu_ref, lambda_ref, alpha_ref);
 
-  if (!is_constant_all<T_y, T_loc, T_scale, T_shape>::value) {
-    const auto& P_div_Pn
-        = to_ref_if<(!is_constant_all<T_y, T_loc, T_scale>::value
-                     && !is_constant_all<T_shape>::value)>(
-            P / (1.0 - p1_pow_alpha));
-    if (!is_constant_all<T_y, T_loc, T_scale>::value) {
-      auto grad_1_2
-          = to_ref_if<!is_constant_all<T_loc>::value
-                          + !is_constant_all<T_scale>::value
-                          + !is_constant_all<T_y>::value
-                      >= 2>(p1_pow_alpha / summed * alpha_val * P_div_Pn);
-      if (!is_constant_all<T_loc>::value) {
+  if constexpr (is_any_autodiff_v<T_y, T_loc, T_scale, T_shape>) {
+    const auto& P_div_Pn = to_ref_if<(
+        is_any_autodiff_v<T_y, T_loc, T_scale> && is_autodiff_v<T_shape>)>(
+        P / (1.0 - p1_pow_alpha));
+    if constexpr (is_any_autodiff_v<T_y, T_loc, T_scale>) {
+      auto grad_1_2 = to_ref_if<
+          is_autodiff_v<
+              T_loc> + is_autodiff_v<T_scale> + is_autodiff_v<T_y> >= 2>(
+          p1_pow_alpha / summed * alpha_val * P_div_Pn);
+      if constexpr (is_autodiff_v<T_loc>) {
         partials<1>(ops_partials) = -grad_1_2;
       }
-      if (!is_constant_all<T_scale>::value) {
+      if constexpr (is_autodiff_v<T_scale>) {
         edge<2>(ops_partials).partials_
             = (mu_val - y_val) / lambda_val * grad_1_2;
       }
-      if (!is_constant_all<T_y>::value) {
+      if constexpr (is_autodiff_v<T_y>) {
         partials<0>(ops_partials) = std::move(grad_1_2);
       }
     }
-    if (!is_constant_all<T_shape>::value) {
+    if constexpr (is_autodiff_v<T_shape>) {
       partials<3>(ops_partials) = log(temp) * p1_pow_alpha * P_div_Pn;
     }
   }

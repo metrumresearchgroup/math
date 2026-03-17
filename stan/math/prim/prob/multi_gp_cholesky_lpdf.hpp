@@ -38,39 +38,42 @@ namespace math {
 template <bool propto, typename T_y, typename T_covar, typename T_w,
           require_all_eigen_matrix_dynamic_t<T_y, T_covar>* = nullptr,
           require_eigen_col_vector_t<T_w>* = nullptr>
-return_type_t<T_y, T_covar, T_w> multi_gp_cholesky_lpdf(const T_y& y,
-                                                        const T_covar& L,
-                                                        const T_w& w) {
+inline return_type_t<T_y, T_covar, T_w> multi_gp_cholesky_lpdf(const T_y& y,
+                                                               const T_covar& L,
+                                                               const T_w& w) {
   using T_lp = return_type_t<T_y, T_covar, T_w>;
-  static const char* function = "multi_gp_cholesky_lpdf";
+  static constexpr const char* function = "multi_gp_cholesky_lpdf";
   check_size_match(function, "Size of random variable (rows y)", y.rows(),
                    "Size of kernel scales (w)", w.size());
   check_size_match(function, "Size of random variable", y.cols(),
                    "rows of covariance parameter", L.rows());
+
   const auto& y_ref = to_ref(y);
+  check_finite(function, "Random variable", y_ref);
   const auto& L_ref = to_ref(L);
+  check_cholesky_factor(function, "Cholesky decomposition of kernel matrix",
+                        L_ref);
   const auto& w_ref = to_ref(w);
   check_positive_finite(function, "Kernel scales", w_ref);
-  check_finite(function, "Random variable", y_ref);
 
   if (y.rows() == 0) {
     return 0;
   }
 
   T_lp lp(0);
-  if (include_summand<propto>::value) {
+  if constexpr (include_summand<propto>::value) {
     lp += NEG_LOG_SQRT_TWO_PI * y.size();
   }
 
-  if (include_summand<propto, T_covar>::value) {
+  if constexpr (include_summand<propto, T_covar>::value) {
     lp -= sum(log(L_ref.diagonal())) * y.rows();
   }
 
-  if (include_summand<propto, T_w>::value) {
+  if constexpr (include_summand<propto, T_w>::value) {
     lp += 0.5 * y.cols() * sum(log(w_ref));
   }
 
-  if (include_summand<propto, T_y, T_w, T_covar>::value) {
+  if constexpr (include_summand<propto, T_y, T_w, T_covar>::value) {
     T_lp sum_lp_vec(0);
     for (int i = 0; i < y.rows(); i++) {
       sum_lp_vec

@@ -1,6 +1,7 @@
 #include <stan/math.hpp>
 #include <stan/math/prim.hpp>
 #include <test/unit/util.hpp>
+#include <test/unit/math/rev/util.hpp>
 #include <test/unit/pretty_print_types.hpp>
 #include <test/unit/math/rev/fun/util.hpp>
 #include <test/unit/math/rev/core/gradable.hpp>
@@ -8,17 +9,10 @@
 #include <string>
 #include <vector>
 
-struct AgradRev : public testing::Test {
-  void SetUp() {
-    // make sure memory's clean before starting each test
-    stan::math::recover_memory();
-  }
-};
-
 namespace stan {
 namespace test {
 template <typename T, typename S>
-void ctor_overloads_float_impl() {
+inline void ctor_overloads_float_impl() {
   using stan::math::var_value;
   using stan::math::vari_value;
   using stan::math::test::type_name;
@@ -42,7 +36,7 @@ void ctor_overloads_float_impl() {
 }
 
 template <typename T>
-void ctor_overloads_float() {
+inline void ctor_overloads_float() {
   ctor_overloads_float_impl<T, double>();
   ctor_overloads_float_impl<T, long double>();
   ctor_overloads_float_impl<T, float>();
@@ -60,7 +54,7 @@ void ctor_overloads_float() {
 }
 
 template <typename EigenMat>
-void ctor_overloads_matrix(EigenMat&& xx) {
+inline void ctor_overloads_matrix(EigenMat&& xx) {
   using stan::math::var_value;
   using stan::math::vari_value;
   using stan::math::test::type_name;
@@ -83,7 +77,7 @@ void ctor_overloads_matrix(EigenMat&& xx) {
 }
 
 template <typename EigenMat>
-void ctor_overloads_sparse_matrix(EigenMat&& x) {
+inline void ctor_overloads_sparse_matrix(EigenMat&& x) {
   using stan::math::var_value;
   using stan::math::vari_value;
   using stan::math::test::type_name;
@@ -129,7 +123,10 @@ void ctor_overloads_sparse_matrix(EigenMat&& x) {
   inplace_add_var.adj() += test_y;
   // adjoints sparsity pattern will be pattern of x and test_y for addition
   for (int k = 0; k < x.outerSize(); ++k) {
-    for (inner_iterator it(test_y, k), iz(inplace_add_var.adj(), k); iz; ++iz) {
+    typename vari_value<eigen_plain>::InnerIterator iz(inplace_add_var.adj(),
+                                                       k);
+    for (inner_iterator it(test_y, k);
+         static_cast<bool>(iz) && static_cast<bool>(it); ++iz) {
       if (iz.row() == it.row() && iz.col() == it.col()) {
         EXPECT_FLOAT_EQ(iz.value() - 1, it.value());
         ++it;
@@ -320,7 +317,7 @@ TEST_F(AgradRev, var_matrix_views_const) {
 }
 
 template <typename dense_vec>
-void var_vector_views_test() {
+inline void var_vector_views_test() {
   using stan::math::var_value;
   dense_vec A(10);
   for (Eigen::Index i = 0; i < A.size(); ++i) {
@@ -358,7 +355,7 @@ TEST_F(AgradRev, var_vector_views) {
 }
 
 template <typename dense_vec>
-void var_vector_views_const_test() {
+inline void var_vector_views_const_test() {
   using stan::math::var_value;
   dense_vec A(10);
   for (Eigen::Index i = 0; i < A.size(); ++i) {
@@ -909,4 +906,88 @@ TEST_F(AgradRev, matrix_compile_time_conversions) {
   rowvec = x11;
   EXPECT_MATRIX_FLOAT_EQ(colvec.val(), rowvec.val());
   EXPECT_MATRIX_FLOAT_EQ(x11.val(), rowvec.val());
+}
+
+TEST_F(AgradRev, assign_nan_varmat) {
+  using stan::math::var_value;
+  using var_vector = var_value<Eigen::Matrix<double, -1, 1>>;
+  using stan::math::var;
+  Eigen::VectorXd x_val(10);
+  for (int i = 0; i < 10; ++i) {
+    x_val(i) = i + 0.1;
+  }
+  var_vector x(x_val);
+  var_vector y = var_vector(Eigen::Matrix<double, -1, 1>::Constant(
+      10, std::numeric_limits<double>::quiet_NaN()));
+  y = stan::math::head(x, 10);
+  var sigma = 1.0;
+  var lp = stan::math::normal_lpdf<false>(y, 0, sigma);
+  lp.grad();
+  Eigen::VectorXd x_ans_adj(10);
+  for (int i = 0; i < 10; ++i) {
+    x_ans_adj(i) = -(i + 0.1);
+  }
+  EXPECT_MATRIX_EQ(x.adj(), x_ans_adj);
+  Eigen::VectorXd y_ans_adj = Eigen::VectorXd::Zero(10);
+  EXPECT_MATRIX_EQ(y_ans_adj, y.adj());
+}
+
+TEST_F(AgradRev, assign_nan_matvar) {
+  using stan::math::var;
+  using var_vector = Eigen::Matrix<var, -1, 1>;
+  Eigen::VectorXd x_val(10);
+  for (int i = 0; i < 10; ++i) {
+    x_val(i) = i + 0.1;
+  }
+  var_vector x(x_val);
+  var_vector y = var_vector(Eigen::Matrix<double, -1, 1>::Constant(
+      10, std::numeric_limits<double>::quiet_NaN()));
+  // need to store y's previous vari pointers
+  var_vector z = y;
+  y = stan::math::head(x, 10);
+  var sigma = 1.0;
+  var lp = stan::math::normal_lpdf<false>(y, 0, sigma);
+  lp.grad();
+  Eigen::VectorXd x_ans_adj(10);
+  for (int i = 0; i < 10; ++i) {
+    x_ans_adj(i) = -(i + 0.1);
+  }
+  EXPECT_MATRIX_EQ(x.adj(), x_ans_adj);
+  Eigen::VectorXd z_ans_adj = Eigen::VectorXd::Zero(10);
+  EXPECT_MATRIX_EQ(z_ans_adj, z.adj());
+}
+
+/**
+ * For var<Matrix> and Matrix<var>, we need to make sure
+ *  the tape, when going through reverse mode, leads to the same outcomes.
+ * In the case where we declare a var<Matrix> without initializing it, aka
+ * `var_value<Eigen::MatrixXd>`, we need to think about what the equivalent
+ *  behavior is for `Eigen::Matrix<var, -1, -1>`.
+ * When default constructing `Eigen::Matrix<var, -1, -1>` we would have an array
+ * of `var` types with `nullptr` as the vari. The first assignment to that array
+ * would then just copy the vari pointer from the other array. This is the
+ * behavior we want to mimic for `var_value<Eigen::MatrixXd>`. So in this test
+ * show that for uninitialized `var_value<Eigen::MatrixXd>`, we can assign it
+ * and the adjoints are the same as x.
+ */
+TEST_F(AgradRev, assign_nullptr_var) {
+  using stan::math::var_value;
+  using var_vector = var_value<Eigen::Matrix<double, -1, 1>>;
+  using stan::math::var;
+  Eigen::VectorXd x_val(10);
+  for (int i = 0; i < 10; ++i) {
+    x_val(i) = i + 0.1;
+  }
+  var_vector x(x_val);
+  var_vector y;
+  y = stan::math::head(x, 10);
+  var sigma = 1.0;
+  var lp = stan::math::normal_lpdf<false>(y, 0, sigma);
+  lp.grad();
+  Eigen::VectorXd x_ans_adj(10);
+  for (int i = 0; i < 10; ++i) {
+    x_ans_adj(i) = -(i + 0.1);
+  }
+  EXPECT_MATRIX_EQ(x.adj(), x_ans_adj);
+  EXPECT_MATRIX_EQ(x_ans_adj, y.adj());
 }

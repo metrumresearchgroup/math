@@ -41,19 +41,18 @@ namespace math {
 template <bool propto, typename T_y, typename T_loc, typename T_scale,
           require_all_not_nonscalar_prim_or_rev_kernel_expression_t<
               T_y, T_loc, T_scale>* = nullptr>
-inline return_type_t<T_y, T_loc, T_scale> normal_lpdf(const T_y& y,
-                                                      const T_loc& mu,
-                                                      const T_scale& sigma) {
+inline return_type_t<T_y, T_loc, T_scale> normal_lpdf(T_y&& y, T_loc&& mu,
+                                                      T_scale&& sigma) {
   using T_partials_return = partials_return_t<T_y, T_loc, T_scale>;
-  using T_y_ref = ref_type_if_t<!is_constant<T_y>::value, T_y>;
-  using T_mu_ref = ref_type_if_t<!is_constant<T_loc>::value, T_loc>;
-  using T_sigma_ref = ref_type_if_t<!is_constant<T_scale>::value, T_scale>;
-  static const char* function = "normal_lpdf";
+  using T_y_ref = ref_type_if_not_constant_t<T_y>;
+  using T_mu_ref = ref_type_if_not_constant_t<T_loc>;
+  using T_sigma_ref = ref_type_if_not_constant_t<T_scale>;
+  static constexpr const char* function = "normal_lpdf";
   check_consistent_sizes(function, "Random variable", y, "Location parameter",
                          mu, "Scale parameter", sigma);
-  T_y_ref y_ref = y;
-  T_mu_ref mu_ref = mu;
-  T_sigma_ref sigma_ref = sigma;
+  T_y_ref y_ref = std::forward<T_y>(y);
+  T_mu_ref mu_ref = std::forward<T_loc>(mu);
+  T_sigma_ref sigma_ref = std::forward<T_scale>(sigma);
 
   decltype(auto) y_val = to_ref(as_value_column_array_or_scalar(y_ref));
   decltype(auto) mu_val = to_ref(as_value_column_array_or_scalar(mu_ref));
@@ -63,42 +62,42 @@ inline return_type_t<T_y, T_loc, T_scale> normal_lpdf(const T_y& y,
   check_finite(function, "Location parameter", mu_val);
   check_positive(function, "Scale parameter", sigma_val);
 
-  if (size_zero(y, mu, sigma)) {
+  if (size_zero(y_ref, mu_ref, sigma_ref)) {
     return 0.0;
   }
-  if (!include_summand<propto, T_y, T_loc, T_scale>::value) {
+  if constexpr (!include_summand<propto, T_y, T_loc, T_scale>::value) {
     return 0.0;
   }
 
   auto ops_partials = make_partials_propagator(y_ref, mu_ref, sigma_ref);
 
   const auto& inv_sigma
-      = to_ref_if<!is_constant_all<T_y, T_scale, T_loc>::value>(inv(sigma_val));
+      = to_ref_if<is_any_autodiff_v<T_y, T_scale, T_loc>>(inv(sigma_val));
   const auto& y_scaled = to_ref((y_val - mu_val) * inv_sigma);
   const auto& y_scaled_sq
-      = to_ref_if<!is_constant_all<T_scale>::value>(y_scaled * y_scaled);
+      = to_ref_if<is_autodiff_v<T_scale>>(y_scaled * y_scaled);
 
-  size_t N = max_size(y, mu, sigma);
+  size_t N = max_size(y_ref, mu_ref, sigma_ref);
   T_partials_return logp = -0.5 * sum(y_scaled_sq);
-  if (include_summand<propto>::value) {
+  if constexpr (include_summand<propto>::value) {
     logp += NEG_LOG_SQRT_TWO_PI * N;
   }
-  if (include_summand<propto, T_scale>::value) {
+  if constexpr (include_summand<propto, T_scale>::value) {
     logp -= sum(log(sigma_val)) * N / math::size(sigma);
   }
 
-  if (!is_constant_all<T_y, T_scale, T_loc>::value) {
-    auto scaled_diff = to_ref_if<!is_constant_all<T_y>::value
-                                     + !is_constant_all<T_scale>::value
-                                     + !is_constant_all<T_loc>::value
-                                 >= 2>(inv_sigma * y_scaled);
-    if (!is_constant_all<T_y>::value) {
+  if constexpr (is_any_autodiff_v<T_y, T_scale, T_loc>) {
+    auto scaled_diff = to_ref_if<
+        is_autodiff_v<
+            T_y> + is_autodiff_v<T_scale> + is_autodiff_v<T_loc> >= 2>(
+        inv_sigma * y_scaled);
+    if constexpr (is_autodiff_v<T_y>) {
       partials<0>(ops_partials) = -scaled_diff;
     }
-    if (!is_constant_all<T_scale>::value) {
+    if constexpr (is_autodiff_v<T_scale>) {
       partials<2>(ops_partials) = inv_sigma * y_scaled_sq - inv_sigma;
     }
-    if (!is_constant_all<T_loc>::value) {
+    if constexpr (is_autodiff_v<T_loc>) {
       partials<1>(ops_partials) = std::move(scaled_diff);
     }
   }
@@ -106,10 +105,10 @@ inline return_type_t<T_y, T_loc, T_scale> normal_lpdf(const T_y& y,
 }
 
 template <typename T_y, typename T_loc, typename T_scale>
-inline return_type_t<T_y, T_loc, T_scale> normal_lpdf(const T_y& y,
-                                                      const T_loc& mu,
-                                                      const T_scale& sigma) {
-  return normal_lpdf<false>(y, mu, sigma);
+inline return_type_t<T_y, T_loc, T_scale> normal_lpdf(T_y&& y, T_loc&& mu,
+                                                      T_scale&& sigma) {
+  return normal_lpdf<false>(std::forward<T_y>(y), std::forward<T_loc>(mu),
+                            std::forward<T_scale>(sigma));
 }
 
 }  // namespace math

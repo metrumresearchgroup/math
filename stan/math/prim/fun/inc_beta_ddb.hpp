@@ -7,14 +7,14 @@
 #include <stan/math/prim/fun/inc_beta.hpp>
 #include <stan/math/prim/fun/inc_beta_dda.hpp>
 #include <stan/math/prim/fun/inv.hpp>
-#include <stan/math/prim/fun/log.hpp>
+#include <stan/math/prim/fun/log1m.hpp>
 #include <cmath>
 
 namespace stan {
 namespace math {
 
 template <typename T>
-T inc_beta_dda(T a, T b, T z, T digamma_a, T digamma_ab);
+inline T inc_beta_dda(T a, T b, T z, T digamma_a, T digamma_ab);
 
 /**
  * Returns the partial derivative of the regularized
@@ -39,7 +39,7 @@ T inc_beta_dda(T a, T b, T z, T digamma_a, T digamma_ab);
  * @pre 0 <= z <= 1
  */
 template <typename T>
-T inc_beta_ddb(T a, T b, T z, T digamma_b, T digamma_ab) {
+inline T inc_beta_ddb(T a, T b, T z, T digamma_b, T digamma_ab) {
   using std::fabs;
   using std::log;
   using std::pow;
@@ -87,7 +87,7 @@ T inc_beta_ddb(T a, T b, T z, T digamma_b, T digamma_ab) {
     }
   }
 
-  return inc_beta(a, b, z) * (log(1 - z) - digamma_b + sum_numer / sum_denom);
+  return inc_beta(a, b, z) * (log1m(z) - digamma_b + sum_numer / sum_denom);
 }
 
 }  // namespace math

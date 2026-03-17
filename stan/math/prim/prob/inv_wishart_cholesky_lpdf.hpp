@@ -40,41 +40,37 @@ namespace math {
 template <bool propto, typename T_y, typename T_dof, typename T_scale,
           require_stan_scalar_t<T_dof>* = nullptr,
           require_all_matrix_t<T_y, T_scale>* = nullptr>
-return_type_t<T_y, T_dof, T_scale> inv_wishart_cholesky_lpdf(
+inline return_type_t<T_y, T_dof, T_scale> inv_wishart_cholesky_lpdf(
     const T_y& L_Y, const T_dof& nu, const T_scale& L_S) {
   using Eigen::Lower;
   using T_L_Y_ref = ref_type_t<T_y>;
   using T_nu_ref = ref_type_t<T_dof>;
   using T_L_S_ref = ref_type_t<T_scale>;
   using T_return = return_type_t<T_y, T_dof, T_scale>;
-  static const char* function = "inv_wishart_cholesky_lpdf";
+  static constexpr const char* function = "inv_wishart_cholesky_lpdf";
   Eigen::Index k = L_Y.rows();
-  check_size_match(function, "Rows of Random variable", L_Y.rows(),
-                   "columns of scale parameter", L_S.rows());
-  check_size_match(function, "Rows of random variable", L_Y.rows(),
-                   "columns of Random variable", L_Y.cols());
-  check_size_match(function, "Rows of scale parameter", L_S.rows(),
-                   "columns of scale parameter", L_S.cols());
+  check_greater(function, "Degrees of freedom parameter", nu, k - 1);
+
+  check_square(function, "Cholesky random variable", L_Y);
+  check_square(function, "Cholesky Scale parameter", L_S);
+  check_size_match(function, "side length of random variable", L_Y.rows(),
+                   "side length of scale parameter", L_S.rows());
 
   T_L_Y_ref L_Y_ref = L_Y;
+  check_cholesky_factor(function, "Cholesky random variable", L_Y_ref);
+
   T_nu_ref nu_ref = nu;
   T_L_S_ref L_S_ref = L_S;
-
-  check_greater(function, "Degrees of freedom parameter", nu_ref, k - 1);
-  check_positive(function, "Cholesky Random variable", L_Y_ref.diagonal());
-  check_positive(function, "columns of Cholesky Random variable",
-                 L_Y_ref.cols());
-  check_positive(function, "Cholesky Scale matrix", L_S_ref.diagonal());
-  check_positive(function, "columns of Cholesky Scale matrix", L_S_ref.cols());
+  check_cholesky_factor(function, "Cholesky Scale matrix", L_S_ref);
 
   T_return lp(0.0);
 
-  if (include_summand<propto, T_dof>::value) {
+  if constexpr (include_summand<propto, T_dof>::value) {
     lp += k * LOG_TWO * (1 - 0.5 * nu_ref);
     lp -= lmgamma(k, 0.5 * nu_ref);
   }
 
-  if (include_summand<propto, T_dof, T_scale, T_y>::value) {
+  if constexpr (include_summand<propto, T_dof, T_scale, T_y>::value) {
     auto L_YinvL_S = mdivide_left_tri<Eigen::Lower>(L_Y_ref, L_S_ref);
     T_return dot_LYinvLS(0.0);
     Eigen::Matrix<T_return, 1, Eigen::Dynamic> linspaced_rv(k);

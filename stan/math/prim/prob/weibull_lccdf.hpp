@@ -34,15 +34,14 @@ namespace math {
 template <typename T_y, typename T_shape, typename T_scale,
           require_all_not_nonscalar_prim_or_rev_kernel_expression_t<
               T_y, T_shape, T_scale>* = nullptr>
-return_type_t<T_y, T_shape, T_scale> weibull_lccdf(const T_y& y,
-                                                   const T_shape& alpha,
-                                                   const T_scale& sigma) {
+inline return_type_t<T_y, T_shape, T_scale> weibull_lccdf(
+    const T_y& y, const T_shape& alpha, const T_scale& sigma) {
   using T_partials_return = partials_return_t<T_y, T_shape, T_scale>;
-  using T_y_ref = ref_type_if_t<!is_constant<T_y>::value, T_y>;
-  using T_alpha_ref = ref_type_if_t<!is_constant<T_shape>::value, T_shape>;
-  using T_sigma_ref = ref_type_if_t<!is_constant<T_scale>::value, T_scale>;
+  using T_y_ref = ref_type_if_not_constant_t<T_y>;
+  using T_alpha_ref = ref_type_if_not_constant_t<T_shape>;
+  using T_sigma_ref = ref_type_if_not_constant_t<T_scale>;
   using std::pow;
-  static const char* function = "weibull_lccdf";
+  static constexpr const char* function = "weibull_lccdf";
 
   T_y_ref y_ref = y;
   T_alpha_ref alpha_ref = alpha;
@@ -62,17 +61,17 @@ return_type_t<T_y, T_shape, T_scale> weibull_lccdf(const T_y& y,
 
   auto ops_partials = make_partials_propagator(y_ref, alpha_ref, sigma_ref);
 
-  const auto& pow_n = to_ref_if<!is_constant_all<T_y, T_shape, T_scale>::value>(
+  const auto& pow_n = to_ref_if<is_any_autodiff_v<T_y, T_shape, T_scale>>(
       pow(y_val / sigma_val, alpha_val));
   T_partials_return ccdf_log = -sum(pow_n);
 
-  if (!is_constant_all<T_y>::value) {
+  if constexpr (is_autodiff_v<T_y>) {
     partials<0>(ops_partials) = -alpha_val / y_val * pow_n;
   }
-  if (!is_constant_all<T_shape>::value) {
+  if constexpr (is_autodiff_v<T_shape>) {
     partials<1>(ops_partials) = -log(y_val / sigma_val) * pow_n;
   }
-  if (!is_constant_all<T_scale>::value) {
+  if constexpr (is_autodiff_v<T_scale>) {
     partials<2>(ops_partials) = alpha_val / sigma_val * pow_n;
   }
   return ops_partials.build(ccdf_log);

@@ -30,9 +30,9 @@ template <
     require_all_prim_or_rev_kernel_expression_t<T_y_cl, T_scale_cl,
                                                 T_shape_cl>* = nullptr,
     require_any_not_stan_scalar_t<T_y_cl, T_scale_cl, T_shape_cl>* = nullptr>
-return_type_t<T_y_cl, T_scale_cl, T_shape_cl> pareto_lcdf(
+inline return_type_t<T_y_cl, T_scale_cl, T_shape_cl> pareto_lcdf(
     const T_y_cl& y, const T_scale_cl& y_min, const T_shape_cl& alpha) {
-  static const char* function = "pareto_lcdf(OpenCL)";
+  static constexpr const char* function = "pareto_lcdf(OpenCL)";
   using T_partials_return = partials_return_t<T_y_cl, T_scale_cl, T_shape_cl>;
   using std::isfinite;
   using std::isinf;
@@ -68,7 +68,8 @@ return_type_t<T_y_cl, T_scale_cl, T_shape_cl> pareto_lcdf(
 
   auto log_quot = log(elt_divide(y_min_val, y_val));
   auto exp_prod = exp(elt_multiply(alpha_val, log_quot));
-  auto lcdf_expr = colwise_sum(log(1.0 - exp_prod));
+  // TODO(Andrew) Further simplify derivatives and log1m_exp below
+  auto lcdf_expr = colwise_sum(log1m(exp_prod));
 
   auto common_deriv = elt_divide(exp_prod, 1.0 - exp_prod);
 
@@ -90,9 +91,9 @@ return_type_t<T_y_cl, T_scale_cl, T_shape_cl> pareto_lcdf(
       = expressions(y_not_nonnegative_expr, y_min_positive_finite_expr,
                     alpha_positive_finite_expr, any_y_lower_than_y_min,
                     any_y_inf, lcdf_expr,
-                    calc_if<!is_constant<T_y_cl>::value>(y_deriv),
-                    calc_if<!is_constant<T_scale_cl>::value>(y_min_deriv),
-                    calc_if<!is_constant<T_shape_cl>::value>(alpha_deriv));
+                    calc_if<is_autodiff_v<T_y_cl>>(y_deriv),
+                    calc_if<is_autodiff_v<T_scale_cl>>(y_min_deriv),
+                    calc_if<is_autodiff_v<T_shape_cl>>(alpha_deriv));
 
   if (from_matrix_cl(any_y_lower_than_y_min_cl).maxCoeff()) {
     return NEGATIVE_INFTY;
@@ -106,13 +107,13 @@ return_type_t<T_y_cl, T_scale_cl, T_shape_cl> pareto_lcdf(
 
   auto ops_partials = make_partials_propagator(y_col, y_min_col, alpha_col);
 
-  if (!is_constant<T_y_cl>::value) {
+  if constexpr (is_autodiff_v<T_y_cl>) {
     partials<0>(ops_partials) = std::move(y_deriv_cl);
   }
-  if (!is_constant<T_scale_cl>::value) {
+  if constexpr (is_autodiff_v<T_scale_cl>) {
     partials<1>(ops_partials) = std::move(y_min_deriv_cl);
   }
-  if (!is_constant<T_shape_cl>::value) {
+  if constexpr (is_autodiff_v<T_shape_cl>) {
     partials<2>(ops_partials) = std::move(alpha_deriv_cl);
   }
   return ops_partials.build(lcdf);

@@ -66,10 +66,10 @@ class optional_broadcast_
     kernel_parts res;
     res.body
         += type_str<Scalar>() + " " + var_name_ + " = " + var_name_arg + ";\n";
-    if (Colwise) {
+    if constexpr (Colwise) {
       res.args += "int " + var_name_ + "is_multirow, ";
     }
-    if (Rowwise) {
+    if constexpr (Rowwise) {
       res.args += "int " + var_name_ + "is_multicol, ";
     }
     return res;
@@ -82,10 +82,10 @@ class optional_broadcast_
    */
   inline void modify_argument_indices(std::string& row_idx_name,
                                       std::string& col_idx_name) const {
-    if (Colwise) {
+    if constexpr (Colwise) {
       row_idx_name = "(" + row_idx_name + " * " + var_name_ + "is_multirow)";
     }
-    if (Rowwise) {
+    if constexpr (Rowwise) {
       col_idx_name = "(" + col_idx_name + " * " + var_name_ + "is_multicol)";
     }
   }
@@ -100,19 +100,20 @@ class optional_broadcast_
    * @param[in,out] arg_num consecutive number of the first argument to set.
    * This is incremented for each argument set by this function.
    */
-  inline void set_args(std::map<const void*, const char*>& generated,
-                       std::map<const void*, const char*>& generated_all,
-                       cl::Kernel& kernel, int& arg_num) const {
+  inline void set_args(
+      std::unordered_map<const void*, const char*>& generated,
+      std::unordered_map<const void*, const char*>& generated_all,
+      cl::Kernel& kernel, int& arg_num) const {
     if (generated.count(this) == 0) {
       generated[this] = "";
-      std::map<const void*, const char*> generated2;
+      std::unordered_map<const void*, const char*> generated2;
       this->template get_arg<0>().set_args(generated2, generated_all, kernel,
                                            arg_num);
-      if (Colwise) {
+      if constexpr (Colwise) {
         kernel.setArg(arg_num++, static_cast<int>(
                                      this->template get_arg<0>().rows() != 1));
       }
-      if (Rowwise) {
+      if constexpr (Rowwise) {
         kernel.setArg(arg_num++, static_cast<int>(
                                      this->template get_arg<0>().cols() != 1));
       }

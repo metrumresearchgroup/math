@@ -35,6 +35,8 @@ benchmarks/*.csv
 *.o-*
 *.exe
 *.a
+# mac debug folders
+*.dSYM/
 
 # Intel template building blocks (TBB)
 lib/tbb
@@ -71,6 +73,7 @@ lib/tbb
 
 # local make include
 /make/local
+/make/ucrt
 
 # python byte code
 *.pyc
@@ -93,6 +96,7 @@ lib/boost_*/user-config.jam
 
 # Clang compilation database
 compile_commands.json
+compile_flags.txt
 
 # Visual Studio Project Setup
 .vscode/*

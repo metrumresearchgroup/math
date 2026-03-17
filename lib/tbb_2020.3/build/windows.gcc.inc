@@ -80,8 +80,11 @@ endif
 # gcc 6.0 and later have -flifetime-dse option that controls
 # elimination of stores done outside the object lifetime
 ifeq (ok,$(call detect_js,/minversion gcc 6.0))
-    # keep pre-contruction stores for zero initialization
-    DSE_KEY = -flifetime-dse=1
+    # Clang does not support -flifetime-dse
+    ifeq (, $(WINARM64))
+      # keep pre-contruction stores for zero initialization
+      DSE_KEY = -flifetime-dse=1
+    endif
 endif
 
 ifeq ($(cfg), release)
@@ -95,7 +98,11 @@ CPLUS_FLAGS += -DUSE_WINTHREAD
 CPLUS_FLAGS += -D_WIN32_WINNT=$(_WIN32_WINNT)
 
 # MinGW specific
-CPLUS_FLAGS += -DMINGW_HAS_SECURE_API=1 -D__MSVCRT_VERSION__=0x0700 -msse -mthreads
+CPLUS_FLAGS += -DMINGW_HAS_SECURE_API=1 -D__MSVCRT_VERSION__=0x0700 -mthreads
+# Unused under ARM64 and error with LLVM19+
+ifeq (, $(WINARM64))
+    CPLUS_FLAGS +=  -msse 
+endif
 
 CONLY = gcc
 debugger = gdb

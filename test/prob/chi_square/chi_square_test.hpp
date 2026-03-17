@@ -1,5 +1,5 @@
 // Arguments: Doubles, Doubles
-#include <stan/math/prim/prob/chi_square_log.hpp>
+#include <stan/math/prim/prob/chi_square_lpdf.hpp>
 #include <stan/math/prim/fun/multiply_log.hpp>
 #include <stan/math/prim/fun/constants.hpp>
 
@@ -43,7 +43,7 @@ class AgradDistributionsChiSquare : public AgradDistributionTest {
   stan::return_type_t<T_y, T_dof, T2> log_prob(const T_y& y, const T_dof& nu,
                                                const T2&, const T3&, const T4&,
                                                const T5&) {
-    return stan::math::chi_square_log(y, nu);
+    return stan::math::chi_square_lpdf(y, nu);
   }
 
   template <bool propto, typename T_y, typename T_dof, typename T2, typename T3,
@@ -51,7 +51,7 @@ class AgradDistributionsChiSquare : public AgradDistributionTest {
   stan::return_type_t<T_y, T_dof> log_prob(const T_y& y, const T_dof& nu,
                                            const T2&, const T3&, const T4&,
                                            const T5&) {
-    return stan::math::chi_square_log<propto>(y, nu);
+    return stan::math::chi_square_lpdf<propto>(y, nu);
   }
 
   template <typename T_y, typename T_dof, typename T2, typename T3, typename T4,
@@ -60,10 +60,9 @@ class AgradDistributionsChiSquare : public AgradDistributionTest {
                                                     const T_dof& nu, const T2&,
                                                     const T3&, const T4&,
                                                     const T5&) {
-    using boost::math::lgamma;
     using stan::math::HALF_LOG_TWO;
+    using stan::math::lgamma;
     using stan::math::multiply_log;
-
     return -nu * HALF_LOG_TWO - lgamma(0.5 * nu)
            + multiply_log(0.5 * nu - 1.0, y) - 0.5 * y;
   }

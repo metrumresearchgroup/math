@@ -75,7 +75,7 @@ class CodeGenerator:
 
             # The first case here is used for the array initializers in sig_utils.special_arg_values
             # Everything else uses the second case
-            if number_nested_arrays > 0 and isinstance(value, collections.Iterable):
+            if number_nested_arrays > 0 and isinstance(value, collections.abc.Iterable):
                 arg = statement_types.ArrayVariable(
                     overload,
                     "array" + suffix,
@@ -129,6 +129,10 @@ class CodeGenerator:
                     )
                 elif inner_type == "(real, vector, ostream_ptr, vector) => vector":
                     arg = statement_types.OdeFunctorVariable("functor" + suffix)
+                elif inner_type == "stochastic_matrix":
+                    arg = statement_types.StochasticMatrixVariable(
+                        overload, "stochastic_matrix" + suffix, size, value
+                    )
                 else:
                     raise Exception("Inner type " + inner_type + " not supported")
 

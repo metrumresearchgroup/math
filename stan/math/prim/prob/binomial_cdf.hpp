@@ -33,15 +33,15 @@ namespace math {
  * @throw std::invalid_argument if container sizes mismatch
  */
 template <typename T_n, typename T_N, typename T_prob>
-return_type_t<T_prob> binomial_cdf(const T_n& n, const T_N& N,
-                                   const T_prob& theta) {
+inline return_type_t<T_prob> binomial_cdf(const T_n& n, const T_N& N,
+                                          const T_prob& theta) {
   using T_partials_return = partials_return_t<T_n, T_N, T_prob>;
   using T_n_ref = ref_type_t<T_n>;
   using T_N_ref = ref_type_t<T_N>;
   using T_theta_ref = ref_type_t<T_prob>;
   using std::exp;
   using std::pow;
-  static const char* function = "binomial_cdf";
+  static constexpr const char* function = "binomial_cdf";
   check_consistent_sizes(function, "Successes variable", n,
                          "Population size parameter", N,
                          "Probability parameter", theta);
@@ -90,7 +90,7 @@ return_type_t<T_prob> binomial_cdf(const T_n& n, const T_N& N,
 
     P *= Pi;
 
-    if (!is_constant_all<T_prob>::value) {
+    if constexpr (is_autodiff_v<T_prob>) {
       const T_partials_return denom = beta(N_dbl - n_dbl, n_dbl + 1) * Pi;
       partials<0>(ops_partials)[i] -= pow(theta_dbl, n_dbl)
                                       * pow(1 - theta_dbl, N_dbl - n_dbl - 1)
@@ -98,7 +98,7 @@ return_type_t<T_prob> binomial_cdf(const T_n& n, const T_N& N,
     }
   }
 
-  if (!is_constant_all<T_prob>::value) {
+  if constexpr (is_autodiff_v<T_prob>) {
     for (size_t i = 0; i < stan::math::size(theta); ++i) {
       partials<0>(ops_partials)[i] *= P;
     }

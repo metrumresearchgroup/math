@@ -1,4 +1,5 @@
 #include <stan/math/rev.hpp>
+#include <test/unit/math/rev/util.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/math/rev/prob/test_gradients.hpp>
 #include <test/unit/math/rev/prob/test_gradients_multi_normal.hpp>
@@ -30,13 +31,13 @@ struct multi_normal_cholesky_fun {
       for (int j = i + 1; j < K_; ++j)
         L(i, j) = 0;
     }
-    return stan::math::multi_normal_cholesky_log<false>(y, mu, L);
+    return stan::math::multi_normal_cholesky_lpdf<false>(y, mu, L);
     // can't test propto=true because finite diffs are
     // all 0 by design for double inputs
   }
 };
 
-TEST(ProbDistributionsMultiNormalCholesky2, TestGradFunctional) {
+TEST_F(AgradRev, ProbDistributionsMultiNormalCholesky2_TestGradFunctional) {
   std::vector<double> x(3 + 3 + 3 * 2);
   // y
   x[0] = 1.0;
@@ -116,20 +117,20 @@ struct vectorized_multi_normal_cholesky_fun {
 
     if (dont_vectorize_y) {
       if (dont_vectorize_mu)
-        return stan::math::multi_normal_cholesky_log<false>(y[0], mu[0], L);
+        return stan::math::multi_normal_cholesky_lpdf<false>(y[0], mu[0], L);
       else
-        return stan::math::multi_normal_cholesky_log<false>(y[0], mu, L);
+        return stan::math::multi_normal_cholesky_lpdf<false>(y[0], mu, L);
     } else {
       if (dont_vectorize_mu)
-        return stan::math::multi_normal_cholesky_log<false>(y, mu[0], L);
+        return stan::math::multi_normal_cholesky_lpdf<false>(y, mu[0], L);
       else
-        return stan::math::multi_normal_cholesky_log<false>(y, mu, L);
+        return stan::math::multi_normal_cholesky_lpdf<false>(y, mu, L);
     }
   }
 };
 
 template <int is_row_vec_y, int is_row_vec_mu>
-void test_all_multi_normal_cholesky() {
+inline void test_all_multi_normal_cholesky() {
   {
     using Eigen::Dynamic;
     using Eigen::Matrix;
@@ -282,7 +283,8 @@ void test_all_multi_normal_cholesky() {
   }
 }
 
-TEST(ProbDistributionsMultiNormalCholesky2, TestGradFunctionalVectorized) {
+TEST_F(AgradRev,
+       ProbDistributionsMultiNormalCholesky2_TestGradFunctionalVectorized) {
   test_all_multi_normal_cholesky<1, 1>();
   test_all_multi_normal_cholesky<1, -1>();
   test_all_multi_normal_cholesky<-1, 1>();

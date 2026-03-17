@@ -14,11 +14,11 @@ namespace math {
 // Temporary neg_binomial_2_ccdf implementation that
 // transforms the input parameters and calls neg_binomial_ccdf
 template <typename T_n, typename T_location, typename T_precision>
-return_type_t<T_location, T_precision> neg_binomial_2_lccdf(
+inline return_type_t<T_location, T_precision> neg_binomial_2_lccdf(
     const T_n& n, const T_location& mu, const T_precision& phi) {
   using T_mu_ref = ref_type_t<T_location>;
   using T_phi_ref = ref_type_t<T_precision>;
-  static const char* function = "neg_binomial_2_lccdf";
+  static constexpr const char* function = "neg_binomial_2_lccdf";
   check_consistent_sizes(function, "Random variable", n, "Location parameter",
                          mu, "Precision Parameter", phi);
   T_mu_ref mu_ref = mu;

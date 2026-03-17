@@ -1,6 +1,7 @@
 #ifndef TEST_UNIT_MATH_REV_PROB_LKJ_CORR_CHOLESKY_TEST_FUNCTORS
 #define TEST_UNIT_MATH_REV_PROB_LKJ_CORR_CHOLESKY_TEST_FUNCTORS
 #include <stan/math/rev.hpp>
+#include <test/unit/math/rev/util.hpp>
 #include <vector>
 
 namespace stan {
@@ -8,17 +9,17 @@ namespace stan {
 namespace math {
 
 template <typename T_L, typename T_eta>
-return_type_t<T_eta, T_L> lkj_corr_cholesky_uc(
+inline return_type_t<T_eta, T_L> lkj_corr_cholesky_uc(
     Eigen::Matrix<T_L, Eigen::Dynamic, 1> L, T_eta eta, int K) {
   using math::cholesky_corr_constrain;
-  using math::lkj_corr_cholesky_log;
+  using math::lkj_corr_cholesky_lpdf;
   using math::positive_constrain;
 
   return_type_t<T_eta, T_L> lp(0.0);
   Eigen::Matrix<T_L, Eigen::Dynamic, Eigen::Dynamic> L_c
       = cholesky_corr_constrain(L, K, lp);
   T_eta eta_c = positive_constrain(eta, lp);
-  lp += lkj_corr_cholesky_log(L_c, eta_c);
+  lp += lkj_corr_cholesky_lpdf(L_c, eta_c);
   return lp;
 }
 
@@ -35,11 +36,11 @@ struct lkj_corr_cholesky_cd {
   }
   template <typename T>
   T operator()(Eigen::Matrix<T, Eigen::Dynamic, 1> vec) const {
-    using math::lkj_corr_cholesky_log;
+    using math::lkj_corr_cholesky_lpdf;
     using math::positive_constrain;
     T lp(0.0);
     T eta_c = positive_constrain(vec(0), lp);
-    lp += lkj_corr_cholesky_log(L_def, eta_c);
+    lp += lkj_corr_cholesky_lpdf(L_def, eta_c);
     return lp;
   }
 };
@@ -54,10 +55,10 @@ struct lkj_corr_cholesky_dc {
   template <typename T>
   T operator()(Eigen::Matrix<T, Eigen::Dynamic, 1> vec) const {
     using math::cholesky_corr_constrain;
-    using math::lkj_corr_cholesky_log;
+    using math::lkj_corr_cholesky_lpdf;
     T lp(0.0);
     Eigen::Matrix<T, -1, -1> L_c = cholesky_corr_constrain(vec, K, lp);
-    lp += lkj_corr_cholesky_log(L_c, eta_c);
+    lp += lkj_corr_cholesky_lpdf(L_c, eta_c);
     return lp;
   }
 };

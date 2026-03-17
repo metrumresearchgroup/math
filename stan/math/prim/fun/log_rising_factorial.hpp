@@ -54,7 +54,7 @@ inline return_type_t<T1, T2> log_rising_factorial(const T1& x, const T2& n) {
   if (is_any_nan(x, n)) {
     return NOT_A_NUMBER;
   }
-  static const char* function = "log_rising_factorial";
+  static constexpr const char* function = "log_rising_factorial";
   check_positive(function, "first argument", x);
   return lgamma(x + n) - lgamma(x);
 }
@@ -70,10 +70,13 @@ inline return_type_t<T1, T2> log_rising_factorial(const T1& x, const T2& n) {
  * @return log_rising_factorial function applied to the two inputs.
  */
 template <typename T1, typename T2, require_any_container_t<T1, T2>* = nullptr>
-inline auto log_rising_factorial(const T1& a, const T2& b) {
-  return apply_scalar_binary(a, b, [&](const auto& c, const auto& d) {
-    return log_rising_factorial(c, d);
-  });
+inline auto log_rising_factorial(T1&& a, T2&& b) {
+  return apply_scalar_binary(
+      [](auto&& c, auto&& d) {
+        return log_rising_factorial(std::forward<decltype(c)>(c),
+                                    std::forward<decltype(d)>(d));
+      },
+      std::forward<T1>(a), std::forward<T2>(b));
 }
 
 }  // namespace math

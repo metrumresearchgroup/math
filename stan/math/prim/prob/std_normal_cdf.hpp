@@ -34,7 +34,7 @@ inline return_type_t<T_y> std_normal_cdf(const T_y& y) {
   using T_partials_return = partials_return_t<T_y>;
   using std::exp;
   using T_y_ref = ref_type_t<T_y>;
-  static const char* function = "std_normal_cdf";
+  static constexpr const char* function = "std_normal_cdf";
   T_y_ref y_ref = y;
   check_not_nan(function, "Random variable", y_ref);
 
@@ -64,18 +64,18 @@ inline return_type_t<T_y> std_normal_cdf(const T_y& y) {
 
     cdf *= cdf_n;
 
-    if (!is_constant_all<T_y>::value) {
+    if constexpr (is_autodiff_v<T_y>) {
       const T_partials_return rep_deriv
           = (y_dbl < -37.5)
                 ? 0.0
                 : INV_SQRT_TWO_PI * exp(-scaled_y * scaled_y) / cdf_n;
-      if (!is_constant_all<T_y>::value) {
+      if constexpr (is_autodiff_v<T_y>) {
         partials<0>(ops_partials)[n] += rep_deriv;
       }
     }
   }
 
-  if (!is_constant_all<T_y>::value) {
+  if constexpr (is_autodiff_v<T_y>) {
     for (size_t n = 0; n < N; ++n) {
       partials<0>(ops_partials)[n] *= cdf;
     }

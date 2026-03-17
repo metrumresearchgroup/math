@@ -25,17 +25,17 @@ namespace math {
  * @throw std::invalid_argument If y and theta are different lengths
  */
 template <bool propto, typename T_y, typename T_theta>
-return_type_t<T_theta> poisson_binomial_lpmf(const T_y& y,
-                                             const T_theta& theta) {
-  static const char* function = "poisson_binomial_lpmf";
+inline return_type_t<T_theta> poisson_binomial_lpmf(const T_y& y,
+                                                    const T_theta& theta) {
+  static constexpr const char* function = "poisson_binomial_lpmf";
 
-  size_t size_theta = size_mvt(theta);
+  auto size_theta = size_mvt(theta);
   if (size_theta > 1) {
     check_consistent_sizes(function, "Successes variables", y,
                            "Probability parameters", theta);
   }
 
-  size_t max_sz = std::max(stan::math::size(y), size_theta);
+  auto max_sz = std::max(stan::math::size(y), size_theta);
   scalar_seq_view<T_y> y_vec(y);
   vector_seq_view<T_theta> theta_vec(theta);
 
@@ -57,8 +57,8 @@ return_type_t<T_theta> poisson_binomial_lpmf(const T_y& y,
 }
 
 template <typename T_y, typename T_theta>
-return_type_t<T_theta> poisson_binomial_lpmf(const T_y& y,
-                                             const T_theta& theta) {
+inline return_type_t<T_theta> poisson_binomial_lpmf(const T_y& y,
+                                                    const T_theta& theta) {
   return poisson_binomial_lpmf<false>(y, theta);
 }
 
