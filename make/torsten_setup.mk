@@ -1,3 +1,6 @@
+TORSTEN_VERSION := 0.92.0-rc1
+TORSTEN_STANC3_VERSION := torsten_v0.92.0
+
 # By default we use DQ, but user can choose AD for Jacobian
 # computation in CVODES' newton iterations.
 ifdef TORSTEN_CVS_JAC_DQ
@@ -33,4 +36,3 @@ endif
 ifdef TORSTEN_USE_STAN_ODE
   CXXFLAGS += -DTORSTEN_USE_STAN_ODE
 endif
-
