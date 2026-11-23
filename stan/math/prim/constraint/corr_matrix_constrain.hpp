@@ -6,6 +6,7 @@
 #include <stan/math/prim/fun/Eigen.hpp>
 #include <stan/math/prim/constraint/corr_constrain.hpp>
 #include <stan/math/prim/fun/read_corr_matrix.hpp>
+#include <stan/math/prim/fun/to_ref.hpp>
 #include <stdexcept>
 
 namespace stan {
@@ -40,9 +41,12 @@ template <typename T, require_eigen_col_vector_t<T>* = nullptr>
 inline Eigen::Matrix<value_type_t<T>, Eigen::Dynamic, Eigen::Dynamic>
 corr_matrix_constrain(T&& x, Eigen::Index k) {
   Eigen::Index k_choose_2 = (k * (k - 1)) / 2;
-  check_size_match("cov_matrix_constrain", "x.size()", x.size(), "k_choose_2",
-                   k_choose_2);
-  return read_corr_matrix(corr_constrain(std::forward<T>(x)), k);
+  decltype(auto) x_ref = to_ref(std::forward<T>(x));
+  check_size_match("cov_matrix_constrain", "x.size()", x_ref.size(),
+                   "k_choose_2", k_choose_2);
+  decltype(auto) cpc_ref
+      = to_ref(corr_constrain(std::forward<decltype(x_ref)>(x_ref)));
+  return read_corr_matrix(cpc_ref, k);
 }
 
 /**
@@ -62,7 +66,7 @@ corr_matrix_constrain(T&& x, Eigen::Index k) {
  * @tparam T type of the vector (must be derived from \c Eigen::MatrixBase and
  * have one compile-time dimension equal to 1)
  * @tparam Lp A scalar type for the lp argument. The scalar type of T should be
- * convertable to this.
+ * convertible to this.
  * @param x Vector of unconstrained partial correlations.
  * @param k Dimensionality of returned correlation matrix.
  * @param lp Log probability reference to increment.
@@ -72,9 +76,12 @@ template <typename T, typename Lp, require_eigen_col_vector_t<T>* = nullptr,
 inline Eigen::Matrix<value_type_t<T>, Eigen::Dynamic, Eigen::Dynamic>
 corr_matrix_constrain(T&& x, Eigen::Index k, Lp& lp) {
   Eigen::Index k_choose_2 = (k * (k - 1)) / 2;
-  check_size_match("cov_matrix_constrain", "x.size()", x.size(), "k_choose_2",
-                   k_choose_2);
-  return read_corr_matrix(corr_constrain(std::forward<T>(x), lp), k, lp);
+  decltype(auto) x_ref = to_ref(std::forward<T>(x));
+  check_size_match("cov_matrix_constrain", "x.size()", x_ref.size(),
+                   "k_choose_2", k_choose_2);
+  decltype(auto) cpc_ref
+      = to_ref(corr_constrain(std::forward<decltype(x_ref)>(x_ref), lp));
+  return read_corr_matrix(cpc_ref, k, lp);
 }
 
 /**
@@ -108,7 +115,7 @@ inline auto corr_matrix_constrain(T&& y, int K) {
  * `Eigen::DenseBase` or a `var_value` with inner type inheriting from
  * `Eigen::DenseBase` with compile time dynamic rows and 1 column
  * @tparam Lp Scalar type for the lp argument. The scalar type of T should be
- * convertable to this.
+ * convertible to this.
  * @param y Vector of unconstrained partial correlations
  * @param K Dimensionality of returned correlation matrix
  * @param[in, out] lp log density accumulator o
@@ -137,7 +144,7 @@ inline auto corr_matrix_constrain(T&& y, int K, Lp& lp) {
  *  inner type inheriting from `Eigen::DenseBase` with compile time dynamic rows
  *  and 1 column or standard vector thereof
  * @tparam Lp A scalar type for the lp argument. The scalar type of T should be
- * convertable to this.
+ * convertible to this.
  * @param x Vector of unconstrained partial correlations
  * @param k Dimensionality of returned correlation matrix
  * @param[in,out] lp log density accumulator

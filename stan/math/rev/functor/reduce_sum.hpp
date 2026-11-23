@@ -2,7 +2,7 @@
 #define STAN_MATH_REV_FUNCTOR_REDUCE_SUM_HPP
 
 #include <stan/math/prim/meta.hpp>
-#include <stan/math/prim/functor.hpp>
+#include <stan/math/prim/functor/reduce_sum.hpp>
 #include <stan/math/rev/core.hpp>
 
 #include <tbb/task_arena.h>
@@ -250,7 +250,7 @@ struct reduce_sum_impl<ReduceFunction, require_var_t<ReturnType>, ReturnType,
 
     // we must use task isolation as described here:
     // https://software.intel.com/content/www/us/en/develop/documentation/tbb-documentation/top/intel-threading-building-blocks-developer-guide/task-isolation.html
-    // this is to ensure that the thread local AD tape ressource is
+    // this is to ensure that the thread local AD tape resource is
     // not being modified from a different task which may happen
     // whenever this function is being used itself in a parallel
     // context (like running multiple chains for Stan)
