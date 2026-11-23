@@ -1,5 +1,5 @@
-TORSTEN_VERSION := 0.92.0-rc1
-TORSTEN_STANC3_VERSION := torsten_v0.92.0
+TORSTEN_VERSION := 0.93.0-rc1
+TORSTEN_STANC3_VERSION := torsten_v0.93.0
 
 # By default we use DQ, but user can choose AD for Jacobian
 # computation in CVODES' newton iterations.
